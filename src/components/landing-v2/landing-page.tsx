@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { Navbar } from "./navbar";
 import { HeroSection } from "./hero/hero-section";
+import { ImageBanner } from "./banner/image-banner";
+import { BANNERS } from "./constants";
 import { Footer } from "./footer/footer";
 
 const ModulesSection = dynamic(() =>
@@ -11,20 +13,14 @@ const ModulesSection = dynamic(() =>
 const PreviewSection = dynamic(() =>
   import("./preview/preview-section").then((m) => ({ default: m.PreviewSection }))
 );
-const ComparisonSection = dynamic(() =>
-  import("./comparison/comparison-section").then((m) => ({ default: m.ComparisonSection }))
-);
-const BusinessTypesSection = dynamic(() =>
-  import("./business-types/business-types-section").then((m) => ({ default: m.BusinessTypesSection }))
+const SalonTypesSection = dynamic(() =>
+  import("./salon-types/salon-types-section").then((m) => ({ default: m.SalonTypesSection }))
 );
 const FeaturesSection = dynamic(() =>
   import("./features/features-section").then((m) => ({ default: m.FeaturesSection }))
 );
 const AiSection = dynamic(() =>
   import("./ai-section/ai-section").then((m) => ({ default: m.AiSection }))
-);
-const StatsSection = dynamic(() =>
-  import("./stats/stats-section").then((m) => ({ default: m.StatsSection }))
 );
 const TestimonialsSection = dynamic(() =>
   import("./testimonials/testimonials-section").then((m) => ({ default: m.TestimonialsSection }))
@@ -46,11 +42,19 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
       <Navbar isAuthenticated={isAuthenticated} />
       <main>
         <HeroSection />
-        <StatsSection />
+        <ImageBanner
+          image={BANNERS[0].image}
+          alt={BANNERS[0].alt}
+          text={BANNERS[0].text}
+        />
         <ModulesSection />
         <PreviewSection />
-        <ComparisonSection />
-        <BusinessTypesSection />
+        <ImageBanner
+          image={BANNERS[1].image}
+          alt={BANNERS[1].alt}
+          text={BANNERS[1].text}
+        />
+        <SalonTypesSection />
         <FeaturesSection />
         <AiSection />
         <TestimonialsSection />

@@ -1,323 +1,419 @@
-import type { LucideIcon } from "lucide-react";
 import {
-  Activity,
-  BarChart3,
-  Bell,
-  Bot,
-  Box,
-  Brain,
-  Building2,
-  Calendar,
-  CalendarCheck,
-  CreditCard,
-  Crown,
-  DollarSign,
-  FileText,
-  Gift,
-  Heart,
   LayoutDashboard,
-  LineChart,
-  Mail,
+  Calendar,
+  UserPlus,
+  ListOrdered,
+  Receipt,
+  CreditCard,
+  Users,
+  Heart,
+  Package,
+  Scissors,
+  Gift,
+  Crown,
+  UserCog,
+  Clock,
+  Wallet,
   Megaphone,
   MessageCircle,
-  Package,
-  Receipt,
-  Scissors,
+  PiggyBank,
+  FileBarChart,
+  BarChart3,
+  Building2,
   Settings,
-  Shield,
-  ShoppingCart,
   Sparkles,
-  Star,
+  Brain,
   TrendingUp,
-  UserCheck,
-  Users,
-  Wallet,
-  Zap,
+  ShoppingBag,
+  type LucideIcon,
 } from "lucide-react";
 
-export const NAV_LINKS = [
-  { label: "Modules", href: "#modules" },
-  { label: "Preview", href: "#preview" },
-  { label: "Features", href: "#features" },
-  { label: "AI", href: "#ai" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "FAQ", href: "#faq" },
-] as const;
+/** Build curated Unsplash URL with size & quality */
+export function img(id: string, w = 1920) {
+  return `https://images.unsplash.com/${id}?w=${w}&q=85&auto=format&fit=crop`;
+}
 
-export const HERO_FEATURES = [
-  "Appointments",
-  "Billing",
-  "POS",
-  "Inventory",
-  "CRM",
-  "Marketing",
-  "WhatsApp",
-  "Membership",
-  "Staff",
-  "Reports",
-  "Analytics",
-  "Multi Branch Management",
-] as const;
-
-export const FLOATING_CARDS = [
-  { label: "Today's Revenue", value: "₹48,250", icon: DollarSign, color: "from-violet-500 to-purple-600" },
-  { label: "Appointments", value: "24 today", icon: CalendarCheck, color: "from-emerald-500 to-teal-600" },
-  { label: "WhatsApp Reminder", value: "12 sent", icon: MessageCircle, color: "from-green-500 to-emerald-600" },
-  { label: "Today's Sales", value: "₹32,180", icon: ShoppingCart, color: "from-blue-500 to-indigo-600" },
-  { label: "Inventory Alert", value: "3 low stock", icon: Box, color: "from-orange-500 to-amber-600" },
-  { label: "Customer Growth", value: "+18%", icon: TrendingUp, color: "from-pink-500 to-rose-600" },
-  { label: "Analytics", value: "Live", icon: BarChart3, color: "from-violet-500 to-fuchsia-600" },
-  { label: "Membership Sales", value: "₹8,400", icon: Crown, color: "from-yellow-500 to-amber-600" },
-  { label: "Pending Payments", value: "₹5,200", icon: Wallet, color: "from-red-500 to-orange-600" },
-  { label: "Branch Performance", value: "3 branches", icon: Building2, color: "from-cyan-500 to-blue-600" },
-  { label: "Realtime Notification", value: "New booking", icon: Bell, color: "from-purple-500 to-violet-600" },
-] as const;
-
-export const CUSTOMER_LOGOS = [
-  "Luxe Hair Co.",
-  "Glow Spa",
-  "Urban Barber",
-  "Elite Nails",
-  "Studio 9",
-  "Zen Wellness",
-] as const;
-
-export type ModuleItem = {
-  name: string;
-  description: string;
-  icon: LucideIcon;
-  gradient: string;
-};
-
-export const ERP_MODULES: ModuleItem[] = [
-  { name: "Dashboard", description: "Real-time KPIs and business overview at a glance.", icon: LayoutDashboard, gradient: "from-violet-500 to-purple-600" },
-  { name: "Appointments", description: "Smart scheduling, reminders, and calendar management.", icon: Calendar, gradient: "from-emerald-500 to-teal-600" },
-  { name: "Walk In", description: "Instant check-in and queue for walk-in customers.", icon: UserCheck, gradient: "from-blue-500 to-cyan-600" },
-  { name: "Queue Management", description: "Digital queue boards and wait-time optimization.", icon: Activity, gradient: "from-orange-500 to-amber-600" },
-  { name: "Customers", description: "Complete customer profiles and visit history.", icon: Users, gradient: "from-pink-500 to-rose-600" },
-  { name: "CRM", description: "Segments, follow-ups, and retention workflows.", icon: Heart, gradient: "from-fuchsia-500 to-pink-600" },
-  { name: "Billing", description: "Invoices, taxes, discounts, and payment tracking.", icon: Receipt, gradient: "from-violet-600 to-indigo-600" },
-  { name: "POS", description: "Fast checkout with split payments and receipts.", icon: CreditCard, gradient: "from-green-500 to-emerald-600" },
-  { name: "Sales", description: "Daily sales, packages, and revenue breakdowns.", icon: ShoppingCart, gradient: "from-sky-500 to-blue-600" },
-  { name: "Inventory", description: "Stock levels, consumption, and purchase orders.", icon: Package, gradient: "from-amber-500 to-orange-600" },
-  { name: "Services", description: "Service catalog with pricing and duration.", icon: Scissors, gradient: "from-purple-500 to-violet-600" },
-  { name: "Packages", description: "Bundled services and combo offers.", icon: Gift, gradient: "from-teal-500 to-emerald-600" },
-  { name: "Membership", description: "Recurring plans, credits, and renewals.", icon: Crown, gradient: "from-yellow-500 to-amber-600" },
-  { name: "Staff Management", description: "Roles, schedules, and performance tracking.", icon: Users, gradient: "from-indigo-500 to-violet-600" },
-  { name: "Attendance", description: "Clock-in/out with biometric integration.", icon: CalendarCheck, gradient: "from-lime-500 to-green-600" },
-  { name: "Payroll", description: "Commissions, pay runs, and salary reports.", icon: Wallet, gradient: "from-emerald-600 to-teal-600" },
-  { name: "Marketing", description: "Campaigns, offers, and customer outreach.", icon: Megaphone, gradient: "from-rose-500 to-pink-600" },
-  { name: "WhatsApp", description: "Automated reminders and two-way messaging.", icon: MessageCircle, gradient: "from-green-500 to-emerald-600" },
-  { name: "Campaigns", description: "SMS, email, and WhatsApp blast campaigns.", icon: Mail, gradient: "from-blue-600 to-indigo-600" },
-  { name: "Expenses", description: "Track salon expenses and vendor payments.", icon: FileText, gradient: "from-stone-500 to-gray-600" },
-  { name: "Reports", description: "50+ pre-built reports for every metric.", icon: BarChart3, gradient: "from-violet-500 to-purple-600" },
-  { name: "Analytics", description: "Deep insights with trend analysis.", icon: LineChart, gradient: "from-cyan-500 to-blue-600" },
-  { name: "Multi Branch", description: "Centralized control across all locations.", icon: Building2, gradient: "from-purple-600 to-fuchsia-600" },
-  { name: "Roles & Permissions", description: "Granular access control for every user.", icon: Shield, gradient: "from-slate-500 to-gray-600" },
-  { name: "Settings", description: "Salon profile, taxes, and integrations.", icon: Settings, gradient: "from-neutral-500 to-stone-600" },
-  { name: "AI Assistant", description: "Natural language queries and smart actions.", icon: Bot, gradient: "from-violet-500 via-purple-500 to-emerald-500" },
-];
-
-export const PREVIEW_TABS = [
-  "Dashboard",
-  "Appointment",
-  "Billing",
-  "Inventory",
-  "CRM",
-  "Marketing",
-  "Analytics",
-] as const;
-
-export type PreviewTab = (typeof PREVIEW_TABS)[number];
-
-export const COMPARISON = {
-  traditional: {
-    title: "Traditional Salon Software",
-    items: [
-      "Disconnected tools for booking, billing, and inventory",
-      "Manual reports that take hours to compile",
-      "No WhatsApp automation or smart reminders",
-      "Limited multi-branch visibility",
-      "Reactive decisions without AI insights",
-      "Expensive custom integrations",
-    ],
-  },
-  salonAi: {
-    title: "Salon AI ERP",
-    items: [
-      "Unified platform with 26+ integrated modules",
-      "Real-time dashboards and one-click reports",
-      "Built-in WhatsApp, SMS, and email campaigns",
-      "Centralized multi-branch command center",
-      "AI-powered predictions and recommendations",
-      "Enterprise-ready with role-based access",
-    ],
-  },
+/* ─── Curated luxury salon photography (25 unique photos) ─── */
+export const IMAGES = {
+  hero: img("photo-1560066984-138d9834c058", 2400),
+  bannerModern: img("photo-1633681926022-84c23e8cb8d6", 2400),
+  bannerNails: img("photo-1604654896290-df63fb53671", 2400),
+  hairStyling: img("photo-1522337360788-8eee13f43537", 1600),
+  hairColor: img("photo-1516975080664-ed2fc6a32937", 1600),
+  hairWash: img("photo-1595476109620-6759778ee7aa", 1600),
+  hairCut: img("photo-1515378799646-29797c97a861", 1600),
+  hairColoring: img("photo-1595475207223-428b62b9619a", 1600),
+  makeup: img("photo-1515377905703-c4788e51af15", 1600),
+  makeupArtist: img("photo-1522335789202-aabd1fc54bc9", 1600),
+  bridal: img("photo-1605497788044-5a32c707b76", 1600),
+  spaMassage: img("photo-1519415510338-8ea38583302f", 1600),
+  facial: img("photo-1512496015851-a90fb38ba796", 1600),
+  nailArt: img("photo-1487412947627-51931370a3b7", 1600),
+  barber: img("photo-1503951914875-452162b0f3f0", 1600),
+  salonChair: img("photo-1521590832164-b7fa111a8572", 1600),
+  beautySalon: img("photo-1562322560-ab82cd340997", 1600),
+  salonWorkspace: img("photo-1634449571103-7c21e446e206", 1600),
+  beautyProducts: img("photo-1596755389378-c31e798baad", 1600),
+  spaInterior: img("photo-1631049307264-da0ec9d70304", 1600),
+  spaRoom: img("photo-1540555700478-4be289fbecef", 1600),
+  skinClinic: img("photo-1610992015732-2449b76340bd", 1600),
+  tattooStudio: img("photo-1519823551278-64ac92734fb8", 1600),
+  reception: img("photo-1522338150512-f5f1a792b9b6", 1600),
+  waitingArea: img("photo-1560066984-138d9834c058", 1600),
+  owner1: img("photo-1573496359142-b8d87734a5a2", 800),
+  owner2: img("photo-1556157382-97eda2d62296", 800),
+  owner3: img("photo-1580489944761-15a19d654956", 800),
+  owner4: img("photo-1594744803329-58e4b7ab98b8", 800),
+  footerBg: img("photo-1633681926022-84c23e8cb8d6", 2400),
+  faqBg: img("photo-1562322560-ab82cd340997", 2400),
+  pricingBg: img("photo-1521590832164-b7fa111a8572", 2400),
 } as const;
 
-export const BUSINESS_TYPES = [
-  { name: "Hair Salon", image: "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&h=400&fit=crop" },
-  { name: "Beauty Salon", image: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=400&fit=crop" },
-  { name: "Spa", image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&h=400&fit=crop" },
-  { name: "Clinic", image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&h=400&fit=crop" },
-  { name: "Nail Studio", image: "https://images.unsplash.com/photo-1604654896290-d9e8b4b5c8c0?w=600&h=400&fit=crop" },
-  { name: "Barber Shop", image: "https://images.unsplash.com/photo-1503951914875-162162056329?w=600&h=400&fit=crop" },
-  { name: "Makeup Studio", image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=600&h=400&fit=crop" },
-  { name: "Academy", image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop" },
-  { name: "Franchise", image: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=400&fit=crop" },
-] as const;
+export const BRAND = {
+  name: "Salon AI",
+  tagline: "Luxury Salon Management, Powered by Intelligence",
+  emerald: "#059669",
+  purple: "#7c3aed",
+  roseGold: "#e8a598",
+};
 
-export const FEATURES = [
-  { title: "Online Booking", description: "24/7 appointment scheduling with automated confirmations.", icon: Calendar },
-  { title: "POS Billing", description: "Lightning-fast checkout with split payments and receipts.", icon: CreditCard },
-  { title: "Inventory Control", description: "Real-time stock tracking with low-stock alerts.", icon: Package },
-  { title: "CRM & Segments", description: "Customer profiles, tags, and targeted campaigns.", icon: Users },
-  { title: "WhatsApp Automation", description: "Reminders, follow-ups, and two-way messaging.", icon: MessageCircle },
-  { title: "Multi-Branch", description: "Manage all locations from a single dashboard.", icon: Building2 },
-  { title: "Staff & Payroll", description: "Attendance, commissions, and pay run automation.", icon: Wallet },
-  { title: "Membership Plans", description: "Recurring revenue with credits and renewals.", icon: Crown },
-  { title: "Marketing Campaigns", description: "SMS, email, and WhatsApp blast campaigns.", icon: Megaphone },
-  { title: "Advanced Reports", description: "50+ reports covering every business metric.", icon: BarChart3 },
-  { title: "AI Analytics", description: "Predictive insights and smart recommendations.", icon: Brain },
-  { title: "Role Permissions", description: "Granular access control for every team member.", icon: Shield },
-] as const;
+export const HERO = {
+  heading: "Run Your Entire Salon With AI Powered ERP",
+  subtitle: "Everything your salon needs in one intelligent platform.",
+  features: [
+    "Appointments",
+    "POS Billing",
+    "Inventory",
+    "CRM",
+    "Marketing",
+    "Membership",
+    "WhatsApp",
+    "Reports",
+    "Analytics",
+    "Multi Branch",
+  ],
+  ctaPrimary: "Start Free Trial",
+  ctaSecondary: "Book Demo",
+};
 
-export const AI_FEATURES = [
-  { title: "AI Reports", description: "Generate comprehensive reports with natural language queries.", icon: FileText },
-  { title: "AI Business Insights", description: "Discover trends and opportunities hidden in your data.", icon: Sparkles },
-  { title: "Revenue Prediction", description: "Forecast revenue with machine learning models.", icon: TrendingUp },
-  { title: "Inventory Prediction", description: "Predict stock needs before you run out.", icon: Box },
-  { title: "Staff Performance", description: "AI-scored performance metrics and coaching tips.", icon: UserCheck },
-  { title: "Customer Behaviour", description: "Understand patterns and predict churn risk.", icon: Users },
-  { title: "Smart Reminder", description: "Optimal timing for appointment reminders.", icon: Bell },
-  { title: "AI Marketing", description: "Personalized campaign suggestions that convert.", icon: Zap },
-] as const;
-
-export const STATS = [
-  { value: 1000, suffix: "+", label: "Salons" },
-  { value: 20, suffix: "+", label: "Modules" },
-  { value: 99.99, suffix: "%", label: "Uptime", decimals: 2 },
-  { value: 10, suffix: " Million+", label: "Invoices", multiplier: 1000000 },
-  { value: 5, suffix: " Million+", label: "Appointments", multiplier: 1000000 },
-] as const;
-
-export const TESTIMONIALS = [
+export const BANNERS = [
   {
-    quote: "Salon AI transformed our 4-branch operation. We went from spreadsheets to a unified ERP in one week.",
+    id: "modern",
+    image: IMAGES.bannerModern,
+    text: "Built for Modern Salon Businesses.",
+    alt: "Modern luxury salon interior with styling stations",
+  },
+  {
+    id: "appointments",
+    image: IMAGES.bannerNails,
+    text: "Manage Every Appointment Without Missing a Customer.",
+    alt: "Luxury nail salon with professional nail art setup",
+  },
+];
+
+export type ErpModule = {
+  id: string;
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  image: string;
+  alt: string;
+};
+
+export const ERP_MODULES: ErpModule[] = [
+  { id: "dashboard", title: "Dashboard", description: "Real-time salon KPIs, revenue trends, and branch performance at a glance.", icon: LayoutDashboard, image: IMAGES.salonWorkspace, alt: "Salon owner reviewing dashboard metrics" },
+  { id: "appointments", title: "Appointments", description: "Smart booking, reminders, and calendar management for every stylist.", icon: Calendar, image: IMAGES.hairStyling, alt: "Stylist managing salon appointments" },
+  { id: "walk-in", title: "Walk In", description: "Instant check-in for walk-in clients with automatic queue assignment.", icon: UserPlus, image: IMAGES.reception, alt: "Salon reception desk greeting clients" },
+  { id: "queue", title: "Queue", description: "Live queue board with estimated wait times and stylist availability.", icon: ListOrdered, image: IMAGES.waitingArea, alt: "Salon waiting area with comfortable seating" },
+  { id: "billing", title: "Billing", description: "Generate invoices, split payments, and apply discounts effortlessly.", icon: Receipt, image: IMAGES.beautyProducts, alt: "Salon billing counter with beauty products" },
+  { id: "pos", title: "POS", description: "Touch-friendly point of sale built for busy salon counters.", icon: CreditCard, image: IMAGES.salonChair, alt: "POS counter at luxury salon" },
+  { id: "customers", title: "Customers", description: "Complete client profiles with visit history and preferences.", icon: Users, image: IMAGES.facial, alt: "Customer receiving facial treatment" },
+  { id: "crm", title: "CRM", description: "Segment clients, track loyalty, and nurture repeat bookings.", icon: Heart, image: IMAGES.makeup, alt: "Makeup consultation with client" },
+  { id: "inventory", title: "Inventory", description: "Track products, set reorder alerts, and manage stock across branches.", icon: Package, image: IMAGES.beautyProducts, alt: "Salon inventory storage room" },
+  { id: "services", title: "Services", description: "Configure services, pricing tiers, and duration by category.", icon: Scissors, image: IMAGES.hairCut, alt: "Professional hair cutting service" },
+  { id: "packages", title: "Packages", description: "Bundle services into seasonal packages and combo deals.", icon: Gift, image: IMAGES.spaMassage, alt: "Spa package treatment room" },
+  { id: "membership", title: "Membership", description: "Recurring membership plans with auto-renewal and perks.", icon: Crown, image: IMAGES.spaInterior, alt: "VIP spa membership lounge" },
+  { id: "staff", title: "Staff", description: "Manage roles, schedules, commissions, and performance.", icon: UserCog, image: IMAGES.hairColor, alt: "Salon staff performing hair coloring" },
+  { id: "attendance", title: "Attendance", description: "Clock-in/out tracking with shift reports and overtime alerts.", icon: Clock, image: IMAGES.barber, alt: "Barber shop staff at work" },
+  { id: "payroll", title: "Payroll", description: "Automated salary calculations based on services and commissions.", icon: Wallet, image: IMAGES.beautySalon, alt: "Salon team meeting" },
+  { id: "marketing", title: "Marketing", description: "Campaigns, promotions, and birthday offers that drive rebookings.", icon: Megaphone, image: IMAGES.bridal, alt: "Bridal makeup marketing showcase" },
+  { id: "whatsapp", title: "WhatsApp", description: "Automated reminders, confirmations, and two-way client chat.", icon: MessageCircle, image: IMAGES.makeupArtist, alt: "Stylist communicating with client" },
+  { id: "expenses", title: "Expenses", description: "Track salon expenses, vendor payments, and profit margins.", icon: PiggyBank, image: IMAGES.salonWorkspace, alt: "Salon back office expense tracking" },
+  { id: "reports", title: "Reports", description: "Detailed financial, staff, and service reports exportable to PDF.", icon: FileBarChart, image: IMAGES.hairWash, alt: "Salon manager reviewing reports" },
+  { id: "analytics", title: "Analytics", description: "Deep insights into revenue, retention, and peak hours.", icon: BarChart3, image: IMAGES.hairColoring, alt: "Analytics-driven salon growth" },
+  { id: "multi-branch", title: "Multi Branch", description: "Centralized control across all salon locations from one dashboard.", icon: Building2, image: IMAGES.bannerModern, alt: "Multi-branch luxury salon chain" },
+  { id: "settings", title: "Settings", description: "Customize branding, taxes, notifications, and integrations.", icon: Settings, image: IMAGES.nailArt, alt: "Salon settings and configuration" },
+];
+
+export type PreviewTab = {
+  id: string;
+  label: string;
+  title: string;
+  description: string;
+};
+
+export const PREVIEW_TABS: PreviewTab[] = [
+  { id: "dashboard", label: "Dashboard", title: "Command Center", description: "See revenue, appointments, and inventory in one unified view." },
+  { id: "appointment", label: "Appointment", title: "Smart Scheduling", description: "Drag-and-drop calendar with conflict detection and auto-reminders." },
+  { id: "billing", label: "Billing", title: "Fast Checkout", description: "Split bills, apply memberships, and print receipts in seconds." },
+  { id: "crm", label: "CRM", title: "Client Relationships", description: "360° client profiles with visit history and personalized offers." },
+  { id: "inventory", label: "Inventory", title: "Stock Control", description: "Real-time stock levels with low-inventory alerts and PO tracking." },
+  { id: "marketing", label: "Marketing", title: "Grow Your Salon", description: "Campaign builder with SMS, email, and WhatsApp automation." },
+  { id: "reports", label: "Reports", title: "Business Reports", description: "Export-ready reports for accounting, staff, and service analysis." },
+  { id: "analytics", label: "Analytics", title: "AI Analytics", description: "Predictive insights on demand, churn, and revenue optimization." },
+];
+
+export type SalonType = {
+  id: string;
+  name: string;
+  image: string;
+  alt: string;
+};
+
+export const SALON_TYPES: SalonType[] = [
+  { id: "hair", name: "Hair Salon", image: IMAGES.hairStyling, alt: "Luxury hair salon styling session" },
+  { id: "beauty", name: "Beauty Salon", image: IMAGES.makeup, alt: "Beauty salon makeup service" },
+  { id: "spa", name: "Spa", image: IMAGES.spaMassage, alt: "Luxury spa therapy room" },
+  { id: "skin", name: "Skin Clinic", image: IMAGES.skinClinic, alt: "Professional skin clinic treatment" },
+  { id: "barber", name: "Barber Shop", image: IMAGES.barber, alt: "Premium barber shop interior" },
+  { id: "nail", name: "Nail Studio", image: IMAGES.nailArt, alt: "Nail art studio with manicure setup" },
+  { id: "makeup", name: "Makeup Studio", image: IMAGES.makeupArtist, alt: "Professional makeup studio" },
+  { id: "academy", name: "Academy", image: IMAGES.hairColor, alt: "Salon academy training session" },
+  { id: "bridal", name: "Bridal Studio", image: IMAGES.bridal, alt: "Bridal makeup studio preparation" },
+  { id: "tattoo", name: "Tattoo Studio", image: IMAGES.tattooStudio, alt: "Professional tattoo studio" },
+];
+
+export type FeatureBlock = {
+  id: string;
+  title: string;
+  description: string;
+  bullets: string[];
+  image: string;
+  alt: string;
+};
+
+export const FEATURE_BLOCKS: FeatureBlock[] = [
+  {
+    id: "reception",
+    title: "Reception That Impresses",
+    description: "Give every client a five-star welcome from the moment they walk in.",
+    bullets: ["Digital check-in kiosk", "VIP client recognition", "Real-time queue display"],
+    image: IMAGES.reception,
+    alt: "Luxury salon reception desk",
+  },
+  {
+    id: "pos",
+    title: "POS Built for Salons",
+    description: "Checkout flows designed for the speed and complexity of salon billing.",
+    bullets: ["Split payments & tips", "Membership auto-apply", "Receipt via WhatsApp"],
+    image: IMAGES.salonChair,
+    alt: "Salon POS counter checkout",
+  },
+  {
+    id: "inventory",
+    title: "Inventory You Can Trust",
+    description: "Never run out of color, products, or retail items mid-appointment.",
+    bullets: ["Multi-branch stock sync", "Auto reorder alerts", "Usage tracking per service"],
+    image: IMAGES.beautyProducts,
+    alt: "Salon inventory and product storage",
+  },
+  {
+    id: "hair-cutting",
+    title: "Stylist-First Workflow",
+    description: "Tools that keep stylists focused on clients, not paperwork.",
+    bullets: ["Service history at chair-side", "Commission tracking", "Performance leaderboard"],
+    image: IMAGES.hairCut,
+    alt: "Professional hair cutting in salon",
+  },
+  {
+    id: "beauty-treatment",
+    title: "Beauty Treatment Tracking",
+    description: "Document every treatment with photos, notes, and product usage.",
+    bullets: ["Before/after gallery", "Allergy & skin type notes", "Treatment plan templates"],
+    image: IMAGES.facial,
+    alt: "Beauty facial treatment session",
+  },
+  {
+    id: "massage",
+    title: "Spa & Wellness Management",
+    description: "Room scheduling, therapist rotation, and package redemption in one flow.",
+    bullets: ["Room availability grid", "Package session tracking", "Therapist preferences"],
+    image: IMAGES.spaRoom,
+    alt: "Luxury massage and spa room",
+  },
+  {
+    id: "spa",
+    title: "Full Spa Experience",
+    description: "Manage the complete spa journey from booking to post-visit follow-up.",
+    bullets: ["Multi-service itineraries", "Gift voucher redemption", "Loyalty point accrual"],
+    image: IMAGES.spaInterior,
+    alt: "Premium spa interior design",
+  },
+  {
+    id: "consultation",
+    title: "Client Consultation Hub",
+    description: "Turn every consultation into a personalized service recommendation.",
+    bullets: ["AI style suggestions", "Digital consent forms", "Instant quote generation"],
+    image: IMAGES.hairColoring,
+    alt: "Hair color consultation with client",
+  },
+];
+
+export const AI_SECTION = {
+  heading: "AI That Understands Your Salon",
+  subtitle: "Predictive analytics, smart scheduling, and automated insights that help you grow revenue while delivering exceptional client experiences.",
+  features: [
+    { icon: Brain, title: "Demand Forecasting", desc: "Predict busy hours and optimize staff scheduling." },
+    { icon: Sparkles, title: "Smart Recommendations", desc: "AI-suggested services based on client history." },
+    { icon: TrendingUp, title: "Revenue Optimization", desc: "Identify upsell opportunities and pricing gaps." },
+    { icon: ShoppingBag, title: "Inventory Intelligence", desc: "Auto-predict product reorder needs by usage patterns." },
+  ],
+};
+
+export type Testimonial = {
+  id: string;
+  name: string;
+  role: string;
+  salon: string;
+  quote: string;
+  rating: number;
+  image: string;
+  alt: string;
+};
+
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    id: "1",
     name: "Priya Sharma",
-    role: "CEO, Luxe Hair Co.",
+    role: "Owner",
+    salon: "Luxe Hair Studio, Mumbai",
+    quote: "Salon AI transformed how we manage 3 branches. Revenue is up 40% and our clients love the WhatsApp reminders.",
     rating: 5,
+    image: IMAGES.owner1,
+    alt: "Priya Sharma salon owner portrait",
   },
   {
-    quote: "The AI insights alone paid for the subscription. We increased revenue by 23% in the first quarter.",
-    name: "Raj Patel",
-    role: "Owner, Urban Barber Chain",
+    id: "2",
+    name: "Raj Malhotra",
+    role: "Director",
+    salon: "The Groom Room, Delhi",
+    quote: "The POS and inventory modules alone saved us 15 hours a week. Best investment for our barber chain.",
     rating: 5,
+    image: IMAGES.owner2,
+    alt: "Raj Malhotra barber shop director",
   },
   {
-    quote: "WhatsApp automation reduced no-shows by 40%. Our front desk team finally has time to focus on guests.",
-    name: "Anita Desai",
-    role: "Director, Glow Spa Group",
+    id: "3",
+    name: "Ananya Reddy",
+    role: "Founder",
+    salon: "Glow Spa & Wellness, Bangalore",
+    quote: "From appointments to payroll — everything just works. The AI analytics helped us identify our most profitable services.",
     rating: 5,
+    image: IMAGES.owner3,
+    alt: "Ananya Reddy spa founder portrait",
   },
-] as const;
+  {
+    id: "4",
+    name: "Meera Kapoor",
+    role: "CEO",
+    salon: "Bridal Bliss Studio, Jaipur",
+    quote: "Managing bridal bookings used to be chaos. Now our team handles 200+ weddings a season with zero double-bookings.",
+    rating: 5,
+    image: IMAGES.owner4,
+    alt: "Meera Kapoor bridal studio CEO",
+  },
+];
 
-export const PRICING_PLANS = [
+export const GOOGLE_REVIEWS = {
+  rating: 4.9,
+  count: 847,
+  highlights: [
+    "Best salon software in India",
+    "Incredible support team",
+    "Worth every rupee",
+  ],
+};
+
+export type PricingPlan = {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  description: string;
+  features: string[];
+  highlighted?: boolean;
+  cta: string;
+};
+
+export const PRICING_PLANS: PricingPlan[] = [
   {
-    name: "Basic",
-    price: "₹999",
+    id: "starter",
+    name: "Starter",
+    price: "₹1,999",
     period: "/month",
-    description: "Essential tools for single-location salons.",
-    features: [
-      "Appointments & Walk-in",
-      "POS Billing",
-      "Customer Management",
-      "Basic Reports",
-      "WhatsApp Reminders",
-      "1 Branch",
-    ],
+    description: "Perfect for single-location salons getting started.",
+    features: ["Up to 3 staff", "Appointments & Billing", "Basic CRM", "WhatsApp reminders", "Email support"],
     cta: "Start Free Trial",
-    highlighted: false,
   },
   {
+    id: "professional",
     name: "Professional",
-    price: "₹2,499",
+    price: "₹4,999",
     period: "/month",
-    description: "Full ERP suite for growing salon businesses.",
-    features: [
-      "All Basic features",
-      "Inventory & CRM",
-      "Marketing Campaigns",
-      "Staff & Payroll",
-      "Advanced Analytics",
-      "Up to 3 Branches",
-      "AI Insights",
-    ],
-    cta: "Start Free Trial",
+    description: "For growing salons that need the full ERP suite.",
+    features: ["Up to 15 staff", "All 22 ERP modules", "AI Analytics", "Marketing automation", "Inventory & POS", "Priority support"],
     highlighted: true,
+    cta: "Start Free Trial",
   },
   {
+    id: "enterprise",
     name: "Enterprise",
     price: "Custom",
     period: "",
-    description: "Tailored solutions for franchises and chains.",
-    features: [
-      "All Professional features",
-      "Unlimited Branches",
-      "Custom Integrations",
-      "Dedicated Account Manager",
-      "SLA & Priority Support",
-      "Advanced AI Suite",
-      "White-label Options",
-    ],
+    description: "Multi-branch chains with advanced customization needs.",
+    features: ["Unlimited staff & branches", "Custom integrations", "Dedicated account manager", "White-label options", "SLA guarantee", "On-site training"],
     cta: "Book Demo",
-    highlighted: false,
   },
-] as const;
+];
 
-export const FAQ_ITEMS = [
-  {
-    question: "What is Salon AI ERP?",
-    answer: "Salon AI is an enterprise-grade salon management platform that combines 26+ modules — appointments, billing, POS, inventory, CRM, marketing, staff management, and AI analytics — into one unified system.",
-  },
-  {
-    question: "How long does setup take?",
-    answer: "Most salons are fully operational within 24–48 hours. Our onboarding team handles data migration, staff training, and configuration at no extra cost.",
-  },
-  {
-    question: "Does it support multiple branches?",
-    answer: "Yes. Professional plans support up to 3 branches, and Enterprise plans offer unlimited locations with centralized reporting and role-based access per branch.",
-  },
-  {
-    question: "Is WhatsApp integration included?",
-    answer: "WhatsApp reminders and two-way messaging are built into every plan. Marketing campaigns via WhatsApp are available on Professional and Enterprise tiers.",
-  },
-  {
-    question: "Can I try before I buy?",
-    answer: "Absolutely. Start a 14-day free trial with full access to all Professional features. No credit card required.",
-  },
-  {
-    question: "What about data security?",
-    answer: "We use bank-grade encryption, daily backups, and 99.99% uptime SLA. Your data is stored in secure, ISO-certified data centers.",
-  },
-] as const;
+export type FaqItem = {
+  question: string;
+  answer: string;
+};
+
+export const FAQ_ITEMS: FaqItem[] = [
+  { question: "How quickly can I set up Salon AI?", answer: "Most salons are fully operational within 24 hours. Our onboarding team imports your services, staff, and client data for you." },
+  { question: "Does it work for multi-branch salons?", answer: "Yes. Manage unlimited branches from a single dashboard with centralized reporting, inventory sync, and staff management." },
+  { question: "Can I migrate from my current software?", answer: "Absolutely. We offer free data migration from Fresha, Booksy, Zoho, and Excel spreadsheets with zero downtime." },
+  { question: "Is WhatsApp integration included?", answer: "WhatsApp reminders, confirmations, and marketing messages are included in Professional and Enterprise plans." },
+  { question: "Do you offer a free trial?", answer: "Yes — 14-day free trial with full access to all modules. No credit card required." },
+  { question: "What payment methods does the POS support?", answer: "Cash, card, UPI, wallets, split payments, and membership credits — all with automatic receipt generation." },
+];
 
 export const FOOTER_LINKS = {
-  product: [
-    { label: "Modules", href: "#modules" },
-    { label: "Features", href: "#features" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "AI", href: "#ai" },
-  ],
-  company: [
-    { label: "About", href: "#" },
-    { label: "Blog", href: "#" },
-    { label: "Careers", href: "#" },
-    { label: "Contact", href: "#" },
-  ],
-  legal: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-    { label: "Security", href: "#" },
-  ],
-} as const;
+  product: ["Features", "Pricing", "Modules", "AI Analytics", "Integrations"],
+  company: ["About", "Careers", "Blog", "Press", "Contact"],
+  support: ["Help Center", "Documentation", "API", "Status", "Community"],
+  legal: ["Privacy", "Terms", "Security", "GDPR"],
+};
+
+export const FLOATING_CARDS = [
+  { id: "revenue", label: "Revenue", value: "₹2.4L", trend: "+12%", color: "emerald" },
+  { id: "appointments", label: "Appointments", value: "48", trend: "Today", color: "purple" },
+  { id: "inventory", label: "Inventory", value: "124", trend: "Items", color: "rose" },
+  { id: "whatsapp", label: "WhatsApp", value: "32", trend: "Sent", color: "emerald" },
+  { id: "growth", label: "Customer Growth", value: "+18%", trend: "MoM", color: "purple" },
+  { id: "sales", label: "Today's Sales", value: "₹86K", trend: "+8%", color: "rose" },
+  { id: "branch", label: "Branch Performance", value: "3/3", trend: "Active", color: "emerald" },
+  { id: "ai", label: "AI Insights", value: "7", trend: "New", color: "purple" },
+] as const;
+
+export const NAV_LINKS = [
+  { href: "#modules", label: "Modules" },
+  { href: "#preview", label: "Platform" },
+  { href: "#salon-types", label: "Salon Types" },
+  { href: "#features", label: "Features" },
+  { href: "#ai", label: "AI" },
+  { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
+];

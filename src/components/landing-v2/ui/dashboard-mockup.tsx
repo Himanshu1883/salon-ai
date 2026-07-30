@@ -1,110 +1,92 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { PreviewTab } from "../constants";
 
 type DashboardMockupProps = {
-  variant?: PreviewTab | "default";
+  variant?: "dashboard" | "appointment" | "billing" | "crm" | "inventory" | "marketing" | "reports" | "analytics";
   className?: string;
+  compact?: boolean;
 };
 
-export function DashboardMockup({ variant = "default", className }: DashboardMockupProps) {
-  return (
-    <div className={cn("overflow-hidden rounded-lg bg-slate-50 text-[10px] sm:text-xs", className)}>
-      <div className="flex h-full min-h-[280px]">
-        {/* Sidebar */}
-        <div className="hidden w-16 shrink-0 border-r border-slate-200 bg-white sm:block md:w-20">
-          <div className="flex h-10 items-center justify-center border-b border-slate-100">
-            <div className="h-5 w-5 rounded-md bg-gradient-to-br from-violet-500 to-emerald-500" />
-          </div>
-          <div className="space-y-1 p-2">
-            {["Dashboard", "Appts", "Billing", "Stock", "CRM"].map((item, i) => (
-              <div
-                key={item}
-                className={cn(
-                  "rounded-md px-2 py-1.5 text-[9px] font-medium",
-                  (variant === "default" && i === 0) ||
-                    (variant === "Dashboard" && i === 0) ||
-                    (variant === "Appointment" && i === 1) ||
-                    (variant === "Billing" && i === 2) ||
-                    (variant === "Inventory" && i === 3) ||
-                    (variant === "CRM" && i === 4)
-                    ? "bg-violet-100 text-violet-700"
-                    : "text-slate-400"
-                )}
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
+const sidebarItems = ["Dashboard", "Appointments", "Billing", "CRM", "Inventory", "Reports"];
 
-        {/* Main content */}
-        <div className="flex-1 p-3 sm:p-4">
-          {variant === "default" || variant === "Dashboard" ? <DashboardView /> : null}
-          {variant === "Appointment" ? <AppointmentView /> : null}
-          {variant === "Billing" ? <BillingView /> : null}
-          {variant === "Inventory" ? <InventoryView /> : null}
-          {variant === "CRM" ? <CrmView /> : null}
-          {variant === "Marketing" ? <MarketingView /> : null}
-          {variant === "Analytics" ? <AnalyticsView /> : null}
+export function DashboardMockup({ variant = "dashboard", className, compact }: DashboardMockupProps) {
+  return (
+    <div
+      className={cn(
+        "flex overflow-hidden rounded-lg bg-gray-50 font-sans text-[10px] text-gray-700 md:text-xs",
+        compact ? "h-full min-h-[180px]" : "min-h-[320px] md:min-h-[400px]",
+        className
+      )}
+    >
+      {/* Sidebar */}
+      <div className="hidden w-[22%] shrink-0 border-r border-gray-200 bg-white p-2 sm:block">
+        <div className="mb-3 flex items-center gap-1.5">
+          <div className="h-4 w-4 rounded-md bg-gradient-to-br from-emerald-500 to-purple-600" />
+          <span className="text-[9px] font-bold text-gray-900 md:text-[10px]">Salon AI</span>
         </div>
+        {sidebarItems.map((item, i) => (
+          <div
+            key={item}
+            className={cn(
+              "mb-1 rounded-md px-2 py-1",
+              (variant === "dashboard" && i === 0) ||
+                (variant === "appointment" && i === 1) ||
+                (variant === "billing" && i === 2) ||
+                (variant === "crm" && i === 3) ||
+                (variant === "inventory" && i === 4) ||
+                (variant === "reports" && i === 5)
+                ? "bg-emerald-50 font-semibold text-emerald-700"
+                : "text-gray-500"
+            )}
+          >
+            {item}
+          </div>
+        ))}
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 p-2 md:p-3">
+        {variant === "dashboard" && <DashboardView compact={compact} />}
+        {variant === "appointment" && <AppointmentView />}
+        {variant === "billing" && <BillingView />}
+        {variant === "crm" && <CrmView />}
+        {variant === "inventory" && <InventoryView />}
+        {variant === "marketing" && <MarketingView />}
+        {variant === "reports" && <ReportsView />}
+        {variant === "analytics" && <AnalyticsView />}
       </div>
     </div>
   );
 }
 
-function DashboardView() {
+function DashboardView({ compact }: { compact?: boolean }) {
   return (
     <>
-      <div className="mb-3 flex items-center justify-between">
-        <div>
-          <div className="text-xs font-semibold text-slate-800 sm:text-sm">Dashboard</div>
-          <div className="text-[9px] text-slate-400">Today&apos;s overview</div>
-        </div>
-        <div className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-medium text-emerald-700">
-          Live
-        </div>
-      </div>
-      <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Dashboard</div>
+      <div className={cn("mb-2 grid gap-1.5", compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4")}>
         {[
-          { label: "Revenue", value: "₹48,250", color: "from-violet-500 to-purple-600" },
-          { label: "Appointments", value: "24", color: "from-emerald-500 to-teal-600" },
-          { label: "New Clients", value: "8", color: "from-blue-500 to-cyan-600" },
-          { label: "Avg. Ticket", value: "₹2,010", color: "from-amber-500 to-orange-600" },
-        ].map((stat) => (
-          <div key={stat.label} className="rounded-lg border border-slate-100 bg-white p-2">
-            <div className="text-[9px] text-slate-400">{stat.label}</div>
-            <div className="mt-0.5 text-xs font-bold text-slate-800">{stat.value}</div>
-            <div className={cn("mt-1 h-1 w-full rounded-full bg-gradient-to-r", stat.color)} />
+          { label: "Revenue", val: "₹2.4L", color: "bg-emerald-500" },
+          { label: "Appointments", val: "48", color: "bg-purple-500" },
+          { label: "Clients", val: "1,284", color: "bg-rose-400" },
+          { label: "Staff", val: "12", color: "bg-violet-500" },
+        ].map((s) => (
+          <div key={s.label} className="rounded-lg bg-white p-2 shadow-sm">
+            <div className={cn("mb-1 h-1 w-6 rounded-full", s.color)} />
+            <div className="text-[8px] text-gray-500 md:text-[9px]">{s.label}</div>
+            <div className="text-[10px] font-bold text-gray-900 md:text-xs">{s.val}</div>
           </div>
         ))}
       </div>
-      <div className="grid gap-2 sm:grid-cols-5">
-        <div className="rounded-lg border border-slate-100 bg-white p-2 sm:col-span-3">
-          <div className="mb-2 text-[9px] font-medium text-slate-600">Revenue Trend</div>
-          <div className="flex h-16 items-end gap-1">
-            {[40, 65, 45, 80, 55, 90, 70, 85, 60, 95, 75, 88].map((h, i) => (
-              <div
-                key={i}
-                className="flex-1 rounded-t bg-gradient-to-t from-violet-500 to-emerald-400"
-                style={{ height: `${h}%` }}
-              />
-            ))}
-          </div>
-        </div>
-        <div className="rounded-lg border border-slate-100 bg-white p-2 sm:col-span-2">
-          <div className="mb-2 text-[9px] font-medium text-slate-600">Top Services</div>
-          {["Haircut", "Color", "Spa"].map((s, i) => (
-            <div key={s} className="mb-1.5 flex items-center justify-between">
-              <span className="text-[9px] text-slate-500">{s}</span>
-              <div className="h-1.5 w-16 overflow-hidden rounded-full bg-slate-100">
-                <div
-                  className="h-full rounded-full bg-violet-500"
-                  style={{ width: `${90 - i * 20}%` }}
-                />
-              </div>
-            </div>
+      <div className="rounded-lg bg-white p-2 shadow-sm">
+        <div className="mb-2 text-[9px] font-semibold text-gray-700">Revenue Trend</div>
+        <div className="flex h-12 items-end gap-1 md:h-16">
+          {[40, 55, 45, 70, 60, 85, 75, 90, 80, 95, 88, 100].map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t bg-gradient-to-t from-emerald-500 to-emerald-300"
+              style={{ height: `${h}%` }}
+            />
           ))}
         </div>
       </div>
@@ -113,23 +95,31 @@ function DashboardView() {
 }
 
 function AppointmentView() {
+  const slots = ["9:00", "10:00", "11:00", "12:00", "1:00", "2:00"];
   return (
     <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">Appointments</div>
-      <div className="space-y-2">
-        {[
-          { time: "10:00", client: "Sarah M.", service: "Hair Color", staff: "Priya" },
-          { time: "11:30", client: "James K.", service: "Haircut", staff: "Alex" },
-          { time: "14:00", client: "Maria L.", service: "Spa Package", staff: "Neha" },
-          { time: "15:30", client: "David R.", service: "Beard Trim", staff: "Alex" },
-        ].map((appt) => (
-          <div key={appt.time} className="flex items-center gap-2 rounded-lg border border-slate-100 bg-white p-2">
-            <div className="w-10 shrink-0 text-[9px] font-bold text-violet-600">{appt.time}</div>
-            <div className="flex-1">
-              <div className="text-[10px] font-medium text-slate-700">{appt.client}</div>
-              <div className="text-[9px] text-slate-400">{appt.service} · {appt.staff}</div>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Appointments</div>
+      <div className="grid grid-cols-[auto_1fr_1fr] gap-1">
+        <div />
+        <div className="text-center text-[8px] font-semibold text-purple-600">Priya</div>
+        <div className="text-center text-[8px] font-semibold text-emerald-600">Raj</div>
+        {slots.map((time, i) => (
+          <div key={time} className="contents">
+            <div className="py-1 text-[8px] text-gray-400">{time}</div>
+            <div className="py-0.5">
+              {i % 2 === 0 && (
+                <div className="rounded bg-purple-100 px-1 py-1 text-[7px] text-purple-700">
+                  Hair Color
+                </div>
+              )}
             </div>
-            <div className="rounded-full bg-emerald-100 px-2 py-0.5 text-[8px] text-emerald-700">Confirmed</div>
+            <div className="py-0.5">
+              {i % 3 !== 0 && (
+                <div className="rounded bg-emerald-100 px-1 py-1 text-[7px] text-emerald-700">
+                  Haircut
+                </div>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -140,59 +130,24 @@ function AppointmentView() {
 function BillingView() {
   return (
     <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">Billing & Invoices</div>
-      <div className="rounded-lg border border-slate-100 bg-white">
-        <div className="grid grid-cols-4 gap-2 border-b border-slate-100 p-2 text-[9px] font-medium text-slate-400">
-          <span>Invoice</span>
-          <span>Client</span>
-          <span>Amount</span>
-          <span>Status</span>
-        </div>
-        {[
-          { id: "INV-1042", client: "Sarah M.", amount: "₹4,500", status: "Paid" },
-          { id: "INV-1041", client: "James K.", amount: "₹1,200", status: "Paid" },
-          { id: "INV-1040", client: "Maria L.", amount: "₹8,900", status: "Pending" },
-        ].map((inv) => (
-          <div key={inv.id} className="grid grid-cols-4 gap-2 border-b border-slate-50 p-2 text-[9px]">
-            <span className="font-medium text-violet-600">{inv.id}</span>
-            <span className="text-slate-600">{inv.client}</span>
-            <span className="font-medium text-slate-800">{inv.amount}</span>
-            <span className={inv.status === "Paid" ? "text-emerald-600" : "text-amber-600"}>{inv.status}</span>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function InventoryView() {
-  return (
-    <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">Inventory</div>
-      <div className="space-y-2">
-        {[
-          { name: "Shampoo Pro 500ml", stock: 45, status: "In Stock" },
-          { name: "Hair Color #5N", stock: 8, status: "Low Stock" },
-          { name: "Conditioner Luxe", stock: 32, status: "In Stock" },
-          { name: "Styling Gel", stock: 3, status: "Critical" },
-        ].map((item) => (
-          <div key={item.name} className="flex items-center justify-between rounded-lg border border-slate-100 bg-white p-2">
-            <div>
-              <div className="text-[10px] font-medium text-slate-700">{item.name}</div>
-              <div className="text-[9px] text-slate-400">{item.stock} units</div>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">POS Billing</div>
+      <div className="grid gap-2 md:grid-cols-2">
+        <div className="space-y-1">
+          {["Hair Color", "Deep Conditioning", "Blow Dry"].map((s, i) => (
+            <div key={s} className="flex justify-between rounded bg-white px-2 py-1 shadow-sm">
+              <span className="text-[8px]">{s}</span>
+              <span className="text-[8px] font-semibold">₹{[3500, 800, 500][i]}</span>
             </div>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[8px] font-medium",
-                item.status === "In Stock" && "bg-emerald-100 text-emerald-700",
-                item.status === "Low Stock" && "bg-amber-100 text-amber-700",
-                item.status === "Critical" && "bg-red-100 text-red-700"
-              )}
-            >
-              {item.status}
-            </span>
+          ))}
+          <div className="flex justify-between border-t pt-1 font-bold">
+            <span className="text-[9px]">Total</span>
+            <span className="text-[9px] text-emerald-600">₹4,800</span>
           </div>
-        ))}
+        </div>
+        <div className="rounded-lg bg-emerald-600 p-2 text-center text-white">
+          <div className="text-[8px] opacity-80">Pay Now</div>
+          <div className="text-sm font-bold">₹4,800</div>
+        </div>
       </div>
     </>
   );
@@ -201,21 +156,39 @@ function InventoryView() {
 function CrmView() {
   return (
     <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">CRM Segments</div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {[
-          { name: "VIP Clients", count: 128, color: "from-violet-500 to-purple-600" },
-          { name: "At Risk", count: 34, color: "from-red-500 to-orange-600" },
-          { name: "New This Month", count: 56, color: "from-emerald-500 to-teal-600" },
-          { name: "Birthday Week", count: 12, color: "from-pink-500 to-rose-600" },
-        ].map((seg) => (
-          <div key={seg.name} className="rounded-lg border border-slate-100 bg-white p-2">
-            <div className={cn("mb-2 h-1 w-8 rounded-full bg-gradient-to-r", seg.color)} />
-            <div className="text-[10px] font-medium text-slate-700">{seg.name}</div>
-            <div className="text-lg font-bold text-slate-900">{seg.count}</div>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">CRM</div>
+      {["Ananya K.", "Rohit S.", "Meera P."].map((name, i) => (
+        <div key={name} className="mb-1 flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
+          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-rose-300 to-purple-400" />
+          <div className="flex-1">
+            <div className="text-[9px] font-semibold">{name}</div>
+            <div className="text-[7px] text-gray-400">{[12, 8, 24][i]} visits · VIP</div>
           </div>
-        ))}
-      </div>
+          <div className="rounded-full bg-emerald-100 px-2 py-0.5 text-[7px] text-emerald-700">
+            Active
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function InventoryView() {
+  return (
+    <>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Inventory</div>
+      {[
+        { name: "L'Oreal Color", stock: 24, status: "ok" },
+        { name: "Keratin Serum", stock: 3, status: "low" },
+        { name: "Shampoo 500ml", stock: 48, status: "ok" },
+      ].map((item) => (
+        <div key={item.name} className="mb-1 flex items-center justify-between rounded bg-white px-2 py-1.5 shadow-sm">
+          <span className="text-[8px]">{item.name}</span>
+          <span className={cn("text-[8px] font-semibold", item.status === "low" ? "text-rose-500" : "text-emerald-600")}>
+            {item.stock} units
+          </span>
+        </div>
+      ))}
     </>
   );
 }
@@ -223,22 +196,31 @@ function CrmView() {
 function MarketingView() {
   return (
     <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">Marketing Campaigns</div>
-      <div className="space-y-2">
-        {[
-          { name: "Summer Glow Offer", channel: "WhatsApp", sent: 1250, open: "68%" },
-          { name: "Birthday Special", channel: "SMS", sent: 340, open: "45%" },
-          { name: "Re-engagement", channel: "Email", sent: 890, open: "32%" },
-        ].map((camp) => (
-          <div key={camp.name} className="rounded-lg border border-slate-100 bg-white p-2">
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] font-medium text-slate-700">{camp.name}</div>
-              <span className="rounded-full bg-green-100 px-2 py-0.5 text-[8px] text-green-700">{camp.channel}</span>
-            </div>
-            <div className="mt-1 flex gap-4 text-[9px] text-slate-400">
-              <span>Sent: {camp.sent}</span>
-              <span>Open: {camp.open}</span>
-            </div>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Marketing</div>
+      <div className="mb-2 rounded-lg bg-gradient-to-r from-purple-500 to-violet-600 p-3 text-white">
+        <div className="text-[9px] font-semibold">Summer Glow Campaign</div>
+        <div className="text-[7px] opacity-80">Sent to 842 clients via WhatsApp</div>
+      </div>
+      <div className="grid grid-cols-3 gap-1">
+        {["Open Rate 68%", "Bookings +24", "Revenue ₹1.2L"].map((m) => (
+          <div key={m} className="rounded bg-white p-1.5 text-center shadow-sm">
+            <div className="text-[7px] font-semibold text-gray-800">{m}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ReportsView() {
+  return (
+    <>
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Reports</div>
+      <div className="space-y-1">
+        {["Revenue Report — July", "Staff Commission", "Service Breakdown"].map((r) => (
+          <div key={r} className="flex items-center justify-between rounded bg-white px-2 py-1.5 shadow-sm">
+            <span className="text-[8px]">{r}</span>
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[7px]">PDF</span>
           </div>
         ))}
       </div>
@@ -249,31 +231,20 @@ function MarketingView() {
 function AnalyticsView() {
   return (
     <>
-      <div className="mb-3 text-xs font-semibold text-slate-800 sm:text-sm">Analytics</div>
-      <div className="rounded-lg border border-slate-100 bg-white p-2">
-        <div className="mb-2 text-[9px] font-medium text-slate-600">Monthly Performance</div>
-        <div className="flex h-24 items-end gap-1.5">
-          {["Jan", "Feb", "Mar", "Apr", "May", "Jun"].map((m, i) => (
-            <div key={m} className="flex flex-1 flex-col items-center gap-1">
-              <div
-                className="w-full rounded-t bg-gradient-to-t from-violet-600 to-emerald-400"
-                style={{ height: `${[55, 62, 58, 72, 68, 85][i]}%` }}
-              />
-              <span className="text-[8px] text-slate-400">{m}</span>
-            </div>
-          ))}
+      <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">AI Analytics</div>
+      <div className="mb-2 rounded-lg border border-purple-200 bg-purple-50 p-2">
+        <div className="text-[8px] font-semibold text-purple-700">AI Insight</div>
+        <div className="text-[7px] text-purple-600">
+          Peak demand Saturday 2–6 PM. Add 2 stylists to capture ₹45K extra revenue.
         </div>
       </div>
-      <div className="mt-2 grid grid-cols-3 gap-2">
-        {[
-          { label: "Growth", value: "+23%" },
-          { label: "Retention", value: "87%" },
-          { label: "NPS", value: "72" },
-        ].map((m) => (
-          <div key={m.label} className="rounded-lg border border-slate-100 bg-white p-2 text-center">
-            <div className="text-[9px] text-slate-400">{m.label}</div>
-            <div className="text-sm font-bold text-violet-600">{m.value}</div>
-          </div>
+      <div className="flex h-14 items-end gap-1 md:h-20">
+        {[30, 50, 40, 80, 65, 90, 70].map((h, i) => (
+          <div
+            key={i}
+            className="flex-1 rounded-t bg-gradient-to-t from-purple-600 to-violet-400"
+            style={{ height: `${h}%` }}
+          />
         ))}
       </div>
     </>

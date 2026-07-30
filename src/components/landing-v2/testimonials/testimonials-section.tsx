@@ -1,83 +1,89 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { Play, Star } from "lucide-react";
-import { SectionHeader, SectionWrapper } from "../ui/section-wrapper";
-import { TESTIMONIALS } from "../constants";
+import { GOOGLE_REVIEWS, TESTIMONIALS } from "../constants";
+import { SectionWrapper } from "../ui/section-wrapper";
 
 export function TestimonialsSection() {
   return (
-    <SectionWrapper id="testimonials" className="bg-gray-50/50">
-      <SectionHeader
-        badge="Testimonials"
-        title="Trusted by Salon Leaders"
-        subtitle="See why 1,000+ salon owners chose Salon AI to power their business."
-      />
-
-      {/* Google rating banner */}
-      <div className="mx-auto mb-12 flex max-w-md items-center justify-center gap-4 rounded-2xl border border-gray-100 bg-white px-6 py-4 shadow-sm">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md">
-          <span className="text-lg font-bold text-blue-600">G</span>
+    <SectionWrapper id="testimonials" className="bg-stone-50">
+      <div className="mx-auto max-w-7xl px-4 lg:px-8">
+        <div className="mb-12 text-center md:mb-16">
+          <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-emerald-600">
+            Trusted by Salon Owners
+          </p>
+          <h2 className="font-serif text-3xl font-bold text-gray-900 md:text-5xl lg:text-6xl">
+            Real Stories. Real Results.
+          </h2>
         </div>
-        <div>
+
+        {/* Google reviews bar */}
+        <div className="mb-10 flex flex-wrap items-center justify-center gap-4 rounded-2xl bg-white p-6 shadow-md">
           <div className="flex items-center gap-1">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" />
+              <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
             ))}
-            <span className="ml-1 text-sm font-bold text-gray-900">4.9</span>
           </div>
-          <p className="text-xs text-gray-500">Based on 500+ Google reviews</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-3">
-        {TESTIMONIALS.map((t, i) => (
-          <motion.div
-            key={t.name}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1, duration: 0.5 }}
-            className="flex flex-col rounded-2xl border border-gray-100 bg-white p-8 shadow-sm"
-          >
-            <div className="mb-4 flex gap-0.5">
-              {Array.from({ length: t.rating }).map((_, j) => (
-                <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
-              ))}
-            </div>
-            <blockquote className="flex-1 text-sm leading-relaxed text-gray-600">
-              &ldquo;{t.quote}&rdquo;
-            </blockquote>
-            <div className="mt-6 flex items-center gap-3 border-t border-gray-100 pt-6">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-emerald-500 text-sm font-bold text-white">
-                {t.name.charAt(0)}
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-gray-900">{t.name}</div>
-                <div className="text-xs text-gray-500">{t.role}</div>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Video testimonial placeholders */}
-      <div className="mt-8 grid gap-4 sm:grid-cols-3">
-        {["Customer Story: Luxe Hair", "How Urban Barber Scaled", "Glow Spa's AI Journey"].map(
-          (title) => (
-            <div
-              key={title}
-              className="group relative flex aspect-video cursor-pointer items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-violet-100 to-emerald-50"
-            >
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/90 shadow-lg transition group-hover:scale-110">
-                <Play className="h-6 w-6 text-violet-600" />
-              </div>
-              <span className="absolute bottom-4 left-4 text-sm font-semibold text-gray-700">
-                {title}
+          <span className="text-2xl font-bold text-gray-900">{GOOGLE_REVIEWS.rating}</span>
+          <span className="text-gray-500">from {GOOGLE_REVIEWS.count}+ Google reviews</span>
+          <div className="hidden h-6 w-px bg-gray-200 md:block" />
+          <div className="flex flex-wrap gap-2">
+            {GOOGLE_REVIEWS.highlights.map((h) => (
+              <span key={h} className="rounded-full bg-emerald-50 px-3 py-1 text-sm text-emerald-700">
+                &ldquo;{h}&rdquo;
               </span>
-            </div>
-          )
-        )}
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2">
+          {TESTIMONIALS.map((t, i) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.1 }}
+              className="overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-gray-100"
+            >
+              <div className="flex flex-col sm:flex-row">
+                {/* Portrait photo */}
+                <div className="relative h-48 w-full shrink-0 sm:h-auto sm:w-44 md:w-52">
+                  <Image
+                    src={t.image}
+                    alt={t.alt}
+                    fill
+                    className="object-cover"
+                    sizes="200px"
+                  />
+                  {/* Video placeholder overlay */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 shadow-lg">
+                      <Play className="h-5 w-5 fill-emerald-600 text-emerald-600" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-1 flex-col p-6">
+                  <div className="mb-2 flex gap-0.5">
+                    {Array.from({ length: t.rating }).map((_, j) => (
+                      <Star key={j} className="h-4 w-4 fill-amber-400 text-amber-400" />
+                    ))}
+                  </div>
+                  <p className="flex-1 text-gray-700 leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="mt-4 border-t pt-4">
+                    <div className="font-semibold text-gray-900">{t.name}</div>
+                    <div className="text-sm text-gray-500">
+                      {t.role}, {t.salon}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </SectionWrapper>
   );
