@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+:root {
+  --background: #faf9f7;
+  --foreground: #1c1917;
+
+  /* Dashboard design system */
+  --dashboard-bg: #f8fafc;
+  --dashboard-card: #ffffff;
+  --dashboard-primary: #6d28d9;
+  --dashboard-primary-hover: #5b21b6;
+  --dashboard-secondary: #8b5cf6;
+  --dashboard-success: #22c55e;
+  --dashboard-warning: #f59e0b;
+  --dashboard-danger: #ef4444;
+  --dashboard-text: #111827;
+  --dashboard-muted: #6b7280;
+  --dashboard-border: #e5e7eb;
+  --dashboard-radius: 20px;
+  --dashboard-button-radius: 16px;
+  --dashboard-card-shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  --rose-50: #fff1f2;
+  --rose-600: #e11d48;
+  --rose-700: #be123c;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-dashboard-bg: var(--dashboard-bg);
+  --color-dashboard-card: var(--dashboard-card);
+  --color-dashboard-primary: var(--dashboard-primary);
+  --color-dashboard-primary-hover: var(--dashboard-primary-hover);
+  --color-dashboard-secondary: var(--dashboard-secondary);
+  --color-dashboard-success: var(--dashboard-success);
+  --color-dashboard-warning: var(--dashboard-warning);
+  --color-dashboard-danger: var(--dashboard-danger);
+  --color-dashboard-text: var(--dashboard-text);
+  --color-dashboard-muted: var(--dashboard-muted);
+  --color-dashboard-border: var(--dashboard-border);
+  --radius-dashboard: var(--dashboard-radius);
+  --radius-dashboard-button: var(--dashboard-button-radius);
+  --shadow-dashboard-card: var(--dashboard-card-shadow);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-playfair);
+}
+
+.landing-v2 {
+  color-scheme: light;
+  font-family: var(--font-inter), var(--font-geist-sans), system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+}
