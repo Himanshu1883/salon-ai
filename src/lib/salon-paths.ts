@@ -68,6 +68,23 @@ export function salonLoginPath(slug: string) {
   return salonPath(slug, "/login");
 }
 
+/** Alias for relative salon login path (`/{slug}/login`). */
+export const getSalonLoginPath = salonLoginPath;
+
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/$/, "");
+}
+
+/** App origin from env (server or build-time). Prefers NEXT_PUBLIC_APP_URL, then AUTH_URL, then VERCEL_URL. */
+export function getAppOrigin(): string {
+  const fromEnv =
+    process.env.NEXT_PUBLIC_APP_URL ??
+    process.env.AUTH_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined);
+
+  return fromEnv ? stripTrailingSlash(fromEnv) : "http://localhost:3000";
+}
+
 /** Post-logout destination: salon login, admin login, or homepage. */
 export function signOutCallbackUrl(options?: {
   salonSlug?: string | null;
@@ -82,9 +99,12 @@ export function salonDashboardPath(slug: string) {
   return salonPath(slug, "/dashboard");
 }
 
-export function getSalonPublicUrl(slug: string, path = "/login") {
-  const base =
-    process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ??
-    "http://localhost:3000";
+/** Full public URL for a salon route. Pass `origin` on the client (e.g. window.location.origin). */
+export function getSalonPublicUrl(
+  slug: string,
+  path = "/login",
+  origin?: string
+) {
+  const base = origin ? stripTrailingSlash(origin) : getAppOrigin();
   return `${base}${salonPath(slug, path)}`;
 }

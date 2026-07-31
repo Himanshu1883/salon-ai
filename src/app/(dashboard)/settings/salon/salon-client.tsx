@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getSalonPublicUrl } from "@/lib/salon-paths";
+import { useSalonLoginUrl } from "@/hooks/use-salon-login-url";
 import { getSalonLogoUrl } from "@/lib/salon-logo";
 import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 
@@ -36,6 +36,7 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
   const [logoLoading, setLogoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { fullUrl: salonLoginUrl } = useSalonLoginUrl(profile?.slug ?? "");
 
   const logoPreviewUrl = getSalonLogoUrl(profile?.logoUrl);
 
@@ -117,7 +118,7 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
           <div className="mb-6 rounded-lg border border-rose-100 bg-rose-50 px-4 py-3">
             <p className="text-sm font-medium text-rose-900">Your salon login URL</p>
             <p className="mt-1 break-all text-sm text-rose-700">
-              {getSalonPublicUrl(profile.slug, "/login")}
+              {salonLoginUrl}
             </p>
             <p className="mt-2 text-xs text-rose-600">
               Share this link with your team. Each salon has its own unique login page.
