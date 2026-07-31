@@ -10,7 +10,7 @@ import {
   FOOTER_STATS,
 } from "../constants";
 import { LANDING_CONTAINER, primaryGradientButtonClass } from "../ui/landing-primitives";
-import { BrandLogo } from "../ui/brand-logo";
+import { BrandMark } from "../ui/brand-logo";
 import { cn } from "@/lib/utils";
 
 function SocialIcon({ icon }: { icon: (typeof FOOTER_SOCIAL)[number]["icon"] }) {
@@ -198,7 +198,7 @@ export function Footer() {
             transition={{ duration: 0.55, ease: EASE }}
             className="flex flex-col items-center text-center lg:items-start lg:text-left"
           >
-            <BrandLogo size="footer" />
+            <BrandMark size="footer" />
 
             <p className="mt-4 max-w-sm text-base leading-relaxed text-[#F7F3EC]/55">
               Luxury AI-powered salon ERP trusted by modern salons across India.

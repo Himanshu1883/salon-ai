@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Menu, X } from "lucide-react";
 import { NAV_LINKS } from "./constants";
-import { BrandLogo } from "./ui/brand-logo";
+import { BrandMark } from "./ui/brand-logo";
 import { primaryGradientButtonClass } from "./ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
@@ -71,10 +71,11 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         {/* Logo */}
         <Link
           href="/"
+          aria-label="Salon AI home"
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
           onClick={() => setMobileOpen(false)}
         >
-          <BrandLogo size="nav" />
+          <BrandMark size="nav" />
         </Link>
 
         {/* Desktop nav */}
