@@ -68,6 +68,7 @@ model Salon {
   reportFavorites ReportFavorite[]
   subscription    SalonSubscription?
   platformInvoices PlatformInvoice[]
+  passwordResetTokens PasswordResetToken[]
 }
 
 model SalonSubscription {
@@ -129,8 +130,24 @@ model User {
   isSuperAdmin  Boolean  @default(false)
   salonId       String?
   salon         Salon?   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  passwordResetTokens PasswordResetToken[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  salonId   String
+  salon     Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([salonId])
 }
 
 model Employee {

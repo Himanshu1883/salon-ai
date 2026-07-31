@@ -107,6 +107,26 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string()
+    .email("Enter a valid email")
+    .transform((value) => value.toLowerCase().trim()),
+  salonSlug: z.string().min(1, "Salon is required"),
+});
+
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1, "Reset link is invalid or expired"),
+    salonSlug: z.string().min(1, "Salon is required"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string().min(6, "Confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export const employeeSchema = z.object({
   name: z.string().min(2, "Name is required"),
   phone: z.string().optional(),

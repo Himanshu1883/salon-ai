@@ -3,13 +3,187 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import {
+  buildPasswordResetEmail,
+  isEmailConfigured,
+  sendEmail,
+} from "@/lib/email";
+import {
   formatBusinessAddress,
   STARTER_SERVICES,
 } from "@/lib/onboarding";
+import {
+  generatePasswordResetToken,
+  getPasswordResetExpiry,
+  hashPasswordResetToken,
+} from "@/lib/password-reset";
+import { getSalonPublicUrl } from "@/lib/salon-paths";
 import { DEFAULT_STOCK_CATEGORY_NAMES } from "@/lib/stock-categories";
-import { onboardingSchema } from "@/lib/validations";
+import {
+  forgotPasswordSchema,
+  onboardingSchema,
+  resetPasswordSchema,
+} from "@/lib/validations";
 import { createTrialSubscription, generateMonthlyInvoice } from "@/actions/subscription";
 import { generateUniqueSalonSlug } from "@/lib/salon-slug";
+
+const PASSWORD_RESET_SUCCESS_MESSAGE =
+  "If an account exists for that email at this salon, we sent password reset instructions.";
+
+export async function requestPasswordResetAction(data: unknown) {
+  const parsed = forgotPasswordSchema.safeParse(data);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+
+  const { email, salonSlug } = parsed.data;
+
+  const salon = await prisma.salon.findUnique({
+    where: { slug: salonSlug },
+    select: { id: true, name: true, slug: true },
+  });
+
+  if (!salon) {
+    return { success: true, message: PASSWORD_RESET_SUCCESS_MESSAGE };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      isSuperAdmin: true,
+      salonId: true,
+      salon: { select: { slug: true } },
+    },
+  });
+
+  if (
+    !user ||
+    user.isSuperAdmin ||
+    !user.salonId ||
+    user.salon?.slug !== salonSlug
+  ) {
+    return { success: true, message: PASSWORD_RESET_SUCCESS_MESSAGE };
+  }
+
+  const rawToken = generatePasswordResetToken();
+  const tokenHash = hashPasswordResetToken(rawToken);
+  const expiresAt = getPasswordResetExpiry();
+  const resetUrl = getSalonPublicUrl(
+    salonSlug,
+    `/reset-password?token=${encodeURIComponent(rawToken)}`
+  );
+
+  await prisma.$transaction(async (tx) => {
+    await tx.passwordResetToken.deleteMany({
+      where: {
+        userId: user.id,
+        salonId: salon.id,
+        usedAt: null,
+      },
+    });
+
+    await tx.passwordResetToken.create({
+      data: {
+        tokenHash,
+        userId: user.id,
+        salonId: salon.id,
+        expiresAt,
+      },
+    });
+  });
+
+  const emailContent = buildPasswordResetEmail({
+    recipientName: user.name,
+    salonName: salon.name,
+    resetUrl,
+  });
+
+  const emailResult = await sendEmail({
+    to: user.email,
+    subject: emailContent.subject,
+    html: emailContent.html,
+    text: emailContent.text,
+  });
+
+  if (!emailResult.success && !emailResult.demoMode) {
+    console.error("[password-reset] failed to send email:", emailResult.error);
+    return {
+      error:
+        "We could not send the reset email. Please try again in a few minutes.",
+    };
+  }
+
+  if (emailResult.demoMode) {
+    console.log("[password-reset] reset link (dev/demo):", resetUrl);
+  }
+
+  return {
+    success: true,
+    message: isEmailConfigured()
+      ? PASSWORD_RESET_SUCCESS_MESSAGE
+      : `${PASSWORD_RESET_SUCCESS_MESSAGE} Email is not configured in this environment — check server logs for the reset link.`,
+  };
+}
+
+export async function resetPasswordAction(data: unknown) {
+  const parsed = resetPasswordSchema.safeParse(data);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Invalid input",
+    };
+  }
+
+  const { token, salonSlug, password } = parsed.data;
+  const tokenHash = hashPasswordResetToken(token);
+
+  const resetToken = await prisma.passwordResetToken.findUnique({
+    where: { tokenHash },
+    include: {
+      user: { select: { id: true, isSuperAdmin: true } },
+      salon: { select: { slug: true } },
+    },
+  });
+
+  if (
+    !resetToken ||
+    resetToken.usedAt ||
+    resetToken.expiresAt < new Date() ||
+    resetToken.salon.slug !== salonSlug ||
+    resetToken.user.isSuperAdmin
+  ) {
+    return {
+      error: "This reset link is invalid or has expired. Please request a new one.",
+    };
+  }
+
+  const hashed = await bcrypt.hash(password, 10);
+
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({
+      where: { id: resetToken.userId },
+      data: { password: hashed },
+    });
+
+    await tx.passwordResetToken.update({
+      where: { id: resetToken.id },
+      data: { usedAt: new Date() },
+    });
+
+    await tx.passwordResetToken.deleteMany({
+      where: {
+        userId: resetToken.userId,
+        usedAt: null,
+        id: { not: resetToken.id },
+      },
+    });
+  });
+
+  return { success: true };
+}
 
 export async function onboardingSignupAction(data: unknown) {
   const parsed = onboardingSchema.safeParse(data);

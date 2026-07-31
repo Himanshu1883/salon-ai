@@ -6,6 +6,8 @@ export const RESERVED_SALON_SLUGS = new Set([
   "signup",
   "login",
   "logout",
+  "forgot-password",
+  "reset-password",
   "_next",
   "assets",
   "static",
@@ -66,6 +68,15 @@ export function salonPath(slug: string, path = "/dashboard") {
 
 export function salonLoginPath(slug: string) {
   return salonPath(slug, "/login");
+}
+
+export function salonForgotPasswordPath(slug: string) {
+  return salonPath(slug, "/forgot-password");
+}
+
+export function salonResetPasswordPath(slug: string, token?: string) {
+  const base = salonPath(slug, "/reset-password");
+  return token ? `${base}?token=${encodeURIComponent(token)}` : base;
 }
 
 /** Alias for relative salon login path (`/{slug}/login`). */

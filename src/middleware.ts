@@ -74,6 +74,15 @@ export default auth((req) => {
       return rewriteWithSalonSlug(req, "/login", salonSlug);
     }
 
+    if (innerPath === "/forgot-password" || innerPath === "/reset-password") {
+      if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
+        return NextResponse.redirect(
+          new URL(`/${salonSlug}/dashboard`, req.url)
+        );
+      }
+      return rewriteWithSalonSlug(req, innerPath, salonSlug);
+    }
+
     if (isSalonProtectedRoute(innerPath)) {
       if (!isLoggedIn) {
         const loginUrl = new URL(`/${salonSlug}/login`, req.url);

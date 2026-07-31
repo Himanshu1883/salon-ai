@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { salonDashboardPath } from "@/lib/salon-paths";
+import { salonDashboardPath, salonForgotPasswordPath } from "@/lib/salon-paths";
 import {
   formatSalonAddress,
   formatSalonPhone,
@@ -242,6 +242,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
   const searchParams = useSearchParams();
   const defaultCallback = salonDashboardPath(salon.slug);
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
+  const resetSuccess = searchParams.get("reset") === "success";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -386,6 +387,11 @@ export default function LoginForm({ salon }: LoginFormProps) {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
+              {resetSuccess && (
+                <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                  Your password has been updated. Sign in with your new password.
+                </p>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-stone-700">
                   Email Address
@@ -444,7 +450,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
                   <span className="text-sm text-stone-600">Remember me</span>
                 </label>
                 <Link
-                  href="/signup"
+                  href={salonForgotPasswordPath(salon.slug)}
                   className="text-sm font-medium text-dashboard-primary transition hover:text-dashboard-primary-hover"
                 >
                   Forgot password?
