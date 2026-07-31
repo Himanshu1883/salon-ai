@@ -14,7 +14,7 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-dashboard-bg">
       <AdminSidebar userName={session.user.name} />
       <main className="flex-1 overflow-auto">
         <div className="mx-auto max-w-7xl p-6 lg:p-8">{children}</div>

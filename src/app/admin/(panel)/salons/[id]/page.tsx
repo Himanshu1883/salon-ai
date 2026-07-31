@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft } from "lucide-react";
+import { ChevronRight, Building2 } from "lucide-react";
 import { getSalonDetail } from "@/actions/platform-admin";
 import { SalonDetailClient } from "./salon-detail-client";
 
@@ -18,13 +18,25 @@ export default async function AdminSalonDetailPage({
 
   return (
     <div className="space-y-6">
-      <Link
-        href="/admin/salons"
-        className="inline-flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
-      >
-        <ChevronLeft className="h-4 w-4" />
-        Back to salons
-      </Link>
+      <nav aria-label="Breadcrumb">
+        <ol className="flex flex-wrap items-center gap-1.5 text-sm">
+          <li>
+            <Link
+              href="/admin/salons"
+              className="font-medium text-dashboard-muted transition hover:text-dashboard-primary"
+            >
+              Salons
+            </Link>
+          </li>
+          <li aria-hidden="true">
+            <ChevronRight className="h-4 w-4 text-dashboard-muted/60" />
+          </li>
+          <li className="flex items-center gap-1.5 font-semibold text-dashboard-text">
+            <Building2 className="h-4 w-4 text-dashboard-primary" />
+            {salon.name}
+          </li>
+        </ol>
+      </nav>
       <SalonDetailClient salon={salon} />
     </div>
   );
