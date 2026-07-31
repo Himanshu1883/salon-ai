@@ -94,11 +94,6 @@ export async function getInventoryDashboardStats() {
   });
 
 
-
-
-
-  
-
   const chartData = movementByDay.map((m) => ({
     type: m.movementType,
     count: m._count.id,
