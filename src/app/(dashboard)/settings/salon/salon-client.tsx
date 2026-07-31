@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSalonPublicUrl } from "@/lib/salon-paths";
 
 type SalonProfile = {
   name: string;
+  slug: string;
   businessType: string | null;
   gstin: string | null;
   addressLine1: string | null;
@@ -62,6 +64,17 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
         <CardTitle className="text-lg">Salon profile</CardTitle>
       </CardHeader>
       <CardContent>
+        {profile?.slug && (
+          <div className="mb-6 rounded-lg border border-rose-100 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-900">Your salon login URL</p>
+            <p className="mt-1 break-all text-sm text-rose-700">
+              {getSalonPublicUrl(profile.slug, "/login")}
+            </p>
+            <p className="mt-2 text-xs text-rose-600">
+              Share this link with your team. Each salon has its own unique login page.
+            </p>
+          </div>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">

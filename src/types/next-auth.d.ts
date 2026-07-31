@@ -10,6 +10,7 @@ declare module "next-auth" {
       isSuperAdmin: boolean;
       salonId?: string;
       salonName?: string;
+      salonSlug?: string;
       plan?: string;
     };
   }
@@ -19,6 +20,7 @@ declare module "next-auth" {
     isSuperAdmin: boolean;
     salonId?: string | null;
     salonName?: string | null;
+    salonSlug?: string | null;
     plan?: string | null;
   }
 }
@@ -29,6 +31,7 @@ declare module "next-auth/jwt" {
     isSuperAdmin?: boolean;
     salonId?: string;
     salonName?: string;
+    salonSlug?: string;
     plan?: string;
   }
 }

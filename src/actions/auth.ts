@@ -9,6 +9,7 @@ import {
 import { DEFAULT_STOCK_CATEGORY_NAMES } from "@/lib/stock-categories";
 import { onboardingSchema } from "@/lib/validations";
 import { createTrialSubscription, generateMonthlyInvoice } from "@/actions/subscription";
+import { generateUniqueSalonSlug } from "@/lib/salon-slug";
 
 export async function onboardingSignupAction(data: unknown) {
   const parsed = onboardingSchema.safeParse(data);
@@ -41,10 +42,13 @@ export async function onboardingSignupAction(data: unknown) {
         input.selectedServiceIds.includes(service.id)
       );
 
+  const slug = await generateUniqueSalonSlug(input.salonName, prisma);
+
   const salon = await prisma.$transaction(async (tx) => {
     const createdSalon = await tx.salon.create({
       data: {
         name: input.salonName,
+        slug,
         phone: input.businessPhone,
         address: fullAddress,
         businessType: input.businessType,
@@ -113,7 +117,12 @@ export async function onboardingSignupAction(data: unknown) {
   await createTrialSubscription(salon.id);
   await generateMonthlyInvoice(salon.id);
 
-  return { success: true, salonId: salon.id, salonName: salon.name };
+  return {
+    success: true,
+    salonId: salon.id,
+    salonName: salon.name,
+    salonSlug: salon.slug,
+  };
 }
 
 /** @deprecated Use onboardingSignupAction */
@@ -141,10 +150,12 @@ export async function signupAction(formData: FormData) {
   }
 
   const hashed = await bcrypt.hash(parsed.data.password, 10);
+  const slug = await generateUniqueSalonSlug(parsed.data.salonName, prisma);
 
   const salon = await prisma.salon.create({
     data: {
       name: parsed.data.salonName,
+      slug,
       phone: parsed.data.phone,
       address: parsed.data.address,
       totalSeats: 4,
@@ -171,5 +182,5 @@ export async function signupAction(formData: FormData) {
     },
   });
 
-  return { success: true, salonId: salon.id };
+  return { success: true, salonId: salon.id, salonSlug: salon.slug };
 }

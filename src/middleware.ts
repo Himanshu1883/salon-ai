@@ -1,6 +1,10 @@
 import NextAuth from "next-auth";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { authConfig } from "@/lib/auth.config";
+import {
+  isSalonProtectedRoute,
+  parseSalonPrefixedPath,
+} from "@/lib/salon-paths";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -8,38 +12,23 @@ const { auth } = NextAuth({
   trustHost: true,
 });
 
-const SALON_ROUTE_MATCHERS = [
-  "/dashboard",
-  "/employees",
-  "/team",
-  "/services",
-  "/catalog",
-  "/inventory",
-  "/seats",
-  "/queue",
-  "/check-in",
-  "/appointments",
-  "/billing",
-  "/sales",
-  "/reports",
-  "/customers",
-  "/clients",
-  "/stock",
-  "/settings",
-  "/schedule",
-  "/invoice-due",
-];
-
-function isSalonProtectedRoute(pathname: string) {
-  return SALON_ROUTE_MATCHERS.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+function rewriteWithSalonSlug(
+  req: NextRequest,
+  innerPath: string,
+  salonSlug: string
+) {
+  const url = req.nextUrl.clone();
+  url.pathname = innerPath;
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set("x-salon-slug", salonSlug);
+  return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
 }
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth?.user;
   const isSuperAdmin = !!req.auth?.user?.isSuperAdmin;
+  const sessionSalonSlug = req.auth?.user?.salonSlug;
 
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {
@@ -58,15 +47,64 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  if (pathname === "/register") {
+    return NextResponse.redirect(new URL("/signup", req.url));
+  }
+
+  const salonPath = parseSalonPrefixedPath(pathname);
+
+  if (salonPath) {
+    const { salonSlug, innerPath } = salonPath;
+
+    if (innerPath === "/login") {
+      if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
+        return NextResponse.redirect(
+          new URL(`/${salonSlug}/dashboard`, req.url)
+        );
+      }
+      return rewriteWithSalonSlug(req, "/login", salonSlug);
+    }
+
+    if (isSalonProtectedRoute(innerPath)) {
+      if (!isLoggedIn) {
+        const loginUrl = new URL(`/${salonSlug}/login`, req.url);
+        loginUrl.searchParams.set("callbackUrl", pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+
+      if (isSuperAdmin) {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+
+      if (sessionSalonSlug && sessionSalonSlug !== salonSlug) {
+        return NextResponse.redirect(
+          new URL(`/${sessionSalonSlug}${innerPath}`, req.url)
+        );
+      }
+
+      return rewriteWithSalonSlug(req, innerPath, salonSlug);
+    }
+
+    return NextResponse.next();
+  }
+
+  if (pathname === "/login") {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+
   if (isSalonProtectedRoute(pathname)) {
     if (!isLoggedIn) {
-      const loginUrl = new URL("/login", req.url);
-      loginUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(loginUrl);
+      return NextResponse.redirect(new URL("/", req.url));
     }
 
     if (isSuperAdmin) {
       return NextResponse.redirect(new URL("/admin", req.url));
+    }
+
+    if (sessionSalonSlug) {
+      return NextResponse.redirect(
+        new URL(`/${sessionSalonSlug}${pathname}`, req.url)
+      );
     }
   }
 
@@ -75,26 +113,6 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
-    "/admin/:path*",
-    "/dashboard",
-    "/dashboard/:path*",
-    "/employees/:path*",
-    "/team/:path*",
-    "/services/:path*",
-    "/catalog/:path*",
-    "/inventory/:path*",
-    "/seats/:path*",
-    "/queue/:path*",
-    "/check-in/:path*",
-    "/appointments/:path*",
-    "/billing/:path*",
-    "/sales/:path*",
-    "/reports/:path*",
-    "/customers/:path*",
-    "/clients/:path*",
-    "/stock/:path*",
-    "/settings/:path*",
-    "/schedule/:path*",
-    "/invoice-due/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
   ],
 };

@@ -66,3 +66,12 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+.salon-login-brand-curve {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.salon-login input[type="checkbox"] {
+  accent-color: #3d7a2a;
+}

@@ -14,6 +14,7 @@ export const authConfig = {
         token.isSuperAdmin = user.isSuperAdmin ?? false;
         token.salonId = user.salonId ?? undefined;
         token.salonName = user.salonName ?? undefined;
+        token.salonSlug = user.salonSlug ?? undefined;
         token.plan = user.plan ?? undefined;
       }
       return token;
@@ -25,6 +26,7 @@ export const authConfig = {
         session.user.isSuperAdmin = Boolean(token.isSuperAdmin);
         session.user.salonId = token.salonId as string | undefined;
         session.user.salonName = token.salonName as string | undefined;
+        session.user.salonSlug = token.salonSlug as string | undefined;
         session.user.plan = token.plan as string | undefined;
       }
       return session;

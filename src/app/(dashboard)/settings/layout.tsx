@@ -10,8 +10,8 @@ export default async function SettingsLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
-  if (!session?.user) redirect("/login");
-  if (!session.user.salonId) redirect("/login");
+  if (!session?.user) redirect("/");
+  if (!session.user.salonId) redirect("/");
 
   const showOwnerSettings = await canAccessSettings(session.user.id);
   const plan = await getSalonPlan(session.user.salonId);

@@ -24,6 +24,7 @@ export async function getSalonProfile() {
     where: { id: session.user.salonId },
     select: {
       name: true,
+      slug: true,
       businessType: true,
       gstin: true,
       addressLine1: true,

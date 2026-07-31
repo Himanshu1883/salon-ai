@@ -61,12 +61,6 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           ) : (
             <>
               <Link
-                href="/login"
-                className="rounded-lg px-4 py-2 text-sm font-medium text-white/80 transition hover:text-white"
-              >
-                Log in
-              </Link>
-              <Link
                 href="/register"
                 className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500"
               >
@@ -108,9 +102,6 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 </Link>
               ) : (
                 <>
-                  <Link href="/login" className="rounded-xl border border-white/20 py-3 text-center text-sm text-white">
-                    Log in
-                  </Link>
                   <Link href="/register" className="rounded-xl bg-emerald-600 py-3 text-center text-sm font-semibold text-white">
                     Start Free Trial
                   </Link>

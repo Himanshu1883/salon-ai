@@ -13,10 +13,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getAuthSession();
-  if (!session?.user) redirect("/login");
+  if (!session?.user) redirect("/");
   if (session.user.isSuperAdmin) redirect("/admin");
   const salonId = session.user.salonId;
-  if (!salonId) redirect("/login");
+  if (!salonId) redirect("/");
 
   const userRole = session.user.role ?? "owner";
   const showSettings = userRole === "owner" || userRole === "manager";

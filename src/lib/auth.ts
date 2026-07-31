@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeSalonPlan, type SalonPlan } from "@/lib/plans";
+import { salonLoginPath } from "@/lib/salon-paths";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -18,16 +19,25 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         email: {},
         password: {},
+        salonSlug: {},
       },
       authorize: async (credentials) => {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
+        const salonSlug =
+          typeof credentials?.salonSlug === "string" &&
+          credentials.salonSlug.trim()
+            ? credentials.salonSlug.trim()
+            : undefined;
+
         let user;
         try {
           user = await prisma.user.findUnique({
             where: { email: parsed.data.email },
-            include: { salon: { select: { id: true, name: true, plan: true } } },
+            include: {
+              salon: { select: { id: true, name: true, plan: true, slug: true } },
+            },
           });
         } catch (error) {
           console.error("[auth] database unavailable during login:", error);
@@ -48,11 +58,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             isSuperAdmin: true,
             salonId: null,
             salonName: null,
+            salonSlug: null,
             plan: null,
           };
         }
 
         if (!user.salon) return null;
+
+        if (salonSlug && user.salon.slug !== salonSlug) {
+          return null;
+        }
 
         return {
           id: user.id,
@@ -62,6 +77,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           isSuperAdmin: false,
           salonId: user.salonId!,
           salonName: user.salon.name,
+          salonSlug: user.salon.slug,
           plan: user.salon.plan,
         };
       },
@@ -76,26 +92,34 @@ export const getAuthSession = cache(auth);
 const fetchSessionUser = cache(async (userId: string) =>
   prisma.user.findUnique({
     where: { id: userId },
-    include: { salon: { select: { id: true, name: true, plan: true } } },
+    include: {
+      salon: { select: { id: true, name: true, plan: true, slug: true } },
+    },
   })
 );
 
 type SalonSessionUser = {
   salonId: string;
   salonName: string;
+  salonSlug: string;
   role: string;
   plan: SalonPlan;
 };
 
+function loginRedirectPath(salonSlug?: string | null) {
+  return salonSlug ? salonLoginPath(salonSlug) : "/";
+}
+
 export async function requireSession() {
   const session = await getAuthSession();
   if (!session?.user?.id) {
-    redirect("/login");
+    redirect("/");
   }
 
   if (
     session.user.salonId &&
     session.user.salonName &&
+    session.user.salonSlug &&
     session.user.plan &&
     !session.user.isSuperAdmin
   ) {
@@ -105,6 +129,7 @@ export async function requireSession() {
         ...session.user,
         salonId: session.user.salonId,
         salonName: session.user.salonName,
+        salonSlug: session.user.salonSlug,
         role: session.user.role ?? "owner",
         plan: normalizeSalonPlan(session.user.plan),
       },
@@ -114,7 +139,7 @@ export async function requireSession() {
   const user = await fetchSessionUser(session.user.id);
 
   if (!user?.salonId || !user.salon) {
-    redirect("/login");
+    redirect(loginRedirectPath(session.user.salonSlug));
   }
 
   const plan = normalizeSalonPlan(user.salon.plan);
@@ -122,6 +147,7 @@ export async function requireSession() {
   if (
     session.user.salonId &&
     session.user.salonName &&
+    session.user.salonSlug &&
     !session.user.isSuperAdmin
   ) {
     return {
@@ -130,6 +156,7 @@ export async function requireSession() {
         ...session.user,
         salonId: session.user.salonId,
         salonName: session.user.salonName,
+        salonSlug: session.user.salonSlug,
         role: session.user.role ?? "owner",
         plan,
       },
@@ -142,6 +169,7 @@ export async function requireSession() {
       ...session.user,
       salonId: user.salonId,
       salonName: user.salon.name,
+      salonSlug: user.salon.slug,
       role: user.role ?? "owner",
       plan,
     },
