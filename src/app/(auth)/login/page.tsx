@@ -5,18 +5,30 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import LoginForm from "./login-form";
 
+const salonSelect = {
+  name: true,
+  slug: true,
+  logoUrl: true,
+  address: true,
+  addressLine1: true,
+  city: true,
+  state: true,
+  pincode: true,
+  businessPhone: true,
+  phone: true,
+} as const;
+
 async function findSalonBySlug(salonSlug: string) {
   try {
     return await prisma.salon.findUnique({
       where: { slug: salonSlug },
-      select: { name: true, slug: true },
+      select: salonSelect,
     });
   } catch (error) {
     console.error("[login] failed to load salon by slug:", error);
     return null;
   }
 }
-
 
 async function resolveSalonSlug() {
   const headerStore = await headers();
@@ -61,7 +73,7 @@ export default async function LoginPage() {
         </div>
       }
     >
-      <LoginForm salonSlug={salon.slug} salonName={salon.name} />
+      <LoginForm salon={salon} />
     </Suspense>
   );
 }

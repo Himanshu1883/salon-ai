@@ -14,6 +14,8 @@ import {
   Leaf,
   Lock,
   Mail,
+  MapPin,
+  Phone,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
@@ -22,11 +24,28 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { salonDashboardPath } from "@/lib/salon-paths";
+import {
+  formatSalonAddress,
+  formatSalonPhone,
+  getSalonLogoUrl,
+} from "@/lib/salon-logo";
 import { cn } from "@/lib/utils";
 
+type SalonBranding = {
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  address: string | null;
+  addressLine1: string | null;
+  city: string | null;
+  state: string | null;
+  pincode: string | null;
+  businessPhone: string | null;
+  phone: string | null;
+};
+
 type LoginFormProps = {
-  salonSlug: string;
-  salonName: string;
+  salon: SalonBranding;
 };
 
 const FEATURES = [
@@ -86,10 +105,140 @@ function MicrosoftIcon() {
   );
 }
 
-export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
+function SalonLogoMark({
+  logoUrl,
+  size = "md",
+  variant = "light",
+}: {
+  logoUrl: string | null;
+  size?: "sm" | "md" | "lg";
+  variant?: "light" | "dark";
+}) {
+  const publicUrl = getSalonLogoUrl(logoUrl);
+  const sizeClasses = {
+    sm: "h-10 w-10",
+    md: "h-14 w-14",
+    lg: "h-16 w-16",
+  }[size];
+
+  if (publicUrl) {
+    return (
+      <div
+        className={cn(
+          "relative shrink-0 overflow-hidden rounded-xl ring-1",
+          sizeClasses,
+          variant === "light"
+            ? "bg-white/10 ring-white/20"
+            : "bg-stone-50 ring-stone-200"
+        )}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={publicUrl}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+      </div>
+    );
+  }
+
+  const Icon = variant === "light" ? Leaf : Sparkles;
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-xl ring-1",
+        sizeClasses,
+        variant === "light"
+          ? "bg-[#8DC63F]/20 ring-[#8DC63F]/40"
+          : "bg-[#8DC63F]/15 ring-[#8DC63F]/25"
+      )}
+    >
+      <Icon
+        className={cn(
+          variant === "light" ? "text-[#8DC63F]" : "text-[#3d7a2a]",
+          size === "lg" ? "h-7 w-7" : size === "md" ? "h-6 w-6" : "h-5 w-5"
+        )}
+      />
+    </div>
+  );
+}
+
+function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compact?: boolean }) {
+  const address = formatSalonAddress(salon);
+  const phone = formatSalonPhone(salon.businessPhone, salon.phone);
+
+  return (
+    <div className={cn("flex flex-col", compact ? "items-center text-center" : "items-start")}>
+      <div
+        className={cn(
+          "flex gap-3.5",
+          compact ? "flex-col items-center" : "items-center"
+        )}
+      >
+        <SalonLogoMark
+          logoUrl={salon.logoUrl}
+          size={compact ? "md" : "lg"}
+          variant="dark"
+        />
+        <div className={compact ? "text-center" : "min-w-0"}>
+          <h2
+            className={cn(
+              "font-bold tracking-tight text-[#1B3B2B]",
+              compact ? "text-xl" : "text-2xl"
+            )}
+          >
+            {salon.name}
+          </h2>
+          <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-stone-400">
+            Team login
+          </p>
+        </div>
+      </div>
+
+      {(address || phone) && (
+        <div
+          className={cn(
+            "mt-4 space-y-2 text-sm text-stone-600",
+            compact ? "text-center" : "w-full"
+          )}
+        >
+          {address && (
+            <p
+              className={cn(
+                "flex gap-2 leading-relaxed",
+                compact ? "justify-center" : "items-start"
+              )}
+            >
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#8DC63F]" />
+              <span>{address}</span>
+            </p>
+          )}
+          {phone && (
+            <p
+              className={cn(
+                "flex gap-2",
+                compact ? "justify-center" : "items-center"
+              )}
+            >
+              <Phone className="h-4 w-4 shrink-0 text-[#8DC63F]" />
+              <a
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                className="font-medium text-[#3d7a2a] transition hover:text-[#1B3B2B] hover:underline"
+              >
+                {phone}
+              </a>
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function LoginForm({ salon }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultCallback = salonDashboardPath(salonSlug);
+  const defaultCallback = salonDashboardPath(salon.slug);
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -98,9 +247,9 @@ export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
   const [email, setEmail] = useState("");
 
   useEffect(() => {
-    const saved = localStorage.getItem(`salon-login-email-${salonSlug}`);
+    const saved = localStorage.getItem(`salon-login-email-${salon.slug}`);
     if (saved) setEmail(saved);
-  }, [salonSlug]);
+  }, [salon.slug]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -111,15 +260,15 @@ export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
     const email = formData.get("email") as string;
 
     if (rememberMe && typeof window !== "undefined") {
-      localStorage.setItem(`salon-login-email-${salonSlug}`, email);
+      localStorage.setItem(`salon-login-email-${salon.slug}`, email);
     } else if (typeof window !== "undefined") {
-      localStorage.removeItem(`salon-login-email-${salonSlug}`);
+      localStorage.removeItem(`salon-login-email-${salon.slug}`);
     }
 
     const result = await signIn("credentials", {
       email,
       password: formData.get("password") as string,
-      salonSlug,
+      salonSlug: salon.slug,
       redirect: false,
     });
 
@@ -162,14 +311,14 @@ export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
         <div className="absolute inset-0 bg-[#0f2419]/82" />
         <div className="salon-login-brand-curve absolute inset-y-0 -right-16 z-10 w-32 bg-[#0f2419]/82" />
 
-        <div className="relative z-20 flex w-full flex-col justify-between p-10 xl:p-12">
-          <div>
+        <div className="relative z-20 flex w-full flex-col justify-between px-10 py-12 xl:px-14 xl:py-14">
+          <div className="flex flex-col">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#8DC63F]/20 ring-1 ring-[#8DC63F]/40">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/20 ring-1 ring-[#8DC63F]/40">
                 <Leaf className="h-6 w-6 text-[#8DC63F]" />
               </div>
-              <div>
-                <p className="text-lg font-semibold tracking-tight text-white">
+              <div className="min-w-0">
+                <p className="text-lg font-semibold leading-tight tracking-tight text-white">
                   Salon AI
                 </p>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/60">
@@ -178,34 +327,36 @@ export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
               </div>
             </div>
 
-            <div className="mt-16 max-w-md">
-              <h1 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-[2.75rem] xl:leading-[1.15]">
+            <div className="mt-14 max-w-md xl:mt-16">
+              <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight text-white xl:text-[2.75rem]">
                 Run Your Salon.{" "}
                 <span className="text-[#8DC63F]">Grow</span> Your Business.
               </h1>
-              <p className="mt-5 text-sm leading-relaxed text-white/75 xl:text-[15px]">
+              <p className="mt-4 text-sm leading-relaxed text-white/75 xl:mt-5 xl:text-[15px]">
                 All-in-one ERP solution to manage appointments, staff, billing,
                 inventory, customers and more.
               </p>
             </div>
 
-            <ul className="mt-10 space-y-5">
+            <ul className="mt-9 space-y-4 xl:mt-10 xl:space-y-5">
               {FEATURES.map(({ icon: Icon, title, description }) => (
-                <li key={title} className="flex items-start gap-4">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/15 ring-1 ring-[#8DC63F]/25">
+                <li key={title} className="flex items-start gap-3.5 xl:gap-4">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/15 ring-1 ring-[#8DC63F]/25 xl:h-11 xl:w-11">
                     <Icon className="h-5 w-5 text-[#8DC63F]" />
                   </div>
-                  <div>
-                    <p className="font-semibold text-white">{title}</p>
-                    <p className="mt-0.5 text-sm text-white/65">{description}</p>
+                  <div className="min-w-0 pt-0.5">
+                    <p className="font-semibold leading-snug text-white">{title}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-white/65">
+                      {description}
+                    </p>
                   </div>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur-sm">
-            <ShieldCheck className="h-3.5 w-3.5 text-[#8DC63F]" />
+          <div className="mt-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur-sm">
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#8DC63F]" />
             Secure • Reliable • Built for Salons
           </div>
         </div>
@@ -213,32 +364,25 @@ export default function LoginForm({ salonSlug, salonName }: LoginFormProps) {
 
       {/* Right login panel */}
       <main className="flex min-h-screen flex-1 flex-col items-center justify-center px-6 py-10 sm:px-10">
-        <div className="mb-8 flex w-full max-w-[440px] items-center gap-3 lg:hidden">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1B3B2B] text-[#8DC63F]">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="font-semibold text-[#1B3B2B]">Salon AI</p>
-            <p className="text-xs text-stone-500">{salonName}</p>
-          </div>
+        <div className="mb-8 w-full max-w-[440px] lg:hidden">
+          <SalonIdentity salon={salon} compact />
         </div>
 
         <div className="w-full max-w-[440px]">
-          <div className="mb-8 text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#8DC63F]/15">
-              <ShieldCheck className="h-6 w-6 text-[#3d7a2a]" />
-            </div>
-            <h2 className="text-2xl font-bold tracking-tight text-[#1B3B2B]">
-              Welcome Back!
-            </h2>
-            <p className="mt-2 text-sm text-stone-500">
-              Login to access your{" "}
-              <span className="font-medium text-stone-700">{salonName}</span>{" "}
-              account
-            </p>
+          <div className="mb-8 hidden lg:block">
+            <SalonIdentity salon={salon} />
           </div>
 
           <div className="rounded-2xl border border-stone-100 bg-white p-6 shadow-[0_8px_40px_rgba(15,36,25,0.08)] sm:p-8">
+            <div className="mb-6 text-center lg:text-left">
+              <h3 className="text-xl font-bold tracking-tight text-[#1B3B2B]">
+                Welcome back
+              </h3>
+              <p className="mt-1.5 text-sm text-stone-500">
+                Sign in to your {salon.name} account
+              </p>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-stone-700">
