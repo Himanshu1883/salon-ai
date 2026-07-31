@@ -114,6 +114,7 @@ export async function getAllSalons(options?: {
       return {
         id: salon.id,
         name: salon.name,
+        slug: salon.slug,
         city: salon.city,
         phone: salon.businessPhone ?? salon.phone,
         businessType: salon.businessType,
@@ -171,6 +172,7 @@ export async function getSalonDetail(salonId: string) {
   return {
     id: salon.id,
     name: salon.name,
+    slug: salon.slug,
     businessType: salon.businessType,
     plan: salon.plan,
     gstin: salon.gstin,
