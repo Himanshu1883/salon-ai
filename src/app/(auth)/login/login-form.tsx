@@ -316,8 +316,8 @@ export default function LoginForm({ salon }: LoginFormProps) {
         <div className="relative z-20 flex w-full flex-col justify-between px-10 py-12 xl:px-14 xl:py-14">
           <div className="flex flex-col">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/20 ring-1 ring-[#8DC63F]/40">
-                <Leaf className="h-6 w-6 text-[#8DC63F]" />
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-dashboard-secondary/20 ring-1 ring-dashboard-secondary/40">
+                <Leaf className="h-6 w-6 text-dashboard-secondary" />
               </div>
               <div className="min-w-0">
                 <p className="text-lg font-semibold leading-tight tracking-tight text-white">
@@ -332,7 +332,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
             <div className="mt-14 max-w-md xl:mt-16">
               <h1 className="text-[2rem] font-bold leading-[1.15] tracking-tight text-white xl:text-[2.75rem]">
                 Run Your Salon.{" "}
-                <span className="text-[#8DC63F]">Grow</span> Your Business.
+                <span className="text-dashboard-secondary">Grow</span> Your Business.
               </h1>
               <p className="mt-4 text-sm leading-relaxed text-white/75 xl:mt-5 xl:text-[15px]">
                 All-in-one ERP solution to manage appointments, staff, billing,
@@ -343,8 +343,8 @@ export default function LoginForm({ salon }: LoginFormProps) {
             <ul className="mt-9 space-y-4 xl:mt-10 xl:space-y-5">
               {FEATURES.map(({ icon: Icon, title, description }) => (
                 <li key={title} className="flex items-start gap-3.5 xl:gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#8DC63F]/15 ring-1 ring-[#8DC63F]/25 xl:h-11 xl:w-11">
-                    <Icon className="h-5 w-5 text-[#8DC63F]" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-dashboard-primary/15 ring-1 ring-dashboard-primary/25 xl:h-11 xl:w-11">
+                    <Icon className="h-5 w-5 text-dashboard-secondary" />
                   </div>
                   <div className="min-w-0 pt-0.5">
                     <p className="font-semibold leading-snug text-white">{title}</p>
@@ -358,7 +358,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
           </div>
 
           <div className="mt-10 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-black/20 px-4 py-2 text-xs font-medium text-white/80 backdrop-blur-sm">
-            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#8DC63F]" />
+            <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-dashboard-secondary" />
             Secure • Reliable • Built for Salons
           </div>
         </div>
@@ -375,9 +375,9 @@ export default function LoginForm({ salon }: LoginFormProps) {
             <SalonIdentity salon={salon} />
           </div>
 
-          <div className="rounded-2xl border border-stone-100 bg-white p-6 shadow-[0_8px_40px_rgba(15,36,25,0.08)] sm:p-8">
+          <div className="rounded-2xl border border-dashboard-border bg-white p-6 shadow-dashboard-card sm:p-8">
             <div className="mb-6 text-center lg:text-left">
-              <h3 className="text-xl font-bold tracking-tight text-[#1B3B2B]">
+              <h3 className="text-xl font-bold tracking-tight text-dashboard-text">
                 Welcome back
               </h3>
               <p className="mt-1.5 text-sm text-stone-500">
@@ -400,7 +400,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="Enter your email"
-                    className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-4 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#8DC63F] focus:bg-white focus:ring-2 focus:ring-[#8DC63F]/20"
+                    className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-4 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-dashboard-primary focus:bg-white focus:ring-2 focus:ring-dashboard-primary/20"
                   />
                 </div>
               </div>
@@ -417,7 +417,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
                     type={showPassword ? "text" : "password"}
                     required
                     placeholder="Enter your password"
-                    className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-11 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-[#8DC63F] focus:bg-white focus:ring-2 focus:ring-[#8DC63F]/20"
+                    className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-11 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-dashboard-primary focus:bg-white focus:ring-2 focus:ring-dashboard-primary/20"
                   />
                   <button
                     type="button"
@@ -439,13 +439,13 @@ export default function LoginForm({ salon }: LoginFormProps) {
                   <Checkbox
                     checked={rememberMe}
                     onChange={(event) => setRememberMe(event.target.checked)}
-                    className="rounded border-stone-300 text-[#3d7a2a] focus:ring-[#8DC63F]"
+                    className="rounded border-stone-300 text-dashboard-primary focus:ring-dashboard-primary"
                   />
                   <span className="text-sm text-stone-600">Remember me</span>
                 </label>
                 <Link
                   href="/signup"
-                  className="text-sm font-medium text-[#3d7a2a] transition hover:text-[#1B3B2B]"
+                  className="text-sm font-medium text-dashboard-primary transition hover:text-dashboard-primary-hover"
                 >
                   Forgot password?
                 </Link>
@@ -461,8 +461,8 @@ export default function LoginForm({ salon }: LoginFormProps) {
                 type="submit"
                 disabled={loading}
                 className={cn(
-                  "flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-lg shadow-[#1B3B2B]/20 transition",
-                  "bg-gradient-to-r from-[#1B3B2B] to-[#5a9e2e] hover:from-[#16301f] hover:to-[#4d8f28]",
+                  "flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white shadow-lg shadow-violet-200/60 transition",
+                  "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary hover:from-dashboard-primary-hover hover:to-dashboard-secondary",
                   "disabled:cursor-not-allowed disabled:opacity-70"
                 )}
               >
@@ -506,7 +506,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
             New to Salon AI?{" "}
             <Link
               href="/signup"
-              className="font-semibold text-[#3d7a2a] transition hover:text-[#1B3B2B]"
+              className="font-semibold text-dashboard-primary transition hover:text-dashboard-primary-hover"
             >
               Create your salon
             </Link>
