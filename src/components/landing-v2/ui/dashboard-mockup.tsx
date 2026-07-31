@@ -14,7 +14,7 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
   return (
     <div
       className={cn(
-        "flex overflow-hidden rounded-lg bg-gray-50 font-sans text-[10px] text-gray-700 md:text-xs",
+        "flex overflow-hidden rounded-lg bg-[#FDFCFA] font-sans text-[10px] text-[#1B1714] md:text-xs",
         compact ? "h-full min-h-[180px]" : "min-h-[320px] md:min-h-[400px]",
         className
       )}
@@ -22,8 +22,8 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
       {/* Sidebar */}
       <div className="hidden w-[22%] shrink-0 border-r border-gray-200 bg-white p-2 sm:block">
         <div className="mb-3 flex items-center gap-1.5">
-          <div className="h-4 w-4 rounded-md bg-gradient-to-br from-emerald-500 to-purple-600" />
-          <span className="text-[9px] font-bold text-gray-900 md:text-[10px]">Salon AI</span>
+          <div className="h-4 w-4 rounded-md bg-[#7A2E2E]" />
+          <span className="text-[9px] font-bold text-[#1B1714] md:text-[10px]">Salon AI</span>
         </div>
         {sidebarItems.map((item, i) => (
           <div
@@ -36,8 +36,8 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
                 (variant === "crm" && i === 3) ||
                 (variant === "inventory" && i === 4) ||
                 (variant === "reports" && i === 5)
-                ? "bg-emerald-50 font-semibold text-emerald-700"
-                : "text-gray-500"
+                ? "bg-[#7A2E2E]/10 font-semibold text-[#7A2E2E]"
+                : "text-[#1B1714]/45"
             )}
           >
             {item}
@@ -66,10 +66,10 @@ function DashboardView({ compact }: { compact?: boolean }) {
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Dashboard</div>
       <div className={cn("mb-2 grid gap-1.5", compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4")}>
         {[
-          { label: "Revenue", val: "₹2.4L", color: "bg-emerald-500" },
-          { label: "Appointments", val: "48", color: "bg-purple-500" },
-          { label: "Clients", val: "1,284", color: "bg-rose-400" },
-          { label: "Staff", val: "12", color: "bg-violet-500" },
+          { label: "Revenue", val: "₹2.4L", color: "bg-[#7A2E2E]" },
+          { label: "Appointments", val: "48", color: "bg-[#2F6F5E]" },
+          { label: "Clients", val: "1,284", color: "bg-[#C9A25D]" },
+          { label: "Staff", val: "12", color: "bg-[#7A2E2E]/60" },
         ].map((s) => (
           <div key={s.label} className="rounded-lg bg-white p-2 shadow-sm">
             <div className={cn("mb-1 h-1 w-6 rounded-full", s.color)} />
@@ -84,7 +84,7 @@ function DashboardView({ compact }: { compact?: boolean }) {
           {[40, 55, 45, 70, 60, 85, 75, 90, 80, 95, 88, 100].map((h, i) => (
             <div
               key={i}
-              className="flex-1 rounded-t bg-gradient-to-t from-emerald-500 to-emerald-300"
+              className="flex-1 rounded-t bg-gradient-to-t from-[#2F6F5E] to-[#2F6F5E]/60"
               style={{ height: `${h}%` }}
             />
           ))}
@@ -101,21 +101,21 @@ function AppointmentView() {
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Appointments</div>
       <div className="grid grid-cols-[auto_1fr_1fr] gap-1">
         <div />
-        <div className="text-center text-[8px] font-semibold text-purple-600">Priya</div>
-        <div className="text-center text-[8px] font-semibold text-emerald-600">Raj</div>
+        <div className="text-center text-[8px] font-semibold text-[#7A2E2E]">Priya</div>
+        <div className="text-center text-[8px] font-semibold text-[#2F6F5E]">Raj</div>
         {slots.map((time, i) => (
           <div key={time} className="contents">
             <div className="py-1 text-[8px] text-gray-400">{time}</div>
             <div className="py-0.5">
               {i % 2 === 0 && (
-                <div className="rounded bg-purple-100 px-1 py-1 text-[7px] text-purple-700">
+                <div className="rounded bg-[#7A2E2E]/10 px-1 py-1 text-[7px] text-[#7A2E2E]">
                   Hair Color
                 </div>
               )}
             </div>
             <div className="py-0.5">
               {i % 3 !== 0 && (
-                <div className="rounded bg-emerald-100 px-1 py-1 text-[7px] text-emerald-700">
+                <div className="rounded bg-[#2F6F5E]/10 px-1 py-1 text-[7px] text-[#2F6F5E]">
                   Haircut
                 </div>
               )}
@@ -141,10 +141,10 @@ function BillingView() {
           ))}
           <div className="flex justify-between border-t pt-1 font-bold">
             <span className="text-[9px]">Total</span>
-            <span className="text-[9px] text-emerald-600">₹4,800</span>
+            <span className="text-[9px] text-[#2F6F5E]">₹4,800</span>
           </div>
         </div>
-        <div className="rounded-lg bg-emerald-600 p-2 text-center text-white">
+        <div className="rounded-lg bg-[#7A2E2E] p-2 text-center text-white">
           <div className="text-[8px] opacity-80">Pay Now</div>
           <div className="text-sm font-bold">₹4,800</div>
         </div>
@@ -159,12 +159,12 @@ function CrmView() {
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">CRM</div>
       {["Ananya K.", "Rohit S.", "Meera P."].map((name, i) => (
         <div key={name} className="mb-1 flex items-center gap-2 rounded-lg bg-white p-2 shadow-sm">
-          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-rose-300 to-purple-400" />
+          <div className="h-6 w-6 rounded-full bg-[#C9A25D]/30" />
           <div className="flex-1">
             <div className="text-[9px] font-semibold">{name}</div>
             <div className="text-[7px] text-gray-400">{[12, 8, 24][i]} visits · VIP</div>
           </div>
-          <div className="rounded-full bg-emerald-100 px-2 py-0.5 text-[7px] text-emerald-700">
+          <div className="rounded-full bg-[#2F6F5E]/10 px-2 py-0.5 text-[7px] text-[#2F6F5E]">
             Active
           </div>
         </div>
@@ -184,7 +184,7 @@ function InventoryView() {
       ].map((item) => (
         <div key={item.name} className="mb-1 flex items-center justify-between rounded bg-white px-2 py-1.5 shadow-sm">
           <span className="text-[8px]">{item.name}</span>
-          <span className={cn("text-[8px] font-semibold", item.status === "low" ? "text-rose-500" : "text-emerald-600")}>
+          <span className={cn("text-[8px] font-semibold", item.status === "low" ? "text-[#7A2E2E]" : "text-[#2F6F5E]")}>
             {item.stock} units
           </span>
         </div>
@@ -197,7 +197,7 @@ function MarketingView() {
   return (
     <>
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Marketing</div>
-      <div className="mb-2 rounded-lg bg-gradient-to-r from-purple-500 to-violet-600 p-3 text-white">
+      <div className="mb-2 rounded-lg bg-[#7A2E2E] p-3 text-white">
         <div className="text-[9px] font-semibold">Summer Glow Campaign</div>
         <div className="text-[7px] opacity-80">Sent to 842 clients via WhatsApp</div>
       </div>
@@ -232,9 +232,9 @@ function AnalyticsView() {
   return (
     <>
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">AI Analytics</div>
-      <div className="mb-2 rounded-lg border border-purple-200 bg-purple-50 p-2">
-        <div className="text-[8px] font-semibold text-purple-700">AI Insight</div>
-        <div className="text-[7px] text-purple-600">
+      <div className="mb-2 rounded-lg border border-[#2F6F5E]/20 bg-[#2F6F5E]/10 p-2">
+        <div className="text-[8px] font-semibold text-[#2F6F5E]">AI Insight</div>
+        <div className="text-[7px] text-[#1B1714]/70">
           Peak demand Saturday 2–6 PM. Add 2 stylists to capture ₹45K extra revenue.
         </div>
       </div>
@@ -242,7 +242,7 @@ function AnalyticsView() {
         {[30, 50, 40, 80, 65, 90, 70].map((h, i) => (
           <div
             key={i}
-            className="flex-1 rounded-t bg-gradient-to-t from-purple-600 to-violet-400"
+            className="flex-1 rounded-t bg-gradient-to-t from-[#2F6F5E] to-[#2F6F5E]/60"
             style={{ height: `${h}%` }}
           />
         ))}

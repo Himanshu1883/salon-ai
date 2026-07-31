@@ -57,8 +57,8 @@ export const IMAGES = {
   beautyProducts: img("photo-1633681926019-03bd9325ec20", 1600),
   spaInterior: img("photo-1631049307264-da0ec9d70304", 1600),
   spaRoom: img("photo-1540555700478-4be289fbecef", 1600),
-  skinClinic: img("photo-1512496015851-a90fb38ba796", 1600),
-  tattooStudio: img("photo-1600948836101-f9ffda59d250", 1600),
+  skinClinic: "/face.png",
+  tattooStudio: "/tattoo.jpg",
   reception: img("photo-1633681926022-84c23e8cb2d6", 1600),
   waitingArea: img("photo-1633681138600-295fcd688876", 1600),
   owner1: img("photo-1573496359142-b8d87734a5a2", 800),
@@ -79,8 +79,11 @@ export const BRAND = {
 };
 
 export const HERO = {
-  heading: "Run Your Entire Salon With AI Powered ERP",
-  subtitle: "Everything your salon needs in one intelligent platform.",
+  eyebrow: "AI-Powered Salon ERP",
+  headline: "Run your entire salon with",
+  headlineEmphasis: "AI-powered precision.",
+  subtitle:
+    "Appointments, billing, inventory, and clients — one intelligent platform built for salons.",
   features: [
     "Appointments",
     "POS Billing",
@@ -91,11 +94,17 @@ export const HERO = {
     "WhatsApp",
     "Reports",
     "Analytics",
-    "Multi Branch",
+    "Multi-Branch",
   ],
   ctaPrimary: "Start Free Trial",
-  ctaSecondary: "Book Demo",
+  ctaSecondary: "Book a Demo",
 };
+
+export const HERO_FLOATING_CARDS = [
+  { id: "revenue", label: "Revenue", value: "₹2.4L", trend: "+12% this month", accent: "burgundy" as const },
+  { id: "inventory", label: "Inventory", value: "124", trend: "Items in stock", accent: "sage" as const },
+  { id: "clients", label: "Clients", value: "1,284", trend: "+18% MoM", accent: "gold" as const },
+];
 
 export const BANNERS = [
   {
@@ -178,16 +187,16 @@ export type SalonType = {
 };
 
 export const SALON_TYPES: SalonType[] = [
-  { id: "hair", name: "Hair Salon", image: IMAGES.hairStyling, alt: "Luxury hair salon styling session" },
-  { id: "beauty", name: "Beauty Salon", image: IMAGES.makeup, alt: "Beauty salon makeup service" },
-  { id: "spa", name: "Spa", image: IMAGES.spaMassage, alt: "Luxury spa therapy room" },
-  { id: "skin", name: "Skin Clinic", image: IMAGES.skinClinic, alt: "Professional skin clinic treatment" },
-  { id: "barber", name: "Barber Shop", image: IMAGES.barber, alt: "Premium barber shop interior" },
-  { id: "nail", name: "Nail Studio", image: IMAGES.nailArt, alt: "Nail art studio with manicure setup" },
-  { id: "makeup", name: "Makeup Studio", image: IMAGES.makeupArtist, alt: "Professional makeup studio" },
-  { id: "academy", name: "Academy", image: IMAGES.hairColor, alt: "Salon academy training session" },
-  { id: "bridal", name: "Bridal Studio", image: IMAGES.bridal, alt: "Bridal makeup studio preparation" },
-  { id: "tattoo", name: "Tattoo Studio", image: IMAGES.tattooStudio, alt: "Professional tattoo studio" },
+  { id: "hair", name: "Hair Salon", image: IMAGES.hairStyling, alt: "Hair salon styling stations and mirrors" },
+  { id: "beauty", name: "Beauty Salon", image: IMAGES.makeup, alt: "Beauty salon makeup and styling service" },
+  { id: "spa", name: "Spa", image: IMAGES.spaMassage, alt: "Luxury spa therapy and wellness room" },
+  { id: "skin", name: "Skin Clinic", image: IMAGES.skinClinic, alt: "Skin clinic facial treatment room with aesthetic bed" },
+  { id: "barber", name: "Barber Shop", image: IMAGES.barber, alt: "Barber shop interior with styling chairs" },
+  { id: "nail", name: "Nail Studio", image: IMAGES.nailArt, alt: "Nail studio manicure and nail art setup" },
+  { id: "makeup", name: "Makeup Studio", image: IMAGES.makeupArtist, alt: "Professional makeup studio workspace" },
+  { id: "academy", name: "Academy", image: IMAGES.hairColor, alt: "Salon academy hair color training class" },
+  { id: "bridal", name: "Bridal Studio", image: IMAGES.bridal, alt: "Bridal studio makeup and preparation" },
+  { id: "tattoo", name: "Tattoo Studio", image: IMAGES.tattooStudio, alt: "Premium tattoo studio interior with treatment chairs" },
 ];
 
 export type FeatureBlock = {
@@ -373,6 +382,15 @@ export const PRICING_PLANS: PricingPlan[] = [
     cta: "Start Free Trial",
   },
   {
+    id: "business",
+    name: "Business",
+    price: "₹8,999",
+    period: "/month",
+    description: "For multi-chair salons and small chains ready to scale.",
+    features: ["Up to 30 staff", "2 branch locations", "All Professional features", "Advanced reporting", "API access", "Phone & chat support"],
+    cta: "Start Free Trial",
+  },
+  {
     id: "enterprise",
     name: "Enterprise",
     price: "Custom",
@@ -397,12 +415,78 @@ export const FAQ_ITEMS: FaqItem[] = [
   { question: "What payment methods does the POS support?", answer: "Cash, card, UPI, wallets, split payments, and membership credits — all with automatic receipt generation." },
 ];
 
-export const FOOTER_LINKS = {
-  product: ["Features", "Pricing", "Modules", "AI Analytics", "Integrations"],
-  company: ["About", "Careers", "Blog", "Press", "Contact"],
-  support: ["Help Center", "Documentation", "API", "Status", "Community"],
-  legal: ["Privacy", "Terms", "Security", "GDPR"],
+export type FooterLink = { label: string; href: string };
+
+export type FooterColumn = {
+  title: string;
+  links: FooterLink[];
 };
+
+export const FOOTER_COLUMNS: FooterColumn[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Features", href: "#features" },
+      { label: "Pricing", href: "#pricing" },
+      { label: "Modules", href: "#modules" },
+      { label: "AI Analytics", href: "#ai" },
+      { label: "Integrations", href: "#" },
+      { label: "API", href: "#" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "About", href: "#" },
+      { label: "Careers", href: "#" },
+      { label: "Blog", href: "#" },
+      { label: "Press", href: "#" },
+      { label: "Contact", href: "mailto:support@salonai.com" },
+    ],
+  },
+  {
+    title: "Resources",
+    links: [
+      { label: "Documentation", href: "#" },
+      { label: "Help Center", href: "#" },
+      { label: "Community", href: "#" },
+      { label: "Roadmap", href: "#" },
+      { label: "Changelog", href: "#" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy", href: "#" },
+      { label: "Terms", href: "#" },
+      { label: "Security", href: "#" },
+      { label: "GDPR", href: "#" },
+      { label: "Cookie Policy", href: "#" },
+    ],
+  },
+];
+
+/** @deprecated Use FOOTER_COLUMNS */
+export const FOOTER_LINKS = {
+  product: FOOTER_COLUMNS[0].links.map((l) => l.label),
+  company: FOOTER_COLUMNS[1].links.map((l) => l.label),
+  support: FOOTER_COLUMNS[2].links.map((l) => l.label),
+  legal: FOOTER_COLUMNS[3].links.map((l) => l.label),
+};
+
+export const FOOTER_STATS = [
+  { value: 1000, suffix: "+", label: "Salons" },
+  { value: 50, suffix: "K+", label: "Appointments" },
+  { value: 99.9, suffix: "%", label: "Uptime", decimals: 1 },
+  { value: null, display: "24/7", label: "Support" },
+] as const;
+
+export const FOOTER_SOCIAL = [
+  { label: "LinkedIn", href: "#", icon: "linkedin" as const },
+  { label: "Instagram", href: "#", icon: "instagram" as const },
+  { label: "Twitter", href: "#", icon: "twitter" as const },
+  { label: "Facebook", href: "#", icon: "facebook" as const },
+];
 
 export const FLOATING_CARDS = [
   { id: "revenue", label: "Revenue", value: "₹2.4L", trend: "+12%", color: "emerald" },
