@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { ArrowRight, Menu, X } from "lucide-react";
 import { NAV_LINKS } from "./constants";
+import { BrandLogo } from "./ui/brand-logo";
+import { primaryGradientButtonClass } from "./ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
 type NavbarProps = {
@@ -11,7 +13,7 @@ type NavbarProps = {
 };
 
 const navLinkClass =
-  "group relative px-3 py-2 text-sm text-[#1B1714]/70 transition-colors duration-200 hover:text-[#1B1714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]";
+  "group relative px-3 py-2 text-sm text-[#1B1714]/70 transition-colors duration-200 hover:text-[#1B1714] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]";
 
 function NavLink({
   href,
@@ -27,7 +29,7 @@ function NavLink({
       {label}
       <span
         aria-hidden
-        className="absolute bottom-0.5 left-1/2 h-[1.5px] w-0 -translate-x-1/2 bg-[#7A2E2E] transition-all duration-200 ease-out group-hover:w-[calc(100%-1.5rem)]"
+        className="absolute bottom-0.5 left-1/2 h-[1.5px] w-0 -translate-x-1/2 bg-[#7C3AED] transition-all duration-200 ease-out group-hover:w-[calc(100%-1.5rem)]"
       />
     </a>
   );
@@ -69,17 +71,10 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+          className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
           onClick={() => setMobileOpen(false)}
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-[#7A2E2E]/25 bg-[#7A2E2E]/[0.07]">
-            <span className="hero-editorial__headline text-[15px] font-medium leading-none text-[#7A2E2E]">
-              S
-            </span>
-          </div>
-          <span className="hero-editorial__headline text-xl font-medium tracking-tight text-[#1B1714]">
-            Salon AI
-          </span>
+          <BrandLogo size="nav" />
         </Link>
 
         {/* Desktop nav */}
@@ -94,13 +89,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           {isAuthenticated ? (
             <Link
               href="/dashboard"
-              className={cn(
-                "rounded-lg bg-[#7A2E2E] px-5 py-2.5 text-sm font-semibold text-[#F7F3EC]",
-                "shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]",
-                "transition-[transform,background-color,box-shadow] duration-200",
-                "hover:-translate-y-px hover:bg-[#6B2828] hover:shadow-[0_4px_16px_-4px_rgba(122,46,46,0.4)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
-              )}
+              className={primaryGradientButtonClass("px-5 py-2.5 text-sm focus-visible:ring-offset-[#F7F3EC]")}
             >
               Dashboard
             </Link>
@@ -108,22 +97,18 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
             <>
               <Link
                 href="/login"
-                className={cn(
-                  "text-sm font-medium text-[#1B1714]/80 underline-offset-4",
-                  "transition-colors duration-200 hover:text-[#1B1714] hover:underline",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
-                )}
+                className={primaryGradientButtonClass("px-5 py-2.5 text-sm focus-visible:ring-offset-[#F7F3EC]")}
               >
-                Log in
+                Login
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
                 href="/register"
                 className={cn(
-                  "rounded-lg bg-[#7A2E2E] px-5 py-2.5 text-sm font-semibold text-[#F7F3EC]",
-                  "shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]",
-                  "transition-[transform,background-color,box-shadow] duration-200",
-                  "hover:-translate-y-px hover:bg-[#6B2828] hover:shadow-[0_4px_16px_-4px_rgba(122,46,46,0.4)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+                  "rounded-full border border-[#1B1714]/20 bg-white/60 px-5 py-2.5 text-sm font-semibold text-[#1B1714]",
+                  "backdrop-blur-sm transition-[transform,background-color,border-color] duration-200",
+                  "hover:-translate-y-px hover:border-[#1B1714]/35 hover:bg-white",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
                 )}
               >
                 Start Free Trial
@@ -140,8 +125,8 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           className={cn(
             "rounded-md p-2 transition-colors duration-200 lg:hidden",
-            mobileOpen ? "text-[#7A2E2E]" : "text-[#1B1714]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+            mobileOpen ? "text-[#7C3AED]" : "text-[#1B1714]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
           )}
         >
           {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -173,7 +158,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 className={cn(
                   "block rounded-md px-3 py-3.5 text-base text-[#1B1714]/75",
                   "transition-colors duration-200 hover:text-[#1B1714]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
                 )}
               >
                 {link.label}
@@ -186,10 +171,8 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
               <Link
                 href="/dashboard"
                 onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "block w-full rounded-lg bg-[#7A2E2E] py-3.5 text-center text-sm font-semibold text-[#F7F3EC]",
-                  "shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2"
+                className={primaryGradientButtonClass(
+                  "w-full py-3.5 text-center text-sm focus-visible:ring-offset-[#F7F3EC]"
                 )}
               >
                 Dashboard
@@ -199,21 +182,19 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
                 <Link
                   href="/login"
                   onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "block w-full py-2 text-center text-sm font-medium text-[#1B1714]/80",
-                    "underline-offset-4 hover:text-[#1B1714] hover:underline",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2"
+                  className={primaryGradientButtonClass(
+                    "w-full py-3.5 text-center text-sm focus-visible:ring-offset-[#F7F3EC]"
                   )}
                 >
-                  Log in
+                  Login
+                  <ArrowRight className="h-4 w-4" aria-hidden />
                 </Link>
                 <Link
                   href="/register"
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "block w-full rounded-lg bg-[#7A2E2E] py-3.5 text-center text-sm font-semibold text-[#F7F3EC]",
-                    "shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2"
+                    "block w-full rounded-full border border-[#1B1714]/20 py-3.5 text-center text-sm font-semibold text-[#1B1714]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
                   )}
                 >
                   Start Free Trial

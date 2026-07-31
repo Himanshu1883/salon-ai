@@ -8,12 +8,28 @@ export const LANDING = {
   ivory: "#F7F3EC",
   band: "#EFE8DC",
   ink: "#1B1714",
-  burgundy: "#7A2E2E",
+  accent: "#7C3AED",
+  accentDark: "#6D28D9",
   sage: "#2F6F5E",
   gold: "#C9A25D",
   border: "#E4DDD1",
   cardShadow: "0 4px 20px rgba(27,23,20,0.06)",
 } as const;
+
+/** @deprecated Use LANDING.accent */
+export const LANDING_BURGUNDY = LANDING.accent;
+
+export const primaryGradientButtonClass = (className?: string) =>
+  cn(
+    "inline-flex items-center justify-center gap-2 rounded-full",
+    "bg-gradient-to-r from-violet-600 via-purple-500 to-violet-400",
+    "font-semibold text-white",
+    "shadow-[0_8px_24px_-4px_rgba(124,58,237,0.4)]",
+    "transition-[transform,box-shadow,filter] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)]",
+    "hover:scale-[1.02] hover:shadow-[0_12px_32px_-4px_rgba(124,58,237,0.5)] hover:brightness-105",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-2",
+    className
+  );
 
 export const LANDING_CONTAINER =
   "mx-auto w-full max-w-[1440px] px-5 sm:px-6 lg:px-10 xl:px-12 2xl:max-w-[1680px] 2xl:px-14";
@@ -45,6 +61,12 @@ export function LandingSection({
   );
 }
 
+export const sectionEyebrowTextClass =
+  "text-[11px] font-medium uppercase tracking-[0.22em] text-[#7C3AED]";
+
+export const sectionHeadingClass =
+  "landing-display text-3xl font-semibold leading-tight tracking-tight text-[#7C3AED] md:text-4xl lg:text-5xl";
+
 export function SectionEyebrow({
   children,
   centered = true,
@@ -59,11 +81,9 @@ export function SectionEyebrow({
         centered ? "justify-center" : "justify-center lg:justify-start"
       )}
     >
-      <span className="h-px w-8 shrink-0 bg-[#1B1714]/20" aria-hidden />
-      <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1B1714]/65">
-        {children}
-      </span>
-      <span className="hidden h-px w-8 shrink-0 bg-[#1B1714]/20 sm:block" aria-hidden />
+      <span className="h-px w-8 shrink-0 bg-[#7C3AED]/25" aria-hidden />
+      <span className={sectionEyebrowTextClass}>{children}</span>
+      <span className="hidden h-px w-8 shrink-0 bg-[#7C3AED]/25 sm:block" aria-hidden />
     </div>
   );
 }
@@ -84,9 +104,7 @@ export function SectionHeader({
   return (
     <div className={cn("mb-12 md:mb-16", centered && "text-center", className)}>
       <SectionEyebrow centered={centered}>{eyebrow}</SectionEyebrow>
-      <h2 className="landing-display text-3xl font-semibold leading-tight tracking-tight text-[#1B1714] md:text-4xl lg:text-5xl">
-        {title}
-      </h2>
+      <h2 className={sectionHeadingClass}>{title}</h2>
       {subtitle && (
         <p
           className={cn(
@@ -136,14 +154,7 @@ export function PrimaryButton({
     <Link
       href={href}
       onClick={onClick}
-      className={cn(
-        "inline-flex items-center justify-center rounded-lg bg-[#7A2E2E] px-6 py-3 text-sm font-semibold text-[#F7F3EC]",
-        "shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]",
-        "transition-[transform,background-color,box-shadow] duration-200",
-        "hover:-translate-y-px hover:bg-[#6B2828] hover:shadow-[0_4px_16px_-4px_rgba(122,46,46,0.4)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
-        className
-      )}
+      className={primaryGradientButtonClass(cn("px-6 py-3 text-sm", className))}
     >
       {children}
     </Link>
@@ -167,7 +178,7 @@ export function SecondaryButton({
         "text-sm font-semibold text-[#1B1714]",
         "transition-[transform,background-color,box-shadow] duration-200",
         "hover:-translate-y-px hover:border-[#1B1714]/40 hover:bg-white/60 hover:shadow-[0_4px_16px_-6px_rgba(27,23,20,0.08)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2",
         className
       )}
     >
@@ -221,7 +232,7 @@ export function BulletItem({ children, variant = "burgundy" }: { children: React
       <span
         className={cn(
           "mt-2.5 h-px w-4 shrink-0",
-          variant === "sage" ? "bg-[#2F6F5E]" : "bg-[#7A2E2E]"
+          variant === "sage" ? "bg-[#2F6F5E]" : "bg-[#7C3AED]"
         )}
         aria-hidden
       />

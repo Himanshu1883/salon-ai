@@ -6,6 +6,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { HERO } from "../constants";
 import { HeroProductShowcase } from "./hero-product-showcase";
+import { primaryGradientButtonClass } from "../ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
 const STAGGER = 0.08;
@@ -35,10 +36,10 @@ export function HeroSection() {
           className="object-cover object-center"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[#F7F3EC]/25" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/82 via-[#F7F3EC]/38 to-[#F7F3EC]/10" />
+        <div className="absolute inset-0 bg-[#F7F3EC]/5" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/52 via-[#F7F3EC]/10 to-[#F7F3EC]/10" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" />
-        <div className="hero-editorial__grain absolute inset-0 opacity-35" />
+        <div className="hero-editorial__grain absolute inset-0 opacity-95" />
       </div>
 
       <div className="relative mx-auto flex h-full min-h-0 max-w-7xl flex-col items-center justify-center gap-4 px-5 pb-[7.25rem] pt-[calc(var(--landing-nav-h)+1rem)] sm:gap-5 sm:px-6 sm:pb-[7.5rem] sm:pt-[calc(var(--landing-nav-h)+1.25rem)] lg:flex-row lg:gap-6 lg:px-8 lg:pb-[calc(var(--landing-trust-half)+0.5rem)] lg:pt-[calc(var(--landing-nav-h)+0.75rem)] xl:gap-8">
@@ -50,7 +51,7 @@ export function HeroSection() {
             className="mb-2 flex items-center justify-center gap-2.5 lg:mb-4 lg:justify-start lg:gap-3"
           >
             <span className="h-px w-6 shrink-0 bg-[#1B1714]/25 sm:w-8" aria-hidden />
-            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7A2E2E] sm:text-[11px] sm:tracking-[0.22em]">
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7C3AED] sm:text-[11px] sm:tracking-[0.22em]">
               {HERO.eyebrow}
             </span>
             <span className="hidden h-px w-6 shrink-0 bg-[#1B1714]/25 sm:block sm:w-8" aria-hidden />
@@ -62,7 +63,7 @@ export function HeroSection() {
             className="hero-editorial__headline text-[1.625rem] font-semibold leading-[1.12] tracking-tight text-[#1B1714] sm:text-[1.875rem] sm:leading-[1.1] md:text-4xl lg:text-[2.75rem] lg:leading-[1.08] xl:text-[3.25rem]"
           >
             {HERO.headline}{" "}
-            <em className="not-italic text-[#7A2E2E]">
+            <em className="not-italic text-[#7C3AED]">
               <span className="italic">{HERO.headlineEmphasis}</span>
             </em>
           </motion.h1>
@@ -102,14 +103,11 @@ export function HeroSection() {
           >
             <Link
               href="/register"
-              className={cn(
-                "inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3",
-                "bg-[#7A2E2E] text-sm font-semibold text-[#F7F3EC] sm:text-[15px] md:text-base",
-                "shadow-[0_4px_16px_-4px_rgba(122,46,46,0.45)]",
-                "transition-[transform,box-shadow,background-color] duration-200",
-                "hover:-translate-y-0.5 hover:bg-[#6B2828] hover:shadow-[0_8px_24px_-6px_rgba(122,46,46,0.5)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]",
-                "lg:w-auto lg:px-8 lg:py-3.5"
+              className={primaryGradientButtonClass(
+                cn(
+                  "w-full px-5 py-3 text-sm sm:text-[15px] md:text-base lg:w-auto lg:px-8 lg:py-3.5",
+                  "focus-visible:ring-offset-[#F7F3EC]"
+                )
               )}
             >
               {HERO.ctaPrimary}

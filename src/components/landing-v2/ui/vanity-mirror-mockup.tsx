@@ -25,7 +25,7 @@ export function VanityMirrorMockup({ className, variant = "dashboard" }: VanityM
           "border-[3px] border-[#C9A25D]",
           "bg-[#F7F3EC]",
           "p-2 md:p-2.5",
-          "shadow-[0_24px_64px_-12px_rgba(27,23,20,0.18),0_8px_24px_-8px_rgba(122,46,46,0.12)]"
+          "shadow-[0_24px_64px_-12px_rgba(27,23,20,0.18),0_8px_24px_-8px_rgba(124,58,237,0.12)]"
         )}
       >
         {/* Inner burgundy hairline */}
@@ -33,7 +33,7 @@ export function VanityMirrorMockup({ className, variant = "dashboard" }: VanityM
           className={cn(
             "overflow-hidden",
             "rounded-t-[2.25rem] rounded-b-xl md:rounded-t-[2.75rem] md:rounded-b-2xl",
-            "border border-[#7A2E2E]/25",
+            "border border-[#7C3AED]/25",
             "bg-white",
             "shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]"
           )}

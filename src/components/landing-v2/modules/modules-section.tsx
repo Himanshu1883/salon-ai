@@ -63,7 +63,7 @@ function ModuleCard({ mod, index, animateIn = false, staggerIndex = 0 }: ModuleC
               className={cn(
                 "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
                 accent === "burgundy"
-                  ? "bg-[#7A2E2E]/10 text-[#7A2E2E]"
+                  ? "bg-[#7C3AED]/10 text-[#7C3AED]"
                   : "bg-[#2F6F5E]/10 text-[#2F6F5E]"
               )}
             >
@@ -175,9 +175,9 @@ export function ModulesSection() {
             "inline-flex items-center justify-center gap-2 rounded-xl px-8 py-3.5",
             "border border-[#1B1714]/30 bg-transparent text-base font-semibold text-[#1B1714]",
             "transition-[transform,background-color,border-color,box-shadow] duration-200",
-            "hover:border-[#7A2E2E] hover:bg-[#7A2E2E]/[0.08]",
+            "hover:border-[#7C3AED] hover:bg-[#7C3AED]/[0.08]",
             "hover:shadow-[0_4px_16px_-6px_rgba(27,23,20,0.08)]",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
           )}
         >
           {expanded ? "Show Less" : "View All 22 Modules"}

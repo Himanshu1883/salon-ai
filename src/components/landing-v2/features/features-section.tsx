@@ -11,16 +11,10 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { FEATURE_BLOCKS } from "../constants";
 import type { FeatureBlock } from "../constants";
-import { LandingSection, SectionHeader } from "../ui/landing-primitives";
+import { LandingSection, sectionHeadingClass } from "../ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
-const BULLET_VARIANTS: ("burgundy" | "sage" | "gold")[] = ["burgundy", "sage", "gold"];
-
-const bulletAccentClass = {
-  burgundy: "bg-[#7A2E2E]",
-  sage: "bg-[#2F6F5E]",
-  gold: "bg-[#C9A25D]",
-};
+const bulletAccentClass = "bg-[#1B1714]/35";
 
 function FeatureNumberMarker({ index }: { index: number }) {
   const num = String(index + 1).padStart(2, "0");
@@ -241,17 +235,14 @@ function FeatureBlockRow({
               viewport={{ once: true, amount: 0.2 }}
               className="mt-6 space-y-3"
             >
-              {block.bullets.map((b, j) => (
+              {block.bullets.map((b) => (
                 <motion.li
                   key={b}
                   variants={bulletItemVariants}
                   className="flex list-none items-start gap-3 text-[#1B1714]/80"
                 >
                   <span
-                    className={cn(
-                      "mt-[0.55rem] h-px w-3 shrink-0",
-                      bulletAccentClass[BULLET_VARIANTS[j % 3]]
-                    )}
+                    className={cn("mt-[0.55rem] h-px w-3 shrink-0", bulletAccentClass)}
                     aria-hidden
                   />
                   <span>{b}</span>
@@ -272,10 +263,16 @@ export function FeaturesSection() {
 
   return (
     <LandingSection id="features" band="band">
-      <SectionHeader
-        eyebrow="Salon-First Features"
-        title="Designed Around Your Salon Floor"
-      />
+      <div className="mb-12 text-center md:mb-16">
+        <div className="mb-4 flex items-center justify-center gap-3">
+          <span className="h-px w-8 shrink-0 bg-[#1B1714]/20" aria-hidden />
+          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1B1714]/65">
+            Salon-First Features
+          </span>
+          <span className="hidden h-px w-8 shrink-0 bg-[#1B1714]/20 sm:block" aria-hidden />
+        </div>
+        <h2 className={sectionHeadingClass}>Designed Around Your Salon Floor</h2>
+      </div>
 
       <div className="relative">
         {/* Vertical journey connector — desktop only */}

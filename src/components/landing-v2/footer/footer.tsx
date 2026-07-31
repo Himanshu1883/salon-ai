@@ -9,7 +9,8 @@ import {
   FOOTER_SOCIAL,
   FOOTER_STATS,
 } from "../constants";
-import { LANDING_CONTAINER } from "../ui/landing-primitives";
+import { LANDING_CONTAINER, primaryGradientButtonClass } from "../ui/landing-primitives";
+import { BrandLogo } from "../ui/brand-logo";
 import { cn } from "@/lib/utils";
 
 function SocialIcon({ icon }: { icon: (typeof FOOTER_SOCIAL)[number]["icon"] }) {
@@ -174,7 +175,7 @@ export function Footer() {
     <footer className="relative overflow-hidden bg-[#0B0908] text-[#F7F3EC]">
       {/* Layered background */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,rgba(122,46,46,0.12),transparent_55%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,rgba(124,58,237,0.14),transparent_55%)]"
         aria-hidden
       />
       <div
@@ -197,14 +198,7 @@ export function Footer() {
             transition={{ duration: 0.55, ease: EASE }}
             className="flex flex-col items-center text-center lg:items-start lg:text-left"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#7A2E2E]/50 bg-[#7A2E2E]/20 shadow-[0_4px_20px_rgba(122,46,46,0.25)]">
-                <span className="landing-display text-base font-semibold text-[#F7F3EC]">S</span>
-              </div>
-              <span className="landing-display text-[32px] font-bold leading-none tracking-tight text-white">
-                Salon AI
-              </span>
-            </div>
+            <BrandLogo size="footer" />
 
             <p className="mt-4 max-w-sm text-base leading-relaxed text-[#F7F3EC]/55">
               Luxury AI-powered salon ERP trusted by modern salons across India.
@@ -213,15 +207,12 @@ export function Footer() {
             <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:max-w-none lg:w-auto">
               <Link
                 href="/register"
-                className={cn(
-                  "inline-flex flex-1 items-center justify-center rounded-lg bg-[#7A2E2E] px-6 py-3 text-sm font-semibold text-[#F7F3EC]",
-                  "shadow-[0_4px_24px_rgba(122,46,46,0.35)]",
-                  "transition-[transform,box-shadow,background-color] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)]",
-                  "hover:scale-[1.02] hover:bg-[#6B2828] hover:shadow-[0_8px_32px_rgba(122,46,46,0.45)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A25D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0908]"
+                className={primaryGradientButtonClass(
+                  "flex-1 px-6 py-3 text-sm focus-visible:ring-offset-[#0B0908]"
                 )}
               >
                 Start Free Trial
+                <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
               <Link
                 href="mailto:support@salonai.com"
@@ -307,7 +298,7 @@ export function Footer() {
           <StatusIndicator />
 
           <p className="text-sm text-[#F7F3EC]/50">
-            Made with <span className="text-[#7A2E2E]">♥</span> for salon professionals.
+            Made with <span className="text-violet-400">♥</span> for salon professionals.
           </p>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Check } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { PRICING_PLANS, type PricingPlan } from "../constants";
-import { LandingCard, LandingSection, SectionEyebrow } from "../ui/landing-primitives";
+import { LandingCard, LandingSection, SectionEyebrow, sectionHeadingClass, primaryGradientButtonClass } from "../ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
 function parseInrPrice(price: string): number | null {
@@ -71,9 +71,9 @@ function BillingToggle({
           onClick={() => onChange(false)}
           className={cn(
             "rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2",
             !annual
-              ? "bg-[#7A2E2E] text-[#F7F3EC]"
+              ? "bg-gradient-to-r from-violet-600 via-purple-500 to-violet-400 text-white shadow-[0_4px_16px_-4px_rgba(124,58,237,0.4)]"
               : "text-[#1B1714]/70 hover:text-[#1B1714]"
           )}
         >
@@ -84,9 +84,9 @@ function BillingToggle({
           onClick={() => onChange(true)}
           className={cn(
             "flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-colors duration-200",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2",
             annual
-              ? "bg-[#7A2E2E] text-[#F7F3EC]"
+              ? "bg-gradient-to-r from-violet-600 via-purple-500 to-violet-400 text-white shadow-[0_4px_16px_-4px_rgba(124,58,237,0.4)]"
               : "text-[#1B1714]/70 hover:text-[#1B1714]"
           )}
         >
@@ -116,8 +116,8 @@ export function PricingSection() {
     <LandingSection id="pricing" band="ivory">
       <div className="mb-8 text-center md:mb-10">
         <SectionEyebrow centered>Simple Pricing</SectionEyebrow>
-        <h2 className="landing-display text-3xl font-semibold leading-tight tracking-tight text-[#1B1714] md:text-4xl lg:text-5xl">
-          Plans That <span className="italic text-[#7A2E2E]">Grow With You</span>
+        <h2 className={sectionHeadingClass}>
+          Plans That <span className="italic text-violet-500">Grow With You</span>
         </h2>
         <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
           14-day free trial. No credit card required.
@@ -152,7 +152,7 @@ export function PricingSection() {
                   !reduced &&
                     "hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(27,23,20,0.1)]",
                   plan.highlighted
-                    ? "border-[1.5px] border-[#7A2E2E] shadow-[0_12px_32px_rgba(27,23,20,0.09)]"
+                    ? "border-[1.5px] border-[#7C3AED] shadow-[0_12px_32px_rgba(27,23,20,0.09)]"
                     : "border-[#E4DDD1]"
                 )}
               >
@@ -192,12 +192,15 @@ export function PricingSection() {
                 <Link
                   href={plan.id === "enterprise" ? "#" : "/register"}
                   className={cn(
-                    "mt-6 block rounded-lg py-3 text-center text-sm font-semibold",
-                    "transition-[transform,background-color,box-shadow,border-color] duration-200",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
                     plan.highlighted
-                      ? "bg-[#7A2E2E] text-[#F7F3EC] shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)] hover:-translate-y-px hover:bg-[#6B2828]"
-                      : "border border-[#1B1714]/25 text-[#1B1714] hover:-translate-y-px hover:border-[#1B1714]/35 hover:bg-[#1B1714]/[0.06]"
+                      ? primaryGradientButtonClass("mt-6 block w-full py-3 text-center text-sm")
+                      : cn(
+                          "mt-6 block rounded-full py-3 text-center text-sm font-semibold",
+                          "border border-[#1B1714]/25 text-[#1B1714]",
+                          "transition-[transform,background-color,box-shadow,border-color] duration-200",
+                          "hover:-translate-y-px hover:border-[#1B1714]/35 hover:bg-[#1B1714]/[0.06]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
+                        )
                   )}
                 >
                   {plan.cta}

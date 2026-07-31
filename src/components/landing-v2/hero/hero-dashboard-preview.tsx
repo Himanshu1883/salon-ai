@@ -20,10 +20,10 @@ const NAV = [
 ];
 
 const KPIS = [
-  { label: "Revenue", value: "₹2.4L", change: "+12%", accent: "border-t-[#7A2E2E]" },
+  { label: "Revenue", value: "₹2.4L", change: "+12%", accent: "border-t-[#7C3AED]" },
   { label: "Appointments", value: "48", change: "Today", accent: "border-t-[#2F6F5E]" },
   { label: "Clients", value: "1,284", change: "+18%", accent: "border-t-[#C9A25D]" },
-  { label: "Staff active", value: "11/12", change: "On floor", accent: "border-t-[#7A2E2E]/60" },
+  { label: "Staff active", value: "11/12", change: "On floor", accent: "border-t-[#7C3AED]/60" },
 ];
 
 const APPOINTMENTS = [
@@ -57,7 +57,7 @@ export function HeroDashboardPreview() {
       {/* Sidebar */}
       <aside className="hidden w-[72px] shrink-0 flex-col border-r border-[#1B1714]/[0.06] bg-[#F7F3EC]/80 px-2 py-4 sm:flex">
         <div className="mb-5 flex flex-col items-center gap-1">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7A2E2E] text-[11px] font-bold text-[#F7F3EC]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#7C3AED] text-[11px] font-bold text-[#F7F3EC]">
             S
           </div>
         </div>
@@ -69,7 +69,7 @@ export function HeroDashboardPreview() {
               className={cn(
                 "flex h-9 w-full items-center justify-center rounded-xl transition-colors",
                 active
-                  ? "bg-[#7A2E2E]/10 text-[#7A2E2E]"
+                  ? "bg-[#7C3AED]/10 text-[#7C3AED]"
                   : "text-[#1B1714]/35 hover:bg-[#1B1714]/[0.04] hover:text-[#1B1714]/60"
               )}
             >

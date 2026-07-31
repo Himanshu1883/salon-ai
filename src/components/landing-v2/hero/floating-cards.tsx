@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { motion, useReducedMotion } from "framer-motion";
 
 const accentMap = {
-  burgundy: "bg-[#7A2E2E]",
+  burgundy: "bg-[#7C3AED]",
   sage: "bg-[#2F6F5E]",
   gold: "bg-[#C9A25D]",
 };
@@ -93,7 +93,7 @@ function StatCard({
         "shadow-[0_8px_32px_-8px_rgba(27,23,20,0.14),0_0_0_1px_rgba(255,255,255,0.9)_inset]",
         "transition-[transform,box-shadow] duration-200",
         "hover:-translate-y-1 hover:shadow-[0_16px_40px_-10px_rgba(27,23,20,0.18)]",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2",
         compact ? "px-2.5 py-2.5" : "min-w-[120px] px-4 py-3.5"
       )}
       tabIndex={0}

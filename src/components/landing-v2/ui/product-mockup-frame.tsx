@@ -41,7 +41,7 @@ export function ProductMockupFrame({
       {showChrome && (
         <div className="flex items-center gap-3 border-b border-[#E4DDD1] bg-[#F7F3EC]/90 px-4 py-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-[#7A2E2E]/30" />
+            <span className="h-2.5 w-2.5 rounded-full bg-[#7C3AED]/30" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#C9A25D]/40" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#2F6F5E]/30" />
           </div>

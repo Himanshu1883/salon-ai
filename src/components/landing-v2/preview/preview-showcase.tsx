@@ -105,7 +105,7 @@ function AccentChip({
   className?: string;
 }) {
   const styles = {
-    burgundy: "border-[#7A2E2E]/15 bg-white text-[#7A2E2E]",
+    burgundy: "border-[#7C3AED]/15 bg-white text-[#7C3AED]",
     sage: "border-[#2F6F5E]/15 bg-white text-[#2F6F5E]",
     gold: "border-[#C9A25D]/25 bg-white text-[#9A7B3B]",
   };
@@ -122,7 +122,7 @@ function AccentChip({
       <div
         className={cn(
           "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
-          accent === "burgundy" && "bg-[#7A2E2E]/10",
+          accent === "burgundy" && "bg-[#7C3AED]/10",
           accent === "sage" && "bg-[#2F6F5E]/10",
           accent === "gold" && "bg-[#C9A25D]/15"
         )}
@@ -179,7 +179,7 @@ export function PreviewShowcase() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(122,46,46,0.12),transparent_65%)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(124,58,237,0.12),transparent_65%)]"
         />
         <div
           aria-hidden
@@ -220,7 +220,7 @@ export function PreviewShowcase() {
               {/* Center glow behind mockup */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute -inset-4 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(122,46,46,0.14),transparent_70%)] blur-2xl lg:-inset-6"
+                className="pointer-events-none absolute -inset-4 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(124,58,237,0.14),transparent_70%)] blur-2xl lg:-inset-6"
               />
 
               <LivePreviewBadge reduced={reduced} />
@@ -234,7 +234,7 @@ export function PreviewShowcase() {
               >
                 <div className="flex items-center gap-3 border-b border-[#E4DDD1] bg-[#F7F3EC]/95 px-4 py-2.5">
                   <div className="flex items-center gap-1.5" aria-hidden>
-                    <span className="h-2.5 w-2.5 rounded-full bg-[#7A2E2E]/35" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-[#7C3AED]/35" />
                     <span className="h-2.5 w-2.5 rounded-full bg-[#C9A25D]/45" />
                     <span className="h-2.5 w-2.5 rounded-full bg-[#2F6F5E]/35" />
                   </div>
@@ -281,9 +281,9 @@ export function PreviewShowcase() {
                         onClick={() => setActive(tab.id as TabId)}
                         className={cn(
                           "shrink-0 rounded-lg px-3 py-2 text-xs font-medium transition-colors duration-200 sm:px-3.5 sm:text-sm",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]",
                           isActive
-                            ? "bg-[#7A2E2E] text-[#F7F3EC] shadow-[0_2px_10px_-2px_rgba(122,46,46,0.35)]"
+                            ? "bg-[#7C3AED] text-[#F7F3EC] shadow-[0_2px_10px_-2px_rgba(124,58,237,0.35)]"
                             : "bg-transparent text-[#1B1714]/70 hover:bg-[#1B1714]/[0.05] hover:text-[#1B1714]"
                         )}
                       >
@@ -319,7 +319,7 @@ export function PreviewShowcase() {
               key={item.label}
               className="flex items-center gap-2 text-[11px] font-medium text-[#1B1714]/55 sm:text-xs"
             >
-              <span className="h-1 w-1 rounded-full bg-[#7A2E2E]/50" aria-hidden />
+              <span className="h-1 w-1 rounded-full bg-[#7C3AED]/50" aria-hidden />
               {item.label}
             </span>
           ))}

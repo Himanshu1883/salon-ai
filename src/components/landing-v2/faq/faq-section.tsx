@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { FAQ_ITEMS, IMAGES } from "../constants";
 import type { FaqItem } from "../constants";
-import { LandingSection } from "../ui/landing-primitives";
+import { LandingSection, sectionHeadingClass, sectionEyebrowTextClass } from "../ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
 /**
@@ -43,7 +43,7 @@ function FaqRow({
         aria-controls={panelId}
         className={cn(
           "group flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left lg:py-6",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]"
         )}
       >
         <span
@@ -59,8 +59,8 @@ function FaqRow({
           strokeWidth={1.5}
           className={cn(
             "h-5 w-5 shrink-0 text-[#1B1714]/55 transition-[transform,color] duration-[250ms] ease-out",
-            "group-hover:text-[#7A2E2E]",
-            isOpen && "rotate-180 text-[#7A2E2E]"
+            "group-hover:text-[#7C3AED]",
+            isOpen && "rotate-180 text-[#7C3AED]"
           )}
           aria-hidden
         />
@@ -135,15 +135,13 @@ export function FaqSection() {
         {/* FAQ list */}
         <div className="flex flex-col lg:justify-center lg:py-2">
           <div className="mb-2 flex items-center gap-3">
-            <span className="h-px w-8 bg-[#7A2E2E]/30" aria-hidden />
-            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7A2E2E]">
-              FAQ
-            </span>
+            <span className="h-px w-8 bg-[#7C3AED]/30" aria-hidden />
+            <span className={sectionEyebrowTextClass}>FAQ</span>
           </div>
 
-          <h2 className="landing-display text-3xl font-semibold leading-tight text-[#1B1714] md:text-4xl lg:text-[2.5rem] xl:text-[2.65rem]">
+          <h2 className={sectionHeadingClass}>
             Questions? We Have{" "}
-            <span className="italic text-[#7A2E2E]">Answers.</span>
+            <span className="italic text-violet-500">Answers.</span>
           </h2>
 
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#1B1714]/60 md:text-base">
@@ -174,8 +172,8 @@ export function FaqSection() {
                 "inline-flex items-center justify-center rounded-lg border border-[#1B1714]/25",
                 "bg-transparent px-5 py-2.5 text-sm font-semibold text-[#1B1714]",
                 "transition-all duration-200",
-                "hover:-translate-y-px hover:border-[#7A2E2E]/40 hover:text-[#7A2E2E]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]"
+                "hover:-translate-y-px hover:border-[#7C3AED]/40 hover:text-[#7C3AED]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7C3AED] focus-visible:ring-offset-2 focus-visible:ring-offset-[#EFE8DC]"
               )}
             >
               Contact our team

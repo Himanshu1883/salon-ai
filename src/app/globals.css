@@ -130,7 +130,7 @@
 .hero-editorial {
   --hero-ivory: #f7f3ec;
   --hero-ink: #1b1714;
-  --hero-burgundy: #7a2e2e;
+  --hero-accent: #7c3aed;
   --hero-sage: #2f6f5e;
   --hero-gold: #c9a25d;
   background-color: var(--hero-ivory);

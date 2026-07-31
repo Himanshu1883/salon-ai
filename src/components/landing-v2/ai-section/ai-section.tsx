@@ -8,6 +8,7 @@ import {
   LandingCard,
   LandingSection,
   SectionEyebrow,
+  sectionHeadingClass,
 } from "../ui/landing-primitives";
 import { ProductMockupFrame } from "../ui/product-mockup-frame";
 
@@ -17,9 +18,7 @@ export function AiSection() {
       <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
           <SectionEyebrow centered={false}>Artificial Intelligence</SectionEyebrow>
-          <h2 className="landing-display text-3xl font-semibold leading-tight text-[#1B1714] md:text-4xl lg:text-5xl">
-            {AI_SECTION.heading}
-          </h2>
+          <h2 className={sectionHeadingClass}>{AI_SECTION.heading}</h2>
           <p className="mt-5 text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
             {AI_SECTION.subtitle}
           </p>

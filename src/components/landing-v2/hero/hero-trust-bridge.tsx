@@ -38,7 +38,7 @@ const TRUST_STATS: {
 ];
 
 const accentStyles = {
-  burgundy: "bg-[#7A2E2E]/10 text-[#7A2E2E]",
+  burgundy: "bg-[#7C3AED]/10 text-[#7C3AED]",
   sage: "bg-[#2F6F5E]/10 text-[#2F6F5E]",
   gold: "bg-[#C9A25D]/15 text-[#9A7B3B]",
 };

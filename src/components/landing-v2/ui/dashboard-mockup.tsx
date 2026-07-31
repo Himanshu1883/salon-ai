@@ -22,7 +22,7 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
       {/* Sidebar */}
       <div className="hidden w-[22%] shrink-0 border-r border-gray-200 bg-white p-2 sm:block">
         <div className="mb-3 flex items-center gap-1.5">
-          <div className="h-4 w-4 rounded-md bg-[#7A2E2E]" />
+          <div className="h-4 w-4 rounded-md bg-[#7C3AED]" />
           <span className="text-[9px] font-bold text-[#1B1714] md:text-[10px]">Salon AI</span>
         </div>
         {sidebarItems.map((item, i) => (
@@ -36,7 +36,7 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
                 (variant === "crm" && i === 3) ||
                 (variant === "inventory" && i === 4) ||
                 (variant === "reports" && i === 5)
-                ? "bg-[#7A2E2E]/10 font-semibold text-[#7A2E2E]"
+                ? "bg-[#7C3AED]/10 font-semibold text-[#7C3AED]"
                 : "text-[#1B1714]/45"
             )}
           >
@@ -66,10 +66,10 @@ function DashboardView({ compact }: { compact?: boolean }) {
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Dashboard</div>
       <div className={cn("mb-2 grid gap-1.5", compact ? "grid-cols-2" : "grid-cols-2 md:grid-cols-4")}>
         {[
-          { label: "Revenue", val: "₹2.4L", color: "bg-[#7A2E2E]" },
+          { label: "Revenue", val: "₹2.4L", color: "bg-[#7C3AED]" },
           { label: "Appointments", val: "48", color: "bg-[#2F6F5E]" },
           { label: "Clients", val: "1,284", color: "bg-[#C9A25D]" },
-          { label: "Staff", val: "12", color: "bg-[#7A2E2E]/60" },
+          { label: "Staff", val: "12", color: "bg-[#7C3AED]/60" },
         ].map((s) => (
           <div key={s.label} className="rounded-lg bg-white p-2 shadow-sm">
             <div className={cn("mb-1 h-1 w-6 rounded-full", s.color)} />
@@ -101,14 +101,14 @@ function AppointmentView() {
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Appointments</div>
       <div className="grid grid-cols-[auto_1fr_1fr] gap-1">
         <div />
-        <div className="text-center text-[8px] font-semibold text-[#7A2E2E]">Priya</div>
+        <div className="text-center text-[8px] font-semibold text-[#7C3AED]">Priya</div>
         <div className="text-center text-[8px] font-semibold text-[#2F6F5E]">Raj</div>
         {slots.map((time, i) => (
           <div key={time} className="contents">
             <div className="py-1 text-[8px] text-gray-400">{time}</div>
             <div className="py-0.5">
               {i % 2 === 0 && (
-                <div className="rounded bg-[#7A2E2E]/10 px-1 py-1 text-[7px] text-[#7A2E2E]">
+                <div className="rounded bg-[#7C3AED]/10 px-1 py-1 text-[7px] text-[#7C3AED]">
                   Hair Color
                 </div>
               )}
@@ -144,7 +144,7 @@ function BillingView() {
             <span className="text-[9px] text-[#2F6F5E]">₹4,800</span>
           </div>
         </div>
-        <div className="rounded-lg bg-[#7A2E2E] p-2 text-center text-white">
+        <div className="rounded-lg bg-[#7C3AED] p-2 text-center text-white">
           <div className="text-[8px] opacity-80">Pay Now</div>
           <div className="text-sm font-bold">₹4,800</div>
         </div>
@@ -184,7 +184,7 @@ function InventoryView() {
       ].map((item) => (
         <div key={item.name} className="mb-1 flex items-center justify-between rounded bg-white px-2 py-1.5 shadow-sm">
           <span className="text-[8px]">{item.name}</span>
-          <span className={cn("text-[8px] font-semibold", item.status === "low" ? "text-[#7A2E2E]" : "text-[#2F6F5E]")}>
+          <span className={cn("text-[8px] font-semibold", item.status === "low" ? "text-[#7C3AED]" : "text-[#2F6F5E]")}>
             {item.stock} units
           </span>
         </div>
@@ -197,7 +197,7 @@ function MarketingView() {
   return (
     <>
       <div className="mb-2 text-[11px] font-bold text-gray-900 md:text-sm">Marketing</div>
-      <div className="mb-2 rounded-lg bg-[#7A2E2E] p-3 text-white">
+      <div className="mb-2 rounded-lg bg-[#7C3AED] p-3 text-white">
         <div className="text-[9px] font-semibold">Summer Glow Campaign</div>
         <div className="text-[7px] opacity-80">Sent to 842 clients via WhatsApp</div>
       </div>

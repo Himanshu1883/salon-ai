@@ -65,7 +65,7 @@ function SalonTypeTile({
           "shadow-[0_4px_20px_rgba(27,23,20,0.06)]",
           "transition-[transform,box-shadow] duration-[400ms] ease-out",
           "group-hover:-translate-y-1 group-hover:shadow-[0_12px_32px_rgba(27,23,20,0.12)]",
-          "group-focus-visible:ring-2 group-focus-visible:ring-[#7A2E2E] group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-[#F7F3EC]"
+          "group-focus-visible:ring-2 group-focus-visible:ring-[#7C3AED] group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-[#F7F3EC]"
         )}
       >
         <Image
@@ -98,8 +98,8 @@ function SalonTypeTile({
               "bg-[#F7F3EC]/90 text-[#1B1714] backdrop-blur-sm",
               "shadow-[0_2px_12px_rgba(27,23,20,0.08)]",
               "transition-[background-color,color] duration-[250ms]",
-              "group-hover:bg-[#7A2E2E] group-hover:text-[#F7F3EC]",
-              "group-focus-visible:bg-[#7A2E2E] group-focus-visible:text-[#F7F3EC]"
+              "group-hover:bg-[#7C3AED] group-hover:text-[#F7F3EC]",
+              "group-focus-visible:bg-[#7C3AED] group-focus-visible:text-[#F7F3EC]"
             )}
           >
             <span
@@ -130,7 +130,7 @@ export function SalonTypesSection() {
 
       <p className="mb-10 text-center text-sm font-medium text-[#1B1714]/55 md:mb-12">
         <span className="inline-flex items-center gap-2 rounded-full border border-[#E4DDD1] bg-white px-3.5 py-1.5 shadow-[0_2px_10px_rgba(27,23,20,0.04)]">
-          <span className="h-1.5 w-1.5 rounded-full bg-[#7A2E2E]" aria-hidden />
+          <span className="h-1.5 w-1.5 rounded-full bg-[#7C3AED]" aria-hidden />
           10 salon types supported
         </span>
       </p>

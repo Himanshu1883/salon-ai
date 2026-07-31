@@ -8,7 +8,7 @@ import type { Testimonial } from "../constants";
 import { LandingSection, SectionHeader } from "../ui/landing-primitives";
 import { cn } from "@/lib/utils";
 
-const AVATAR_COLORS = ["bg-[#7A2E2E]", "bg-[#2F6F5E]", "bg-[#1B1714]", "bg-[#C9A25D]"] as const;
+const AVATAR_COLORS = ["bg-[#7C3AED]", "bg-[#2F6F5E]", "bg-[#1B1714]", "bg-[#C9A25D]"] as const;
 
 const FOOTER_STATS = [
   { value: "4.9", label: "Average Rating", accent: false },
@@ -183,7 +183,7 @@ function StatsFooter({ instant }: { instant: boolean }) {
               ) : stat.accent ? (
                 <>
                   {stat.value}
-                  <span className="italic text-[#7A2E2E]">{stat.suffix}</span>
+                  <span className="italic text-[#7C3AED]">{stat.suffix}</span>
                 </>
               ) : (
                 stat.value
