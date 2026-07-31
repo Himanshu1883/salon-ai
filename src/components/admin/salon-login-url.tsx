@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getSalonPublicUrl, salonLoginPath } from "@/lib/salon-paths";
+import { useSalonLoginUrl } from "@/hooks/use-salon-login-url";
 
 type SalonLoginUrlProps = {
   slug: string;
@@ -14,12 +14,11 @@ type SalonLoginUrlProps = {
 
 export function SalonLoginUrl({ slug, variant = "compact" }: SalonLoginUrlProps) {
   const [copied, setCopied] = useState(false);
-  const url = getSalonPublicUrl(slug, "/login");
-  const path = salonLoginPath(slug);
-  const label = variant === "full" ? url : path;
+  const { path, fullUrl } = useSalonLoginUrl(slug);
+  const label = variant === "full" ? fullUrl : path;
 
   async function copyUrl() {
-    await navigator.clipboard.writeText(url);
+    await navigator.clipboard.writeText(fullUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }
@@ -27,11 +26,11 @@ export function SalonLoginUrl({ slug, variant = "compact" }: SalonLoginUrlProps)
   return (
     <div className="flex min-w-0 items-center gap-1">
       <Link
-        href={url}
+        href={path}
         target="_blank"
         rel="noopener noreferrer"
         className="truncate text-xs text-violet-600 hover:underline"
-        title={url}
+        title={fullUrl}
       >
         {label}
       </Link>
