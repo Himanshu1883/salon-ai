@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -17,8 +17,18 @@ async function findSalonBySlug(salonSlug: string) {
   }
 }
 
+
+async function resolveSalonSlug() {
+  const headerStore = await headers();
+  const fromHeader =
+    headerStore.get("x-salon-slug") ??
+    headerStore.get("x-middleware-request-x-salon-slug");
+  if (fromHeader) return fromHeader;
+  return (await cookies()).get("salon-slug")?.value ?? null;
+}
+
 export async function generateMetadata(): Promise<Metadata> {
-  const salonSlug = (await headers()).get("x-salon-slug");
+  const salonSlug = await resolveSalonSlug();
   if (!salonSlug) {
     return { title: "Login" };
   }
@@ -31,7 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LoginPage() {
-  const salonSlug = (await headers()).get("x-salon-slug");
+  const salonSlug = await resolveSalonSlug();
 
   if (!salonSlug) {
     notFound();

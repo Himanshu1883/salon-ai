@@ -21,7 +21,16 @@ function rewriteWithSalonSlug(
   url.pathname = innerPath;
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-salon-slug", salonSlug);
-  return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+  const response = NextResponse.rewrite(url, {
+    request: { headers: requestHeaders },
+  });
+  response.cookies.set("salon-slug", salonSlug, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return response;
 }
 
 export default auth((req) => {
