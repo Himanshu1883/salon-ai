@@ -5,16 +5,25 @@ import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import LoginForm from "./login-form";
 
+async function findSalonBySlug(salonSlug: string) {
+  try {
+    return await prisma.salon.findUnique({
+      where: { slug: salonSlug },
+      select: { name: true, slug: true },
+    });
+  } catch (error) {
+    console.error("[login] failed to load salon by slug:", error);
+    return null;
+  }
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const salonSlug = (await headers()).get("x-salon-slug");
   if (!salonSlug) {
     return { title: "Login" };
   }
 
-  const salon = await prisma.salon.findUnique({
-    where: { slug: salonSlug },
-    select: { name: true },
-  });
+  const salon = await findSalonBySlug(salonSlug);
 
   return {
     title: salon ? `Login — ${salon.name}` : "Login",
@@ -28,10 +37,7 @@ export default async function LoginPage() {
     notFound();
   }
 
-  const salon = await prisma.salon.findUnique({
-    where: { slug: salonSlug },
-    select: { name: true, slug: true },
-  });
+  const salon = await findSalonBySlug(salonSlug);
 
   if (!salon) {
     notFound();
