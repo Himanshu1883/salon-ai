@@ -24,12 +24,14 @@ import {
 } from "@/components/ui/table";
 import { SubscriptionStatusBadge } from "@/components/admin/subscription-status-badge";
 import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
+import { SalonLoginUrl } from "@/components/admin/salon-login-url";
 import { updateSalonPlanAsAdmin } from "@/actions/plans";
 import type { SalonStatusFilter } from "@/actions/platform-admin";
 
 type SalonRow = {
   id: string;
   name: string;
+  slug: string;
   city: string | null;
   phone: string | null;
   businessType: string | null;
@@ -143,6 +145,7 @@ export function SalonsListClient({
           <TableHeader>
             <TableRow>
               <TableHead>Salon</TableHead>
+              <TableHead>Login URL</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Type</TableHead>
@@ -157,7 +160,7 @@ export function SalonsListClient({
           <TableBody>
             {salons.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-10 text-center text-slate-500">
+                <TableCell colSpan={11} className="py-10 text-center text-slate-500">
                   No salons found
                 </TableCell>
               </TableRow>
@@ -169,6 +172,9 @@ export function SalonsListClient({
                     {salon.city && (
                       <div className="text-xs text-slate-500">{salon.city}</div>
                     )}
+                  </TableCell>
+                  <TableCell className="max-w-[200px]">
+                    <SalonLoginUrl slug={salon.slug} />
                   </TableCell>
                   <TableCell>
                     <div>{salon.ownerName}</div>

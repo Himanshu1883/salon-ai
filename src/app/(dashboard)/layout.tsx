@@ -13,10 +13,10 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const session = await getAuthSession();
-  if (!session?.user) redirect("/login");
+  if (!session?.user) redirect("/");
   if (session.user.isSuperAdmin) redirect("/admin");
   const salonId = session.user.salonId;
-  if (!salonId) redirect("/login");
+  if (!salonId) redirect("/");
 
   const userRole = session.user.role ?? "owner";
   const showSettings = userRole === "owner" || userRole === "manager";
@@ -30,6 +30,7 @@ export default async function DashboardLayout({
     <PlanProvider plan={plan}>
       <DashboardShell
         salonName={session.user.salonName ?? "Salon"}
+        salonSlug={session.user.salonSlug}
         userName={session.user.name}
         userRole={userRole}
         showSettings={showSettings}

@@ -6,7 +6,7 @@ import { BillingClient } from "./billing-client";
 
 export default async function BillingSettingsPage() {
   const session = await auth();
-  if (!session?.user) redirect("/login");
+  if (!session?.user) redirect("/");
 
   const allowed = await canAccessSettings(session.user.id);
   if (!allowed) redirect("/dashboard");

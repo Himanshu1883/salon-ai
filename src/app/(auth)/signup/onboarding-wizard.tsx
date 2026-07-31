@@ -803,18 +803,22 @@ export default function OnboardingWizard() {
     const signInResult = await signIn("credentials", {
       email: formData.email,
       password: formData.password,
+      salonSlug: result.salonSlug,
       redirect: false,
     });
 
     setLoading(false);
 
     if (signInResult?.error) {
-      router.push("/login");
+      router.push(result.salonSlug ? `/${result.salonSlug}/login` : "/");
       return;
     }
 
     const welcomeName = encodeURIComponent(result.salonName ?? formData.salonName);
-    router.push(`/dashboard?welcome=1&name=${welcomeName}`);
+    const dashboardPath = result.salonSlug
+      ? `/${result.salonSlug}/dashboard?welcome=1&name=${welcomeName}`
+      : `/dashboard?welcome=1&name=${welcomeName}`;
+    router.push(dashboardPath);
     router.refresh();
   }
 
@@ -892,13 +896,8 @@ export default function OnboardingWizard() {
           </div>
 
           <p className="mt-6 text-center text-sm text-stone-500">
-            Already have an account?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-violet-600 hover:underline"
-            >
-              Sign in
-            </Link>
+            Already have an account? Use your salon&apos;s login link, for example{" "}
+            <span className="font-medium text-violet-600">yoursalon.com/your-salon-name/login</span>
           </p>
         </CardContent>
       </Card>

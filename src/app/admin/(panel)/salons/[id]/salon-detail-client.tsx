@@ -24,6 +24,7 @@ import {
 import { updateSalonPlanAsAdmin } from "@/actions/plans";
 import { MONTHLY_AMOUNT_INR } from "@/lib/subscription";
 import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
+import { SalonLoginUrl } from "@/components/admin/salon-login-url";
 import { PLAN_LABELS, type SalonPlan } from "@/lib/plans";
 
 type SalonDetail = NonNullable<Awaited<ReturnType<typeof import("@/actions/platform-admin").getSalonDetail>>>;
@@ -90,6 +91,10 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
             <CardTitle className="text-base">Business</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
+            <div className="flex gap-2">
+              <span className="w-28 shrink-0 text-slate-500">Login URL</span>
+              <SalonLoginUrl slug={salon.slug} variant="full" />
+            </div>
             <DetailRow label="Type" value={salon.businessType?.replace(/_/g, " ") ?? "—"} />
             <DetailRow label="GSTIN" value={salon.gstin ?? "—"} />
             <DetailRow label="Address" value={salon.address ?? salon.addressLine1 ?? "—"} />

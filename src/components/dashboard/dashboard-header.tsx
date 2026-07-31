@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { signOut } from "next-auth/react";
+import { signOutCallbackUrl } from "@/lib/salon-paths";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ function getGreeting(): string {
 type DashboardHeaderProps = {
   userName: string;
   salonName: string;
+  salonSlug?: string;
   userRole?: string;
   showSettings?: boolean;
   alertCount?: number;
@@ -46,6 +48,7 @@ type DashboardHeaderProps = {
 export function DashboardHeader({
   userName,
   salonName,
+  salonSlug,
   userRole = "owner",
   showSettings = false,
   alertCount = 0,
@@ -210,7 +213,11 @@ export function DashboardHeader({
                     </>
                   )}
                   <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: "/" })}
+                    onClick={() =>
+                      signOut({
+                        callbackUrl: signOutCallbackUrl({ salonSlug }),
+                      })
+                    }
                     className="text-red-600 focus:text-red-600"
                   >
                     <LogOut className="h-4 w-4" />

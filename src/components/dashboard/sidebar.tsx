@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
+import { signOutCallbackUrl } from "@/lib/salon-paths";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -158,6 +159,7 @@ function PremiumPlanCard({
 function UserProfileFooter({
   userName,
   userRole,
+  salonSlug,
   showSettings,
   collapsed,
   onNavigate,
@@ -165,6 +167,7 @@ function UserProfileFooter({
 }: {
   userName: string;
   userRole: string;
+  salonSlug?: string;
   showSettings?: boolean;
   collapsed?: boolean;
   onNavigate?: () => void;
@@ -219,7 +222,9 @@ function UserProfileFooter({
             </>
           )}
           <DropdownMenuItem
-            onClick={() => signOut({ callbackUrl: "/" })}
+            onClick={() =>
+              signOut({ callbackUrl: signOutCallbackUrl({ salonSlug }) })
+            }
             className="text-red-600 focus:text-red-600"
           >
             <LogOut className="h-4 w-4" />
@@ -250,6 +255,7 @@ function UserProfileFooter({
 
 export function Sidebar({
   salonName,
+  salonSlug,
   userName,
   userRole = "owner",
   showSettings = false,
@@ -261,6 +267,7 @@ export function Sidebar({
   onToggleCollapse,
 }: {
   salonName: string;
+  salonSlug?: string;
   userName: string;
   userRole?: string;
   showSettings?: boolean;
@@ -342,6 +349,7 @@ export function Sidebar({
       <UserProfileFooter
         userName={userName}
         userRole={userRole}
+        salonSlug={salonSlug}
         showSettings={showSettings}
         collapsed={collapsed}
         onNavigate={onNavigate}

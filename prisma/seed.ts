@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { createPrismaClient } from "../src/lib/create-prisma-client";
 import { DEFAULT_STOCK_CATEGORY_NAMES } from "../src/lib/stock-categories";
 import { syncDemoUserPasswords } from "../src/lib/demo-users";
+import { slugifySalonName } from "../src/lib/salon-slug";
 import { seedBasicPlanCustomers } from "../src/lib/seed-basic-plan-customers";
 import { seedMakeupStudioServices, fixInvoiceLineItemDescriptions } from "../src/lib/seed-makeup-studio-services";
 import { seedInventoryDemoForSalonEmails } from "../src/lib/seed-inventory-demo";
@@ -107,6 +108,7 @@ async function seedOverdueTestSalon() {
   const salon = await prisma.salon.create({
     data: {
       name: "Overdue Test Salon",
+      slug: slugifySalonName("Overdue Test Salon"),
       phone: "+91 98765 43210",
       address: "456 Test Lane, Mumbai",
       totalSeats: 2,
@@ -176,6 +178,7 @@ async function seedTestUser() {
   const salon = await prisma.salon.create({
     data: {
       name: "Test Salon",
+      slug: slugifySalonName("Test Salon"),
       plan: "BASIC",
       phone: "+91 90000 00001",
       address: "1 Test Street, Mumbai",
@@ -248,7 +251,7 @@ async function main() {
   });
   if (existing) {
     console.log("Demo data already exists. Skipping seed.");
-    console.log("Demo login: demo@salon.ai / demo1234");
+    console.log("Demo login: demo@salon.ai / demo1234 at /luxe-hair-studio/login");
     const salon = await prisma.salon.findFirst({
       where: { users: { some: { email: "demo@salon.ai" } } },
     });
@@ -305,6 +308,7 @@ async function main() {
   const salon = await prisma.salon.create({
     data: {
       name: "Luxe Hair Studio",
+      slug: slugifySalonName("Luxe Hair Studio"),
       plan: "ENTERPRISE",
       phone: "(555) 123-4567",
       address: "123 Beauty Lane, San Francisco, CA",
@@ -951,7 +955,8 @@ async function main() {
   });
 
   console.log("Seed complete!");
-  console.log("Demo login: demo@salon.ai / demo1234");
+  console.log("Demo login: demo@salon.ai / demo1234 at /luxe-hair-studio/login");
+  console.log("Test login: test@abc.com / abc@123 at /test-salon/login");
 
   await seedActiveSubscription(salon.id);
   await seedOverdueTestSalon();

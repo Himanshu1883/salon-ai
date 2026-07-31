@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireOwnerOrManager } from "@/lib/auth";
+import { saveSalonLogo } from "@/lib/salon-logo-upload";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -24,6 +25,7 @@ export async function getSalonProfile() {
     where: { id: session.user.salonId },
     select: {
       name: true,
+      slug: true,
       businessType: true,
       gstin: true,
       addressLine1: true,
@@ -33,8 +35,44 @@ export async function getSalonProfile() {
       businessPhone: true,
       businessEmail: true,
       address: true,
+      logoUrl: true,
     },
   });
+}
+
+export async function uploadSalonLogo(formData: FormData) {
+  const session = await requireOwnerOrManager();
+  const file = formData.get("logo") as File | null;
+
+  if (!file || file.size === 0) {
+    return { error: "Select an image to upload" };
+  }
+
+  const upload = await saveSalonLogo(file, session.user.salonId);
+  if (upload.error) return { error: upload.error };
+  if (!upload.path) return { error: "Upload failed" };
+
+  await prisma.salon.update({
+    where: { id: session.user.salonId },
+    data: { logoUrl: upload.path },
+  });
+
+  revalidatePath("/settings/salon");
+  revalidatePath("/login");
+  return { success: true, logoUrl: upload.path };
+}
+
+export async function removeSalonLogo() {
+  const session = await requireOwnerOrManager();
+
+  await prisma.salon.update({
+    where: { id: session.user.salonId },
+    data: { logoUrl: null },
+  });
+
+  revalidatePath("/settings/salon");
+  revalidatePath("/login");
+  return { success: true };
 }
 
 export async function updateSalonProfile(data: unknown) {

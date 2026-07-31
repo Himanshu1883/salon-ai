@@ -175,3 +175,21 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
+
+.salon-login-brand-curve {
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.salon-login input[type="checkbox"] {
+  accent-color: var(--dashboard-primary);
+}
+
+.salon-login-brand-overlay {
+  background: color-mix(
+    in srgb,
+    var(--dashboard-primary-hover) 30%,
+    #0a0612 70%
+  );
+  opacity: 0.88;
+}

@@ -16,7 +16,8 @@
     "db:link-customers": "npx tsx scripts/link-customers.ts",
     "db:studio": "prisma studio",
     "postinstall": "prisma generate",
-    "db:reset-demo-passwords": "npx tsx scripts/reset-demo-passwords.ts"
+    "db:reset-demo-passwords": "npx tsx scripts/reset-demo-passwords.ts",
+    "db:backfill-slugs": "npx tsx scripts/backfill-salon-slugs.ts"
   },
   "prisma": {
     "seed": "npx tsx prisma/seed.ts"

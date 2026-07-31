@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 type DashboardShellProps = {
   salonName: string;
+  salonSlug?: string;
   userName: string;
   userRole: string;
   showSettings?: boolean;
@@ -19,6 +20,7 @@ type DashboardShellProps = {
 
 export function DashboardShell({
   salonName,
+  salonSlug,
   userName,
   userRole,
   showSettings = false,
@@ -60,6 +62,7 @@ export function DashboardShell({
       >
         <Sidebar
           salonName={salonName}
+          salonSlug={salonSlug}
           userName={userName}
           userRole={userRole}
           showSettings={showSettings}
@@ -91,6 +94,7 @@ export function DashboardShell({
         <DashboardHeader
           userName={userName}
           salonName={salonName}
+          salonSlug={salonSlug}
           userRole={userRole}
           showSettings={showSettings}
           alertCount={alertCount}

@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { updateSalonProfile } from "@/actions/salon";
+import {
+  removeSalonLogo,
+  updateSalonProfile,
+  uploadSalonLogo,
+} from "@/actions/salon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSalonPublicUrl } from "@/lib/salon-paths";
+import { getSalonLogoUrl } from "@/lib/salon-logo";
+import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
 
 type SalonProfile = {
   name: string;
+  slug: string;
   businessType: string | null;
   gstin: string | null;
   addressLine1: string | null;
@@ -18,13 +26,18 @@ type SalonProfile = {
   pincode: string | null;
   businessPhone: string | null;
   businessEmail: string | null;
+  logoUrl: string | null;
 } | null;
 
 export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
   const router = useRouter();
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
+  const [logoLoading, setLogoLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  const logoPreviewUrl = getSalonLogoUrl(profile?.logoUrl);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,7 +60,45 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
 
     setLoading(false);
 
-    if ("error" in result && result.error) {
+    if ("error" in result && typeof result.error === "string") {
+      setError(result.error);
+      return;
+    }
+
+    setSuccess(true);
+    router.refresh();
+  }
+
+  async function handleLogoUpload(file: File) {
+    setLogoLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const formData = new FormData();
+    formData.set("logo", file);
+    const result = await uploadSalonLogo(formData);
+
+    setLogoLoading(false);
+
+    if ("error" in result && typeof result.error === "string") {
+      setError(result.error);
+      return;
+    }
+
+    setSuccess(true);
+    router.refresh();
+  }
+
+  async function handleLogoRemove() {
+    setLogoLoading(true);
+    setError(null);
+    setSuccess(false);
+
+    const result = await removeSalonLogo();
+
+    setLogoLoading(false);
+
+    if ("error" in result && typeof result.error === "string") {
       setError(result.error);
       return;
     }
@@ -62,6 +113,81 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
         <CardTitle className="text-lg">Salon profile</CardTitle>
       </CardHeader>
       <CardContent>
+        {profile?.slug && (
+          <div className="mb-6 rounded-lg border border-rose-100 bg-rose-50 px-4 py-3">
+            <p className="text-sm font-medium text-rose-900">Your salon login URL</p>
+            <p className="mt-1 break-all text-sm text-rose-700">
+              {getSalonPublicUrl(profile.slug, "/login")}
+            </p>
+            <p className="mt-2 text-xs text-rose-600">
+              Share this link with your team. Each salon has its own unique login page.
+            </p>
+          </div>
+        )}
+
+        <div className="mb-6 rounded-xl border border-stone-100 bg-stone-50/50 p-4">
+          <Label className="text-sm font-medium text-stone-700">Business logo</Label>
+          <p className="mt-1 text-xs text-stone-500">
+            Shown on your salon&apos;s login page. JPG, PNG, or WebP up to 2MB.
+          </p>
+
+          <div className="mt-4 flex flex-wrap items-center gap-4">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">
+              {logoPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={logoPreviewUrl}
+                  alt={`${profile?.name ?? "Salon"} logo`}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <ImageIcon className="h-8 w-8 text-stone-300" />
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleLogoUpload(file);
+                  event.target.value = "";
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={logoLoading}
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {logoLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Upload className="h-4 w-4" />
+                )}
+                {profile?.logoUrl ? "Replace logo" : "Upload logo"}
+              </Button>
+              {profile?.logoUrl && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={logoLoading}
+                  onClick={() => void handleLogoRemove()}
+                  className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
