@@ -2,88 +2,149 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ArrowRight, Sparkles } from "lucide-react";
-import { HERO, IMAGES } from "../constants";
-import { MacbookMockup } from "../ui/macbook-mockup";
-import { FloatingCards } from "./floating-cards";
+import { motion, useReducedMotion } from "framer-motion";
+import { ArrowRight } from "lucide-react";
+import { HERO } from "../constants";
+import { HeroProductShowcase } from "./hero-product-showcase";
+import { cn } from "@/lib/utils";
+
+const STAGGER = 0.08;
+
+const fadeUp = (delay: number, reduced: boolean) =>
+  reduced
+    ? {}
+    : {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
+      };
 
 export function HeroSection() {
+  const prefersReducedMotion = useReducedMotion();
+  const reduced = !!prefersReducedMotion;
+
   return (
-    <section className="relative min-h-screen overflow-hidden">
-      {/* Full-screen background */}
-      <Image
-        src={IMAGES.hero}
-        alt="Luxury salon interior with professional styling stations"
-        fill
-        priority
-        className="object-cover"
-        sizes="100vw"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/50" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30" />
+    <section className="hero-editorial relative h-full overflow-x-hidden">
+      {/* Salon background */}
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <Image
+          src="/salon.jpg"
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-[#F7F3EC]/25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/82 via-[#F7F3EC]/38 to-[#F7F3EC]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" />
+        <div className="hero-editorial__grain absolute inset-0 opacity-35" />
+      </div>
 
-      <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col items-center gap-8 px-4 pb-16 pt-28 lg:flex-row lg:items-center lg:gap-12 lg:px-8 lg:pt-24">
-        {/* Left content */}
-        <motion.div
-          initial={{ opacity: 0, x: -40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="z-10 flex-1 text-center lg:text-left"
-        >
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-sm text-white/90 backdrop-blur-md">
-            <Sparkles className="h-4 w-4 text-emerald-400" />
-            AI-Powered Salon ERP
-          </div>
-
-          <h1 className="font-serif text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-6xl xl:text-7xl">
-            {HERO.heading.split("AI Powered ERP")[0]}
-            <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-purple-400 bg-clip-text text-transparent">
-              AI Powered ERP
+      <div className="relative mx-auto flex h-full min-h-0 max-w-7xl flex-col items-center justify-center gap-4 px-5 pb-[7.25rem] pt-[calc(var(--landing-nav-h)+1rem)] sm:gap-5 sm:px-6 sm:pb-[7.5rem] sm:pt-[calc(var(--landing-nav-h)+1.25rem)] lg:flex-row lg:gap-6 lg:px-8 lg:pb-[calc(var(--landing-trust-half)+0.5rem)] lg:pt-[calc(var(--landing-nav-h)+0.75rem)] xl:gap-8">
+        {/* Copy & CTAs */}
+        <div className="z-10 w-full flex-shrink-0 text-center lg:max-w-xl lg:flex-1 lg:text-left">
+          <motion.div
+            data-motion=""
+            {...fadeUp(0, reduced)}
+            className="mb-2 flex items-center justify-center gap-2.5 lg:mb-4 lg:justify-start lg:gap-3"
+          >
+            <span className="h-px w-6 shrink-0 bg-[#1B1714]/25 sm:w-8" aria-hidden />
+            <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7A2E2E] sm:text-[11px] sm:tracking-[0.22em]">
+              {HERO.eyebrow}
             </span>
-          </h1>
+            <span className="hidden h-px w-6 shrink-0 bg-[#1B1714]/25 sm:block sm:w-8" aria-hidden />
+          </motion.div>
 
-          <p className="mt-5 max-w-xl text-lg text-white/80 lg:text-xl">
+          <motion.h1
+            data-motion=""
+            {...fadeUp(STAGGER, reduced)}
+            className="hero-editorial__headline text-[1.625rem] font-semibold leading-[1.12] tracking-tight text-[#1B1714] sm:text-[1.875rem] sm:leading-[1.1] md:text-4xl lg:text-[2.75rem] lg:leading-[1.08] xl:text-[3.25rem]"
+          >
+            {HERO.headline}{" "}
+            <em className="not-italic text-[#7A2E2E]">
+              <span className="italic">{HERO.headlineEmphasis}</span>
+            </em>
+          </motion.h1>
+
+          <motion.p
+            data-motion=""
+            {...fadeUp(STAGGER * 2, reduced)}
+            className="mx-auto mt-3 max-w-[20rem] text-sm leading-relaxed text-[#1B1714]/75 sm:mt-4 sm:max-w-md sm:text-[15px] md:text-base lg:mx-0 lg:max-w-xl"
+          >
             {HERO.subtitle}
-          </p>
+          </motion.p>
 
-          <div className="mt-6 flex flex-wrap justify-center gap-2 lg:justify-start">
-            {HERO.features.map((f) => (
+          <motion.div
+            data-motion=""
+            {...fadeUp(STAGGER * 3, reduced)}
+            className="mt-4 hidden flex-wrap justify-center gap-2 min-[720px]:flex lg:justify-start"
+          >
+            {HERO.features.map((feature) => (
               <span
-                key={f}
-                className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs text-white/90 backdrop-blur-sm md:text-sm"
+                key={feature}
+                className={cn(
+                  "rounded-full border border-[#1B1714]/20 bg-transparent px-3 py-1.5",
+                  "text-xs text-[#1B1714]/80 md:text-[13px]",
+                  "transition-colors duration-200",
+                  "hover:border-[#2F6F5E] hover:bg-[#2F6F5E] hover:text-[#F7F3EC]"
+                )}
               >
-                {f}
+                {feature}
               </span>
             ))}
-          </div>
+          </motion.div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center lg:justify-start">
+          <motion.div
+            data-motion=""
+            {...fadeUp(STAGGER * 4, reduced)}
+            className="mx-auto mt-4 flex w-full max-w-sm flex-col gap-2.5 sm:mt-5 sm:max-w-md sm:gap-3 lg:mx-0 lg:mt-6 lg:max-w-none lg:flex-row lg:justify-start"
+          >
             <Link
               href="/register"
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-8 py-4 text-base font-semibold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-500"
+              className={cn(
+                "inline-flex w-full items-center justify-center gap-2 rounded-xl px-5 py-3",
+                "bg-[#7A2E2E] text-sm font-semibold text-[#F7F3EC] sm:text-[15px] md:text-base",
+                "shadow-[0_4px_16px_-4px_rgba(122,46,46,0.45)]",
+                "transition-[transform,box-shadow,background-color] duration-200",
+                "hover:-translate-y-0.5 hover:bg-[#6B2828] hover:shadow-[0_8px_24px_-6px_rgba(122,46,46,0.5)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7A2E2E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]",
+                "lg:w-auto lg:px-8 lg:py-3.5"
+              )}
             >
               {HERO.ctaPrimary}
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden />
             </Link>
             <Link
               href="#pricing"
-              className="inline-flex items-center justify-center rounded-xl border border-white/30 bg-white/10 px-8 py-4 text-base font-semibold text-white backdrop-blur-md transition hover:bg-white/20"
+              className={cn(
+                "inline-flex w-full items-center justify-center rounded-xl px-5 py-3",
+                "border border-[#1B1714]/30 bg-white/60 text-sm font-semibold text-[#1B1714] backdrop-blur-sm sm:text-[15px] md:text-base",
+                "transition-[transform,box-shadow,background-color,border-color] duration-200",
+                "hover:-translate-y-0.5 hover:border-[#1B1714]/50 hover:bg-white/80",
+                "hover:shadow-[0_4px_16px_-6px_rgba(27,23,20,0.12)]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F5E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]",
+                "lg:w-auto lg:bg-transparent lg:px-8 lg:py-3.5 lg:backdrop-blur-none"
+              )}
             >
               {HERO.ctaSecondary}
             </Link>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
 
-        {/* Right — MacBook + floating cards */}
+        {/* Dashboard mockup — desktop only */}
         <motion.div
-          initial={{ opacity: 0, x: 40 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="relative z-10 w-full flex-1 lg:max-w-xl"
+          data-motion=""
+          initial={reduced ? false : { opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={
+            reduced
+              ? { duration: 0 }
+              : { duration: 0.65, delay: STAGGER * 5, ease: [0.22, 1, 0.36, 1] }
+          }
+          className="relative z-10 hidden w-full min-h-0 flex-1 overflow-visible lg:block lg:max-h-full lg:max-w-[420px] xl:max-w-[480px] 2xl:max-w-[520px]"
         >
-          <FloatingCards />
-          <MacbookMockup variant="dashboard" />
+          <HeroProductShowcase animate={!reduced} className="lg:origin-top lg:scale-[0.9] xl:scale-[0.95] 2xl:scale-100" />
         </motion.div>
       </div>
     </section>

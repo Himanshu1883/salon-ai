@@ -1,11 +1,10 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { Navbar } from "./navbar";
 import { HeroSection } from "./hero/hero-section";
-import { ImageBanner } from "./banner/image-banner";
-import { BANNERS } from "./constants";
+import { HeroTrustBridge } from "./hero/hero-trust-bridge";
 import { Footer } from "./footer/footer";
+import dynamic from "next/dynamic";
 
 const ModulesSection = dynamic(() =>
   import("./modules/modules-section").then((m) => ({ default: m.ModulesSection }))
@@ -38,30 +37,17 @@ type LandingPageV2Props = {
 
 export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
   return (
-    <div className="landing-v2 min-h-screen bg-white text-gray-900 antialiased">
+    <div className="landing-v2 min-h-screen antialiased">
       <Navbar isAuthenticated={isAuthenticated} />
       <main>
-        <HeroSection />
-        <ImageBanner
-          image={BANNERS[0].image}
-          alt={BANNERS[0].alt}
-          text={BANNERS[0].text}
-          priority
-        />
+        <div className="relative h-[100svh] max-h-[100svh] min-h-[100svh] overflow-x-hidden lg:h-[calc(100svh-var(--landing-trust-half))] lg:max-h-[calc(100svh-var(--landing-trust-half))] lg:min-h-[calc(100svh-var(--landing-trust-half))] lg:overflow-visible">
+          <HeroSection />
+          <HeroTrustBridge />
+        </div>
         <ModulesSection />
         <PreviewSection />
-        <ImageBanner
-          image={BANNERS[1].image}
-          alt={BANNERS[1].alt}
-          text={BANNERS[1].text}
-        />
         <SalonTypesSection />
         <FeaturesSection />
-        <ImageBanner
-          image={BANNERS[2].image}
-          alt={BANNERS[2].alt}
-          text={BANNERS[2].text}
-        />
         <AiSection />
         <TestimonialsSection />
         <PricingSection />
