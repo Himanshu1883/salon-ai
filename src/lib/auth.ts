@@ -8,7 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeSalonPlan, type SalonPlan } from "@/lib/plans";
-import { salonLoginPath } from "@/lib/salon-paths";
+import { signOutCallbackUrl } from "@/lib/salon-paths";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -107,7 +107,7 @@ type SalonSessionUser = {
 };
 
 function loginRedirectPath(salonSlug?: string | null) {
-  return salonSlug ? salonLoginPath(salonSlug) : "/";
+  return signOutCallbackUrl({ salonSlug });
 }
 
 export async function requireSession() {

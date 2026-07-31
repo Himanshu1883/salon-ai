@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { signOutCallbackUrl } from "@/lib/salon-paths";
 import { LayoutDashboard, Building2, LogOut, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,11 @@ export function AdminSidebar({ userName }: { userName: string }) {
         <Button
           variant="outline"
           className="w-full justify-start gap-2"
-          onClick={() => signOut({ callbackUrl: "/admin/login" })}
+          onClick={() =>
+            signOut({
+              callbackUrl: signOutCallbackUrl({ isSuperAdmin: true }),
+            })
+          }
         >
           <LogOut className="h-4 w-4" />
           Logout

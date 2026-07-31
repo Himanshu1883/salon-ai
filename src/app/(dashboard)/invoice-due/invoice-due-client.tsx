@@ -26,9 +26,11 @@ type OverdueInvoice = {
 export function InvoiceDueClient({
   overdueInvoice,
   subscription,
+  signOutUrl = "/",
 }: {
   overdueInvoice: OverdueInvoice;
   subscription: Subscription;
+  signOutUrl?: string;
 }) {
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center">
@@ -102,7 +104,7 @@ export function InvoiceDueClient({
               variant="ghost"
               size="sm"
               className="mt-3 gap-2 text-stone-600"
-              onClick={() => signOut({ callbackUrl: "/" })}
+              onClick={() => signOut({ callbackUrl: signOutUrl })}
             >
               <LogOut className="h-4 w-4" />
               Log out

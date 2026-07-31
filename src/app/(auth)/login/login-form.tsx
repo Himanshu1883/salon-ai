@@ -149,13 +149,15 @@ function SalonLogoMark({
         "flex shrink-0 items-center justify-center rounded-xl ring-1",
         sizeClasses,
         variant === "light"
-          ? "bg-[#8DC63F]/20 ring-[#8DC63F]/40"
-          : "bg-[#8DC63F]/15 ring-[#8DC63F]/25"
+          ? "bg-dashboard-secondary/20 ring-dashboard-secondary/40"
+          : "bg-dashboard-primary/15 ring-dashboard-primary/25"
       )}
     >
       <Icon
         className={cn(
-          variant === "light" ? "text-[#8DC63F]" : "text-[#3d7a2a]",
+          variant === "light"
+            ? "text-dashboard-secondary"
+            : "text-dashboard-primary",
           size === "lg" ? "h-7 w-7" : size === "md" ? "h-6 w-6" : "h-5 w-5"
         )}
       />
@@ -183,7 +185,7 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
         <div className={compact ? "text-center" : "min-w-0"}>
           <h2
             className={cn(
-              "font-bold tracking-tight text-[#1B3B2B]",
+              "font-bold tracking-tight text-dashboard-text",
               compact ? "text-xl" : "text-2xl"
             )}
           >
@@ -209,7 +211,7 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
                 compact ? "justify-center" : "items-start"
               )}
             >
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#8DC63F]" />
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-dashboard-secondary" />
               <span>{address}</span>
             </p>
           )}
@@ -220,10 +222,10 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
                 compact ? "justify-center" : "items-center"
               )}
             >
-              <Phone className="h-4 w-4 shrink-0 text-[#8DC63F]" />
+              <Phone className="h-4 w-4 shrink-0 text-dashboard-secondary" />
               <a
                 href={`tel:${phone.replace(/\s/g, "")}`}
-                className="font-medium text-[#3d7a2a] transition hover:text-[#1B3B2B] hover:underline"
+                className="font-medium text-dashboard-primary transition hover:text-dashboard-primary-hover hover:underline"
               >
                 {phone}
               </a>
@@ -308,8 +310,8 @@ export default function LoginForm({ salon }: LoginFormProps) {
           className="object-cover"
           sizes="50vw"
         />
-        <div className="absolute inset-0 bg-[#0f2419]/82" />
-        <div className="salon-login-brand-curve absolute inset-y-0 -right-16 z-10 w-32 bg-[#0f2419]/82" />
+        <div className="salon-login-brand-overlay absolute inset-0" />
+        <div className="salon-login-brand-overlay salon-login-brand-curve absolute inset-y-0 -right-16 z-10 w-32" />
 
         <div className="relative z-20 flex w-full flex-col justify-between px-10 py-12 xl:px-14 xl:py-14">
           <div className="flex flex-col">

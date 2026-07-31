@@ -34,6 +34,11 @@ export const authConfig = {
     authorized: async ({ auth }) => {
       return !!auth?.user;
     },
+    redirect: async ({ url, baseUrl }) => {
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      if (new URL(url).origin === baseUrl) return url;
+      return baseUrl;
+    },
   },
   providers: [],
 } satisfies NextAuthConfig;

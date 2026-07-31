@@ -68,6 +68,16 @@ export function salonLoginPath(slug: string) {
   return salonPath(slug, "/login");
 }
 
+/** Post-logout destination: salon login, admin login, or homepage. */
+export function signOutCallbackUrl(options?: {
+  salonSlug?: string | null;
+  isSuperAdmin?: boolean;
+}): string {
+  if (options?.isSuperAdmin) return "/admin/login";
+  if (options?.salonSlug) return salonLoginPath(options.salonSlug);
+  return "/";
+}
+
 export function salonDashboardPath(slug: string) {
   return salonPath(slug, "/dashboard");
 }

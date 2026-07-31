@@ -30,6 +30,7 @@ export default async function DashboardLayout({
     <PlanProvider plan={plan}>
       <DashboardShell
         salonName={session.user.salonName ?? "Salon"}
+        salonSlug={session.user.salonSlug}
         userName={session.user.name}
         userRole={userRole}
         showSettings={showSettings}
