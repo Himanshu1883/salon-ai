@@ -9,9 +9,16 @@ type ImageBannerProps = {
   alt: string;
   text: string;
   height?: "md" | "lg";
+  priority?: boolean;
 };
 
-export function ImageBanner({ image, alt, text, height = "lg" }: ImageBannerProps) {
+export function ImageBanner({
+  image,
+  alt,
+  text,
+  height = "lg",
+  priority = false,
+}: ImageBannerProps) {
   const ref = useRef<HTMLElement>(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
 
@@ -19,17 +26,22 @@ export function ImageBanner({ image, alt, text, height = "lg" }: ImageBannerProp
     <section
       ref={ref}
       className={`relative w-full overflow-hidden ${
-        height === "lg" ? "h-[50vh] min-h-[320px] md:h-[60vh] md:min-h-[420px]" : "h-[40vh] min-h-[280px] md:h-[50vh]"
+        height === "lg"
+          ? "h-[55vh] min-h-[360px] md:h-[70vh] md:min-h-[480px] lg:min-h-[560px]"
+          : "h-[45vh] min-h-[300px] md:h-[55vh] md:min-h-[400px]"
       }`}
     >
       <Image
         src={image}
         alt={alt}
         fill
-        className="object-cover"
+        priority={priority}
+        quality={90}
+        className="object-cover object-center"
         sizes="100vw"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/40" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/55 to-purple-950/40" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}

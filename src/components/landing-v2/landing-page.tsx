@@ -46,6 +46,7 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
           image={BANNERS[0].image}
           alt={BANNERS[0].alt}
           text={BANNERS[0].text}
+          priority
         />
         <ModulesSection />
         <PreviewSection />
@@ -56,6 +57,11 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
         />
         <SalonTypesSection />
         <FeaturesSection />
+        <ImageBanner
+          image={BANNERS[2].image}
+          alt={BANNERS[2].alt}
+          text={BANNERS[2].text}
+        />
         <AiSection />
         <TestimonialsSection />
         <PricingSection />
