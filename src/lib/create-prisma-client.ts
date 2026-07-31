@@ -56,7 +56,7 @@ function toPooledDatabaseUrl(url: string): string {
 function withStatementTimeout(url: string): string {
   if (url.includes("statement_timeout")) return url;
   // Prisma Postgres pooled endpoints reject libpq `options` query params.
-  if (url.includes("db.prisma.io")) return url;
+  if (url.includes("db.prisma.io") || url.includes(".neon.tech")) return url;
 
   try {
     const parsed = new URL(url);
