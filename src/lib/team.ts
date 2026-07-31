@@ -1,0 +1,85 @@
+import {
+  addDays,
+  format,
+  parseISO,
+  startOfWeek,
+  endOfWeek,
+  isSameDay,
+} from "date-fns";
+
+export const EMPLOYEE_ROLE_LABELS: Record<string, string> = {
+  owner: "Workspace owner",
+  manager: "Manager",
+  stylist: "Stylist",
+  receptionist: "Receptionist",
+};
+
+export function getRoleLabel(role: string): string {
+  return EMPLOYEE_ROLE_LABELS[role] ?? role.charAt(0).toUpperCase() + role.slice(1);
+}
+
+export function parseTimeToMinutes(time: string): number {
+  const [hours, minutes] = time.split(":").map(Number);
+  return hours * 60 + (minutes ?? 0);
+}
+
+export function formatShiftTime(time: string): string {
+  const [hourStr, minuteStr] = time.split(":");
+  let hour = parseInt(hourStr, 10);
+  const minutes = parseInt(minuteStr ?? "0", 10);
+  const period = hour >= 12 ? "PM" : "AM";
+  if (hour === 0) hour = 12;
+  else if (hour > 12) hour -= 12;
+  if (minutes === 0) return `${hour} ${period}`;
+  return `${hour}:${minuteStr} ${period}`;
+}
+
+export function formatShiftRange(startTime: string, endTime: string): string {
+  return `${formatShiftTime(startTime)} – ${formatShiftTime(endTime)}`;
+}
+
+export function calculateShiftHours(
+  startTime: string,
+  endTime: string
+): number {
+  const start = parseTimeToMinutes(startTime);
+  const end = parseTimeToMinutes(endTime);
+  return Math.max(0, (end - start) / 60);
+}
+
+export function getWeekStart(date: Date | string): Date {
+  const d = typeof date === "string" ? parseISO(date) : date;
+  return startOfWeek(d, { weekStartsOn: 1 });
+}
+
+export function getWeekDays(weekStart: Date): Date[] {
+  return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+}
+
+export function formatWeekRange(weekStart: Date): string {
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+  return `${format(weekStart, "MMM d")} – ${format(weekEnd, "MMM d, yyyy")}`;
+}
+
+export function formatDayHeader(date: Date): { day: string; hours: number } {
+  return {
+    day: format(date, "EEE"),
+    hours: 0,
+  };
+}
+
+export function toDateKey(date: Date): string {
+  return format(date, "yyyy-MM-dd");
+}
+
+export function parseDateKey(key: string): Date {
+  return parseISO(key);
+}
+
+export function isTodayInWeek(weekStart: Date): boolean {
+  const today = new Date();
+  const weekEnd = addDays(weekStart, 6);
+  return today >= weekStart && today <= weekEnd;
+}
+
+export { isSameDay, format, addDays };

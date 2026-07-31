@@ -1,0 +1,798 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SalonPlan {
+  BASIC
+  ENTERPRISE
+}
+
+model Salon {
+  id                  String   @id @default(cuid())
+  name                String
+  plan                SalonPlan @default(ENTERPRISE)
+  phone               String?
+  address             String?
+  businessType        String?
+  gstin               String?
+  addressLine1        String?
+  city                String?
+  state               String?
+  pincode             String?
+  businessPhone       String?
+  businessEmail       String?
+  openingHours        String?
+  currency            String   @default("INR")
+  expectedTeamSize    Int?
+  onboardingCompleted Boolean  @default(true)
+  logoUrl             String?
+  totalSeats          Int      @default(4)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  users        User[]
+  employees    Employee[]
+  seats        Seat[]
+  services     Service[]
+  customers    Customer[]
+  queueEntries QueueEntry[]
+  appointments Appointment[]
+  invoices     Invoice[]
+  smsReminders SmsReminder[]
+  serviceCategories ServiceCategory[]
+  stockCategories   StockCategory[]
+  stockItems   StockItem[]
+  stockPurchases StockPurchase[]
+  suppliers    Supplier[]
+  productBrands  ProductBrand[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
+  stockAdjustments StockAdjustment[]
+  staffProductIssues StaffProductIssue[]
+  serviceRecipes ServiceRecipe[]
+  stockLedgerEntries StockLedgerEntry[]
+  branches       Branch[]
+  branchTransfers BranchTransfer[]
+  customSegments CustomSegment[]
+  shifts         Shift[]
+  timesheets     Timesheet[]
+  payRuns        PayRun[]
+  faceProfiles   EmployeeFaceProfile[]
+  attendanceRecords AttendanceRecord[]
+  reportFavorites ReportFavorite[]
+  subscription    SalonSubscription?
+  platformInvoices PlatformInvoice[]
+}
+
+model SalonSubscription {
+  id                 String   @id @default(cuid())
+  salonId            String   @unique
+  salon              Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  status             String   @default("trial")
+  planName           String   @default("Salon AI Pro")
+  monthlyAmount      Float    @default(750)
+  setupFeePaid       Boolean  @default(false)
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt        DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model PlatformInvoice {
+  id            String    @id @default(cuid())
+  salonId       String
+  salon         Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  invoiceNumber String
+  amount        Float
+  tax           Float     @default(0)
+  total         Float
+  periodStart   DateTime
+  periodEnd     DateTime
+  dueDate       DateTime
+  paidAt        DateTime?
+  status        String    @default("draft")
+  paymentMethod String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([salonId, invoiceNumber])
+  @@index([salonId, status])
+}
+
+model ReportFavorite {
+  id         String   @id @default(cuid())
+  salonId    String
+  salon      Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  userId     String
+  reportSlug String
+  createdAt  DateTime @default(now())
+
+  @@unique([salonId, userId, reportSlug])
+  @@index([salonId, userId])
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  name          String
+  phone         String?
+  role          String   @default("owner")
+  isSuperAdmin  Boolean  @default(false)
+  salonId       String?
+  salon         Salon?   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Employee {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String?
+  email       String?
+  role        String
+  specialties String?
+  avatarUrl   String?
+  status      String   @default("active")
+  addressLine1      String?
+  addressLine2      String?
+  city              String?
+  state             String?
+  pincode           String?
+  country           String?  @default("India")
+  aadharNumber      String?
+  panNumber         String?
+  aadharDocumentUrl String?
+  panDocumentUrl    String?
+  offerLetterUrl    String?
+  otherDocuments    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  services     EmployeeService[]
+  queueEntries QueueEntry[]
+  appointments Appointment[]
+  seats        Seat[]
+  invoices     Invoice[]
+  shifts       Shift[]
+  timesheets   Timesheet[]
+  faceProfile  EmployeeFaceProfile?
+  attendanceRecords AttendanceRecord[]
+  staffProductIssues StaffProductIssue[]
+  stockLedgerEntries StockLedgerEntry[]
+
+  @@index([salonId])
+  @@index([salonId, status])
+  @@index([salonId, name])
+}
+
+model EmployeeFaceProfile {
+  id               String   @id @default(cuid())
+  salonId          String
+  salon            Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId       String   @unique
+  employee         Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  faceDescriptor   String
+  enrolledAt       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  enrolledByUserId String?
+
+  @@index([salonId])
+}
+
+model AttendanceRecord {
+  id         String    @id @default(cuid())
+  salonId    String
+  salon      Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  checkInAt  DateTime
+  checkOutAt DateTime?
+  method     String
+  confidence Float?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([salonId, date])
+}
+
+model Shift {
+  id         String   @id @default(cuid())
+  salonId    String
+  salon      Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date       DateTime
+  startTime  String?
+  endTime    String?
+  isWorking  Boolean  @default(true)
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([employeeId, date])
+  @@index([salonId, date])
+}
+
+model Timesheet {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  weekStart   DateTime
+  hoursWorked Float    @default(0)
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([salonId, weekStart])
+}
+
+model PayRun {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd   DateTime
+  totalAmount Float    @default(0)
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([salonId, periodStart])
+}
+
+model Seat {
+  id         String    @id @default(cuid())
+  salonId    String
+  salon      Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  number     Int
+  status     String    @default("available")
+  employeeId String?
+  employee   Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  queueEntries QueueEntry[]
+  invoices     Invoice[]
+
+  @@unique([salonId, number])
+}
+
+model ServiceCategory {
+  id        String   @id @default(cuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services Service[]
+
+  @@index([salonId, sortOrder])
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  duration    Int
+  price       Float
+  categoryId  String?
+  category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  employees     EmployeeService[]
+  queueServices QueueService[]
+  appointments  Appointment[]
+  invoiceLineItems InvoiceLineItem[]
+  serviceRecipes ServiceRecipe[]
+
+  @@index([salonId, categoryId, sortOrder])
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  email     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockItems StockItem[]
+  purchaseOrders PurchaseOrder[]
+  goodsReceipts  GoodsReceipt[]
+
+  @@index([salonId, name])
+}
+
+model EmployeeService {
+  employeeId String
+  serviceId  String
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([employeeId, serviceId])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  salonId   String
+  salon     Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  phone     String?
+  email          String?
+  notes          String?
+  birthday       DateTime?
+  loyaltyPoints  Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  queueEntries QueueEntry[]
+  appointments Appointment[]
+  invoices     Invoice[]
+  stockLedgerEntries StockLedgerEntry[]
+
+  @@index([salonId, phone])
+}
+
+model CustomSegment {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  rules       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([salonId])
+}
+
+model QueueEntry {
+  id            String       @id @default(cuid())
+  salonId       String
+  salon         Salon        @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      Customer     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  employeeId    String?
+  employee      Employee?    @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  seatId        String?
+  seat          Seat?        @relation(fields: [seatId], references: [id], onDelete: SetNull)
+  status        String       @default("waiting")
+  checkedInAt   DateTime     @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  position      Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  services QueueService[]
+  invoices Invoice[]
+
+  @@index([salonId, appointmentId])
+}
+
+model QueueService {
+  queueEntryId String
+  serviceId    String
+  queueEntry   QueueEntry @relation(fields: [queueEntryId], references: [id], onDelete: Cascade)
+  service      Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([queueEntryId, serviceId])
+}
+
+model Appointment {
+  id          String    @id @default(cuid())
+  salonId     String
+  salon       Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId  String
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  employeeId  String?
+  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  scheduledAt DateTime
+  status      String    @default("scheduled")
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  invoices    Invoice[]
+  smsReminders SmsReminder[]
+  stockLedgerEntries StockLedgerEntry[]
+  queueEntries QueueEntry[]
+}
+
+model Invoice {
+  id            String    @id @default(cuid())
+  salonId       String
+  salon         Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  customerName  String
+  customerPhone String?
+  status        String    @default("draft")
+  subtotal      Float
+  tax           Float     @default(0)
+  total         Float
+  dueDate       DateTime?
+  paidAt        DateTime?
+  paymentMethod String?
+  notes         String?
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  checkInId     String?
+  checkIn       QueueEntry?  @relation(fields: [checkInId], references: [id], onDelete: SetNull)
+  employeeId    String?
+  employee      Employee?    @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  seatId        String?
+  seat          Seat?        @relation(fields: [seatId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  lineItems InvoiceLineItem[]
+}
+
+model InvoiceLineItem {
+  id          String   @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  serviceId   String?
+  service     Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  stockItemId String?
+  stockItem   StockItem? @relation(fields: [stockItemId], references: [id], onDelete: SetNull)
+  itemType    String   @default("SERVICE")
+  description String
+  quantity    Int      @default(1)
+  unitPrice   Float
+  total       Float
+}
+
+model StockCategory {
+  id        String   @id @default(cuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockItems StockItem[]
+
+  @@unique([salonId, name])
+  @@index([salonId, sortOrder])
+}
+
+model StockItem {
+  id             String   @id @default(cuid())
+  salonId        String
+  salon          Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name           String
+  sku            String?
+  barcode        String?
+  categoryId     String
+  category       StockCategory @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  brandId        String?
+  brand          ProductBrand? @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  supplierId     String?
+  supplier       Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  unit           String   @default("piece")
+  quantityOnHand Int      @default(0)
+  reorderLevel   Int?
+  maxLevel       Int?
+  costPrice      Float    @default(0)
+  retailPrice    Float    @default(0)
+  avgCost        Float    @default(0)
+  gstRate        Float    @default(18)
+  shelfLocation  String?
+  expiryDate     DateTime?
+  batchNumber    String?
+  imageUrl       String?
+  status         String   @default("active")
+  isRetail       Boolean  @default(true)
+  description    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  purchases            StockPurchase[]
+  purchaseOrderLines   PurchaseOrderLine[]
+  grnLineItems         GrnLineItem[]
+  stockAdjustments     StockAdjustment[]
+  staffProductIssues   StaffProductIssue[]
+  serviceRecipes       ServiceRecipe[]
+  stockLedgerEntries   StockLedgerEntry[]
+  branchTransferLines  BranchTransferLine[]
+  invoiceLineItems     InvoiceLineItem[]
+
+  @@index([salonId, categoryId])
+  @@index([salonId, name])
+  @@index([salonId, status])
+  @@index([salonId, expiryDate])
+}
+
+model ProductBrand {
+  id        String   @id @default(cuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stockItems StockItem[]
+
+  @@unique([salonId, name])
+  @@index([salonId])
+}
+
+model PurchaseOrder {
+  id           String   @id @default(cuid())
+  salonId      String
+  salon        Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  orderNumber  String
+  supplierId   String?
+  supplier     Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  status       String   @default("draft")
+  orderDate    DateTime @default(now())
+  expectedDate DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  lines          PurchaseOrderLine[]
+  goodsReceipts  GoodsReceipt[]
+
+  @@unique([salonId, orderNumber])
+  @@index([salonId, status])
+  @@index([salonId, orderDate])
+}
+
+model PurchaseOrderLine {
+  id               String        @id @default(cuid())
+  purchaseOrderId  String
+  purchaseOrder    PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  stockItemId      String
+  stockItem        StockItem     @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantityOrdered  Int
+  quantityReceived Int           @default(0)
+  unitCost         Float         @default(0)
+
+  @@index([purchaseOrderId])
+}
+
+model GoodsReceipt {
+  id              String   @id @default(cuid())
+  salonId         String
+  salon           Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  grnNumber       String
+  purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  supplierId      String?
+  supplier        Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  receivedDate    DateTime @default(now())
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  lineItems GrnLineItem[]
+
+  @@unique([salonId, grnNumber])
+  @@index([salonId, receivedDate])
+}
+
+model GrnLineItem {
+  id          String       @id @default(cuid())
+  grnId       String
+  grn         GoodsReceipt @relation(fields: [grnId], references: [id], onDelete: Cascade)
+  stockItemId String
+  stockItem   StockItem    @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantity    Int
+  unitCost    Float        @default(0)
+  batchNumber String?
+  expiryDate  DateTime?
+
+  @@index([grnId])
+}
+
+model StockAdjustment {
+  id          String    @id @default(cuid())
+  salonId     String
+  salon       Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  stockItemId String
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  adjustmentType String
+  quantity    Int
+  reason      String
+  notes       String?
+  status      String    @default("approved")
+  approvedById String?
+  createdById  String?
+  createdAt   DateTime  @default(now())
+
+  @@index([salonId, createdAt])
+  @@index([salonId, stockItemId])
+}
+
+model StaffProductIssue {
+  id          String   @id @default(cuid())
+  salonId     String
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId  String
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  stockItemId String
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantity    Int
+  quantityReturned Int @default(0)
+  issueDate   DateTime @default(now())
+  notes       String?
+  status      String   @default("issued")
+  createdAt   DateTime @default(now())
+
+  returns StaffProductReturn[]
+
+  @@index([salonId, employeeId])
+  @@index([salonId, issueDate])
+}
+
+model StaffProductReturn {
+  id         String            @id @default(cuid())
+  issueId    String
+  issue      StaffProductIssue @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  quantity   Int
+  returnDate DateTime          @default(now())
+  notes      String?
+
+  @@index([issueId])
+}
+
+model ServiceRecipe {
+  id          String    @id @default(cuid())
+  salonId     String
+  salon       Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  serviceId   String
+  service     Service   @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  stockItemId String
+  stockItem   StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantity    Float
+  unit        String
+
+  @@unique([serviceId, stockItemId])
+  @@index([salonId, serviceId])
+}
+
+model StockLedgerEntry {
+  id            String   @id @default(cuid())
+  salonId       String
+  salon         Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  stockItemId   String
+  stockItem     StockItem @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  movementType  String
+  quantity      Int
+  quantityAfter Int
+  unitCost      Float?
+  referenceType String?
+  referenceId   String?
+  appointmentId String?
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  customerId    String?
+  customer      Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  employeeId    String?
+  employee      Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  invoiceId     String?
+  notes         String?
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  @@index([salonId, stockItemId, createdAt])
+  @@index([salonId, movementType])
+  @@index([salonId, createdAt])
+}
+
+model Branch {
+  id        String   @id @default(cuid())
+  salonId   String
+  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  address   String?
+  isMain    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  transfersFrom BranchTransfer[] @relation("TransferFrom")
+  transfersTo   BranchTransfer[] @relation("TransferTo")
+
+  @@unique([salonId, name])
+  @@index([salonId])
+}
+
+model BranchTransfer {
+  id           String   @id @default(cuid())
+  salonId      String
+  salon        Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  transferNumber String
+  fromBranchId String
+  fromBranch   Branch   @relation("TransferFrom", fields: [fromBranchId], references: [id], onDelete: Restrict)
+  toBranchId   String
+  toBranch     Branch   @relation("TransferTo", fields: [toBranchId], references: [id], onDelete: Restrict)
+  status       String   @default("pending")
+  transferDate DateTime @default(now())
+  receivedDate DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  lineItems BranchTransferLine[]
+
+  @@unique([salonId, transferNumber])
+  @@index([salonId, status])
+}
+
+model BranchTransferLine {
+  id          String         @id @default(cuid())
+  transferId  String
+  transfer    BranchTransfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  stockItemId String
+  stockItem   StockItem      @relation(fields: [stockItemId], references: [id], onDelete: Restrict)
+  quantity    Int
+
+  @@index([transferId])
+}
+
+model StockPurchase {
+  id                 String   @id @default(cuid())
+  salonId            String
+  salon              Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  stockItemId        String
+  stockItem          StockItem @relation(fields: [stockItemId], references: [id], onDelete: Cascade)
+  quantityPurchased  Int
+  amount             Float
+  unitCost           Float?
+  supplierName       String?
+  purchaseDate       DateTime
+  billAttachmentPath String?
+  notes              String?
+  createdAt          DateTime @default(now())
+
+  @@index([salonId, stockItemId])
+  @@index([salonId, purchaseDate])
+}
+
+model SmsReminder {
+  id             String    @id @default(cuid())
+  salonId        String
+  salon          Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  type           String
+  recipientPhone String
+  recipientName  String
+  message        String
+  scheduledAt    DateTime
+  sentAt         DateTime?
+  status         String    @default("pending")
+  appointmentId  String?
+  appointment    Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
