@@ -6,15 +6,11 @@ import {
   deleteInvoice,
   updateInvoiceStatus,
 } from "@/actions/billing";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { BillingInvoiceDialog } from "@/components/billing/billing-invoice-dialog";
 import { BillingHeader } from "@/components/billing/billing-header";
 import { BillingKpiCards } from "@/components/billing/billing-kpi-cards";
 import { BillingFilterBar } from "@/components/billing/billing-filter-bar";
 import { BillingInvoiceTable } from "@/components/billing/billing-invoice-table";
-import { BillingInvoiceForm } from "@/components/billing/billing-invoice-form";
 import { BillingEmptyState } from "@/components/billing/billing-empty-state";
 import type {
   BillingEmployee,
@@ -186,20 +182,17 @@ export function BillingClient({
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="flex h-[780px] max-h-[calc(100vh-2rem)] w-[1180px] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-[20px] border-0 bg-white p-0 shadow-[0_30px_80px_rgba(0,0,0,0.15)] [&>button]:hidden">
-          <BillingInvoiceForm
-            services={services}
-            employees={employees}
-            seats={seats}
-            prefilledCustomer={prefilledCustomer}
-            isBasicPlan={isBasicPlan}
-            salonName={salonName}
-            onSuccess={handleInvoiceCreated}
-            onCancel={() => setOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      <BillingInvoiceDialog
+        open={open}
+        onOpenChange={setOpen}
+        services={services}
+        employees={employees}
+        seats={seats}
+        prefilledCustomer={prefilledCustomer}
+        isBasicPlan={isBasicPlan}
+        salonName={salonName}
+        onSuccess={handleInvoiceCreated}
+      />
     </div>
   );
 }

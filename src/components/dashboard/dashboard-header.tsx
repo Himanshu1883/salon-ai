@@ -13,6 +13,7 @@ import {
   LogOut,
   CreditCard,
   Building2,
+  Receipt,
 } from "lucide-react";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { signOut } from "next-auth/react";
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getRoleLabel } from "@/lib/team";
 import { usePlan } from "@/components/plans/plan-provider";
+import { useRecordSale } from "@/components/dashboard/record-sale-provider";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -55,6 +57,7 @@ export function DashboardHeader({
   accessBlocked = false,
 }: DashboardHeaderProps) {
   const { isEnterprise } = usePlan();
+  const { openRecordSale } = useRecordSale();
   const firstName = userName.split(" ")[0] ?? "there";
   const today = format(new Date(), "EEEE, MMMM d, yyyy");
   const roleLabel =
@@ -164,8 +167,9 @@ export function DashboardHeader({
                         <Link href="/check-in">Walk-in check-in</Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem asChild>
-                      <Link href="/billing">Record sale</Link>
+                    <DropdownMenuItem onSelect={openRecordSale}>
+                      <Receipt className="h-4 w-4" />
+                      Record sale
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link href="/clients">Add customer</Link>

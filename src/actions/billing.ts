@@ -695,3 +695,46 @@ export async function deleteInvoice(id: string) {
   invalidateBillingCache(session.user.salonId);
   return { success: true };
 }
+
+export async function getBillingInvoiceFormData() {
+  const session = await requireSession();
+  const salonId = session.user.salonId;
+
+  const [services, employees, seats, salon, plan] = await Promise.all([
+    prisma.service.findMany({
+      where: { salonId },
+      include: { category: true },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.employee.findMany({
+      where: { salonId, status: "active" },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.seat.findMany({
+      where: { salonId },
+      orderBy: { number: "asc" },
+      select: { id: true, number: true },
+    }),
+    prisma.salon.findUnique({
+      where: { id: salonId },
+      select: { name: true },
+    }),
+    getSalonPlan(salonId),
+  ]);
+
+  return {
+    services: services.map((s) => ({
+      id: s.id,
+      name: s.name,
+      price: s.price,
+      duration: s.duration,
+      categoryName: s.category?.name ?? "Other",
+      description: s.description,
+    })),
+    employees,
+    seats,
+    isBasicPlan: isBasicPlan(plan),
+    salonName: salon?.name ?? "Salon",
+  };
+}

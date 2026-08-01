@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { HeaderDataLoader } from "@/components/dashboard/header-data-loader";
+import { RecordSaleProvider } from "@/components/dashboard/record-sale-provider";
 import { cn } from "@/lib/utils";
 
 type DashboardShellProps = {
@@ -42,7 +43,8 @@ export function DashboardShell({
   );
 
   return (
-    <div className="flex min-h-screen bg-dashboard-bg font-[family-name:var(--font-inter)]">
+    <RecordSaleProvider>
+      <div className="flex min-h-screen bg-dashboard-bg font-[family-name:var(--font-inter)]">
       <HeaderDataLoader onData={handleHeaderData} />
       {mobileOpen && (
         <button
@@ -105,6 +107,7 @@ export function DashboardShell({
           <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
-    </div>
+      </div>
+    </RecordSaleProvider>
   );
 }

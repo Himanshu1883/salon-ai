@@ -12,6 +12,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { usePlan } from "@/components/plans/plan-provider";
+import { useRecordSale } from "@/components/dashboard/record-sale-provider";
 
 const actions = [
   {
@@ -35,10 +36,10 @@ const actions = [
     descriptionClassName: "text-white/80",
   },
   {
-    href: "/billing",
     label: "Record Sale",
     description: "Create invoice",
     icon: Receipt,
+    action: "record-sale" as const,
     className:
       "border-2 border-sky-200 bg-white text-sky-700 shadow-sm hover:border-sky-300 hover:bg-sky-50/50",
     iconClassName: "bg-sky-100 text-sky-600",
@@ -58,8 +59,9 @@ const actions = [
 
 export function DashboardQuickActions() {
   const { isEnterprise } = usePlan();
+  const { openRecordSale } = useRecordSale();
   const visibleActions = actions.filter((action) => {
-    if (action.href === "/check-in" || action.href === "/queue") {
+    if ("href" in action && (action.href === "/check-in" || action.href === "/queue")) {
       return isEnterprise;
     }
     return true;
@@ -75,31 +77,53 @@ export function DashboardQuickActions() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {visibleActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={cn(
-                  "flex flex-col gap-3 rounded-xl px-4 py-4 transition-all hover:scale-[1.01]",
-                  action.className
-                )}
-              >
-                <div
-                  className={cn(
-                    "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                    action.iconClassName
-                  )}
+            {visibleActions.map((action) => {
+              const cardClassName = cn(
+                "flex flex-col gap-3 rounded-xl px-4 py-4 transition-all hover:scale-[1.01]",
+                action.className
+              );
+              const cardContent = (
+                <>
+                  <div
+                    className={cn(
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
+                      action.iconClassName
+                    )}
+                  >
+                    <action.icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold">{action.label}</p>
+                    <p className={cn("text-xs", action.descriptionClassName)}>
+                      {action.description}
+                    </p>
+                  </div>
+                </>
+              );
+
+              if ("action" in action && action.action === "record-sale") {
+                return (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={openRecordSale}
+                    className={cardClassName}
+                  >
+                    {cardContent}
+                  </button>
+                );
+              }
+
+              return (
+                <Link
+                  key={"href" in action ? action.href : action.label}
+                  href={"href" in action ? action.href : "#"}
+                  className={cardClassName}
                 >
-                  <action.icon className="h-5 w-5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold">{action.label}</p>
-                  <p className={cn("text-xs", action.descriptionClassName)}>
-                    {action.description}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                  {cardContent}
+                </Link>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
