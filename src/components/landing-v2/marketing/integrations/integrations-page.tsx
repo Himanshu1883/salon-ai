@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 const EASE = [0.22, 0.61, 0.36, 1] as const;
 const CONTAINER = "mx-auto w-full max-w-[1120px] px-5 sm:px-6 lg:px-8";
 
-/** Real integrations / connected capabilities from Glow Desk product */
+/** Real integrations / connected capabilities from GlowDesk Product */
 const WORKFLOWS = [
   {
     id: "messaging",
@@ -160,7 +160,7 @@ export function IntegrationsPageContent() {
             <Reveal>
               <div className="mb-6 flex flex-col items-center gap-3">
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/45">
-                  Integrations · Glow Desk ERP
+                  Integrations · GlowDesk ERP
                 </p>
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 py-1 pl-1 pr-4 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
                   <Image
@@ -187,7 +187,7 @@ export function IntegrationsPageContent() {
 
             <Reveal delay={0.14}>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
-                Glow Desk connects WhatsApp, UPI payments, POS, inventory,
+                GlowDesk connects WhatsApp, UPI payments, POS, inventory,
                 marketing, and multi-branch ops — so your team runs one system
                 from booking to checkout.
               </p>
@@ -226,7 +226,7 @@ export function IntegrationsPageContent() {
         <div className={CONTAINER}>
           <Reveal>
             <h2 className="landing-display max-w-2xl text-3xl font-medium tracking-tight text-[#1B1714] md:text-4xl">
-              Pick your workflow. See Glow Desk at work.
+              Pick your workflow. See GlowDesk at work.
             </h2>
           </Reveal>
 
@@ -420,7 +420,7 @@ export function IntegrationsPageContent() {
             </h2>
             <p className="mt-4 text-base text-[#1B1714]/60">
               These aren&apos;t third-party plugins — they&apos;re built into
-              Glow Desk and share the same client, staff, and billing data.
+              GlowDesk and share the same client, staff, and billing data.
             </p>
           </Reveal>
 

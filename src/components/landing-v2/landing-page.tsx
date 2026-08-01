@@ -6,8 +6,8 @@ import { HeroTrustBridge } from "./hero/hero-trust-bridge";
 import { Footer } from "./footer/footer";
 import dynamic from "next/dynamic";
 
-const ModulesSection = dynamic(() =>
-  import("./modules/modules-section").then((m) => ({ default: m.ModulesSection }))
+const AboutSection = dynamic(() =>
+  import("./about/about-section").then((m) => ({ default: m.AboutSection }))
 );
 const PreviewSection = dynamic(() =>
   import("./preview/preview-section").then((m) => ({ default: m.PreviewSection }))
@@ -44,7 +44,7 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
           <HeroSection />
           <HeroTrustBridge />
         </div>
-        <ModulesSection />
+        <AboutSection />
         <PreviewSection />
         <SalonTypesSection />
         <FeaturesSection />

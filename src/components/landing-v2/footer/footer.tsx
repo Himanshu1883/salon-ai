@@ -1,15 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
+import { useState } from "react";
+import { ArrowRight } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   FOOTER_COLUMNS,
   FOOTER_SOCIAL,
   FOOTER_STATS,
 } from "../constants";
 import { LANDING_CONTAINER } from "../ui/landing-primitives";
-import { BrandMark } from "../ui/brand-logo";
+import { BrandLogo } from "../ui/brand-logo";
 import { cn } from "@/lib/utils";
 
 function SocialIcon({
@@ -18,7 +19,7 @@ function SocialIcon({
   icon: (typeof FOOTER_SOCIAL)[number]["icon"];
 }) {
   const props = {
-    className: "h-4 w-4",
+    className: "h-3.5 w-3.5",
     fill: "currentColor",
     "aria-hidden": true as const,
   };
@@ -53,15 +54,34 @@ function SocialIcon({
 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
 
-function FooterLinkItem({ label, href }: { label: string; href: string }) {
+function FooterLinkItem({
+  label,
+  href,
+  icon,
+}: {
+  label: string;
+  href: string;
+  icon?: (typeof FOOTER_SOCIAL)[number]["icon"];
+}) {
   const className =
-    "text-sm text-white/50 transition-colors duration-300 hover:text-white";
-  const content = <span>{label}</span>;
+    "inline-flex items-center gap-1.5 text-sm text-white/45 transition-colors duration-200 hover:text-white";
+  const content = (
+    <>
+      <span>{label}</span>
+      {icon ? <SocialIcon icon={icon} /> : null}
+    </>
+  );
 
   return (
     <li>
       {href.startsWith("mailto:") || href.startsWith("http") ? (
-        <a href={href} className={className}>
+        <a
+          href={href}
+          className={className}
+          {...(href.startsWith("http")
+            ? { target: "_blank", rel: "noopener noreferrer" }
+            : {})}
+        >
           {content}
         </a>
       ) : (
@@ -73,211 +93,236 @@ function FooterLinkItem({ label, href }: { label: string; href: string }) {
   );
 }
 
-function formatStat(
-  stat: (typeof FOOTER_STATS)[number],
-  value: number
-): string {
-  if (stat.value === null) return stat.display;
-
-  const decimals = "decimals" in stat ? stat.decimals : 0;
-
-  if (stat.suffix === "K+") {
-    return `${Math.round(value)}${stat.suffix}`;
-  }
-
-  if (stat.suffix === "%") {
-    return `${value.toFixed(decimals)}${stat.suffix}`;
-  }
-
-  return `${Math.round(value).toLocaleString("en-IN")}${stat.suffix}`;
-}
-
-function AnimatedStat({
-  stat,
-  index,
-  instant,
-}: {
-  stat: (typeof FOOTER_STATS)[number];
-  index: number;
-  instant: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [display, setDisplay] = useState(
-    stat.value === null
-      ? stat.display
-      : instant
-        ? formatStat(stat, stat.value)
-        : "0"
-  );
-
-  useEffect(() => {
-    if (instant || stat.value === null || !inView) {
-      if (stat.value !== null && inView) {
-        setDisplay(formatStat(stat, stat.value));
-      }
-      return;
-    }
-
-    const duration = 1400;
-    const start = performance.now();
-    let frame = 0;
-
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setDisplay(formatStat(stat, stat.value! * eased));
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [inView, instant, stat]);
-
+function DotGrid() {
   return (
-    <motion.div
-      ref={ref}
-      initial={instant ? false : { opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{
-        delay: instant ? 0 : index * 0.07,
-        duration: 0.5,
-        ease: EASE,
-      }}
-      className="relative px-1 py-1 sm:px-2"
-    >
-      <p className="landing-display text-3xl font-medium tracking-tight text-white md:text-4xl">
-        {display}
-      </p>
-      <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-white/40">
-        {stat.label}
-      </p>
-    </motion.div>
-  );
-}
-
-function StatusIndicator() {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="relative flex h-1.5 w-1.5">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70 opacity-50" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
-      </span>
-      <span className="text-xs tracking-wide text-white/45">
-        System online
-      </span>
+    <div className="grid grid-cols-3 gap-1" aria-hidden>
+      {Array.from({ length: 9 }).map((_, i) => (
+        <span key={i} className="h-1 w-1 rounded-full bg-[#C4B5FD]/50" />
+      ))}
     </div>
   );
+}
+
+function formatStatDisplay(stat: (typeof FOOTER_STATS)[number]): string {
+  if (stat.value === null) return stat.display;
+  if (stat.suffix === "%") {
+    const decimals = "decimals" in stat ? stat.decimals : 0;
+    return `${stat.value.toFixed(decimals)}${stat.suffix}`;
+  }
+  if (stat.suffix === "K+") return `${stat.value}${stat.suffix}`;
+  return `${stat.value.toLocaleString("en-IN")}${stat.suffix}`;
 }
 
 export function Footer() {
   const prefersReducedMotion = useReducedMotion();
   const instant = !!prefersReducedMotion;
   const year = new Date().getFullYear();
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubscribed(true);
+  }
 
   return (
     <footer className="relative overflow-hidden bg-[#0C0A09] text-[#F7F3EC]">
       <div className="pointer-events-none absolute inset-0" aria-hidden>
-        <div className="absolute -left-1/4 top-0 h-[420px] w-[70%] rounded-full bg-[#5B21B6]/20 blur-[120px]" />
-        <div className="absolute -right-1/4 bottom-0 h-[320px] w-[55%] rounded-full bg-[#4F46E5]/10 blur-[100px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,9,0)_0%,rgba(12,10,9,0.55)_100%)]" />
-        <div
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
-          }}
-        />
+        <div className="absolute -left-1/4 top-0 h-[380px] w-[60%] rounded-full bg-[#5B21B6]/18 blur-[110px]" />
+        <div className="absolute -right-1/4 bottom-0 h-[280px] w-[50%] rounded-full bg-[#4F46E5]/12 blur-[100px]" />
       </div>
 
-      <div className={cn(LANDING_CONTAINER, "relative")}>
-        {/* Brand + nav */}
-        <div className="grid gap-12 border-b border-white/[0.08] pt-14 pb-14 md:pt-16 md:pb-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+      <div className={cn(LANDING_CONTAINER, "relative pt-10 pb-10 md:pt-14 md:pb-12")}>
+        {/* Dual CTA cards */}
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
           <motion.div
-            initial={instant ? false : { opacity: 0, y: 18 }}
+            initial={instant ? false : { opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, ease: EASE }}
+            className="relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-white/[0.08] bg-[#161210] px-7 py-8 md:min-h-[320px] md:px-9 md:py-10"
           >
-            <BrandMark size="footer" />
-            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/45">
-              Luxury AI-powered salon ERP trusted by modern salons across India.
-            </p>
+            <div>
+              <h2 className="landing-display max-w-[16ch] text-3xl font-medium leading-[1.15] tracking-tight text-white md:text-4xl">
+                Salon tips & product updates
+              </h2>
+              <p className="mt-4 max-w-sm text-xs leading-relaxed text-white/45 md:text-[13px]">
+                Get GlowDesk release notes, booking & billing tips, and WhatsApp
+                automation ideas. By subscribing you agree to our privacy policy.
+              </p>
+            </div>
 
-            {FOOTER_SOCIAL.length > 0 && (
-              <div className="mt-6 flex items-center gap-2.5">
-                {FOOTER_SOCIAL.map(({ label, href, icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    aria-label={label}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/45",
-                      "transition-[transform,color,background-color,border-color] duration-300",
-                      "hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
-                    )}
-                  >
-                    <SocialIcon icon={icon} />
-                  </a>
-                ))}
-              </div>
+            {subscribed ? (
+              <p className="text-sm text-[#C4B5FD]">
+                You&apos;re in — watch your inbox for salon updates.
+              </p>
+            ) : (
+              <form
+                onSubmit={handleSubscribe}
+                className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-5"
+              >
+                <label className="min-w-0 flex-1">
+                  <span className="sr-only">Email</span>
+                  <input
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@yoursalon.com"
+                    className="w-full border-0 border-b border-white/25 bg-transparent pb-3 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#A78BFA]"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  className="inline-flex shrink-0 items-center justify-center rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#0C0A09] transition-[transform,background-color] hover:-translate-y-px hover:bg-[#EDE9FE]"
+                >
+                  Subscribe
+                </button>
+              </form>
             )}
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-10 sm:gap-12">
+          <motion.div
+            initial={instant ? false : { opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: instant ? 0 : 0.08, duration: 0.5, ease: EASE }}
+            className="relative flex min-h-[280px] flex-col justify-between overflow-hidden rounded-[1.75rem] border border-[#5B21B6]/35 bg-gradient-to-br from-[#2E1065]/80 to-[#161210] px-7 py-8 md:min-h-[320px] md:px-9 md:py-10"
+          >
+            <p
+              className="pointer-events-none absolute -right-2 bottom-0 select-none font-serif text-[14rem] font-medium leading-none text-white/[0.06] md:text-[16rem]"
+              aria-hidden
+            >
+              S
+            </p>
+
+            <div className="relative">
+              <DotGrid />
+              <h2 className="landing-display mt-6 max-w-[18ch] text-3xl font-medium leading-[1.15] tracking-tight text-white md:text-4xl">
+                Run appointments, billing & AI on one platform.
+              </h2>
+              <p className="mt-3 max-w-sm text-xs leading-relaxed text-white/45 md:text-[13px]">
+                14-day free trial · {FOOTER_STATS[0].value}
+                {FOOTER_STATS[0].suffix} salons · No credit card
+              </p>
+            </div>
+
+            <div className="relative mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/signup"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-2.5 text-sm font-semibold text-[#0C0A09] transition-[transform,background-color] hover:-translate-y-px hover:bg-[#EDE9FE]"
+              >
+                Start free trial
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+              </Link>
+              <Link
+                href="/pricing"
+                className="inline-flex items-center rounded-full border border-white/20 px-5 py-2.5 text-sm font-medium text-white/70 transition-colors hover:border-white/40 hover:text-white"
+              >
+                View pricing
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Stats */}
+        <div className="mt-10 grid grid-cols-2 gap-6 border-b border-white/[0.08] pb-10 md:mt-12 md:grid-cols-4 md:gap-8 md:pb-12">
+          {FOOTER_STATS.map((stat, i) => (
+            <motion.div
+              key={stat.label}
+              initial={instant ? false : { opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: instant ? 0 : i * 0.05,
+                duration: 0.4,
+                ease: EASE,
+              }}
+            >
+              <p className="landing-display text-2xl font-medium tracking-tight text-white md:text-3xl">
+                {formatStatDisplay(stat)}
+              </p>
+              <p className="mt-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-white/35">
+                {stat.label}
+              </p>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Logo + columns */}
+        <div className="mt-12 flex flex-col gap-12 md:mt-14 lg:flex-row lg:items-start lg:justify-between lg:gap-16">
+          <div className="max-w-xs">
+            <Link
+              href="/"
+              aria-label="GlowDesk home"
+              className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-1.5"
+            >
+              <BrandLogo size="nav" className="!h-8 !w-8 rounded-lg" />
+            </Link>
+            <p className="mt-4 text-sm leading-relaxed text-white/40">
+              AI-powered salon ERP for appointments, POS, inventory, staff, and
+              WhatsApp — built for Indian salons.
+            </p>
+          </div>
+
+          <div className="grid flex-1 grid-cols-2 gap-x-10 gap-y-10 sm:grid-cols-3 lg:max-w-3xl lg:justify-items-start xl:max-w-4xl">
             {FOOTER_COLUMNS.map((column, colIndex) => (
               <motion.div
                 key={column.title}
-                initial={instant ? false : { opacity: 0, y: 18 }}
+                initial={instant ? false : { opacity: 0, y: 12 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{
-                  delay: instant ? 0 : 0.08 + colIndex * 0.06,
-                  duration: 0.5,
+                  delay: instant ? 0 : 0.05 + colIndex * 0.05,
+                  duration: 0.45,
                   ease: EASE,
                 }}
               >
-                <h4 className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
+                <h4 className="text-sm font-semibold text-white">
                   {column.title}
                 </h4>
-                <ul className="mt-5 space-y-3">
+                <ul className="mt-4 space-y-2.5">
                   {column.links.map((link) => (
                     <FooterLinkItem key={link.label} {...link} />
                   ))}
                 </ul>
               </motion.div>
             ))}
+
+            <motion.div
+              initial={instant ? false : { opacity: 0, y: 12 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{
+                delay: instant ? 0 : 0.15,
+                duration: 0.45,
+                ease: EASE,
+              }}
+            >
+              <h4 className="text-sm font-semibold text-white">Follow us</h4>
+              <ul className="mt-4 space-y-2.5">
+                <FooterLinkItem
+                  label="Contact us"
+                  href="mailto:support@glowdesk.com"
+                />
+                <FooterLinkItem label="Documentation" href="/documentation" />
+                {FOOTER_SOCIAL.map((social) => (
+                  <FooterLinkItem
+                    key={social.label}
+                    label={social.label}
+                    href={social.href}
+                    icon={social.icon}
+                  />
+                ))}
+              </ul>
+            </motion.div>
           </div>
         </div>
 
-        {/* Stats — editorial, no cards */}
-        <div className="grid grid-cols-2 gap-y-10 border-b border-white/[0.08] py-12 md:py-14 lg:grid-cols-4 lg:gap-0">
-          {FOOTER_STATS.map((stat, i) => (
-            <div
-              key={stat.label}
-              className={cn(
-                "lg:px-6",
-                i > 0 && "lg:border-l lg:border-white/[0.08]",
-                i === 0 && "lg:pl-0"
-              )}
-            >
-              <AnimatedStat stat={stat} index={i} instant={instant} />
-            </div>
-          ))}
-        </div>
-
-        {/* Bottom bar */}
-        <div className="flex flex-col items-start gap-4 py-8 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            &copy; {year} Glow Desk · Made in India
-          </p>
-          <StatusIndicator />
-          <p className="sm:text-right">
-            Built for salon professionals
-          </p>
+        <div className="mt-14 flex flex-col gap-2 border-t border-white/[0.08] pt-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
+          <p>&copy; {year} GlowDesk · Made in India</p>
+          <p>Built for salon professionals</p>
         </div>
       </div>
     </footer>

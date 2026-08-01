@@ -17,13 +17,14 @@ export function BrandLogo({ className, size = "nav", priority }: BrandLogoProps)
 
   return (
     <Image
-      src="/log.png"
+      src="/logo-mark.png"
       alt=""
       width={config.width}
       height={config.height}
       priority={priority ?? size === "nav"}
+      unoptimized
       className={cn(
-        "rounded-xl object-contain object-center",
+        "object-contain object-center",
         config.className,
         className
       )}
@@ -40,7 +41,7 @@ type BrandMarkProps = {
 
 export function BrandMark({ className, size = "nav", priority }: BrandMarkProps) {
   return (
-    <div className={cn("flex items-center gap-2.5", className)}>
+    <div className={cn("flex items-center", className)}>
       <BrandLogo size={size} priority={priority} />
       <span
         className={cn(
@@ -50,7 +51,7 @@ export function BrandMark({ className, size = "nav", priority }: BrandMarkProps)
             : "text-xl text-white sm:text-2xl"
         )}
       >
-        Glow Desk
+        GlowDesk
       </span>
     </div>
   );
