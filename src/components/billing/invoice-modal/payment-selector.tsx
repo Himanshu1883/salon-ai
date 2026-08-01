@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SplitPayment } from "./split-payment";
+import { SectionHeader } from "./section-header";
 
 export type PaymentMethodId =
   | "cash"
@@ -129,12 +130,9 @@ export function PaymentSelector({
 }: PaymentSelectorProps) {
   return (
     <section aria-labelledby="payment-section">
-      <h3
-        id="payment-section"
-        className="mb-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]"
-      >
+      <SectionHeader id="payment-section" className="mb-5">
         Choose payment method
-      </h3>
+      </SectionHeader>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {PAYMENT_OPTIONS.map((option) => {
           const Icon = option.icon;
@@ -147,18 +145,19 @@ export function PaymentSelector({
               whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(option.id)}
               className={cn(
-                "relative flex flex-col items-center gap-3 rounded-[18px] border-2 bg-white p-4 text-center transition-all",
+                "relative flex flex-col items-center gap-3 rounded-2xl border bg-white p-4 text-center transition-all",
+                "shadow-sm shadow-violet-950/[0.02]",
                 isSelected
-                  ? "border-[#6D5DF6] shadow-[0_0_0_1px_#6D5DF6]"
-                  : "border-[#E5E7EB] hover:border-[#6D5DF6]/40"
+                  ? "border-violet-400 shadow-md shadow-violet-500/10 ring-2 ring-violet-500/20"
+                  : "border-violet-100/80 hover:border-violet-200 hover:shadow-md hover:shadow-violet-500/5"
               )}
             >
               <span
                 className={cn(
-                  "absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full border-2",
+                  "absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors",
                   isSelected
-                    ? "border-[#6D5DF6] bg-[#6D5DF6]"
-                    : "border-[#D1D5DB] bg-white"
+                    ? "border-violet-600 bg-violet-600"
+                    : "border-violet-200 bg-white"
                 )}
               >
                 {isSelected && (
@@ -173,7 +172,7 @@ export function PaymentSelector({
               >
                 <Icon className="h-6 w-6" />
               </div>
-              <span className="text-sm font-medium text-[#1C103D]">
+              <span className="text-sm font-medium text-dashboard-text">
                 {option.label}
               </span>
             </motion.button>

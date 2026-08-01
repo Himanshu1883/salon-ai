@@ -3,6 +3,7 @@
 import { motion, useSpring, useTransform } from "framer-motion";
 import { useEffect } from "react";
 import { formatCurrency } from "@/lib/utils";
+import { invoiceModalStyles } from "./styles";
 
 export type SummaryLineItem = {
   name: string;
@@ -36,20 +37,26 @@ export function InvoiceSummary({
   total,
 }: InvoiceSummaryProps) {
   return (
-    <div className="sticky top-0 rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFC] p-6">
-      <h3 className="mb-5 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]">
-        Invoice Summary
-      </h3>
+    <div className={invoiceModalStyles.summaryCard}>
+      <div className="mb-5 flex items-center gap-2.5">
+        <div
+          className="h-4 w-1 rounded-full bg-gradient-to-b from-violet-500 to-violet-400"
+          aria-hidden
+        />
+        <h3 className="text-sm font-semibold tracking-tight text-dashboard-text">
+          Invoice Summary
+        </h3>
+      </div>
 
       {items.length > 0 && (
-        <div className="mb-5 space-y-2.5 border-b border-[#E5E7EB] pb-5">
+        <div className="mb-5 space-y-3 border-b border-violet-100/80 pb-5">
           {items.map((item, index) => (
             <div
               key={`${item.name}-${index}`}
               className="flex items-start justify-between gap-3 text-sm"
             >
-              <span className="leading-snug text-[#6B7280]">{item.name}</span>
-              <span className="shrink-0 font-medium tabular-nums text-[#1C103D]">
+              <span className="leading-snug text-dashboard-muted">{item.name}</span>
+              <span className="shrink-0 font-medium tabular-nums text-dashboard-text">
                 {formatCurrency(item.amount)}
               </span>
             </div>
@@ -57,29 +64,29 @@ export function InvoiceSummary({
         </div>
       )}
 
-      <dl className="space-y-4 text-sm">
-        <div className="flex items-center justify-between text-[#6B7280]">
+      <dl className="space-y-3.5 text-sm">
+        <div className="flex items-center justify-between text-dashboard-muted">
           <dt>Subtotal</dt>
-          <dd className="font-medium text-[#1C103D]">
+          <dd className="font-medium text-dashboard-text">
             <AnimatedAmount value={subtotal} />
           </dd>
         </div>
-        <div className="flex items-center justify-between text-[#6B7280]">
+        <div className="flex items-center justify-between text-dashboard-muted">
           <dt>Discount</dt>
-          <dd className="font-medium text-[#22C55E]">
+          <dd className="font-medium text-emerald-600">
             −<AnimatedAmount value={discount} />
           </dd>
         </div>
-        <div className="flex items-center justify-between text-[#6B7280]">
+        <div className="flex items-center justify-between text-dashboard-muted">
           <dt>GST</dt>
-          <dd className="font-medium text-[#1C103D]">
+          <dd className="font-medium text-dashboard-text">
             <AnimatedAmount value={tax} />
           </dd>
         </div>
-        <div className="border-t border-[#E5E7EB] pt-4">
+        <div className="rounded-xl bg-gradient-to-br from-violet-50/80 to-violet-50/40 px-4 py-4 ring-1 ring-violet-100/60">
           <div className="flex items-baseline justify-between">
-            <dt className="text-sm font-semibold text-[#1C103D]">Grand total</dt>
-            <dd className="text-2xl font-bold text-[#6D5DF6]">
+            <dt className="text-sm font-semibold text-dashboard-text">Grand total</dt>
+            <dd className="text-2xl font-bold text-violet-600">
               <AnimatedAmount value={total} />
             </dd>
           </div>

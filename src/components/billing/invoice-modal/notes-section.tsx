@@ -1,6 +1,7 @@
 "use client";
 
 import { Textarea } from "@/components/ui/textarea";
+import { invoiceModalStyles } from "./styles";
 
 type NotesSectionProps = {
   id: string;
@@ -21,12 +22,15 @@ export function NotesSection({
 }: NotesSectionProps) {
   return (
     <section aria-labelledby={`${id}-label`}>
-      <h3
-        id={`${id}-label`}
-        className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]"
-      >
-        {label}
-      </h3>
+      <div className="mb-5 flex items-center gap-3">
+        <div
+          className="h-5 w-1 shrink-0 rounded-full bg-gradient-to-b from-violet-500 to-violet-400"
+          aria-hidden
+        />
+        <h3 id={`${id}-label`} className={invoiceModalStyles.sectionTitle}>
+          {label}
+        </h3>
+      </div>
       <div className="relative">
         <Textarea
           id={id}
@@ -34,9 +38,9 @@ export function NotesSection({
           onChange={(e) => onChange(e.target.value.slice(0, maxLength))}
           placeholder={placeholder}
           rows={3}
-          className="min-h-[96px] resize-none rounded-[14px] border-[#E5E7EB] bg-white px-4 py-3 text-sm focus-visible:border-[#6D5DF6]/40 focus-visible:ring-2 focus-visible:ring-[#6D5DF6]/20"
+          className={invoiceModalStyles.textarea}
         />
-        <span className="absolute bottom-3 right-3 text-xs text-[#9CA3AF]">
+        <span className="absolute bottom-3.5 right-3.5 text-xs text-dashboard-muted">
           {value.length}/{maxLength}
         </span>
       </div>

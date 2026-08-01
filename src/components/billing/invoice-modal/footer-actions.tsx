@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { invoiceModalStyles } from "./styles";
 
 type FooterActionsProps = {
   step: 1 | 2;
@@ -27,7 +28,7 @@ export function FooterActions({
   disableReceive = false,
 }: FooterActionsProps) {
   return (
-    <div className="sticky bottom-0 shrink-0 border-t border-[#E5E7EB] bg-white px-8 py-5">
+    <div className="sticky bottom-0 shrink-0 border-t border-violet-100/60 bg-white/95 px-8 py-5 backdrop-blur-sm sm:px-10">
       <div className="flex items-center justify-between gap-3">
         {step === 1 ? (
           <>
@@ -36,7 +37,7 @@ export function FooterActions({
               variant="outline"
               onClick={onCancel}
               disabled={loading}
-              className="h-12 rounded-[14px] border-[#E5E7EB] px-6 text-[#6B7280] hover:text-[#1C103D]"
+              className={invoiceModalStyles.outlineButton}
             >
               Cancel
             </Button>
@@ -45,7 +46,7 @@ export function FooterActions({
                 type="button"
                 onClick={onCreateInvoice}
                 disabled={loading}
-                className="h-12 min-w-[180px] rounded-[14px] bg-[#6D5DF6] px-6 text-white shadow-lg shadow-[#6D5DF6]/25 hover:bg-[#5B4DE0]"
+                className={cn(invoiceModalStyles.primaryButton, "min-w-[180px]")}
               >
                 <AnimatePresence mode="wait" initial={false}>
                   {loading ? (
@@ -80,7 +81,7 @@ export function FooterActions({
               variant="outline"
               onClick={onBack}
               disabled={loading}
-              className="h-12 rounded-[14px] border-[#E5E7EB] px-6 text-[#6B7280]"
+              className={invoiceModalStyles.outlineButton}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
@@ -91,7 +92,7 @@ export function FooterActions({
                 variant="outline"
                 onClick={onSaveDraft}
                 disabled={loading}
-                className="h-12 rounded-[14px] border-[#E5E7EB] px-6 text-[#6B7280]"
+                className={invoiceModalStyles.outlineButton}
               >
                 Save Draft
               </Button>
@@ -101,7 +102,8 @@ export function FooterActions({
                   onClick={onReceivePayment}
                   disabled={loading || disableReceive}
                   className={cn(
-                    "h-12 min-w-[220px] rounded-[14px] bg-[#6D5DF6] px-6 text-white shadow-lg shadow-[#6D5DF6]/25 hover:bg-[#5B4DE0]",
+                    invoiceModalStyles.primaryButton,
+                    "min-w-[220px]",
                     disableReceive && "opacity-60"
                   )}
                 >

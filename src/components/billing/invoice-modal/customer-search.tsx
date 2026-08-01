@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, getInitials } from "@/lib/utils";
 import { formatLastVisit } from "@/components/clients/clients-utils";
+import { invoiceModalStyles } from "./styles";
 
 export type InvoiceCustomer = {
   id?: string;
@@ -166,9 +167,9 @@ export function CustomerSearch({
   }
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="invoice-customer-name" className="text-sm font-medium text-[#1C103D]">
-        Customer name <span className="text-[#EF4444]">*</span>
+    <div className="space-y-2.5">
+      <Label htmlFor="invoice-customer-name" className={invoiceModalStyles.label}>
+        Customer name <span className="text-red-500">*</span>
       </Label>
       <div ref={containerRef} className="relative">
         <div className="relative">
@@ -200,16 +201,16 @@ export function CustomerSearch({
             autoComplete="off"
             aria-invalid={!!error}
             className={cn(
-              "h-12 rounded-[14px] border-[#E5E7EB] bg-white pl-11 pr-28 text-sm",
-              "focus-visible:border-[#6D5DF6]/40 focus-visible:ring-2 focus-visible:ring-[#6D5DF6]/20",
+              invoiceModalStyles.input,
+              "pl-11 pr-28",
               value.id && "pl-14",
-              error && "border-[#EF4444] focus-visible:ring-red-200"
+              error && invoiceModalStyles.inputError
             )}
           />
           <button
             type="button"
             onClick={startNewCustomer}
-            className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-[10px] px-2.5 py-1.5 text-xs font-medium text-[#6D5DF6] transition-colors hover:bg-[#6D5DF6]/8"
+            className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-medium text-violet-600 transition-colors hover:bg-violet-50"
           >
             <Plus className="h-3.5 w-3.5" />
             Add Customer
@@ -217,7 +218,7 @@ export function CustomerSearch({
         </div>
 
         {open && (loading || results.length > 0) && (
-          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-[14px] border border-[#E5E7EB] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
+          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]">
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -348,12 +349,12 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
   }
 
   return (
-    <div className="space-y-2">
-      <Label htmlFor="invoice-phone" className="text-sm font-medium text-[#1C103D]">
-        Phone <span className="text-[#EF4444]">*</span>
+    <div className="space-y-2.5">
+      <Label htmlFor="invoice-phone" className={invoiceModalStyles.label}>
+        Phone <span className="text-red-500">*</span>
       </Label>
       <div ref={containerRef} className="relative">
-        <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+        <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted/70" />
         <Input
           id="invoice-phone"
           type="tel"
@@ -365,10 +366,10 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
           }}
           onFocus={() => query.replace(/\D/g, "").length >= 4 && setOpen(true)}
           placeholder="Search phone number..."
-          className="h-12 rounded-[14px] border-[#E5E7EB] bg-white pl-11 text-sm focus-visible:border-[#6D5DF6]/40 focus-visible:ring-2 focus-visible:ring-[#6D5DF6]/20"
+          className={cn(invoiceModalStyles.input, "pl-11")}
         />
         {open && (loading || results.length > 0) && (
-          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-[14px] border border-[#E5E7EB] bg-white shadow-[0_20px_50px_rgba(0,0,0,0.12)]">
+          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]">
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -405,19 +406,19 @@ type CustomerEmailFieldProps = {
 
 export function CustomerEmailField({ value, onChange }: CustomerEmailFieldProps) {
   return (
-    <div className="space-y-2 sm:col-span-2">
-      <Label htmlFor="invoice-email" className="text-sm font-medium text-[#1C103D]">
-        Email <span className="font-normal text-[#9CA3AF]">(optional)</span>
+    <div className="space-y-2.5 sm:col-span-2">
+      <Label htmlFor="invoice-email" className={invoiceModalStyles.label}>
+        Email <span className="font-normal text-dashboard-muted">(optional)</span>
       </Label>
       <div className="relative">
-        <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+        <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted/70" />
         <Input
           id="invoice-email"
           type="email"
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder="customer@email.com"
-          className="h-12 rounded-[14px] border-[#E5E7EB] bg-white pl-11 text-sm focus-visible:border-[#6D5DF6]/40 focus-visible:ring-2 focus-visible:ring-[#6D5DF6]/20"
+          className={cn(invoiceModalStyles.input, "pl-11")}
         />
       </div>
     </div>

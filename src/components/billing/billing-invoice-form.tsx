@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 import { resolveLineItemLabel } from "@/lib/service-display";
 import {
   CustomerEmailField,
@@ -38,6 +38,8 @@ import {
   type PaymentMethodId,
 } from "./invoice-modal/payment-selector";
 import { SuccessBanner } from "./invoice-modal/success-banner";
+import { SectionHeader } from "./invoice-modal/section-header";
+import { invoiceModalStyles } from "./invoice-modal/styles";
 import {
   formatInvoiceNumber,
   lineDiscount,
@@ -504,11 +506,11 @@ export function BillingInvoiceForm({
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
+    <div className="flex h-full flex-col bg-gradient-to-b from-white via-white to-violet-50/25">
       <InvoiceModalHeader step={step === 1 ? 1 : 2} onClose={onCancel} />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div className="flex-1 overflow-y-auto px-8 py-8 sm:px-10">
           <AnimatePresence mode="wait">
             {step === 1 ? (
               <motion.div
@@ -517,17 +519,14 @@ export function BillingInvoiceForm({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 transition={{ duration: 0.25 }}
-                className="grid gap-6 lg:grid-cols-[1fr_300px]"
+                className="grid gap-8 lg:grid-cols-[1fr_320px]"
               >
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <section aria-labelledby="customer-section">
-                    <h3
-                      id="customer-section"
-                      className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]"
-                    >
+                    <SectionHeader id="customer-section">
                       Customer Information
-                    </h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    </SectionHeader>
+                    <div className="grid gap-5 sm:grid-cols-2">
                       <CustomerSearch
                         value={customer}
                         onChange={setCustomer}
@@ -543,37 +542,34 @@ export function BillingInvoiceForm({
                   </section>
 
                   <section aria-labelledby="details-section">
-                    <h3
-                      id="details-section"
-                      className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]"
-                    >
+                    <SectionHeader id="details-section">
                       Invoice Details
-                    </h3>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor="due-date" className="text-sm font-medium text-[#1C103D]">
+                    </SectionHeader>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div className="space-y-2.5">
+                        <Label htmlFor="due-date" className={invoiceModalStyles.label}>
                           Due date
                         </Label>
                         <div className="relative">
-                          <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+                          <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted/70" />
                           <Input
                             id="due-date"
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
-                            className="h-12 rounded-[14px] border-[#E5E7EB] bg-white pl-11 text-sm focus-visible:border-[#6D5DF6]/40 focus-visible:ring-2 focus-visible:ring-[#6D5DF6]/20"
+                            className={cn(invoiceModalStyles.input, "pl-11")}
                           />
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-sm font-medium text-[#1C103D]">
+                      <div className="space-y-2.5">
+                        <Label className={invoiceModalStyles.label}>
                           Invoice status
                         </Label>
                         <Select value={status} onValueChange={setStatus}>
-                          <SelectTrigger className="h-12 rounded-[14px] border-[#E5E7EB] focus:ring-[#6D5DF6]/20">
+                          <SelectTrigger className={invoiceModalStyles.selectTrigger}>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="rounded-[14px]">
+                          <SelectContent className="rounded-2xl">
                             {STATUS_OPTIONS.map((opt) => (
                               <SelectItem key={opt.value} value={opt.value}>
                                 {opt.label}
@@ -627,38 +623,42 @@ export function BillingInvoiceForm({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.25 }}
-                className="grid gap-6 lg:grid-cols-[1fr_300px]"
+                className="grid gap-8 lg:grid-cols-[1fr_320px]"
               >
-                <div className="space-y-6">
+                <div className="space-y-8">
                   <SuccessBanner invoiceNumber={invoiceNumber} />
 
-                  <section className="rounded-[18px] border border-[#E5E7EB] bg-[#F8FAFC] p-5">
-                    <h3 className="mb-4 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9CA3AF]">
-                      Invoice Summary
-                    </h3>
-                    <dl className="grid gap-3 text-sm sm:grid-cols-3">
+                  <section className={cn(invoiceModalStyles.card, "p-6")}>
+                    <SectionHeader className="mb-4">Invoice Summary</SectionHeader>
+                    <dl className="grid gap-4 text-sm sm:grid-cols-3">
                       <div>
-                        <dt className="text-[#9CA3AF]">Customer</dt>
-                        <dd className="mt-1 font-medium text-[#1C103D]">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
+                          Customer
+                        </dt>
+                        <dd className="mt-1.5 font-medium text-dashboard-text">
                           {customer.name}
                           {customer.phone && (
-                            <span className="mt-0.5 block text-xs font-normal text-[#6B7280]">
+                            <span className="mt-0.5 block text-xs font-normal text-dashboard-muted">
                               {customer.phone}
                             </span>
                           )}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[#9CA3AF]">Due Date</dt>
-                        <dd className="mt-1 font-medium text-[#1C103D]">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
+                          Due Date
+                        </dt>
+                        <dd className="mt-1.5 font-medium text-dashboard-text">
                           {dueDate
                             ? format(new Date(dueDate), "d MMM yyyy")
                             : "—"}
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-[#9CA3AF]">Total Amount</dt>
-                        <dd className="mt-1 text-lg font-bold text-[#6D5DF6]">
+                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
+                          Total Amount
+                        </dt>
+                        <dd className="mt-1.5 text-lg font-bold text-violet-600">
                           {formatCurrency(displayTotal)}
                         </dd>
                       </div>
@@ -700,7 +700,7 @@ export function BillingInvoiceForm({
           </AnimatePresence>
 
           {error && (
-            <p className="mt-4 rounded-[14px] bg-red-50 px-4 py-3 text-sm text-[#EF4444]">
+            <p className="mt-4 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm text-red-600">
               {error}
             </p>
           )}

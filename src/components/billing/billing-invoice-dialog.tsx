@@ -34,7 +34,7 @@ export function BillingInvoiceDialog({
 }: BillingInvoiceDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[780px] max-h-[calc(100vh-2rem)] w-[1180px] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-[20px] border-0 bg-white p-0 shadow-[0_30px_80px_rgba(0,0,0,0.15)] [&>button]:hidden">
+      <DialogContent className="flex h-[800px] max-h-[calc(100vh-2rem)] w-[1200px] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-[24px] border border-violet-100/50 bg-white p-0 shadow-[0_32px_64px_-12px_rgba(109,40,217,0.18),0_0_0_1px_rgba(109,40,217,0.04)] [&>button]:hidden">
         <BillingInvoiceForm
           services={services}
           employees={employees}
