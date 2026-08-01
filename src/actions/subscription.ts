@@ -4,8 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
 import { revalidatePath, unstable_cache } from "next/cache";
 import {
-  MONTHLY_AMOUNT_INR,
-  SUBSCRIPTION_PLAN_NAME,
+  getSubscriptionBillingForPlan,
   PLATFORM_TAX_RATE,
   INVOICE_DUE_DAYS,
   TRIAL_DAYS,
@@ -145,22 +144,35 @@ export async function syncAllSalonOverdueStates() {
 }
 
 export async function getSalonSubscriptionStatus(salonId: string) {
-  const [subscription, invoices, overdueInvoice, blocked] = await Promise.all([
+  const [subscription, invoices, overdueInvoice, blocked, salon] = await Promise.all([
     getSalonSubscription(salonId),
     getPlatformInvoices(salonId),
     getOverduePlatformInvoice(salonId),
     isSalonAccessBlocked(salonId),
+    prisma.salon.findUnique({
+      where: { id: salonId },
+      select: { plan: true },
+    }),
   ]);
+
+  const billing = getSubscriptionBillingForPlan(salon?.plan);
 
   return {
     subscription,
     invoices,
     overdueInvoice,
     blocked,
+    planMonthlyFallback: billing.monthlyAmount,
   };
 }
 
 export async function createTrialSubscription(salonId: string) {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    select: { plan: true },
+  });
+  const billing = getSubscriptionBillingForPlan(salon?.plan);
+
   const now = new Date();
   const { periodStart, periodEnd } = getMonthPeriod(now);
   const trialEndsAt = addDays(now, TRIAL_DAYS);
@@ -169,8 +181,8 @@ export async function createTrialSubscription(salonId: string) {
     data: {
       salonId,
       status: "trial",
-      planName: SUBSCRIPTION_PLAN_NAME,
-      monthlyAmount: MONTHLY_AMOUNT_INR,
+      planName: billing.planName,
+      monthlyAmount: billing.monthlyAmount,
       setupFeePaid: false,
       currentPeriodStart: periodStart,
       currentPeriodEnd: periodEnd,

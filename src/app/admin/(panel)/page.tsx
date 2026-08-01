@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAdminStats } from "@/actions/platform-admin";
+import { PlatformPlansOverview } from "@/components/admin/platform-plans-overview";
 import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
 import {
   Building2,
@@ -119,6 +120,8 @@ export default async function AdminDashboardPage() {
           );
         })}
       </div>
+
+      <PlatformPlansOverview />
 
       <AdminCard>
         <AdminCardHeader

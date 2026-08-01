@@ -8,8 +8,19 @@ import { seedBasicPlanCustomers } from "../src/lib/seed-basic-plan-customers";
 import { seedMakeupStudioServices, fixInvoiceLineItemDescriptions } from "../src/lib/seed-makeup-studio-services";
 import { seedInventoryDemoForSalonEmails } from "../src/lib/seed-inventory-demo";
 import { seedTestSalonAppointments } from "../src/lib/seed-test-salon-appointments";
+import {
+  getPlanMonthlyAmount,
+  getSubscriptionPlanName,
+  type SalonPlan,
+} from "../src/lib/plans";
 
-const MONTHLY_AMOUNT = 750;
+function getSubscriptionAmountForPlan(plan: SalonPlan) {
+  return getPlanMonthlyAmount(plan);
+}
+
+function getSubscriptionNameForPlan(plan: SalonPlan) {
+  return getSubscriptionPlanName(plan);
+}
 const TAX_RATE = 0.18;
 
 function getMonthPeriod(date = new Date()) {
@@ -18,7 +29,7 @@ function getMonthPeriod(date = new Date()) {
   return { periodStart, periodEnd };
 }
 
-async function seedActiveSubscription(salonId: string) {
+async function seedActiveSubscription(salonId: string, plan: SalonPlan = "ENTERPRISE") {
   const existing = await prisma.salonSubscription.findUnique({
     where: { salonId },
   });
@@ -26,7 +37,7 @@ async function seedActiveSubscription(salonId: string) {
 
   const now = new Date();
   const { periodStart, periodEnd } = getMonthPeriod(now);
-  const amount = MONTHLY_AMOUNT;
+  const amount = getSubscriptionAmountForPlan(plan);
   const tax = Math.round(amount * TAX_RATE * 100) / 100;
   const total = amount + tax;
 
@@ -34,7 +45,7 @@ async function seedActiveSubscription(salonId: string) {
     data: {
       salonId,
       status: "active",
-      planName: "Salon AI Pro",
+      planName: getSubscriptionNameForPlan(plan),
       monthlyAmount: amount,
       setupFeePaid: true,
       currentPeriodStart: periodStart,
@@ -98,7 +109,7 @@ async function seedOverdueTestSalon() {
   const hashed = await bcrypt.hash("demo1234", 10);
   const now = new Date();
   const { periodStart, periodEnd } = getMonthPeriod(now);
-  const amount = MONTHLY_AMOUNT;
+  const amount = getSubscriptionAmountForPlan("ENTERPRISE");
   const tax = Math.round(amount * TAX_RATE * 100) / 100;
   const total = amount + tax;
   const trialEnded = new Date(now);
@@ -130,7 +141,7 @@ async function seedOverdueTestSalon() {
       subscription: {
         create: {
           status: "past_due",
-          planName: "Salon AI Pro",
+          planName: getSubscriptionNameForPlan("ENTERPRISE"),
           monthlyAmount: amount,
           setupFeePaid: false,
           currentPeriodStart: periodStart,
@@ -202,7 +213,7 @@ async function seedTestUser() {
     },
   });
 
-  await seedActiveSubscription(salon.id);
+  await seedActiveSubscription(salon.id, "BASIC");
   await seedBasicPlanCustomers(prisma);
   await seedMakeupStudioServices(prisma);
   await seedTestSalonAppointments(prisma);

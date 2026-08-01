@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/currency";
+import { getPlanMonthlyAmount } from "@/lib/plans";
 import { PayInvoiceButton } from "@/components/subscription/pay-invoice-dialog";
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 
@@ -65,11 +66,13 @@ export function BillingClient({
   invoices,
   overdueInvoice,
   blocked,
+  planMonthlyFallback = getPlanMonthlyAmount("ENTERPRISE"),
 }: {
   subscription: Subscription | null;
   invoices: PlatformInvoice[];
   overdueInvoice: PlatformInvoice | null;
   blocked: boolean;
+  planMonthlyFallback?: number;
 }) {
   const nextDue =
     overdueInvoice?.dueDate ??
@@ -103,13 +106,13 @@ export function BillingClient({
             <div className="flex items-center justify-between">
               <span className="text-stone-600">Plan</span>
               <span className="font-medium">
-                {subscription?.planName ?? "Salon AI Pro"}
+                {subscription?.planName ?? "Enterprise"}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-stone-600">Monthly amount</span>
               <span className="font-medium">
-                {formatCurrency(subscription?.monthlyAmount ?? 750)}/month
+                {formatCurrency(subscription?.monthlyAmount ?? planMonthlyFallback)}/month
               </span>
             </div>
             <div className="flex items-center justify-between">

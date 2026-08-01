@@ -53,14 +53,24 @@ export const PLAN_LABELS: Record<SalonPlan, string> = {
 
 export const PLAN_PRICING: Record<SalonPlan, { monthly: number; tagline: string }> = {
   BASIC: {
-    monthly: 499,
+    monthly: 600,
     tagline: "Essentials for small salons",
   },
   ENTERPRISE: {
-    monthly: 1499,
+    monthly: 1999,
     tagline: "Full ERP for growing businesses",
   },
 };
+
+export const SUBSCRIPTION_PLANS: SalonPlan[] = ["BASIC", "ENTERPRISE"];
+
+export function getPlanMonthlyAmount(plan: SalonPlan): number {
+  return PLAN_PRICING[plan].monthly;
+}
+
+export function getSubscriptionPlanName(plan: SalonPlan): string {
+  return PLAN_LABELS[plan];
+}
 
 export const PLAN_FEATURES: Record<SalonPlan, string[]> = {
   BASIC: [

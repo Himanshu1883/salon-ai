@@ -92,8 +92,8 @@ model SalonSubscription {
   salonId            String   @unique
   salon              Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
   status             String   @default("trial")
-  planName           String   @default("Salon AI Pro")
-  monthlyAmount      Float    @default(750)
+  planName           String   @default("Enterprise")
+  monthlyAmount      Float    @default(1999)
   setupFeePaid       Boolean  @default(false)
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime

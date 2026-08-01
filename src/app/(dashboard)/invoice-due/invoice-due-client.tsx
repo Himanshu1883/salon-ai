@@ -77,7 +77,7 @@ export function InvoiceDueClient({
                 <div className="flex justify-between">
                   <dt className="text-stone-500">Plan</dt>
                   <dd className="font-medium">
-                    {subscription?.planName ?? "Salon AI Pro"}
+                    {subscription?.planName ?? "Enterprise"}
                   </dd>
                 </div>
               </dl>

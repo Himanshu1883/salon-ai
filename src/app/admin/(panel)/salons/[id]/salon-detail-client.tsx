@@ -40,11 +40,10 @@ import {
   type SalonSubscriptionAction,
 } from "@/actions/platform-admin";
 import { updateSalonPlanAsAdmin } from "@/actions/plans";
-import { MONTHLY_AMOUNT_INR } from "@/lib/subscription";
 import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
 import { SalonLoginUrl } from "@/components/admin/salon-login-url";
 import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
-import { PLAN_LABELS, type SalonPlan } from "@/lib/plans";
+import { PLAN_LABELS, getPlanMonthlyAmount, type SalonPlan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 type SalonDetail = NonNullable<Awaited<ReturnType<typeof import("@/actions/platform-admin").getSalonDetail>>>;
@@ -129,6 +128,7 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
   }
 
   const subscription = salon.subscription;
+  const planMonthlyAmount = getPlanMonthlyAmount(salon.plan as SalonPlan);
 
   return (
     <div className="space-y-6">
@@ -244,7 +244,11 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
             <DetailField
               icon={CreditCard}
               label="Monthly amount"
-              value={subscription ? `₹${subscription.monthlyAmount ?? MONTHLY_AMOUNT_INR}` : "—"}
+              value={
+                subscription
+                  ? `₹${(subscription.monthlyAmount ?? planMonthlyAmount).toLocaleString("en-IN")}`
+                  : `₹${planMonthlyAmount.toLocaleString("en-IN")}`
+              }
             />
             <div className="flex items-start gap-3">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-dashboard-primary/10 text-dashboard-primary">

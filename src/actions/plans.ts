@@ -4,12 +4,24 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireOwnerOrManager, requireSession, requireSuperAdmin } from "@/lib/auth";
 import {
+  getPlanMonthlyAmount,
+  getSubscriptionPlanName,
   PLAN_FEATURES,
   PLAN_LABELS,
   PLAN_PRICING,
   normalizeSalonPlan,
   type SalonPlan,
 } from "@/lib/plans";
+
+async function syncSubscriptionPlan(salonId: string, plan: SalonPlan) {
+  await prisma.salonSubscription.updateMany({
+    where: { salonId },
+    data: {
+      planName: getSubscriptionPlanName(plan),
+      monthlyAmount: getPlanMonthlyAmount(plan),
+    },
+  });
+}
 
 function revalidatePlanPaths() {
   revalidateTag("salon-plan", "max");
@@ -46,6 +58,8 @@ export async function updateSalonPlan(plan: SalonPlan) {
     data: { plan },
   });
 
+  await syncSubscriptionPlan(session.user.salonId, plan);
+
   revalidatePlanPaths();
   revalidatePath("/settings/subscription");
   revalidatePath("/settings/billing");
@@ -67,6 +81,8 @@ export async function updateSalonPlanAsAdmin(salonId: string, plan: SalonPlan) {
     where: { id: salonId },
     data: { plan },
   });
+
+  await syncSubscriptionPlan(salonId, plan);
 
   revalidatePlanPaths();
   revalidatePath("/admin/salons");

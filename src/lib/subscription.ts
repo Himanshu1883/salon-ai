@@ -1,7 +1,30 @@
 import { parseSalonPrefixedPath } from "@/lib/salon-paths";
 
-export const SUBSCRIPTION_PLAN_NAME = "Salon AI Pro";
-export const MONTHLY_AMOUNT_INR = 750;
+import {
+  getPlanMonthlyAmount,
+  getSubscriptionPlanName,
+  normalizeSalonPlan,
+  type SalonPlan,
+} from "@/lib/plans";
+
+/** @deprecated Use getSubscriptionPlanName(plan) */
+export const SUBSCRIPTION_PLAN_NAME = "Enterprise";
+
+/** @deprecated Use getPlanMonthlyAmount(plan) */
+export const MONTHLY_AMOUNT_INR = getPlanMonthlyAmount("ENTERPRISE");
+
+export function getSubscriptionBillingForPlan(plan: string | null | undefined): {
+  plan: SalonPlan;
+  planName: string;
+  monthlyAmount: number;
+} {
+  const normalized = normalizeSalonPlan(plan);
+  return {
+    plan: normalized,
+    planName: getSubscriptionPlanName(normalized),
+    monthlyAmount: getPlanMonthlyAmount(normalized),
+  };
+}
 export const TRIAL_DAYS = 14;
 export const INVOICE_DUE_DAYS = 7;
 export const PLATFORM_TAX_RATE = 0.18;

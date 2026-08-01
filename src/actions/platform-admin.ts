@@ -6,9 +6,8 @@ import { requireSuperAdmin } from "@/lib/auth";
 import {
   addDays,
   getMonthPeriod,
-  MONTHLY_AMOUNT_INR,
+  getSubscriptionBillingForPlan,
   PLATFORM_TAX_RATE,
-  SUBSCRIPTION_PLAN_NAME,
   TRIAL_DAYS,
   type SubscriptionStatus,
 } from "@/lib/subscription";
@@ -257,13 +256,18 @@ export async function updateSalonSubscription(
       break;
     }
     case "activate": {
+      const salon = await prisma.salon.findUnique({
+        where: { id: salonId },
+        select: { plan: true },
+      });
+      const billing = getSubscriptionBillingForPlan(salon?.plan);
       const { periodStart, periodEnd } = getMonthPeriod(now);
       await prisma.salonSubscription.update({
         where: { salonId },
         data: {
           status: "active",
-          planName: SUBSCRIPTION_PLAN_NAME,
-          monthlyAmount: MONTHLY_AMOUNT_INR,
+          planName: billing.planName,
+          monthlyAmount: billing.monthlyAmount,
           currentPeriodStart: periodStart,
           currentPeriodEnd: periodEnd,
         },
