@@ -21,6 +21,8 @@ export type SalonStatusFilter =
   | "past_due"
   | "suspended";
 
+export type SalonPlanFilter = "all" | "BASIC" | "ENTERPRISE";
+
 export type SalonSubscriptionAction =
   | "extend_trial"
   | "activate"
@@ -33,16 +35,25 @@ export async function getAdminStats() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-  const [totalSalons, onTrial, activeMonthly, pastDueOrSuspended, signedUpThisMonth] =
-    await Promise.all([
-      prisma.salon.count(),
-      prisma.salonSubscription.count({ where: { status: "trial" } }),
-      prisma.salonSubscription.count({ where: { status: "active" } }),
-      prisma.salonSubscription.count({
-        where: { status: { in: ["past_due", "suspended"] } },
-      }),
-      prisma.salon.count({ where: { createdAt: { gte: monthStart } } }),
-    ]);
+  const [
+    totalSalons,
+    onTrial,
+    activeMonthly,
+    pastDueOrSuspended,
+    signedUpThisMonth,
+    basicPlan,
+    enterprisePlan,
+  ] = await Promise.all([
+    prisma.salon.count(),
+    prisma.salonSubscription.count({ where: { status: "trial" } }),
+    prisma.salonSubscription.count({ where: { status: "active" } }),
+    prisma.salonSubscription.count({
+      where: { status: { in: ["past_due", "suspended"] } },
+    }),
+    prisma.salon.count({ where: { createdAt: { gte: monthStart } } }),
+    prisma.salon.count({ where: { plan: "BASIC" } }),
+    prisma.salon.count({ where: { plan: "ENTERPRISE" } }),
+  ]);
 
   return {
     totalSalons,
@@ -50,12 +61,15 @@ export async function getAdminStats() {
     activeMonthly,
     pastDueOrSuspended,
     signedUpThisMonth,
+    basicPlan,
+    enterprisePlan,
   };
 }
 
 export async function getAllSalons(options?: {
   search?: string;
   status?: SalonStatusFilter;
+  plan?: SalonPlanFilter;
   page?: number;
   pageSize?: number;
 }) {
@@ -63,11 +77,13 @@ export async function getAllSalons(options?: {
 
   const search = options?.search?.trim() ?? "";
   const status = options?.status ?? "all";
+  const plan = options?.plan ?? "all";
   const page = Math.max(1, options?.page ?? 1);
   const pageSize = Math.min(50, Math.max(1, options?.pageSize ?? 20));
   const skip = (page - 1) * pageSize;
 
   const where: {
+    plan?: "BASIC" | "ENTERPRISE";
     subscription?: { status: SubscriptionStatus | { in: SubscriptionStatus[] } };
     OR?: Array<{
       name?: { contains: string };
@@ -78,6 +94,10 @@ export async function getAllSalons(options?: {
 
   if (status !== "all") {
     where.subscription = { status };
+  }
+
+  if (plan !== "all") {
+    where.plan = plan;
   }
 
   if (search) {
