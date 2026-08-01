@@ -15,6 +15,10 @@ import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
 import { deductRetailSale } from "@/lib/inventory/ledger";
 import { isInternalServiceDescription, resolveLineItemLabel } from "@/lib/service-display";
+import {
+  getActiveMembershipDiscount,
+  applyMembershipDiscount,
+} from "@/lib/memberships/discount";
 
 const TAX_RATE = 0.08;
 
@@ -383,7 +387,8 @@ export async function createInvoice(formData: FormData) {
   );
   if ("error" in validation) return validation;
 
-  const totals = calcTotals(parsed.data.lineItems);
+  let totals = calcTotals(parsed.data.lineItems);
+  let invoiceNotes = parsed.data.notes ?? "";
 
   const serviceIds = [
     ...new Set(
@@ -430,13 +435,33 @@ export async function createInvoice(formData: FormData) {
     phone: parsed.data.customerPhone,
   });
 
+  const membershipDiscount = await getActiveMembershipDiscount(
+    session.user.salonId,
+    customer.id
+  );
+  if (membershipDiscount && membershipDiscount.discountPercent > 0) {
+    const { discountedSubtotal, discountAmount } = applyMembershipDiscount(
+      totals.subtotal,
+      membershipDiscount.discountPercent
+    );
+    const tax = Math.round(discountedSubtotal * TAX_RATE * 100) / 100;
+    const total = Math.round((discountedSubtotal + tax) * 100) / 100;
+    totals = { subtotal: discountedSubtotal, tax, total };
+    invoiceNotes = [
+      invoiceNotes,
+      `Membership discount (${membershipDiscount.planName}): −₹${discountAmount.toFixed(2)}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+
   const invoice = await prisma.invoice.create({
     data: {
       salonId: session.user.salonId,
       customerId: customer.id,
       customerName: parsed.data.customerName,
       customerPhone: parsed.data.customerPhone,
-      notes: parsed.data.notes,
+      notes: invoiceNotes || null,
       dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
       status: parsed.data.status,
       employeeId: parsed.data.employeeId || null,
@@ -475,6 +500,11 @@ export async function createInvoice(formData: FormData) {
 
   invalidateBillingCache(session.user.salonId);
   return { success: true, id: invoice.id };
+}
+
+export async function getMembershipDiscountForCustomer(customerId: string) {
+  const session = await requireSession();
+  return getActiveMembershipDiscount(session.user.salonId, customerId);
 }
 
 export async function createInvoiceFromAppointment(appointmentId: string) {

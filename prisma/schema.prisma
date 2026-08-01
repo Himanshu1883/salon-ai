@@ -92,6 +92,19 @@ model Salon {
   adminImpersonationTokens AdminImpersonationToken[]
   projects         Project[]
   supportConversation SupportConversation?
+  membershipPlans       MembershipPlan[]
+  membershipBenefits    MembershipBenefit[]
+  customerMemberships   CustomerMembership[]
+  membershipTransactions MembershipTransaction[]
+  loyaltySettings       LoyaltySettings?
+  loyaltyPointsLedger   LoyaltyPointsLedger[]
+  walletAccounts        WalletAccount[]
+  walletTransactions    WalletTransaction[]
+  membershipOffers      MembershipOffer[]
+  giftCards             GiftCard[]
+  familyMembershipMembers FamilyMembershipMember[]
+  membershipUsageLogs   MembershipUsageLog[]
+  membershipSettings    MembershipSettings?
 }
 
 enum SupportMessageSender {
@@ -479,6 +492,12 @@ model Customer {
   appointments Appointment[]
   invoices     Invoice[]
   stockLedgerEntries StockLedgerEntry[]
+  customerMemberships CustomerMembership[]
+  membershipTransactions MembershipTransaction[]
+  loyaltyPointsLedger LoyaltyPointsLedger[]
+  walletAccounts        WalletAccount[]
+  familyMembershipMembers FamilyMembershipMember[]
+  membershipUsageLogs MembershipUsageLog[]
 
   @@index([salonId, phone])
 }
@@ -938,4 +957,320 @@ model Project {
 
   @@index([salonId])
   @@index([salonId, status])
+}
+
+enum MembershipPlanType {
+  MONTHLY
+  QUARTERLY
+  HALF_YEARLY
+  YEARLY
+  CUSTOM
+}
+
+enum MembershipPlanStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum MembershipBenefitType {
+  DISCOUNT_PERCENT
+  DISCOUNT_FIXED
+  FREE_SERVICE
+  PRIORITY_BOOKING
+  WALLET_BONUS
+  LOYALTY_MULTIPLIER
+  OTHER
+}
+
+enum CustomerMembershipStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  SUSPENDED
+  PENDING
+}
+
+enum MembershipTransactionType {
+  PURCHASE
+  RENEWAL
+  UPGRADE
+  REFUND
+  WALLET_TOPUP
+  WALLET_DEBIT
+  LOYALTY_EARN
+  LOYALTY_REDEEM
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  REDEEMED
+  EXPIRED
+  CANCELLED
+}
+
+model MembershipPlan {
+  id               String               @id @default(cuid())
+  salonId          String
+  salon            Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name             String
+  description      String?
+  category         String               @default("Standard")
+  type             MembershipPlanType   @default(MONTHLY)
+  validityDays     Int                  @default(30)
+  price            Float
+  tax              Float                @default(0)
+  discountPercent  Float                @default(0)
+  walletBonus      Float                @default(0)
+  rewardMultiplier Float                @default(1)
+  priorityBooking  Boolean              @default(false)
+  vipAccess        Boolean              @default(false)
+  themeColor       String               @default("#22C55E")
+  bannerUrl        String?
+  badgeUrl         String?
+  status           MembershipPlanStatus @default(ACTIVE)
+  sortOrder        Int                  @default(0)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  benefits            PlanBenefit[]
+  customerMemberships CustomerMembership[]
+  offers              MembershipOffer[]
+
+  @@index([salonId, status])
+  @@index([salonId, sortOrder])
+}
+
+model MembershipBenefit {
+  id          String                @id @default(cuid())
+  salonId     String
+  salon       Salon                 @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  type        MembershipBenefitType @default(OTHER)
+  value       Float?
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  plans PlanBenefit[]
+
+  @@index([salonId])
+}
+
+model PlanBenefit {
+  planId        String
+  benefitId     String
+  valueOverride Float?
+  plan          MembershipPlan    @relation(fields: [planId], references: [id], onDelete: Cascade)
+  benefit       MembershipBenefit @relation(fields: [benefitId], references: [id], onDelete: Cascade)
+
+  @@id([planId, benefitId])
+}
+
+model CustomerMembership {
+  id               String                   @id @default(cuid())
+  salonId          String
+  salon            Salon                    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId       String
+  customer         Customer                 @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  planId           String
+  plan             MembershipPlan           @relation(fields: [planId], references: [id], onDelete: Restrict)
+  status           CustomerMembershipStatus @default(ACTIVE)
+  startDate        DateTime                 @default(now())
+  endDate          DateTime
+  pricePaid        Float
+  taxPaid          Float                    @default(0)
+  discountApplied  Float                    @default(0)
+  autoRenew        Boolean                  @default(false)
+  membershipNumber String
+  qrCode           String?
+  notes            String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  transactions  MembershipTransaction[]
+  usageLogs     MembershipUsageLog[]
+  familyMembers FamilyMembershipMember[]
+
+  @@unique([salonId, membershipNumber])
+  @@index([salonId, customerId])
+  @@index([salonId, status])
+  @@index([salonId, endDate])
+}
+
+model MembershipTransaction {
+  id                   String                    @id @default(cuid())
+  salonId              String
+  salon                Salon                     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerMembershipId String?
+  customerMembership   CustomerMembership?       @relation(fields: [customerMembershipId], references: [id], onDelete: SetNull)
+  customerId           String
+  customer             Customer                  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type                 MembershipTransactionType
+  amount               Float
+  tax                  Float                     @default(0)
+  description          String?
+  paymentMethod        String?
+  invoiceId            String?
+  metadata             Json?
+  createdAt            DateTime                  @default(now())
+
+  @@index([salonId, customerId])
+  @@index([salonId, createdAt])
+  @@index([customerMembershipId])
+}
+
+model LoyaltySettings {
+  id                  String   @id @default(cuid())
+  salonId             String   @unique
+  salon               Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  pointsPerRupee      Float    @default(1)
+  redemptionRate      Float    @default(0.01)
+  minRedemptionPoints Int      @default(100)
+  expiryDays          Int?
+  enabled             Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model LoyaltyPointsLedger {
+  id            String   @id @default(cuid())
+  salonId       String
+  salon         Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  points        Int
+  balanceAfter  Int
+  reason        String
+  referenceType String?
+  referenceId   String?
+  createdAt     DateTime @default(now())
+
+  @@index([salonId, customerId])
+  @@index([salonId, createdAt])
+}
+
+model WalletAccount {
+  id         String   @id @default(cuid())
+  salonId    String
+  salon      Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  balance    Float    @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  transactions WalletTransaction[]
+
+  @@unique([salonId, customerId])
+  @@index([salonId])
+}
+
+model WalletTransaction {
+  id              String        @id @default(cuid())
+  salonId         String
+  salon           Salon         @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  walletAccountId String
+  walletAccount   WalletAccount @relation(fields: [walletAccountId], references: [id], onDelete: Cascade)
+  customerId      String
+  amount          Float
+  balanceAfter    Float
+  type            String
+  description     String?
+  referenceId     String?
+  createdAt       DateTime      @default(now())
+
+  @@index([salonId, customerId])
+  @@index([walletAccountId, createdAt])
+}
+
+model MembershipOffer {
+  id              String          @id @default(cuid())
+  salonId         String
+  salon           Salon           @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  planId          String?
+  plan            MembershipPlan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+  name            String
+  description     String?
+  discountPercent Float?
+  discountFixed   Float?
+  validFrom       DateTime
+  validTo         DateTime
+  status          String          @default("active")
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([salonId, status])
+  @@index([salonId, validFrom, validTo])
+}
+
+model GiftCard {
+  id              String         @id @default(cuid())
+  salonId         String
+  salon           Salon          @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  code            String
+  initialBalance  Float
+  currentBalance  Float
+  purchaserName   String?
+  recipientName   String?
+  recipientEmail  String?
+  status          GiftCardStatus @default(ACTIVE)
+  expiresAt       DateTime?
+  redeemedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([salonId, code])
+  @@index([salonId, status])
+}
+
+model FamilyMembershipMember {
+  id                   String             @id @default(cuid())
+  salonId              String
+  salon                Salon              @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerMembershipId String
+  customerMembership   CustomerMembership @relation(fields: [customerMembershipId], references: [id], onDelete: Cascade)
+  customerId           String
+  customer             Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  relationship         String             @default("family")
+  status               String             @default("active")
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([customerMembershipId])
+  @@index([salonId, customerId])
+}
+
+model MembershipUsageLog {
+  id                   String             @id @default(cuid())
+  salonId              String
+  salon                Salon              @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  customerMembershipId String
+  customerMembership   CustomerMembership @relation(fields: [customerMembershipId], references: [id], onDelete: Cascade)
+  customerId           String
+  customer             Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId            String?
+  description          String
+  discountApplied      Float              @default(0)
+  pointsEarned         Int                @default(0)
+  invoiceId            String?
+  usedAt               DateTime           @default(now())
+
+  @@index([salonId, customerId])
+  @@index([customerMembershipId, usedAt])
+}
+
+model MembershipSettings {
+  id                   String   @id @default(cuid())
+  salonId              String   @unique
+  salon                Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  autoRenewEnabled     Boolean  @default(true)
+  renewalReminderDays  Int      @default(7)
+  allowFamilyMembers   Boolean  @default(false)
+  maxFamilyMembers     Int      @default(4)
+  defaultTaxRate       Float    @default(18)
+  membershipPrefix     String   @default("GD")
+  termsAndConditions   String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }

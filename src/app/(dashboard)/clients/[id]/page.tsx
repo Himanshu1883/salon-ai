@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getCustomerStats } from "@/actions/customers";
+import { getCustomerMembershipProfile } from "@/actions/memberships";
 import { CustomerDetailClient } from "@/app/(dashboard)/customers/[id]/customer-detail-client";
 
 export default async function ClientDetailPage({
@@ -8,9 +9,14 @@ export default async function ClientDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const stats = await getCustomerStats(id);
+  const [stats, membershipProfile] = await Promise.all([
+    getCustomerStats(id),
+    getCustomerMembershipProfile(id),
+  ]);
 
   if (!stats) notFound();
 
-  return <CustomerDetailClient stats={stats} />;
+  return (
+    <CustomerDetailClient stats={stats} membershipProfile={membershipProfile} />
+  );
 }

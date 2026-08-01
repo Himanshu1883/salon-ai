@@ -129,7 +129,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/catalog/services", label: "Services", icon: Scissors, module: "services" },
   { href: "/inventory", label: "Inventory", icon: Package, module: "inventory" },
   { href: "/team/members", label: "Staff", icon: Users, module: "staff" },
-  { href: "/sales/memberships", label: "Membership", icon: Crown, module: "membership" },
+  { href: "/memberships", label: "Memberships", icon: Crown, module: "membership" },
   { href: "/settings/notifications", label: "Marketing", icon: Megaphone, module: "marketing" },
   { href: "/reports", label: "Expenses", icon: Wallet, module: "expense" },
   { href: "/reports", label: "Reports", icon: BarChart3, module: "reports" },
@@ -191,7 +191,7 @@ export function getModuleForPath(pathname: string): PlanModule | null {
     return "services";
   }
   if (matchPath(path, "/team/members") || matchPath(path, "/employees")) return "staff";
-  if (matchPath(path, "/sales/memberships")) return "membership";
+  if (matchPath(path, "/memberships") || matchPath(path, "/sales/memberships")) return "membership";
   if (matchPath(path, "/settings/notifications")) return "marketing";
   if (matchPath(path, "/reports/finance")) return "expense";
   if (matchPath(path, "/reports/dashboards")) return "analytics";

@@ -8,6 +8,7 @@ import { seedBasicPlanCustomers } from "../src/lib/seed-basic-plan-customers";
 import { seedMakeupStudioServices, fixInvoiceLineItemDescriptions } from "../src/lib/seed-makeup-studio-services";
 import { seedInventoryDemoForSalonEmails } from "../src/lib/seed-inventory-demo";
 import { seedTestSalonAppointments } from "../src/lib/seed-test-salon-appointments";
+import { seedMembershipPlansForSalon } from "../src/lib/seed-membership-plans";
 import {
   getPlanMonthlyAmount,
   getSubscriptionPlanName,
@@ -1045,6 +1046,10 @@ async function main() {
   await seedTestUser();
   await seedSuperAdmin();
   await seedInventoryDemoForSalonEmails(prisma, ["demo@salon.ai", "test@abc.com"]);
+  const allSalons = await prisma.salon.findMany({ select: { id: true } });
+  for (const s of allSalons) {
+    await seedMembershipPlansForSalon(prisma, s.id);
+  }
   await fixInvoiceLineItemDescriptions(prisma);
   await seedDemoProjects(
     salon.id,

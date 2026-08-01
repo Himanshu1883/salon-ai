@@ -40,11 +40,14 @@ import {
   Receipt,
   Sparkles,
   UserPlus,
+  Crown,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { cn, getInitials } from "@/lib/utils";
 import { format } from "date-fns";
 import { usePlan } from "@/components/plans/plan-provider";
+import { CustomerMembershipTab } from "@/components/memberships/customer-membership-tab";
+import type { PlanRecommendation } from "@/lib/memberships/recommendations";
 
 type CustomerStats = {
   customer: {
@@ -73,6 +76,30 @@ type CustomerStats = {
     employee: string | null;
     status: string;
   }[];
+};
+
+type MembershipProfile = {
+  membership: {
+    id: string;
+    membershipNumber: string;
+    endDate: Date;
+    plan: {
+      name: string;
+      themeColor: string;
+      discountPercent: number;
+      benefits: { benefit: { name: string } }[];
+    };
+    customer: { name: string };
+  } | null;
+  walletBalance: number;
+  analytics: {
+    visitCount: number;
+    totalSpend: number;
+    visitsLast90Days: number;
+    favoriteServices: string[];
+    hasActiveMembership: boolean;
+  };
+  recommendation: PlanRecommendation | null;
 };
 
 const invoiceStatusVariant: Record<
@@ -400,8 +427,10 @@ function InvoicesTable({
 
 export function CustomerDetailClient({
   stats,
+  membershipProfile,
 }: {
   stats: CustomerStats;
+  membershipProfile?: MembershipProfile;
 }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -660,6 +689,13 @@ export function CustomerDetailClient({
                 )}
               </TabsTrigger>
               <TabsTrigger
+                value="membership"
+                className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+              >
+                <Crown className="mr-1.5 h-4 w-4" />
+                Membership
+              </TabsTrigger>
+              <TabsTrigger
                 value="profile"
                 className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
@@ -676,6 +712,17 @@ export function CustomerDetailClient({
           <TabsContent value="invoices" className="mt-0 px-4 py-5 sm:px-6 sm:py-6">
             <InvoicesTable invoices={stats.invoices} />
           </TabsContent>
+
+          {membershipProfile && isEnterprise && (
+            <TabsContent value="membership" className="mt-0 px-4 py-5 sm:px-6 sm:py-6">
+              <CustomerMembershipTab
+                customerId={customer.id}
+                customerName={customer.name}
+                loyaltyPoints={customer.loyaltyPoints}
+                profile={membershipProfile}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="profile" className="mt-0 px-4 py-5 sm:px-6 sm:py-6">
             <div className="grid gap-6 lg:grid-cols-2">

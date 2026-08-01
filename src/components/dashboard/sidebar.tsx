@@ -79,8 +79,8 @@ function isActive(pathname: string, href: string, label: string) {
   if (href === "/check-in") {
     return pathname === "/check-in" || pathname.startsWith("/queue");
   }
-  if (href === "/sales/memberships") {
-    return pathname.startsWith("/sales/memberships");
+  if (href === "/memberships") {
+    return pathname.startsWith("/memberships") || pathname.startsWith("/sales/memberships");
   }
   if (href === "/projects") {
     return pathname === "/projects" || pathname.startsWith("/projects/");
