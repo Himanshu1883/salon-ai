@@ -6,6 +6,7 @@ import { resolveLineItemLabel } from "@/lib/service-display";
 import { format } from "date-fns";
 import { Printer, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { InvoiceWhatsAppActions } from "./invoice-whatsapp-actions";
 
 type Invoice = {
   id: string;
@@ -32,7 +33,16 @@ type Invoice = {
   }[];
 };
 
-export function InvoicePrintView({ invoice }: { invoice: Invoice }) {
+export function InvoicePrintView({
+  invoice,
+  whatsappSettings,
+}: {
+  invoice: Invoice;
+  whatsappSettings: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
+}) {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4 print:hidden">
@@ -41,9 +51,15 @@ export function InvoicePrintView({ invoice }: { invoice: Invoice }) {
             <ArrowLeft className="h-4 w-4" /> Back to billing
           </Link>
         </Button>
-        <Button onClick={() => window.print()}>
-          <Printer className="h-4 w-4" /> Print invoice
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <InvoiceWhatsAppActions
+            invoice={invoice}
+            billingMessageTemplate={whatsappSettings.billingMessageTemplate}
+          />
+          <Button onClick={() => window.print()}>
+            <Printer className="h-4 w-4" /> Print invoice
+          </Button>
+        </div>
       </div>
 
       <div className="mx-auto max-w-2xl rounded-lg border bg-white p-8 shadow-sm print:border-none print:shadow-none">

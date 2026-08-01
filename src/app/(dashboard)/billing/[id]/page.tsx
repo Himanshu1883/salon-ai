@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getInvoice } from "@/actions/billing";
+import { getWhatsAppSettingsAction } from "@/actions/whatsapp";
 import { InvoicePrintView } from "./invoice-print-view";
 
 export default async function InvoicePage({
@@ -8,8 +9,13 @@ export default async function InvoicePage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const invoice = await getInvoice(id);
+  const [invoice, whatsappSettings] = await Promise.all([
+    getInvoice(id),
+    getWhatsAppSettingsAction(),
+  ]);
   if (!invoice) notFound();
 
-  return <InvoicePrintView invoice={invoice} />;
+  return (
+    <InvoicePrintView invoice={invoice} whatsappSettings={whatsappSettings} />
+  );
 }

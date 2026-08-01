@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { CreditCard, Building2, Bell, Crown } from "lucide-react";
+import { CreditCard, Building2, Bell, Crown, MessageCircle } from "lucide-react";
 import { isBasicPlan, type SalonPlan } from "@/lib/plans";
 
 const settingsLinks = [
@@ -23,6 +23,12 @@ const settingsLinks = [
     ownerOnly: true,
   },
   {
+    href: "/settings/whatsapp",
+    label: "WhatsApp messages",
+    icon: MessageCircle,
+    ownerOnly: true,
+  },
+  {
     href: "/settings/notifications",
     label: "Notifications",
     icon: Bell,
@@ -35,7 +41,8 @@ function isSettingsActive(pathname: string, href: string) {
   if (
     href === "/settings/billing" ||
     href === "/settings/salon" ||
-    href === "/settings/subscription"
+    href === "/settings/subscription" ||
+    href === "/settings/whatsapp"
   ) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }

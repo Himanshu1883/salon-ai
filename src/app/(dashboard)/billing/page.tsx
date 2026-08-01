@@ -8,6 +8,7 @@ import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { requireSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getWhatsAppSettingsAction } from "@/actions/whatsapp";
 
 export default async function BillingPage({
   searchParams,
@@ -27,7 +28,7 @@ export default async function BillingPage({
   const plan = await getSalonPlan(session.user.salonId);
   const basicBilling = isBasicPlan(plan);
 
-  const [invoices, stats, services, employees, seats, salon, platformBilling] =
+  const [invoices, stats, services, employees, seats, salon, platformBilling, whatsappSettings] =
     await Promise.all([
       getInvoices({
         status: params.status,
@@ -44,6 +45,7 @@ export default async function BillingPage({
         select: { name: true },
       }),
       getSalonSubscriptionStatus(session.user.salonId),
+      getWhatsAppSettingsAction(),
     ]);
 
   if (
@@ -82,6 +84,7 @@ export default async function BillingPage({
       autoOpenCreate={Boolean(params.customerName)}
       isBasicPlan={basicBilling}
       salonName={salon?.name ?? "Salon"}
+      whatsappSettings={whatsappSettings}
       platformInvoices={platformBilling.invoices}
       subscriptionPlanName={
         platformBilling.subscription?.planName ?? "Enterprise"

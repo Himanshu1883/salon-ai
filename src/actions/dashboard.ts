@@ -128,7 +128,7 @@ async function fetchDashboardKpis(salonId: string) {
     }),
   ]);
 
-  const queueCounts = queueGroups.map((g) => ({
+  const queueCounts = queueGroups.map((g: { status: string; _count: { _all: number } }) => ({
     status: g.status,
     _count: g._count._all,
   }));
@@ -271,7 +271,7 @@ async function fetchDashboardWidgets(salonId: string) {
     }),
   ]);
 
-  const queueCounts = queueGroups.map((g) => ({
+  const queueCounts = queueGroups.map((g: { status: string; _count: { _all: number } }) => ({
     status: g.status,
     _count: g._count._all,
   }));

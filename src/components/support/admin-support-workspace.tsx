@@ -33,7 +33,7 @@ const QUICK_ACTIONS = [
   { key: "billing", label: "Billing", icon: CreditCard, path: "/settings/billing" },
   { key: "appointments", label: "Appointment", icon: Calendar, path: "/sales/appointments" },
   { key: "inventory", label: "Inventory", icon: Package, path: "/inventory" },
-  { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, path: "/settings/notifications" },
+  { key: "whatsapp", label: "WhatsApp", icon: MessageCircle, path: "/settings/whatsapp" },
   { key: "staff", label: "Staff", icon: Users, path: "/team/members" },
   { key: "reports", label: "Reports", icon: BarChart3, path: "/reports" },
   { key: "settings", label: "Settings", icon: Settings, path: "/settings/salon" },

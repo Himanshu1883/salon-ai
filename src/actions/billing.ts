@@ -13,6 +13,7 @@ import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
+import { getSalonBillingWhatsAppTemplate } from "@/actions/whatsapp";
 import { deductRetailSale } from "@/lib/inventory/ledger";
 import { isInternalServiceDescription, resolveLineItemLabel } from "@/lib/service-display";
 import {
@@ -735,7 +736,7 @@ export async function getBillingInvoiceFormData() {
   const session = await requireSession();
   const salonId = session.user.salonId;
 
-  const [services, employees, seats, salon, plan] = await Promise.all([
+  const [services, employees, seats, salon, plan, whatsappSettings] = await Promise.all([
     prisma.service.findMany({
       where: { salonId },
       include: { category: true },
@@ -756,6 +757,7 @@ export async function getBillingInvoiceFormData() {
       select: { name: true },
     }),
     getSalonPlan(salonId),
+    getSalonBillingWhatsAppTemplate(salonId),
   ]);
 
   return {
@@ -771,5 +773,6 @@ export async function getBillingInvoiceFormData() {
     seats,
     isBasicPlan: isBasicPlan(plan),
     salonName: salon?.name ?? "Salon",
+    whatsappSettings,
   };
 }

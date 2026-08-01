@@ -28,6 +28,7 @@ import {
   getDemoTimeline,
   WHATSAPP_TEMPLATES,
 } from "./templates";
+import { openWhatsApp } from "@/lib/whatsapp";
 import type {
   AttachmentKey,
   SendMode,
@@ -40,6 +41,7 @@ type WhatsAppCommunicationDrawerProps = {
   open: boolean;
   onClose: () => void;
   context: WhatsAppInvoiceContext;
+  billingMessageTemplate?: string;
   onSent?: () => void;
 };
 
@@ -60,12 +62,6 @@ const AUTO_TOGGLES = [
   { id: "auto_reminder", label: "Automatically send appointment reminder" },
 ] as const;
 
-function normalizePhone(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length === 10) return `91${digits}`;
-  return digits;
-}
-
 function statusBadge(status: TimelineStatus) {
   const map: Record<TimelineStatus, string> = {
     sent: "bg-blue-50 text-blue-700",
@@ -81,6 +77,7 @@ export function WhatsAppCommunicationDrawer({
   open,
   onClose,
   context,
+  billingMessageTemplate,
   onSent,
 }: WhatsAppCommunicationDrawerProps) {
   const [phone, setPhone] = useState(context.customerPhone);
@@ -126,8 +123,14 @@ export function WhatsAppCommunicationDrawer({
       : `/billing/${context.invoiceId}`;
 
   const messagePreview = useMemo(
-    () => buildWhatsAppMessage(templateId, { ...context, customerPhone: phone }, invoiceUrl),
-    [templateId, context, phone, invoiceUrl]
+    () =>
+      buildWhatsAppMessage(
+        templateId,
+        { ...context, customerPhone: phone },
+        invoiceUrl,
+        billingMessageTemplate
+      ),
+    [templateId, context, phone, invoiceUrl, billingMessageTemplate]
   );
 
   const timeline = useMemo(() => getDemoTimeline(context.staffName), [context.staffName]);
@@ -148,10 +151,8 @@ export function WhatsAppCommunicationDrawer({
     }
 
     setSending(true);
-    await new Promise((r) => setTimeout(r, 900));
-    const waPhone = normalizePhone(phone);
-    const url = `https://wa.me/${waPhone}?text=${encodeURIComponent(messagePreview)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    await new Promise((r) => setTimeout(r, 400));
+    openWhatsApp(phone, messagePreview);
     setSending(false);
     setToast("Opening WhatsApp…");
     onSent?.();

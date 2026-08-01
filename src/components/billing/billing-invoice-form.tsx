@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format } from "date-fns";
 import { CalendarDays, X } from "lucide-react";
@@ -61,6 +61,7 @@ import {
   WhatsAppCommunicationDrawer,
   type WhatsAppInvoiceContext,
 } from "./whatsapp-communication";
+import { buildBillingWhatsAppMessage, openWhatsApp } from "@/lib/whatsapp";
 
 const TAX_RATE = 0.08;
 const NOTES_MAX = 300;
@@ -89,6 +90,10 @@ type BillingInvoiceFormProps = {
   prefilledCustomer?: { name: string; phone: string };
   isBasicPlan?: boolean;
   salonName?: string;
+  whatsappSettings?: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
   onSuccess: (invoice: BillingInvoice) => void;
   onCancel?: () => void;
 };
@@ -104,6 +109,7 @@ export function BillingInvoiceForm({
   prefilledCustomer,
   isBasicPlan = false,
   salonName = "Salon",
+  whatsappSettings,
   onSuccess,
   onCancel,
 }: BillingInvoiceFormProps) {
@@ -141,6 +147,9 @@ export function BillingInvoiceForm({
   const [completedInvoice, setCompletedInvoice] = useState<BillingInvoice | null>(
     null
   );
+  const autoWhatsAppOpened = useRef(false);
+
+  const billingMessageTemplate = whatsappSettings?.billingMessageTemplate;
 
   useEffect(() => {
     if (!isBasicPlan && employees.length > 0 && !employeeId) {
@@ -229,6 +238,65 @@ export function BillingInvoiceForm({
     ? grandTotal
     : Math.round((subtotal + displayTax) * 100) / 100;
   const requiresEmployee = !isBasicPlan && employees.length > 0;
+
+  const servicesSummary = useMemo(
+    () =>
+      lineItems
+        .map((item) =>
+          resolveLineItemLabel({
+            serviceName: services.find((s) => s.id === item.serviceId)?.name,
+            description: item.description,
+          })
+        )
+        .filter(Boolean)
+        .join(", "),
+    [lineItems, services]
+  );
+
+  const buildWhatsAppContext = useCallback(
+    (
+      invoiceId: string,
+      invNumber: string,
+      paymentMethod: string,
+      paidAt: Date
+    ): WhatsAppInvoiceContext => ({
+      invoiceId,
+      invoiceNumber: invNumber,
+      customerName: customer.name.trim(),
+      customerPhone: customer.phone.trim(),
+      customerEmail: customer.email,
+      amount: displayTotal,
+      paymentMethod,
+      paidAt,
+      staffName: employees.find((e) => e.id === employeeId)?.name ?? "Staff",
+      salonName,
+      loyaltyPoints: customer.loyaltyPoints,
+      services: servicesSummary || "—",
+    }),
+    [customer, displayTotal, employeeId, employees, salonName, servicesSummary]
+  );
+
+  useEffect(() => {
+    if (
+      step !== 3 ||
+      !successContext ||
+      !whatsappSettings?.autoOpenAfterPayment ||
+      !successContext.customerPhone ||
+      !billingMessageTemplate ||
+      autoWhatsAppOpened.current
+    ) {
+      return;
+    }
+
+    autoWhatsAppOpened.current = true;
+    const invoiceUrl = `${window.location.origin}/billing/${successContext.invoiceId}`;
+    const message = buildBillingWhatsAppMessage(
+      billingMessageTemplate,
+      successContext,
+      invoiceUrl
+    );
+    openWhatsApp(successContext.customerPhone, message);
+  }, [step, successContext, whatsappSettings, billingMessageTemplate]);
 
   const summaryItems = useMemo(
     () =>
@@ -459,21 +527,16 @@ export function BillingInvoiceForm({
       backendMethod
     );
     setCompletedInvoice(invoice);
-    setSuccessContext({
-      invoiceId: createdInvoiceId,
-      invoiceNumber,
-      customerName: customer.name.trim(),
-      customerPhone: customer.phone.trim(),
-      customerEmail: customer.email,
-      amount: displayTotal,
-      paymentMethod: backendMethod,
-      paidAt,
-      staffName:
-        employees.find((e) => e.id === employeeId)?.name ?? "Staff",
-      salonName,
-      loyaltyPoints: customer.loyaltyPoints,
-    });
+    setSuccessContext(buildWhatsAppContext(createdInvoiceId, invoiceNumber, backendMethod, paidAt));
     setStep(3);
+  }
+
+  function openWhatsAppDrawerFromStep2() {
+    if (!createdInvoiceId) return;
+    setSuccessContext(
+      buildWhatsAppContext(createdInvoiceId, invoiceNumber, "pending", new Date())
+    );
+    setWhatsappOpen(true);
   }
 
   function handleFinishNewInvoice() {
@@ -504,12 +567,14 @@ export function BillingInvoiceForm({
           open={whatsappOpen}
           onClose={() => setWhatsappOpen(false)}
           context={successContext}
+          billingMessageTemplate={billingMessageTemplate}
         />
       </>
     );
   }
 
   return (
+    <>
     <div className="flex h-full flex-col bg-gradient-to-b from-white via-white to-violet-50/25">
       <InvoiceModalHeader step={step === 1 ? 1 : 2} onClose={onCancel} />
 
@@ -659,7 +724,10 @@ export function BillingInvoiceForm({
                 className="grid gap-8 lg:grid-cols-[1fr_320px]"
               >
                 <div className="space-y-8">
-                  <SuccessBanner invoiceNumber={invoiceNumber} />
+                  <SuccessBanner
+                    invoiceNumber={invoiceNumber}
+                    onSendWhatsApp={openWhatsAppDrawerFromStep2}
+                  />
 
                   <section className={cn(invoiceModalStyles.card, "p-6")}>
                     <SectionHeader className="mb-4">Invoice Summary</SectionHeader>
@@ -751,5 +819,14 @@ export function BillingInvoiceForm({
         />
       </div>
     </div>
+    {successContext && (
+      <WhatsAppCommunicationDrawer
+        open={whatsappOpen}
+        onClose={() => setWhatsappOpen(false)}
+        context={successContext}
+        billingMessageTemplate={billingMessageTemplate}
+      />
+    )}
+    </>
   );
 }

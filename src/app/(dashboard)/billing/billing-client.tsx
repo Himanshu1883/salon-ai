@@ -37,6 +37,7 @@ export function BillingClient({
   autoOpenCreate = false,
   isBasicPlan = false,
   salonName = "Salon",
+  whatsappSettings,
   platformInvoices = [],
   subscriptionPlanName = "Enterprise",
   initialTab = "customers",
@@ -51,6 +52,10 @@ export function BillingClient({
   autoOpenCreate?: boolean;
   isBasicPlan?: boolean;
   salonName?: string;
+  whatsappSettings?: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
   platformInvoices?: PlatformSubscriptionInvoice[];
   subscriptionPlanName?: string;
   initialTab?: "customers" | "subscription";
@@ -252,6 +257,7 @@ export function BillingClient({
         prefilledCustomer={prefilledCustomer}
         isBasicPlan={isBasicPlan}
         salonName={salonName}
+        whatsappSettings={whatsappSettings}
         onSuccess={handleInvoiceCreated}
       />
     </div>

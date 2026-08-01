@@ -18,6 +18,10 @@ type BillingInvoiceDialogProps = {
   prefilledCustomer?: { name: string; phone: string };
   isBasicPlan?: boolean;
   salonName?: string;
+  whatsappSettings?: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
   onSuccess: (invoice: BillingInvoice) => void;
 };
 
@@ -30,6 +34,7 @@ export function BillingInvoiceDialog({
   prefilledCustomer,
   isBasicPlan = false,
   salonName = "Salon",
+  whatsappSettings,
   onSuccess,
 }: BillingInvoiceDialogProps) {
   return (
@@ -42,6 +47,7 @@ export function BillingInvoiceDialog({
           prefilledCustomer={prefilledCustomer}
           isBasicPlan={isBasicPlan}
           salonName={salonName}
+          whatsappSettings={whatsappSettings}
           onSuccess={onSuccess}
           onCancel={() => onOpenChange(false)}
         />
