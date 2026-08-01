@@ -167,9 +167,10 @@ export function PreviewShowcase() {
       {/* Premium stage panel */}
       <div
         className={cn(
-          "relative overflow-hidden rounded-[1.75rem] border border-[#E4DDD1]",
-          "bg-gradient-to-b from-white/70 via-[#F7F3EC]/40 to-[#EFE8DC]/80",
-          "px-4 py-8 sm:px-6 sm:py-10 md:px-10 md:py-12 lg:px-12 lg:py-14"
+          "relative overflow-hidden rounded-[1.75rem] border border-[#C4B5FD]/40",
+          "bg-gradient-to-br from-white via-[#F5F3FF] to-[#EDE9FE]",
+          "px-4 py-8 sm:px-6 sm:py-10 md:px-10 md:py-12 lg:px-12 lg:py-14",
+          "shadow-[0_20px_60px_-24px_rgba(91,33,182,0.25)]"
         )}
       >
         {/* Texture + glow */}

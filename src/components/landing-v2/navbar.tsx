@@ -72,8 +72,8 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
       className={cn(
         "fixed inset-x-0 top-0 z-50 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-[220ms] ease-out",
         scrolled
-          ? "border-b border-[#E4DDD1] bg-[#F7F3EC]/95 shadow-[0_4px_24px_-8px_rgba(27,23,20,0.1)] backdrop-blur-xl"
-          : "border-b border-[#E4DDD1]/90 bg-white/75 shadow-[0_1px_0_rgba(255,255,255,0.65)_inset,0_8px_32px_-12px_rgba(27,23,20,0.1)] backdrop-blur-xl"
+          ? "border-b border-[#E4DDD1] bg-white/95 shadow-[0_4px_24px_-8px_rgba(27,23,20,0.1)] backdrop-blur-xl"
+          : "border-b border-[#E4DDD1]/90 bg-white/95 shadow-[0_1px_0_rgba(255,255,255,0.65)_inset,0_8px_32px_-12px_rgba(27,23,20,0.1)] backdrop-blur-xl"
       )}
     >
       {/* Accent hairline — matches hero editorial theme */}
@@ -161,7 +161,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         <div
           className={cn(
             "px-4 pb-6 pt-2",
-            scrolled ? "bg-[#F7F3EC]" : "bg-white/80 backdrop-blur-xl"
+            "bg-white"
           )}
         >
           <div className="space-y-1">

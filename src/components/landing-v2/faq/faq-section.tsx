@@ -117,7 +117,7 @@ export function FaqSection() {
   const reduced = !!prefersReducedMotion;
 
   return (
-    <LandingSection id="faq" band="band">
+    <LandingSection id="faq" band="band" className="landing-preview-band">
       <div className="grid items-stretch gap-10 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,0.58fr)] lg:gap-12 xl:gap-16">
         {/* Portrait photo */}
         <div className="relative min-h-[300px] sm:min-h-[380px] lg:min-h-[560px] lg:h-full">

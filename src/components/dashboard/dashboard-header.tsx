@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -66,11 +67,29 @@ export function DashboardHeader({
       : getRoleLabel(userRole).replace("Workspace owner", "Owner");
 
   return (
-    <header className="sticky top-0 z-30 border-b border-dashboard-border bg-dashboard-card/95 px-4 py-4 font-[family-name:var(--font-inter)] backdrop-blur-md sm:px-6 lg:px-8">
+    <header className="relative sticky top-0 z-30 overflow-hidden border-b border-dashboard-border font-[family-name:var(--font-inter)] shadow-[0_8px_30px_-18px_rgba(91,33,182,0.35)]">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <Image
+          src="/git.png"
+          alt=""
+          fill
+          priority
+          className="object-cover object-center"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-white/88 via-white/78 to-[#F5F3FF]/70" />
+        <div className="absolute inset-0 bg-[#5B21B6]/[0.06]" />
+        <div className="absolute inset-0 backdrop-blur-[1.5px]" />
+      </div>
+
+      <div className="relative z-10 px-4 py-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,420px)_minmax(0,1fr)]">
         <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight text-dashboard-text sm:text-2xl">
-            {getGreeting()}, {firstName} 👋
+            <span className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] bg-clip-text text-transparent">
+              {getGreeting()}, {firstName}
+            </span>{" "}
+            <span aria-hidden>👋</span>
           </h1>
           <p className="mt-0.5 truncate text-sm font-medium text-dashboard-primary">
             {salonName}
@@ -232,6 +251,7 @@ export function DashboardHeader({
             </>
           )}
         </div>
+      </div>
       </div>
     </header>
   );

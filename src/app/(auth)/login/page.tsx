@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
-import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import LoginForm from "./login-form";
+import LoginWorkspaceGate from "./login-workspace-gate";
 
 const salonSelect = {
   name: true,
@@ -55,14 +55,16 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginPage() {
   const salonSlug = await resolveSalonSlug();
 
+  // No salon context (marketing /login) → workspace picker.
+  // Missing/unreachable salon → picker too (never 404 the Login CTA).
   if (!salonSlug) {
-    notFound();
+    return <LoginWorkspaceGate />;
   }
 
   const salon = await findSalonBySlug(salonSlug);
 
   if (!salon) {
-    notFound();
+    return <LoginWorkspaceGate />;
   }
 
   return (

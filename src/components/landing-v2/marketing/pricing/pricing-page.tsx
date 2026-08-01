@@ -7,7 +7,6 @@ import { ArrowRight, Check } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   FAQ_ITEMS,
-  IMAGES,
   PRICING_PLANS,
   type PricingPlan,
 } from "../../constants";
@@ -179,22 +178,21 @@ export function PricingPageContent() {
   );
 
   return (
-    <div className="bg-[#FAF9F7] text-[#1B1714]">
+    <div className="bg-white text-[#1B1714]">
       {/* Hero — 100vh banner */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src={IMAGES.hairStyling}
+            src="/pricing.png"
             alt=""
             fill
             priority
             className="object-cover object-center"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
-          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/55" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_42%,rgba(255,255,255,0.35),transparent_68%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-40" />
         </div>
 
         <div
@@ -250,7 +248,7 @@ export function PricingPageContent() {
       {/* Plan cards */}
       <section
         id="plans"
-        className="scroll-mt-24 border-b border-[#E8E4DE] pb-16 pt-12 md:pb-24 md:pt-16"
+        className="scroll-mt-24 border-b border-[#E8E4DE] bg-white pb-16 pt-12 md:pb-24 md:pt-16"
       >
         <div className={CONTAINER}>
           <Reveal className="mb-10 flex justify-center">
@@ -344,7 +342,7 @@ export function PricingPageContent() {
       </section>
 
       {/* FAQ strip */}
-      <section className="border-b border-[#E8E4DE] bg-[#EFE8DC] py-16 md:py-20">
+      <section className="landing-preview-band border-b border-[#E8E4DE] py-16 md:py-20">
         <div className={CONTAINER}>
           <Reveal className="mb-10 text-center">
             <h2 className="landing-display text-2xl font-medium md:text-3xl">
@@ -374,7 +372,7 @@ export function PricingPageContent() {
       </section>
 
       {/* Bottom CTA — ReflexAI style */}
-      <section className="py-20 md:py-28">
+      <section className="bg-white py-20 md:py-28">
         <div className={cn(CONTAINER, "max-w-2xl text-center")}>
           <Reveal>
             <h2 className="landing-display text-3xl font-medium md:text-4xl">

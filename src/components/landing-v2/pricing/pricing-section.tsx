@@ -113,7 +113,7 @@ export function PricingSection() {
   const [annual, setAnnual] = useState(false);
 
   return (
-    <LandingSection id="pricing" band="ivory">
+    <LandingSection id="pricing" band="ivory" className="bg-white">
       <div className="mb-8 text-center md:mb-10">
         <SectionEyebrow centered>Simple Pricing</SectionEyebrow>
         <h2 className={sectionHeadingClass}>

@@ -141,8 +141,15 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
+  // Marketing "Login" links to /login. Allow it (workspace picker or
+  // cookie/header-scoped form). Do not bounce back to home.
   if (pathname === "/login") {
-    return NextResponse.redirect(new URL("/", req.url));
+    if (isLoggedIn && !isSuperAdmin && sessionSalonSlug) {
+      return NextResponse.redirect(
+        new URL(`/${sessionSalonSlug}/dashboard`, req.url)
+      );
+    }
+    return NextResponse.next();
   }
 
   if (isSalonProtectedRoute(pathname)) {

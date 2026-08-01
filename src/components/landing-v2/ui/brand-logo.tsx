@@ -17,12 +17,16 @@ export function BrandLogo({ className, size = "nav", priority }: BrandLogoProps)
 
   return (
     <Image
-      src="/logo.jpeg"
+      src="/log.png"
       alt=""
       width={config.width}
       height={config.height}
       priority={priority ?? size === "nav"}
-      className={cn("rounded-lg object-cover object-center", config.className, className)}
+      className={cn(
+        "rounded-xl object-contain object-center",
+        config.className,
+        className
+      )}
       aria-hidden
     />
   );

@@ -36,6 +36,15 @@ export const metadata: Metadata = {
   },
   description:
     "Salon AI helps salons manage appointments, billing, CRM, inventory, staff, reports, WhatsApp reminders, and AI analytics.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.png", type: "image/png", sizes: "48x48" },
+      { url: "/log.png", type: "image/png", sizes: "512x512" },
+    ],
+    apple: [{ url: "/log.png", type: "image/png" }],
+    shortcut: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

@@ -114,7 +114,7 @@ export function HeroTrustBridge() {
       {/* Mobile & tablet — pinned to bottom inside 100svh hero */}
       <section
         aria-label="Salon AI trust metrics"
-        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#F7F3EC] from-70% via-[#F7F3EC]/95 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 lg:hidden"
+        className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-white from-70% via-white/95 to-transparent px-5 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-6 lg:hidden"
       >
         <motion.div
           data-motion=""

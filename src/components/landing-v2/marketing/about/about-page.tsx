@@ -213,22 +213,21 @@ export function AboutPageContent() {
   const featured = TESTIMONIALS[0];
 
   return (
-    <div className="bg-[#FAF9F7] text-[#1B1714]">
+    <div className="bg-white text-[#1B1714]">
       {/* ── Hero — Docs-style centered 100vh banner ── */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src="/bg2.png"
+            src="/about.png"
             alt=""
             fill
             priority
             className="object-cover object-center"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
-          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/55" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_42%,rgba(255,255,255,0.35),transparent_68%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-40" />
         </div>
 
         <div
@@ -245,9 +244,13 @@ export function AboutPageContent() {
                   Trusted by {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+
                   salons
                 </p>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 px-4 py-1.5 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full bg-[#5B21B6]"
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 py-1 pl-1 pr-4 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
+                  <Image
+                    src="/log.png"
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full object-contain"
                     aria-hidden
                   />
                   Welcome to Salon AI
@@ -286,15 +289,14 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Philosophy ── */}
-      <section className="relative overflow-hidden border-b border-[#E8E4DE]">
+      <section className="relative overflow-hidden border-b border-[#E8E4DE] bg-white">
         <div
           className="pointer-events-none absolute inset-0"
           aria-hidden
         >
-          <div className="absolute inset-0 bg-[#F7F3EC]" />
           <div className="absolute -left-1/4 top-0 h-[70%] w-[70%] rounded-full bg-[#5B21B6]/[0.06] blur-3xl" />
           <div className="absolute -right-1/4 bottom-0 h-[55%] w-[55%] rounded-full bg-[#4F46E5]/[0.05] blur-3xl" />
-          <div className="hero-editorial__grain absolute inset-0 opacity-60" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-40" />
           <p className="landing-display absolute -right-4 top-1/2 hidden -translate-y-1/2 select-none text-[clamp(6rem,18vw,14rem)] font-medium leading-none tracking-tight text-[#1B1714]/[0.035] lg:block">
             System
           </p>
@@ -380,7 +382,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Founder's note / Mission quote ── */}
-      <section className={cn(aboutSectionPadding, "bg-[#EFE8DC]")}>
+      <section className={cn(aboutSectionPadding, "landing-preview-band")}>
         <div className={ABOUT_CONTAINER}>
           <div className="grid gap-12 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
             <Reveal>
@@ -420,7 +422,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Our Story ── */}
-      <section className={cn(aboutSectionPadding, "border-b border-[#E8E4DE]")}>
+      <section className={cn(aboutSectionPadding, "border-b border-[#E8E4DE] bg-white")}>
         <div className={ABOUT_CONTAINER}>
           <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
             <Reveal>
@@ -472,7 +474,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── What we do — numbered services ── */}
-      <section className={cn(aboutSectionPadding, "bg-[#FAF9F7]")}>
+      <section className={cn(aboutSectionPadding, "landing-preview-band")}>
         <div className={ABOUT_CONTAINER}>
           <Reveal className="max-w-2xl">
             <BracketLabel>What We Do</BracketLabel>
@@ -602,7 +604,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Client stories ── */}
-      <section className={cn(aboutSectionPadding, "border-b border-[#E8E4DE]")}>
+      <section className={cn(aboutSectionPadding, "border-b border-[#E8E4DE] bg-white")}>
         <div className={ABOUT_CONTAINER}>
           <Reveal className="max-w-2xl">
             <BracketLabel>Client Stories</BracketLabel>
@@ -655,7 +657,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── How we work ── */}
-      <section className={cn(aboutSectionPadding, "bg-[#EFE8DC]")}>
+      <section className={cn(aboutSectionPadding, "landing-preview-band")}>
         <div className={ABOUT_CONTAINER}>
           <Reveal className="max-w-2xl">
             <BracketLabel>How We Work</BracketLabel>
@@ -709,7 +711,7 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Bottom CTA ── */}
-      <section className={cn(aboutSectionPadding, "border-t border-[#E8E4DE]")}>
+      <section className={cn(aboutSectionPadding, "border-t border-[#E8E4DE] bg-white")}>
         <div className={cn(ABOUT_CONTAINER, "max-w-3xl text-center")}>
           <Reveal>
             <BracketLabel>Let&apos;s Talk</BracketLabel>

@@ -44,7 +44,7 @@ export function DashboardShell({
 
   return (
     <RecordSaleProvider>
-      <div className="flex h-dvh overflow-hidden bg-dashboard-bg font-[family-name:var(--font-inter)]">
+      <div className="dashboard-shell flex h-dvh overflow-hidden font-[family-name:var(--font-inter)]">
       <HeaderDataLoader onData={handleHeaderData} />
       {mobileOpen && (
         <button
@@ -77,12 +77,12 @@ export function DashboardShell({
         />
       </div>
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-dashboard-border bg-dashboard-card/95 px-4 py-3 backdrop-blur-sm lg:hidden">
+      <div className="dashboard-main-panel flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-dashboard-border bg-white/70 px-4 py-3 backdrop-blur-xl lg:hidden">
           <button
             type="button"
             onClick={() => setMobileOpen((open) => !open)}
-            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-dashboard-border bg-white text-dashboard-text shadow-sm"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-dashboard-border bg-white/90 text-dashboard-primary shadow-sm"
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

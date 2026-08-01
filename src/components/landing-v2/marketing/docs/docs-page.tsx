@@ -164,22 +164,21 @@ export function DocsPageContent() {
   const setupFaq = FAQ_ITEMS.find((f) => f.question.includes("set up"));
 
   return (
-    <div className="bg-[#F7F3EC] text-[#1B1714]">
+    <div className="bg-white text-[#1B1714]">
       {/* Hero — 100vh, centered (unique bg vs other marketing pages) */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E4DDD1]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src={IMAGES.bannerModern}
+            src="/docss.png"
             alt=""
             fill
             priority
             className="object-cover object-center"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
-          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/55" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_42%,rgba(255,255,255,0.35),transparent_68%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-40" />
         </div>
 
         <div
@@ -212,7 +211,7 @@ export function DocsPageContent() {
       </section>
 
       {/* Topic cards — "Whatever type of place you have in mind" */}
-      <section id="topics" className="border-b border-[#E4DDD1] py-20 md:py-28">
+      <section id="topics" className="border-b border-[#E4DDD1] bg-white py-20 md:py-28">
         <div className={CONTAINER}>
           <Reveal className="mb-12 text-center md:mb-16">
             <h2 className="landing-display text-2xl font-medium md:text-3xl lg:text-4xl">
@@ -257,7 +256,7 @@ export function DocsPageContent() {
             key={step.title}
             className={cn(
               "py-16 md:py-20",
-              index % 2 === 1 ? "bg-[#EFE8DC]" : "bg-[#F7F3EC]"
+              index % 2 === 1 ? "landing-preview-band" : "bg-white"
             )}
           >
             <div className={cn(CONTAINER, "max-w-3xl")}>
@@ -279,7 +278,7 @@ export function DocsPageContent() {
       </section>
 
       {/* Standards / Module guides — Huts Standards strip */}
-      <section className="border-b border-[#E4DDD1] py-20 md:py-28">
+      <section className="landing-preview-band border-b border-[#E4DDD1] py-20 md:py-28">
         <div className={CONTAINER}>
           <Reveal className="max-w-3xl">
             <h2 className="landing-display text-2xl font-medium md:text-3xl lg:text-4xl">
@@ -344,7 +343,7 @@ export function DocsPageContent() {
       </section>
 
       {/* Testimonials — "But don't take it from us" */}
-      <section className="border-b border-[#E4DDD1] bg-[#EFE8DC] py-20 md:py-28">
+      <section className="border-b border-[#E4DDD1] bg-white py-20 md:py-28">
         <div className={CONTAINER}>
           <Reveal className="mb-12 text-center md:mb-16">
             <h2 className="landing-display text-2xl font-medium md:text-3xl lg:text-4xl">
@@ -378,7 +377,7 @@ export function DocsPageContent() {
       </section>
 
       {/* Stats — Huts bottom stats */}
-      <section className="border-b border-[#E4DDD1] py-16 md:py-20">
+      <section className="landing-preview-band border-b border-[#E4DDD1] py-16 md:py-20">
         <div className={CONTAINER}>
           <Reveal className="mb-10 text-center">
             <p className="text-sm text-[#1B1714]/50">Still don&apos;t believe it?</p>
@@ -403,7 +402,7 @@ export function DocsPageContent() {
       {/* Quick start checklist */}
       <section
         id="getting-started"
-        className="border-b border-[#E4DDD1] bg-[#F7F3EC] py-20 md:py-28"
+        className="border-b border-[#E4DDD1] bg-white py-20 md:py-28"
       >
         <div className={CONTAINER}>
           <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
@@ -444,7 +443,7 @@ export function DocsPageContent() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="py-20 md:py-28">
+      <section className="landing-preview-band py-20 md:py-28">
         <div className={cn(CONTAINER, "max-w-3xl text-center")}>
           <Reveal>
             <h2 className="landing-display text-3xl font-medium md:text-4xl lg:text-5xl">

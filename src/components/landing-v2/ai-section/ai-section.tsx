@@ -14,7 +14,7 @@ import { ProductMockupFrame } from "../ui/product-mockup-frame";
 
 export function AiSection() {
   return (
-    <LandingSection id="ai" band="ivory">
+    <LandingSection id="ai" band="ivory" className="bg-white">
       <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
         <div>
           <SectionEyebrow centered={false}>Artificial Intelligence</SectionEyebrow>

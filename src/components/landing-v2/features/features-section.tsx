@@ -69,8 +69,9 @@ function FeatureImage({
           viewport={{ once: true, amount: 0.2 }}
           className={cn(
             "group relative overflow-hidden rounded-2xl",
-            "border border-[#1B1714]/[0.08]",
-            "shadow-[0_20px_40px_rgba(27,23,20,0.08)]"
+            "border-2 border-[#5B21B6]/45",
+            "shadow-[0_20px_40px_rgba(91,33,182,0.12)]",
+            "ring-1 ring-inset ring-[#C4B5FD]/40"
           )}
         >
           <div className="relative aspect-[4/3] overflow-hidden md:aspect-[5/4] lg:aspect-[4/3] lg:h-[420px] lg:aspect-auto">
@@ -262,23 +263,27 @@ export function FeaturesSection() {
   const enhanced = isDesktop && !prefersReducedMotion;
 
   return (
-    <LandingSection id="features" band="band">
-      <div className="mb-12 text-center md:mb-16">
+    <LandingSection
+      id="features"
+      band="band"
+      className="landing-features-band !relative !overflow-hidden"
+    >
+      <div className="relative z-10 mb-12 text-center md:mb-16">
         <div className="mb-4 flex items-center justify-center gap-3">
-          <span className="h-px w-8 shrink-0 bg-[#1B1714]/20" aria-hidden />
-          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#1B1714]/65">
+          <span className="h-px w-8 shrink-0 bg-[#5B21B6]/25" aria-hidden />
+          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#5B21B6]">
             Salon-First Features
           </span>
-          <span className="hidden h-px w-8 shrink-0 bg-[#1B1714]/20 sm:block" aria-hidden />
+          <span className="hidden h-px w-8 shrink-0 bg-[#5B21B6]/25 sm:block" aria-hidden />
         </div>
         <h2 className={sectionHeadingClass}>Designed Around Your Salon Floor</h2>
       </div>
 
-      <div className="relative">
+      <div className="relative z-10">
         {/* Vertical journey connector — desktop only */}
         <div
           aria-hidden
-          className="pointer-events-none absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-[#1B1714]/[0.08] lg:block"
+          className="pointer-events-none absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-[#5B21B6]/15 lg:block"
         />
 
         <div className="relative space-y-16 md:space-y-20 lg:space-y-24">

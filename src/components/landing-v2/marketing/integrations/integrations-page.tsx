@@ -132,22 +132,21 @@ export function IntegrationsPageContent() {
   const reduced = !!useReducedMotion();
 
   return (
-    <div className="bg-[#FAF9F7] text-[#1B1714]">
+    <div className="bg-white text-[#1B1714]">
       {/* Hero — Docs-style centered 100vh banner */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src="/bgg.jpg"
+            src="/docs.png"
             alt=""
             fill
             priority
             className="object-cover object-center"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
-          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/70 via-white/30 to-white/55" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_75%_55%_at_50%_42%,rgba(255,255,255,0.35),transparent_68%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-40" />
         </div>
 
         <div
@@ -163,9 +162,13 @@ export function IntegrationsPageContent() {
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/45">
                   Integrations · Salon AI ERP
                 </p>
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 px-4 py-1.5 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
-                  <span
-                    className="h-1.5 w-1.5 rounded-full bg-[#5B21B6]"
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 py-1 pl-1 pr-4 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
+                  <Image
+                    src="/log.png"
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full object-contain"
                     aria-hidden
                   />
                   One connected platform
@@ -219,7 +222,7 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Pick your workflow */}
-      <section className="border-b border-[#E8E4DE] bg-[#EFE8DC] py-20 md:py-28">
+      <section className="border-b border-[#E8E4DE] bg-white py-20 md:py-28">
         <div className={CONTAINER}>
           <Reveal>
             <h2 className="landing-display max-w-2xl text-3xl font-medium tracking-tight text-[#1B1714] md:text-4xl">
@@ -282,7 +285,7 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Quotes */}
-      <section className="border-b border-[#E8E4DE] bg-[#FAF9F7] py-16 md:py-20">
+      <section className="landing-preview-band border-b border-[#E8E4DE] py-16 md:py-20">
         <div className={CONTAINER}>
           <div className="grid gap-5 md:grid-cols-2">
             {QUOTES.map((q, index) => (
@@ -306,7 +309,7 @@ export function IntegrationsPageContent() {
       {/* Platform */}
       <section
         id="operations"
-        className="border-b border-[#E8E4DE] bg-[#EFE8DC] py-20 md:py-28"
+        className="border-b border-[#E8E4DE] bg-white py-20 md:py-28"
       >
         <div className={CONTAINER}>
           <Reveal className="max-w-3xl">
@@ -355,7 +358,7 @@ export function IntegrationsPageContent() {
       {/* Payments */}
       <section
         id="payments"
-        className="border-b border-[#E8E4DE] bg-[#FAF9F7] py-20 md:py-28"
+        className="landing-preview-band border-b border-[#E8E4DE] py-20 md:py-28"
       >
         <div className={CONTAINER}>
           <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
@@ -409,7 +412,7 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Native modules */}
-      <section className="border-b border-[#E8E4DE] bg-[#EFE8DC] py-20 md:py-28">
+      <section className="border-b border-[#E8E4DE] bg-white py-20 md:py-28">
         <div className={CONTAINER}>
           <Reveal className="max-w-2xl">
             <h2 className="landing-display text-3xl font-medium text-[#1B1714] md:text-4xl">
@@ -445,7 +448,7 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Migration + API */}
-      <section className="border-b border-[#E8E4DE] bg-[#FAF9F7] py-20 md:py-28">
+      <section className="landing-preview-band border-b border-[#E8E4DE] py-20 md:py-28">
         <div className={CONTAINER}>
           <div className="grid gap-5 lg:grid-cols-2">
             <Reveal>
@@ -500,7 +503,7 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Bottom CTA */}
-      <section className="bg-[#FAF9F7] py-24 md:py-32">
+      <section className="bg-white py-24 md:py-32">
         <div className={cn(CONTAINER, "max-w-3xl text-center")}>
           <Reveal>
             <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#1B1714]/40">

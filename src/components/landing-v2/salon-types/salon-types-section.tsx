@@ -121,7 +121,7 @@ export function SalonTypesSection() {
   const reduced = !!prefersReducedMotion;
 
   return (
-    <LandingSection id="salon-types" band="ivory">
+    <LandingSection id="salon-types" band="ivory" className="bg-white">
       <SectionHeader
         eyebrow="Built For Every Salon"
         title="Your Salon Type. Fully Supported."

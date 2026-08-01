@@ -108,7 +108,7 @@ export function ModulesSection() {
     <LandingSection
       id="modules"
       band="ivory"
-      className="!pt-6 lg:!pt-[calc(var(--landing-trust-half)+4.5rem)]"
+      className="bg-white !pt-6 lg:!pt-[calc(var(--landing-trust-half)+4.5rem)]"
     >
       <p className="mb-6 hidden text-center text-sm font-medium text-[#1B1714]/60 lg:mb-8 lg:block">
         Trusted by Beauty Professionals
@@ -130,7 +130,7 @@ export function ModulesSection() {
           {!expanded && (
             <div
               aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-b from-transparent to-[#F7F3EC]"
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-b from-transparent to-white"
             />
           )}
         </div>

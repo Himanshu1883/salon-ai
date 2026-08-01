@@ -29,7 +29,7 @@ export function HeroSection() {
       {/* Salon background */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
         <Image
-          src="/salon.jpg"
+          src="/git.png"
           alt=""
           fill
           priority
@@ -37,8 +37,8 @@ export function HeroSection() {
           sizes="100vw"
         />
         <div className="absolute inset-0 bg-[#F7F3EC]/10" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/88 via-[#F7F3EC]/45 to-[#F7F3EC]/15" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/10 via-[#F7F3EC]/20 to-[#F7F3EC]/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/10" />
         <div className="hero-editorial__grain absolute inset-0 opacity-95" />
       </div>
 

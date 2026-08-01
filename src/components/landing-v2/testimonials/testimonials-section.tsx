@@ -238,7 +238,11 @@ export function TestimonialsSection() {
   const instant = !!prefersReducedMotion;
 
   return (
-    <LandingSection id="testimonials" band="band">
+    <LandingSection
+      id="testimonials"
+      band="band"
+      className="landing-preview-band"
+    >
       <SectionHeader
         eyebrow="Trusted by Salon Owners"
         title="Real Stories. Real Results."
