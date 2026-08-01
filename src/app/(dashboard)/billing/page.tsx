@@ -1,4 +1,5 @@
 import { getInvoices, getBillingStats } from "@/actions/billing";
+import { generateTrialInvoice, getSalonSubscriptionStatus } from "@/actions/subscription";
 import { BillingClient } from "./billing-client";
 import { getServices } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
@@ -18,6 +19,7 @@ export default async function BillingPage({
     employeeId?: string;
     customerName?: string;
     customerPhone?: string;
+    tab?: string;
   }>;
 }) {
   const session = await requireSession();
@@ -25,22 +27,33 @@ export default async function BillingPage({
   const plan = await getSalonPlan(session.user.salonId);
   const basicBilling = isBasicPlan(plan);
 
-  const [invoices, stats, services, employees, seats, salon] = await Promise.all([
-    getInvoices({
-      status: params.status,
-      dateFrom: params.dateFrom,
-      dateTo: params.dateTo,
-      employeeId: params.employeeId,
-    }),
-    getBillingStats(),
-    getServices(),
-    getActiveEmployees(),
-    getSeats(),
-    prisma.salon.findUnique({
-      where: { id: session.user.salonId },
-      select: { name: true },
-    }),
-  ]);
+  const [invoices, stats, services, employees, seats, salon, platformBilling] =
+    await Promise.all([
+      getInvoices({
+        status: params.status,
+        dateFrom: params.dateFrom,
+        dateTo: params.dateTo,
+        employeeId: params.employeeId,
+      }),
+      getBillingStats(),
+      getServices(),
+      getActiveEmployees(),
+      getSeats(),
+      prisma.salon.findUnique({
+        where: { id: session.user.salonId },
+        select: { name: true },
+      }),
+      getSalonSubscriptionStatus(session.user.salonId),
+    ]);
+
+  if (
+    platformBilling.subscription?.status === "trial" &&
+    platformBilling.subscription.trialEndsAt
+  ) {
+    await generateTrialInvoice(session.user.salonId).catch(() => undefined);
+    const refreshed = await getSalonSubscriptionStatus(session.user.salonId);
+    platformBilling.invoices = refreshed.invoices;
+  }
 
   return (
     <BillingClient
@@ -69,6 +82,11 @@ export default async function BillingPage({
       autoOpenCreate={Boolean(params.customerName)}
       isBasicPlan={basicBilling}
       salonName={salon?.name ?? "Salon"}
+      platformInvoices={platformBilling.invoices}
+      subscriptionPlanName={
+        platformBilling.subscription?.planName ?? "Enterprise"
+      }
+      initialTab={params.tab === "subscription" ? "subscription" : "customers"}
     />
   );
 }

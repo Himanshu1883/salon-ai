@@ -330,6 +330,7 @@ export async function payPlatformInvoice(
 
   revalidatePath("/settings/billing");
   revalidatePath("/settings/subscription");
+  revalidatePath("/billing");
   revalidatePath("/invoice-due");
   revalidatePath("/dashboard");
 

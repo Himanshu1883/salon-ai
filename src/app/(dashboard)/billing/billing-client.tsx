@@ -12,6 +12,11 @@ import { BillingKpiCards } from "@/components/billing/billing-kpi-cards";
 import { BillingFilterBar } from "@/components/billing/billing-filter-bar";
 import { BillingInvoiceTable } from "@/components/billing/billing-invoice-table";
 import { BillingEmptyState } from "@/components/billing/billing-empty-state";
+import {
+  PlatformSubscriptionInvoices,
+  type PlatformSubscriptionInvoice,
+} from "@/components/subscription/platform-subscription-invoices";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   BillingEmployee,
   BillingFilters,
@@ -32,6 +37,9 @@ export function BillingClient({
   autoOpenCreate = false,
   isBasicPlan = false,
   salonName = "Salon",
+  platformInvoices = [],
+  subscriptionPlanName = "Enterprise",
+  initialTab = "customers",
 }: {
   invoices: BillingInvoice[];
   stats: BillingStats;
@@ -43,17 +51,38 @@ export function BillingClient({
   autoOpenCreate?: boolean;
   isBasicPlan?: boolean;
   salonName?: string;
+  platformInvoices?: PlatformSubscriptionInvoice[];
+  subscriptionPlanName?: string;
+  initialTab?: "customers" | "subscription";
 }) {
   const router = useRouter();
   const [invoices, setInvoices] = useState(initialInvoices);
   const [stats, setStats] = useState(initialStats);
   const [open, setOpen] = useState(autoOpenCreate);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState(initialTab);
 
   useEffect(() => {
     setInvoices(initialInvoices);
     setStats(initialStats);
   }, [initialInvoices, initialStats]);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
+
+  function handleTabChange(value: string) {
+    const tab = value as "customers" | "subscription";
+    setActiveTab(tab);
+    const params = new URLSearchParams(window.location.search);
+    if (tab === "subscription") {
+      params.set("tab", "subscription");
+    } else {
+      params.delete("tab");
+    }
+    const query = params.toString();
+    router.replace(query ? `/billing?${query}` : "/billing", { scroll: false });
+  }
 
   function handleInvoiceCreated(invoice: BillingInvoice) {
     setOpen(false);
@@ -114,11 +143,13 @@ export function BillingClient({
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
     if (employeeId && employeeId !== "all") params.set("employeeId", employeeId);
+    if (activeTab === "subscription") params.set("tab", "subscription");
     router.push(`/billing?${params.toString()}`);
   }
 
   function resetFilters() {
-    router.push("/billing");
+    const params = activeTab === "subscription" ? "?tab=subscription" : "";
+    router.push(`/billing${params}`);
   }
 
   async function handleDelete(id: string) {
@@ -140,47 +171,77 @@ export function BillingClient({
     <div className="space-y-6">
       <BillingHeader
         onNewInvoice={() => setOpen(true)}
-        isBasicPlan={isBasicPlan}
+        showNewInvoice={activeTab === "customers"}
       />
 
-      <BillingKpiCards stats={stats} />
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
+        <TabsList className="h-auto w-full justify-start gap-1 rounded-xl border border-[#ECECEC] bg-white p-1 shadow-sm sm:w-auto">
+          <TabsTrigger
+            value="customers"
+            className="rounded-lg px-4 py-2 data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white"
+          >
+            Customer Invoices
+          </TabsTrigger>
+          <TabsTrigger
+            value="subscription"
+            className="rounded-lg px-4 py-2 data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white"
+          >
+            Glow Desk Subscription
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
-        <div className="flex flex-col gap-4 border-b border-[#ECECEC] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-[#1C103D]">
-              Invoices
-            </h2>
-            <p className="text-sm text-[#9CA3AF]">
-              {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}
-            </p>
-          </div>
-          <BillingFilterBar
-            filters={filters}
-            employees={employees}
-            isBasicPlan={isBasicPlan}
-            onApply={applyFilters}
-            onReset={resetFilters}
-          />
-        </div>
+        <TabsContent value="customers" className="mt-0 space-y-6">
+          <BillingKpiCards stats={stats} />
 
-        <div className="p-1">
-          {invoices.length === 0 ? (
-            <div className="p-6">
-              <BillingEmptyState onNewInvoice={() => setOpen(true)} />
+          <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
+            <div className="flex flex-col gap-4 border-b border-[#ECECEC] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-[#1C103D]">
+                  Customer Invoices
+                </h2>
+                <p className="text-sm text-[#9CA3AF]">
+                  Bills you create for salon customers — {invoices.length} invoice
+                  {invoices.length !== 1 ? "s" : ""}
+                </p>
+              </div>
+              <BillingFilterBar
+                filters={filters}
+                employees={employees}
+                isBasicPlan={isBasicPlan}
+                onApply={applyFilters}
+                onReset={resetFilters}
+              />
             </div>
-          ) : (
-            <BillingInvoiceTable
-              invoices={invoices}
-              loading={loading}
-              isBasicPlan={isBasicPlan}
-              onMarkPaid={handleInvoicePaid}
-              onMarkSent={(id) => handleStatus(id, "sent")}
-              onDelete={handleDelete}
+
+            <div className="p-1">
+              {invoices.length === 0 ? (
+                <div className="p-6">
+                  <BillingEmptyState onNewInvoice={() => setOpen(true)} />
+                </div>
+              ) : (
+                <BillingInvoiceTable
+                  invoices={invoices}
+                  loading={loading}
+                  isBasicPlan={isBasicPlan}
+                  onMarkPaid={handleInvoicePaid}
+                  onMarkSent={(id) => handleStatus(id, "sent")}
+                  onDelete={handleDelete}
+                />
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="subscription" className="mt-0">
+          <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
+            <PlatformSubscriptionInvoices
+              invoices={platformInvoices}
+              planName={subscriptionPlanName}
+              salonName={salonName}
             />
-          )}
-        </div>
-      </div>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <BillingInvoiceDialog
         open={open}
