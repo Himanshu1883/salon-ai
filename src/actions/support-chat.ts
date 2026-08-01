@@ -180,7 +180,10 @@ export async function getAdminSupportConversations() {
   return summaries;
 }
 
-export async function getAdminSupportMessages(conversationId: string) {
+export async function getAdminSupportMessages(
+  conversationId: string,
+  options?: { revalidate?: boolean }
+) {
   await requireSuperAdmin();
 
   const conversation = await prisma.supportConversation.findUnique({
@@ -205,7 +208,10 @@ export async function getAdminSupportMessages(conversationId: string) {
     data: { adminLastReadAt: new Date() },
   });
 
-  revalidatePath("/admin/support");
+  // revalidatePath must not run during RSC render (e.g. admin/support page SSR).
+  if (options?.revalidate !== false) {
+    revalidatePath("/admin/support");
+  }
 
   return {
     conversationId: conversation.id,
