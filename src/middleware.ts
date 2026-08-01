@@ -65,6 +65,13 @@ export default auth((req) => {
   if (salonPath) {
     const { salonSlug, innerPath } = salonPath;
 
+    if (innerPath === "/appointments" || innerPath.startsWith("/appointments/")) {
+      const url = req.nextUrl.clone();
+      const suffix = innerPath.slice("/appointments".length);
+      url.pathname = `/${salonSlug}/sales/appointments${suffix}`;
+      return NextResponse.redirect(url);
+    }
+
     if (innerPath === "/login") {
       if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
         return NextResponse.redirect(

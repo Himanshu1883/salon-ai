@@ -7,6 +7,7 @@ import { slugifySalonName } from "../src/lib/salon-slug";
 import { seedBasicPlanCustomers } from "../src/lib/seed-basic-plan-customers";
 import { seedMakeupStudioServices, fixInvoiceLineItemDescriptions } from "../src/lib/seed-makeup-studio-services";
 import { seedInventoryDemoForSalonEmails } from "../src/lib/seed-inventory-demo";
+import { seedTestSalonAppointments } from "../src/lib/seed-test-salon-appointments";
 
 const MONTHLY_AMOUNT = 750;
 const TAX_RATE = 0.18;
@@ -170,6 +171,7 @@ async function seedTestUser() {
     }
     await seedBasicPlanCustomers(prisma);
     await seedMakeupStudioServices(prisma);
+    await seedTestSalonAppointments(prisma);
     return;
   }
 
@@ -203,6 +205,7 @@ async function seedTestUser() {
   await seedActiveSubscription(salon.id);
   await seedBasicPlanCustomers(prisma);
   await seedMakeupStudioServices(prisma);
+  await seedTestSalonAppointments(prisma);
   console.log("Test user: test@abc.com / abc@123");
 }
 
@@ -357,6 +360,7 @@ async function main() {
         "demo@salon.ai",
         "test@abc.com",
       ]);
+      await seedTestSalonAppointments(prisma);
       await fixInvoiceLineItemDescriptions(prisma);
       const allEmployees = await prisma.employee.findMany({
         where: { salonId: salon.id, status: "active" },

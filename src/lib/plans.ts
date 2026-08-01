@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { parseSalonPrefixedPath } from "@/lib/salon-paths";
 import {
   LayoutDashboard,
   Users,
@@ -157,38 +158,45 @@ function matchPath(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+function normalizeAppPath(pathname: string): string {
+  const salonPath = parseSalonPrefixedPath(pathname);
+  return salonPath?.innerPath ?? pathname;
+}
+
 export function getModuleForPath(pathname: string): PlanModule | null {
-  if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "dashboard";
-  if (matchPath(pathname, "/projects")) return "projects";
+  const path = normalizeAppPath(pathname);
+  if (path === "/dashboard" || path.startsWith("/dashboard/")) return "dashboard";
+  if (matchPath(path, "/projects")) return "projects";
   if (
-    matchPath(pathname, "/sales/appointments") ||
-    matchPath(pathname, "/appointments")
+    matchPath(path, "/sales/appointments") ||
+    matchPath(path, "/appointments")
   ) {
     return "appointments";
   }
-  if (matchPath(pathname, "/check-in")) return "walk-in";
-  if (matchPath(pathname, "/queue")) return "appointments";
-  if (matchPath(pathname, "/clients") || matchPath(pathname, "/customers")) return "customers";
-  if (matchPath(pathname, "/billing")) return "billing";
-  if (matchPath(pathname, "/catalog/services") || matchPath(pathname, "/services")) {
+  if (matchPath(path, "/check-in")) return "walk-in";
+  if (matchPath(path, "/queue")) return "appointments";
+  if (matchPath(path, "/clients") || matchPath(path, "/customers")) return "customers";
+  if (matchPath(path, "/billing")) return "billing";
+  if (matchPath(path, "/catalog/services") || matchPath(path, "/services")) {
     return "services";
   }
-  if (matchPath(pathname, "/team/members") || matchPath(pathname, "/employees")) return "staff";
-  if (matchPath(pathname, "/sales/memberships")) return "membership";
-  if (matchPath(pathname, "/settings/notifications")) return "marketing";
-  if (matchPath(pathname, "/reports/finance")) return "expense";
-  if (matchPath(pathname, "/reports/dashboards")) return "analytics";
-  if (matchPath(pathname, "/reports")) return "reports";
-  if (matchPath(pathname, "/inventory") || matchPath(pathname, "/stock")) return "inventory";
-  if (matchPath(pathname, "/sales")) return "sales";
-  if (matchPath(pathname, "/settings")) return "settings";
-  if (matchPath(pathname, "/schedule")) return "appointments";
-  if (matchPath(pathname, "/seats")) return "staff";
+  if (matchPath(path, "/team/members") || matchPath(path, "/employees")) return "staff";
+  if (matchPath(path, "/sales/memberships")) return "membership";
+  if (matchPath(path, "/settings/notifications")) return "marketing";
+  if (matchPath(path, "/reports/finance")) return "expense";
+  if (matchPath(path, "/reports/dashboards")) return "analytics";
+  if (matchPath(path, "/reports")) return "reports";
+  if (matchPath(path, "/inventory") || matchPath(path, "/stock")) return "inventory";
+  if (matchPath(path, "/sales")) return "sales";
+  if (matchPath(path, "/settings")) return "settings";
+  if (matchPath(path, "/schedule")) return "appointments";
+  if (matchPath(path, "/seats")) return "staff";
   return null;
 }
 
 export function canAccessPath(plan: SalonPlan, pathname: string): boolean {
-  if (pathname === "/invoice-due" || matchPath(pathname, "/invoice-due")) {
+  const path = normalizeAppPath(pathname);
+  if (path === "/invoice-due" || matchPath(path, "/invoice-due")) {
     return true;
   }
 
@@ -197,7 +205,7 @@ export function canAccessPath(plan: SalonPlan, pathname: string): boolean {
 
   if (module === "settings" && plan === "BASIC") {
     return BASIC_SETTINGS_PATHS.some(
-      (path) => pathname === path || pathname.startsWith(`${path}/`)
+      (settingsPath) => path === settingsPath || path.startsWith(`${settingsPath}/`)
     );
   }
 
