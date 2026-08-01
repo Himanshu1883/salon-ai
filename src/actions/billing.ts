@@ -375,7 +375,12 @@ export async function createInvoice(formData: FormData) {
   };
 
   const schema = basicBilling ? invoiceSchemaBasic : invoiceSchema;
-  const parsed = schema.safeParse(raw);
+  const activeEmployeeCount = basicBilling
+    ? 0
+    : await prisma.employee.count({
+        where: { salonId: session.user.salonId, status: "active" },
+      });
+  const parsed = (activeEmployeeCount === 0 ? invoiceSchemaBasic : schema).safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }

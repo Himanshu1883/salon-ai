@@ -219,12 +219,16 @@ export function BillingInvoiceForm({
     0
   );
 
+  const displaySubtotal = gstIncluded
+    ? Math.round((subtotal - totalTax) * 100) / 100
+    : subtotal;
   const displayTax = gstIncluded
     ? totalTax
     : Math.round(subtotal * TAX_RATE * 100) / 100;
   const displayTotal = gstIncluded
     ? grandTotal
     : Math.round((subtotal + displayTax) * 100) / 100;
+  const requiresEmployee = !isBasicPlan && employees.length > 0;
 
   const summaryItems = useMemo(
     () =>
@@ -292,7 +296,7 @@ export function BillingInvoiceForm({
     if (!customer.name.trim() || customer.name.trim().length < 2) {
       errors.customer = "Customer name is required";
     }
-    if (!isBasicPlan && !employeeId) {
+    if (requiresEmployee && !employeeId) {
       errors.employee = "Assigned stylist is required";
     }
     if (lineItems.length === 0) {
@@ -578,6 +582,35 @@ export function BillingInvoiceForm({
                           </SelectContent>
                         </Select>
                       </div>
+                      {requiresEmployee && (
+                        <div className="space-y-2.5 sm:col-span-2">
+                          <Label className={invoiceModalStyles.label}>
+                            Assigned stylist <span className="text-red-500">*</span>
+                          </Label>
+                          <Select value={employeeId} onValueChange={setEmployeeId}>
+                            <SelectTrigger
+                              className={cn(
+                                invoiceModalStyles.selectTrigger,
+                                fieldErrors.employee && invoiceModalStyles.inputError
+                              )}
+                            >
+                              <SelectValue placeholder="Select stylist" />
+                            </SelectTrigger>
+                            <SelectContent className="rounded-2xl">
+                              {employees.map((emp) => (
+                                <SelectItem key={emp.id} value={emp.id}>
+                                  {emp.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {fieldErrors.employee && (
+                            <p className="text-xs text-[#EF4444]">
+                              {fieldErrors.employee}
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </section>
 
@@ -610,7 +643,7 @@ export function BillingInvoiceForm({
 
                 <InvoiceSummary
                   items={summaryItems}
-                  subtotal={subtotal}
+                  subtotal={displaySubtotal}
                   discount={totalDiscount}
                   tax={displayTax}
                   total={displayTotal}
@@ -690,7 +723,7 @@ export function BillingInvoiceForm({
 
                 <InvoiceSummary
                   items={summaryItems}
-                  subtotal={subtotal}
+                  subtotal={displaySubtotal}
                   discount={totalDiscount}
                   tax={displayTax}
                   total={displayTotal}
