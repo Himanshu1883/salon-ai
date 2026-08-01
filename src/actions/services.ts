@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
-import { serviceSchema } from "@/lib/validations";
+import { bulkCreateServicesSchema, serviceSchema } from "@/lib/validations";
 
 function revalidateServices(salonId: string) {
   revalidateSalonCache(salonId, "catalog", "check-in", "billing");
@@ -252,6 +252,105 @@ export async function duplicateService(id: string) {
 
   revalidateServices(session.user.salonId);
   return { success: true };
+}
+
+export async function bulkDeleteServices(ids: string[]) {
+  const session = await requireSession();
+  if (ids.length === 0) return { error: "No services selected" };
+
+  const services = await prisma.service.findMany({
+    where: { id: { in: ids }, salonId: session.user.salonId },
+    select: { id: true },
+  });
+
+  if (services.length !== ids.length) {
+    return { error: "Some services were not found" };
+  }
+
+  await prisma.service.deleteMany({
+    where: { id: { in: ids }, salonId: session.user.salonId },
+  });
+
+  revalidateServices(session.user.salonId);
+  return { success: true, deletedCount: ids.length };
+}
+
+export type BulkServiceInput = {
+  name: string;
+  description?: string;
+  duration: number;
+  price: number;
+  categoryId: string;
+};
+
+export async function bulkCreateServices(services: BulkServiceInput[]) {
+  const session = await requireSession();
+  const parsed = bulkCreateServicesSchema.safeParse({ services });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const categoryIds = [...new Set(parsed.data.services.map((s) => s.categoryId))];
+  const categories = await prisma.serviceCategory.findMany({
+    where: { id: { in: categoryIds }, salonId: session.user.salonId },
+    select: { id: true },
+  });
+  if (categories.length !== categoryIds.length) {
+    return { error: "One or more categories were not found" };
+  }
+
+  const maxOrders = await prisma.service.groupBy({
+    by: ["categoryId"],
+    where: {
+      salonId: session.user.salonId,
+      categoryId: { in: categoryIds },
+    },
+    _max: { sortOrder: true },
+  });
+  const nextOrderByCategory = new Map(
+    maxOrders.map((row) => [
+      row.categoryId,
+      (row._max.sortOrder ?? -1) + 1,
+    ])
+  );
+
+  const created = await prisma.$transaction(
+    parsed.data.services.map((item) => {
+      const sortOrder = nextOrderByCategory.get(item.categoryId) ?? 0;
+      nextOrderByCategory.set(item.categoryId, sortOrder + 1);
+      return prisma.service.create({
+        data: {
+          salonId: session.user.salonId,
+          name: item.name,
+          description: item.description,
+          duration: item.duration,
+          price: item.price,
+          categoryId: item.categoryId,
+          sortOrder,
+        },
+        include: {
+          employees: {
+            include: { employee: { select: { id: true, name: true } } },
+          },
+        },
+      });
+    })
+  );
+
+  revalidateServices(session.user.salonId);
+  return {
+    success: true,
+    services: created.map((service) => ({
+      id: service.id,
+      name: service.name,
+      description: service.description,
+      duration: service.duration,
+      price: service.price,
+      categoryId: service.categoryId,
+      sortOrder: service.sortOrder,
+      employees: service.employees,
+    })),
+  };
 }
 
 export async function reorderServices(categoryId: string, orderedIds: string[]) {

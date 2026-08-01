@@ -2,7 +2,10 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { serviceCategorySchema } from "@/lib/validations";
+import {
+  bulkCreateCategoriesSchema,
+  serviceCategorySchema,
+} from "@/lib/validations";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { revalidateSalonCache } from "@/lib/salon-cache";
 
@@ -137,6 +140,126 @@ export async function deleteServiceCategory(id: string) {
     return { success: true };
   } catch (err) {
     return actionError(err, "Could not delete category. Please try again.");
+  }
+}
+
+export async function bulkCreateCategories(names: string[]) {
+  try {
+    const session = await requireSession();
+    const trimmed = names.map((n) => n.trim()).filter(Boolean);
+    const parsed = bulkCreateCategoriesSchema.safeParse({ names: trimmed });
+    if (!parsed.success) {
+      return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+    }
+
+    const startOrder = await prisma.serviceCategory.count({
+      where: { salonId: session.user.salonId },
+    });
+
+    const created = await prisma.$transaction(
+      parsed.data.names.map((name, index) =>
+        prisma.serviceCategory.create({
+          data: {
+            salonId: session.user.salonId,
+            name,
+            sortOrder: startOrder + index,
+          },
+          select: { id: true, name: true, sortOrder: true },
+        })
+      )
+    );
+
+    revalidateCatalog(session.user.salonId);
+    return { success: true, categories: created };
+  } catch (err) {
+    return actionError(err, "Could not create categories. Please try again.");
+  }
+}
+
+export type CategoryBulkDeleteHandling =
+  | { mode: "delete-services" }
+  | { mode: "move-services"; targetCategoryId: string };
+
+export async function bulkDeleteServiceCategories(
+  ids: string[],
+  handling: CategoryBulkDeleteHandling
+) {
+  try {
+    const session = await requireSession();
+    if (ids.length === 0) return { error: "No categories selected" };
+
+    const categories = await prisma.serviceCategory.findMany({
+      where: { salonId: session.user.salonId, id: { in: ids } },
+      include: { services: { select: { id: true } } },
+    });
+    if (categories.length !== ids.length) {
+      return { error: "Some categories were not found" };
+    }
+
+    const serviceIds = categories.flatMap((c) =>
+      c.services.map((s) => s.id)
+    );
+
+    if (
+      handling.mode === "move-services" &&
+      (ids.includes(handling.targetCategoryId) ||
+        !(await prisma.serviceCategory.findFirst({
+          where: {
+            id: handling.targetCategoryId,
+            salonId: session.user.salonId,
+          },
+        })))
+    ) {
+      return { error: "Choose a valid category to move services into" };
+    }
+
+    await prisma.$transaction(async (tx) => {
+      if (serviceIds.length > 0) {
+        if (handling.mode === "delete-services") {
+          await tx.service.deleteMany({
+            where: {
+              salonId: session.user.salonId,
+              id: { in: serviceIds },
+            },
+          });
+        } else {
+          const maxOrder = await tx.service.aggregate({
+            where: {
+              salonId: session.user.salonId,
+              categoryId: handling.targetCategoryId,
+            },
+            _max: { sortOrder: true },
+          });
+          let nextOrder = (maxOrder._max.sortOrder ?? -1) + 1;
+          for (const serviceId of serviceIds) {
+            await tx.service.update({
+              where: { id: serviceId },
+              data: {
+                categoryId: handling.targetCategoryId,
+                sortOrder: nextOrder++,
+              },
+            });
+          }
+        }
+      }
+
+      await tx.serviceCategory.deleteMany({
+        where: { salonId: session.user.salonId, id: { in: ids } },
+      });
+    });
+
+    revalidateCatalog(session.user.salonId);
+    if (serviceIds.length > 0) {
+      revalidateSalonCache(session.user.salonId, "billing", "check-in");
+    }
+    return {
+      success: true,
+      deletedCategoryCount: ids.length,
+      affectedServiceCount: serviceIds.length,
+      handling: handling.mode,
+    };
+  } catch (err) {
+    return actionError(err, "Could not delete categories. Please try again.");
   }
 }
 

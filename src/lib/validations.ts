@@ -168,6 +168,26 @@ export const serviceCategorySchema = z.object({
   sortOrder: z.coerce.number().min(0).optional(),
 });
 
+export const bulkCreateCategoriesSchema = z.object({
+  names: z
+    .array(z.string().min(2, "Category name must be at least 2 characters"))
+    .min(1, "Add at least one category name"),
+});
+
+export const bulkServiceItemSchema = z.object({
+  name: z.string().min(2, "Service name is required"),
+  description: z.string().optional(),
+  duration: z.coerce.number().min(5, "Minimum 5 minutes"),
+  price: z.coerce.number().min(0, "Price must be positive"),
+  categoryId: z.string().min(1, "Category is required"),
+});
+
+export const bulkCreateServicesSchema = z.object({
+  services: z
+    .array(bulkServiceItemSchema)
+    .min(1, "Add at least one service"),
+});
+
 export const serviceSchema = z.object({
   name: z.string().min(2, "Service name is required"),
   description: z.string().optional(),

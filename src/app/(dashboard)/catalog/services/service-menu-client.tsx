@@ -14,7 +14,18 @@ import {
   updateServiceCategory,
   deleteServiceCategory,
 } from "@/actions/service-categories";
+import {
+  BulkActionBar,
+  BulkAddCategoriesDialog,
+  BulkAddServicesDialog,
+  BulkDeleteCategoriesDialog,
+  BulkDeleteConfirmDialog,
+  runBulkDeleteCategories,
+  runBulkDeleteServices,
+  type CategoryBulkDeleteHandling,
+} from "./service-bulk-actions";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +75,7 @@ import {
   Layers,
   FolderOpen,
   ArrowUpDown,
+  CheckSquare,
 } from "lucide-react";
 import { invoiceModalStyles } from "@/components/billing/invoice-modal/styles";
 import { formatCurrency, formatDuration, cn } from "@/lib/utils";
@@ -469,17 +481,47 @@ function ServicesTable({
   onEdit,
   onDelete,
   onDuplicate,
+  bulkMode = false,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
 }: {
   services: ServiceItem[];
   onEdit: (service: ServiceItem) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
+  bulkMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: (ids: string[], select: boolean) => void;
 }) {
+  const serviceIds = services.map((s) => s.id);
+  const allSelected =
+    bulkMode &&
+    serviceIds.length > 0 &&
+    serviceIds.every((id) => selectedIds?.has(id));
+  const someSelected =
+    bulkMode && serviceIds.some((id) => selectedIds?.has(id));
+
   return (
     <div className="overflow-hidden rounded-2xl border border-dashboard-border">
       <Table>
         <TableHeader>
           <TableRow className="border-dashboard-border bg-dashboard-bg/60 hover:bg-dashboard-bg/60">
+            {bulkMode && (
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allSelected}
+                  ref={(el) => {
+                    if (el) el.indeterminate = Boolean(someSelected && !allSelected);
+                  }}
+                  onChange={() =>
+                    onToggleSelectAll?.(serviceIds, !allSelected)
+                  }
+                  aria-label="Select all services in category"
+                />
+              </TableHead>
+            )}
             <TableHead className="text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
               Service
             </TableHead>
@@ -501,8 +543,22 @@ function ServicesTable({
           {services.map((service) => (
             <TableRow
               key={service.id}
-              className="border-dashboard-border/60 transition-colors hover:bg-violet-50/30"
+              className={cn(
+                "border-dashboard-border/60 transition-colors hover:bg-violet-50/30",
+                bulkMode &&
+                  selectedIds?.has(service.id) &&
+                  "bg-violet-50/50"
+              )}
             >
+              {bulkMode && (
+                <TableCell>
+                  <Checkbox
+                    checked={selectedIds?.has(service.id) ?? false}
+                    onChange={() => onToggleSelect?.(service.id)}
+                    aria-label={`Select ${service.name}`}
+                  />
+                </TableCell>
+              )}
               <TableCell>
                 <div className="min-w-0">
                   <p className="font-medium text-dashboard-text">
@@ -550,11 +606,13 @@ function ServicesTable({
                 )}
               </TableCell>
               <TableCell className="text-right">
-                <ServiceActionsMenu
-                  onEdit={() => onEdit(service)}
-                  onDelete={() => onDelete(service.id)}
-                  onDuplicate={() => onDuplicate(service.id)}
-                />
+                {!bulkMode && (
+                  <ServiceActionsMenu
+                    onEdit={() => onEdit(service)}
+                    onDelete={() => onDelete(service.id)}
+                    onDuplicate={() => onDuplicate(service.id)}
+                  />
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -631,6 +689,19 @@ export function ServiceMenuClient({
     name: string;
   } | null>(null);
   const [localCategories, setLocalCategories] = useState(initialCategories);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<Set<string>>(
+    new Set()
+  );
+  const [bulkDeleteType, setBulkDeleteType] = useState<
+    "services" | "categories" | null
+  >(null);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [bulkAddServicesOpen, setBulkAddServicesOpen] = useState(false);
+  const [bulkAddCategoriesOpen, setBulkAddCategoriesOpen] = useState(false);
 
   useEffect(() => {
     setLocalCategories(initialCategories);
@@ -675,6 +746,148 @@ export function ServiceMenuClient({
     }
     return map;
   }, [localCategories]);
+
+  function toggleBulkMode() {
+    setBulkMode((v) => {
+      if (v) {
+        setSelectedServiceIds(new Set());
+        setSelectedCategoryIds(new Set());
+      } else {
+        setManageOrder(false);
+      }
+      return !v;
+    });
+  }
+
+  function toggleServiceSelection(id: string) {
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleServiceSelectionAll(ids: string[], select: boolean) {
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (select) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  }
+
+  function toggleCategorySelection(id: string) {
+    setSelectedCategoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const selectedServiceNames = useMemo(() => {
+    const names: string[] = [];
+    for (const cat of localCategories) {
+      for (const service of cat.services) {
+        if (selectedServiceIds.has(service.id)) names.push(service.name);
+      }
+    }
+    return names;
+  }, [localCategories, selectedServiceIds]);
+
+  const selectedCategoryGroups = useMemo(
+    () => localCategories.filter((c) => selectedCategoryIds.has(c.id)),
+    [localCategories, selectedCategoryIds]
+  );
+
+  async function confirmBulkDeleteServices() {
+    setBulkDeleteLoading(true);
+    const ids = [...selectedServiceIds];
+    const result = await runBulkDeleteServices(ids);
+    setBulkDeleteLoading(false);
+    if ("error" in result && result.error) {
+      alert(result.error);
+      return;
+    }
+    setLocalCategories((prev) =>
+      prev.map((cat) => ({
+        ...cat,
+        services: cat.services.filter((s) => !selectedServiceIds.has(s.id)),
+      }))
+    );
+    setSelectedServiceIds(new Set());
+    setBulkDeleteType(null);
+  }
+
+  async function confirmBulkDeleteCategories(
+    handling: CategoryBulkDeleteHandling
+  ) {
+    setBulkDeleteLoading(true);
+    const ids = [...selectedCategoryIds];
+    const result = await runBulkDeleteCategories(ids, handling);
+    setBulkDeleteLoading(false);
+    if ("error" in result && result.error) {
+      alert(result.error);
+      return;
+    }
+
+    if (handling.mode === "delete-services") {
+      setLocalCategories((prev) =>
+        prev.filter((c) => !selectedCategoryIds.has(c.id))
+      );
+    } else {
+      const movedServices = selectedCategoryGroups.flatMap((c) => c.services);
+      setLocalCategories((prev) => {
+        const remaining = prev.filter((c) => !selectedCategoryIds.has(c.id));
+        return remaining.map((cat) =>
+          cat.id === handling.targetCategoryId
+            ? { ...cat, services: [...cat.services, ...movedServices] }
+            : cat
+        );
+      });
+    }
+
+    if (selectedCategoryId && selectedCategoryIds.has(selectedCategoryId)) {
+      setSelectedCategoryId(null);
+    }
+    setSelectedCategoryIds(new Set());
+    setBulkDeleteType(null);
+  }
+
+  async function confirmBulkDelete() {
+    if (bulkDeleteType === "services") {
+      await confirmBulkDeleteServices();
+    }
+  }
+
+  function handleBulkServicesCreated(services: ServiceItem[]) {
+    setLocalCategories((prev) => {
+      const byCategory = new Map<string, ServiceItem[]>();
+      for (const service of services) {
+        if (!service.categoryId) continue;
+        const list = byCategory.get(service.categoryId) ?? [];
+        list.push(service);
+        byCategory.set(service.categoryId, list);
+      }
+      return prev.map((cat) => {
+        const added = byCategory.get(cat.id);
+        if (!added?.length) return cat;
+        return { ...cat, services: [...cat.services, ...added] };
+      });
+    });
+  }
+
+  function handleBulkCategoriesCreated(
+    categories: { id: string; name: string; sortOrder: number }[]
+  ) {
+    setLocalCategories((prev) => [
+      ...prev,
+      ...categories.map((c) => ({ ...c, services: [] })),
+    ]);
+  }
 
   function upsertLocalService(service: ServiceItem) {
     setLocalCategories((prev) =>
@@ -808,7 +1021,12 @@ export function ServiceMenuClient({
                     Add category
                   </DropdownMenuItem>
                   <DropdownMenuItem
-                    onClick={() => setManageOrder((v) => !v)}
+                    onClick={() => {
+                      setManageOrder((v) => {
+                        if (!v) setBulkMode(false);
+                        return !v;
+                      });
+                    }}
                     className="rounded-lg"
                   >
                     <ArrowUpDown className="mr-2 h-4 w-4" />
@@ -903,8 +1121,26 @@ export function ServiceMenuClient({
           Filters
         </Button>
         <Button
+          variant={bulkMode ? "default" : "outline"}
+          onClick={toggleBulkMode}
+          className={cn(
+            "h-11 rounded-2xl",
+            bulkMode
+              ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
+              : "border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50"
+          )}
+        >
+          <CheckSquare className="h-4 w-4" />
+          {bulkMode ? "Done selecting" : "Bulk actions"}
+        </Button>
+        <Button
           variant={manageOrder ? "default" : "outline"}
-          onClick={() => setManageOrder((v) => !v)}
+          onClick={() => {
+            setManageOrder((v) => {
+              if (!v) setBulkMode(false);
+              return !v;
+            });
+          }}
           className={cn(
             "h-11 rounded-2xl",
             manageOrder
@@ -916,6 +1152,26 @@ export function ServiceMenuClient({
           {manageOrder ? "Done reordering" : "Manage order"}
         </Button>
       </div>
+
+      {bulkMode && (
+        <BulkActionBar
+          selectedServiceCount={selectedServiceIds.size}
+          selectedCategoryCount={selectedCategoryIds.size}
+          onDeleteServices={() => setBulkDeleteType("services")}
+          onDeleteCategories={() => setBulkDeleteType("categories")}
+          onAddServices={() => setBulkAddServicesOpen(true)}
+          onAddCategories={() => setBulkAddCategoriesOpen(true)}
+          onClearSelection={() => {
+            setSelectedServiceIds(new Set());
+            setSelectedCategoryIds(new Set());
+          }}
+          onExitBulkMode={() => {
+            setBulkMode(false);
+            setSelectedServiceIds(new Set());
+            setSelectedCategoryIds(new Set());
+          }}
+        />
+      )}
 
       {showFilters && (
         <motion.div
@@ -1000,28 +1256,51 @@ export function ServiceMenuClient({
             </li>
             {localCategories.map((cat) => (
               <li key={cat.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategoryId(cat.id)}
+                <div
                   className={cn(
-                    "flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm transition-colors",
-                    selectedCategoryId === cat.id
-                      ? "bg-violet-50 font-medium text-dashboard-primary"
-                      : "text-dashboard-muted hover:bg-dashboard-bg"
+                    "flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors",
+                    selectedCategoryId === cat.id && !bulkMode
+                      ? "bg-violet-50"
+                      : bulkMode && selectedCategoryIds.has(cat.id)
+                        ? "bg-violet-50/70"
+                        : ""
                   )}
                 >
-                  <span className="truncate">{cat.name}</span>
-                  <span
+                  {bulkMode && (
+                    <Checkbox
+                      checked={selectedCategoryIds.has(cat.id)}
+                      onChange={() => toggleCategorySelection(cat.id)}
+                      aria-label={`Select category ${cat.name}`}
+                      className="ml-1 shrink-0"
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      bulkMode
+                        ? toggleCategorySelection(cat.id)
+                        : setSelectedCategoryId(cat.id)
+                    }
                     className={cn(
-                      "ml-2 shrink-0 rounded-lg px-2 py-0.5 text-xs tabular-nums",
-                      selectedCategoryId === cat.id
-                        ? "bg-violet-100 text-violet-700"
-                        : "bg-dashboard-bg text-dashboard-muted"
+                      "flex min-w-0 flex-1 items-center justify-between rounded-lg px-1 py-1.5 text-left text-sm transition-colors",
+                      selectedCategoryId === cat.id && !bulkMode
+                        ? "font-medium text-dashboard-primary"
+                        : "text-dashboard-muted hover:bg-dashboard-bg"
                     )}
                   >
-                    {categoryCounts.get(cat.id) ?? 0}
-                  </span>
-                </button>
+                    <span className="truncate">{cat.name}</span>
+                    <span
+                      className={cn(
+                        "ml-2 shrink-0 rounded-lg px-2 py-0.5 text-xs tabular-nums",
+                        selectedCategoryId === cat.id && !bulkMode
+                          ? "bg-violet-100 text-violet-700"
+                          : "bg-dashboard-bg text-dashboard-muted"
+                      )}
+                    >
+                      {categoryCounts.get(cat.id) ?? 0}
+                    </span>
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
@@ -1139,6 +1418,10 @@ export function ServiceMenuClient({
                     onEdit={openEditService}
                     onDelete={handleDeleteService}
                     onDuplicate={handleDuplicate}
+                    bulkMode={bulkMode}
+                    selectedIds={selectedServiceIds}
+                    onToggleSelect={toggleServiceSelection}
+                    onToggleSelectAll={toggleServiceSelectionAll}
                   />
                 )}
               </motion.section>
@@ -1228,6 +1511,39 @@ export function ServiceMenuClient({
           )}
         </DialogContent>
       </Dialog>
+
+      <BulkDeleteConfirmDialog
+        open={bulkDeleteType === "services"}
+        onOpenChange={(open) => !open && setBulkDeleteType(null)}
+        type="services"
+        count={selectedServiceIds.size}
+        names={selectedServiceNames}
+        loading={bulkDeleteLoading}
+        onConfirm={confirmBulkDelete}
+      />
+
+      <BulkDeleteCategoriesDialog
+        open={bulkDeleteType === "categories"}
+        onOpenChange={(open) => !open && setBulkDeleteType(null)}
+        selectedCategories={selectedCategoryGroups}
+        allCategories={localCategories}
+        loading={bulkDeleteLoading}
+        onConfirm={confirmBulkDeleteCategories}
+      />
+
+      <BulkAddServicesDialog
+        open={bulkAddServicesOpen}
+        onOpenChange={setBulkAddServicesOpen}
+        categories={localCategories.map((c) => ({ id: c.id, name: c.name }))}
+        defaultCategoryId={selectedCategoryId ?? undefined}
+        onSuccess={handleBulkServicesCreated}
+      />
+
+      <BulkAddCategoriesDialog
+        open={bulkAddCategoriesOpen}
+        onOpenChange={setBulkAddCategoriesOpen}
+        onSuccess={handleBulkCategoriesCreated}
+      />
     </div>
   );
 }
