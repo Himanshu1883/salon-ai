@@ -23,7 +23,7 @@ export default async function AdminLayout({
         supportUnreadCount={supportUnreadCount}
       />
       <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-7xl p-6 lg:p-8">{children}</div>
+        <div className="mx-auto max-w-[1800px] p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );

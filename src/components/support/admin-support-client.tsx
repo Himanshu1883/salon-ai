@@ -1,44 +1,57 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
-import { Building2, MessageSquare } from "lucide-react";
-import { SupportChatPanel } from "@/components/support/support-chat-panel";
+import { HeadphonesIcon } from "lucide-react";
+import { AdminSupportConversationList } from "@/components/support/admin-support-conversation-list";
+import { AdminSupportWorkspace } from "@/components/support/admin-support-workspace";
+import { AdminSupportContextSidebar } from "@/components/support/admin-support-context-sidebar";
 import {
   getAdminSupportConversations,
   getAdminSupportMessages,
   sendAdminSupportMessage,
+  updateAdminSupportConversationStatus,
+  type SupportConversationDetail,
+  type SupportConversationStatus,
   type SupportConversationSummary,
-  type SupportMessageDTO,
+  type SupportStatusCounts,
 } from "@/actions/support-chat";
-import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 
 type AdminSupportClientProps = {
   initialConversations: SupportConversationSummary[];
   initialSelectedId: string | null;
-  initialMessages: SupportMessageDTO[];
-  initialSalonName: string | null;
+  initialDetail: SupportConversationDetail | null;
+  initialStatusCounts: SupportStatusCounts;
 };
 
 export function AdminSupportClient({
   initialConversations,
   initialSelectedId,
-  initialMessages,
-  initialSalonName,
+  initialDetail,
+  initialStatusCounts,
 }: AdminSupportClientProps) {
   const [conversations, setConversations] =
     useState(initialConversations);
   const [selectedId, setSelectedId] = useState<string | null>(initialSelectedId);
-  const [messages, setMessages] = useState(initialMessages);
-  const [salonName, setSalonName] = useState(initialSalonName);
+  const [detail, setDetail] = useState<SupportConversationDetail | null>(
+    initialDetail
+  );
+  const [statusCounts, setStatusCounts] = useState(initialStatusCounts);
+  const [statusFilter, setStatusFilter] = useState<
+    SupportConversationStatus | "ALL"
+  >("ALL");
+  const [searchQuery, setSearchQuery] = useState("");
   const [loadingThread, setLoadingThread] = useState(false);
 
-  const refreshConversations = useCallback(async () => {
-    const next = await getAdminSupportConversations();
-    setConversations(next);
-  }, []);
+  const refreshConversations = useCallback(
+    async (filter: SupportConversationStatus | "ALL" = statusFilter) => {
+      const next = await getAdminSupportConversations(
+        filter === "ALL" ? undefined : filter
+      );
+      setConversations(next);
+      return next;
+    },
+    [statusFilter]
+  );
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -52,9 +65,33 @@ export function AdminSupportClient({
     setLoadingThread(true);
     try {
       const thread = await getAdminSupportMessages(conversationId);
-      setMessages(thread.messages);
-      setSalonName(thread.salonName);
+      setDetail(thread);
       await refreshConversations();
+    } finally {
+      setLoadingThread(false);
+    }
+  }
+
+  async function handleStatusFilterChange(
+    filter: SupportConversationStatus | "ALL"
+  ) {
+    setStatusFilter(filter);
+    setLoadingThread(true);
+    try {
+      const next = await getAdminSupportConversations(
+        filter === "ALL" ? undefined : filter
+      );
+      setConversations(next);
+
+      if (selectedId && !next.some((item) => item.id === selectedId)) {
+        const first = next[0] ?? null;
+        if (first) {
+          await selectConversation(first.id);
+        } else {
+          setSelectedId(null);
+          setDetail(null);
+        }
+      }
     } finally {
       setLoadingThread(false);
     }
@@ -63,7 +100,7 @@ export function AdminSupportClient({
   const refreshMessages = useCallback(async () => {
     if (!selectedId) return [];
     const thread = await getAdminSupportMessages(selectedId);
-    setMessages(thread.messages);
+    setDetail(thread);
     await refreshConversations();
     return thread.messages;
   }, [selectedId, refreshConversations]);
@@ -78,105 +115,73 @@ export function AdminSupportClient({
     [selectedId, refreshConversations]
   );
 
+  async function handleStatusChange(status: SupportConversationStatus) {
+    if (!selectedId || !detail) return;
+    await updateAdminSupportConversationStatus(selectedId, status);
+    const thread = await getAdminSupportMessages(selectedId);
+    setDetail(thread);
+    await refreshConversations();
+    setStatusCounts((current) => {
+      const prev = detail.status;
+      if (prev === status) return current;
+      const next = { ...current };
+      if (prev === "OPEN") next.open -= 1;
+      if (prev === "WAITING") next.waiting -= 1;
+      if (prev === "CLOSED") next.closed -= 1;
+      if (status === "OPEN") next.open += 1;
+      if (status === "WAITING") next.waiting += 1;
+      if (status === "CLOSED") next.closed += 1;
+      return next;
+    });
+  }
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-dashboard-text sm:text-3xl">
-          Customer Support
-        </h1>
-        <p className="mt-2 text-sm text-dashboard-muted">
-          Reply to salon support requests from one inbox.
-        </p>
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col">
+      <div className="mb-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-700 text-white shadow-lg shadow-violet-500/25">
+            <HeadphonesIcon className="h-5 w-5" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-dashboard-text sm:text-2xl">
+              Chat Support
+            </h1>
+            <p className="text-sm text-dashboard-muted">
+              Glow Desk customer support — manage salon conversations in one place.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-        <AdminCard className="overflow-hidden">
-          <AdminCardHeader
-            title="Conversations"
-            description={`${conversations.length} salon thread${conversations.length === 1 ? "" : "s"}`}
-            icon={MessageSquare}
+      <div className="grid min-h-0 flex-1 gap-4 lg:grid-cols-[300px_minmax(0,1fr)_280px] xl:grid-cols-[320px_minmax(0,1fr)_300px]">
+        <div className="min-h-[420px] lg:min-h-0">
+          <AdminSupportConversationList
+            conversations={conversations}
+            selectedId={selectedId}
+            statusFilter={statusFilter}
+            statusCounts={statusCounts}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onStatusFilterChange={(filter) => void handleStatusFilterChange(filter)}
+            onSelect={(id) => void selectConversation(id)}
           />
-          <AdminCardContent className="p-0">
-            {conversations.length === 0 ? (
-              <div className="px-5 py-10 text-center text-sm text-dashboard-muted">
-                No support conversations yet. They appear here when a salon sends a message.
-              </div>
-            ) : (
-              <ul className="max-h-[560px] divide-y divide-dashboard-border overflow-y-auto">
-                {conversations.map((conversation) => {
-                  const active = conversation.id === selectedId;
-                  return (
-                    <li key={conversation.id}>
-                      <button
-                        type="button"
-                        onClick={() => void selectConversation(conversation.id)}
-                        className={cn(
-                          "flex w-full items-start gap-3 px-4 py-3 text-left transition hover:bg-slate-50",
-                          active && "bg-dashboard-primary/5"
-                        )}
-                      >
-                        <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-dashboard-primary">
-                          <Building2 className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-semibold text-dashboard-text">
-                              {conversation.salonName}
-                            </p>
-                            {conversation.unreadCount > 0 && (
-                              <Badge className="h-5 min-w-5 shrink-0 justify-center rounded-full bg-dashboard-primary px-1.5 text-[10px]">
-                                {conversation.unreadCount}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="truncate text-xs text-dashboard-muted">
-                            {conversation.lastMessagePreview ?? "No messages yet"}
-                          </p>
-                          <p className="mt-1 text-[10px] text-dashboard-muted">
-                            {formatDistanceToNow(new Date(conversation.lastMessageAt), {
-                              addSuffix: true,
-                            })}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </AdminCardContent>
-        </AdminCard>
+        </div>
 
-        <AdminCard className="overflow-hidden">
-          <AdminCardHeader
-            title={salonName ?? "Select a conversation"}
-            description={
-              selectedId
-                ? "Messages with this salon"
-                : "Choose a salon from the list to view and reply"
-            }
-            icon={MessageSquare}
+        <div className="min-h-[480px] lg:min-h-0">
+          <AdminSupportWorkspace
+            detail={detail}
+            loading={loadingThread}
+            onSend={sendMessage}
+            onRefresh={refreshMessages}
           />
-          <AdminCardContent className="p-0">
-            {!selectedId ? (
-              <div className="flex min-h-[420px] items-center justify-center px-6 text-center text-sm text-dashboard-muted">
-                Select a conversation to start chatting.
-              </div>
-            ) : loadingThread ? (
-              <div className="flex min-h-[420px] items-center justify-center text-sm text-dashboard-muted">
-                Loading messages…
-              </div>
-            ) : (
-              <SupportChatPanel
-                messages={messages}
-                viewer="admin"
-                onSend={sendMessage}
-                onRefresh={refreshMessages}
-                emptyHint="No messages in this thread yet."
-              />
-            )}
-          </AdminCardContent>
-        </AdminCard>
+        </div>
+
+        <div className="min-h-[320px] lg:min-h-0 lg:max-h-none">
+          <AdminSupportContextSidebar
+            detail={detail}
+            onStatusChange={(status) => void handleStatusChange(status)}
+          />
+        </div>
       </div>
     </div>
   );

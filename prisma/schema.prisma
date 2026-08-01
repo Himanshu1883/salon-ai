@@ -94,18 +94,38 @@ enum SupportMessageSender {
   ADMIN
 }
 
+enum SupportConversationStatus {
+  OPEN
+  WAITING
+  CLOSED
+}
+
+enum SupportTicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model SupportConversation {
-  id              String   @id @default(cuid())
-  salonId         String   @unique
-  salon           Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  lastMessageAt   DateTime @default(now())
+  id              String                    @id @default(cuid())
+  salonId         String                    @unique
+  salon           Salon                     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  ticketNumber    String?                   @unique
+  subject         String?
+  status          SupportConversationStatus @default(OPEN)
+  priority        SupportTicketPriority     @default(MEDIUM)
+  metadata        Json?
+  lastMessageAt   DateTime                  @default(now())
   adminLastReadAt DateTime?
   salonLastReadAt DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  agentJoinedAt   DateTime?
+  statusChangedAt DateTime?
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
   messages        SupportMessage[]
 
   @@index([lastMessageAt])
+  @@index([status, lastMessageAt])
 }
 
 model SupportMessage {

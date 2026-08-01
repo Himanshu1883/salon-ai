@@ -1,20 +1,56 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { HeadphonesIcon } from "lucide-react";
 import { SupportChatPanel } from "@/components/support/support-chat-panel";
 import {
   getSalonSupportThread,
   sendSalonSupportMessage,
+  updateSalonSupportContext,
   type SupportMessageDTO,
 } from "@/actions/support-chat";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 
 type SalonSupportClientProps = {
   initialMessages: SupportMessageDTO[];
+  userName: string;
 };
 
-export function SalonSupportClient({ initialMessages }: SalonSupportClientProps) {
+function parseUserAgent(ua: string) {
+  let browser = "Unknown";
+  let os = "Unknown";
+
+  if (/Edg\//.test(ua)) browser = "Edge";
+  else if (/Chrome\//.test(ua)) browser = "Chrome";
+  else if (/Safari\//.test(ua) && !/Chrome/.test(ua)) browser = "Safari";
+  else if (/Firefox\//.test(ua)) browser = "Firefox";
+
+  if (/Windows/.test(ua)) os = "Windows";
+  else if (/Mac OS X/.test(ua)) os = "macOS";
+  else if (/Android/.test(ua)) os = "Android";
+  else if (/iPhone|iPad/.test(ua)) os = "iOS";
+  else if (/Linux/.test(ua)) os = "Linux";
+
+  return { browser, os };
+}
+
+export function SalonSupportClient({
+  initialMessages,
+  userName,
+}: SalonSupportClientProps) {
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const { browser, os } = parseUserAgent(ua);
+
+    void updateSalonSupportContext({
+      currentPage: window.location.pathname,
+      userName,
+      browser,
+      os,
+      userAgent: ua.slice(0, 200),
+    });
+  }, [userName]);
+
   const refreshMessages = useCallback(async () => {
     const thread = await getSalonSupportThread();
     return thread.messages;

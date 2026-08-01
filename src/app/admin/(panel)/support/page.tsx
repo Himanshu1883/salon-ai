@@ -1,23 +1,25 @@
 import {
   getAdminSupportConversations,
   getAdminSupportMessages,
+  getAdminSupportStatusCounts,
 } from "@/actions/support-chat";
 import { AdminSupportClient } from "@/components/support/admin-support-client";
 
 export default async function AdminSupportPage() {
-  const conversations = await getAdminSupportConversations();
-  const selected = conversations[0] ?? null;
+  const [conversations, statusCounts] = await Promise.all([
+    getAdminSupportConversations(),
+    getAdminSupportStatusCounts(),
+  ]);
 
-  const thread = selected
-    ? await getAdminSupportMessages(selected.id)
-    : null;
+  const selected = conversations[0] ?? null;
+  const detail = selected ? await getAdminSupportMessages(selected.id) : null;
 
   return (
     <AdminSupportClient
       initialConversations={conversations}
       initialSelectedId={selected?.id ?? null}
-      initialMessages={thread?.messages ?? []}
-      initialSalonName={thread?.salonName ?? null}
+      initialDetail={detail}
+      initialStatusCounts={statusCounts}
     />
   );
 }

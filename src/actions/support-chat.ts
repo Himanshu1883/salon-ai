@@ -8,6 +8,8 @@ const MESSAGE_MAX_LENGTH = 4000;
 const MESSAGE_FETCH_LIMIT = 200;
 
 export type SupportMessageSender = "SALON" | "ADMIN";
+export type SupportConversationStatus = "OPEN" | "WAITING" | "CLOSED";
+export type SupportTicketPriority = "LOW" | "MEDIUM" | "HIGH";
 
 export type SupportMessageDTO = {
   id: string;
@@ -17,14 +19,50 @@ export type SupportMessageDTO = {
   createdAt: string;
 };
 
+export type SupportConversationMetadata = {
+  currentPage?: string;
+  userName?: string;
+  browser?: string;
+  os?: string;
+  userAgent?: string;
+};
+
 export type SupportConversationSummary = {
   id: string;
   salonId: string;
   salonName: string;
   salonSlug: string;
+  ticketNumber: string | null;
+  subject: string | null;
+  status: SupportConversationStatus;
+  priority: SupportTicketPriority;
   lastMessageAt: string;
   lastMessagePreview: string | null;
   unreadCount: number;
+  createdAt: string;
+};
+
+export type SupportConversationDetail = {
+  conversationId: string;
+  salonId: string;
+  salonName: string;
+  salonSlug: string;
+  ticketNumber: string | null;
+  subject: string | null;
+  status: SupportConversationStatus;
+  priority: SupportTicketPriority;
+  metadata: SupportConversationMetadata | null;
+  createdAt: string;
+  agentJoinedAt: string | null;
+  statusChangedAt: string | null;
+  messages: SupportMessageDTO[];
+};
+
+export type SupportStatusCounts = {
+  all: number;
+  open: number;
+  waiting: number;
+  closed: number;
 };
 
 function serializeMessage(message: {
@@ -43,6 +81,11 @@ function serializeMessage(message: {
   };
 }
 
+function parseMetadata(value: unknown): SupportConversationMetadata | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return value as SupportConversationMetadata;
+}
+
 function validateMessageBody(body: string) {
   const trimmed = body.trim();
   if (!trimmed) {
@@ -54,11 +97,27 @@ function validateMessageBody(body: string) {
   return trimmed;
 }
 
+async function generateTicketNumber() {
+  const count = await prisma.supportConversation.count({
+    where: { ticketNumber: { not: null } },
+  });
+  return `GD-${String(count + 1).padStart(4, "0")}`;
+}
+
 async function getOrCreateConversation(salonId: string) {
-  return prisma.supportConversation.upsert({
+  const existing = await prisma.supportConversation.findUnique({
     where: { salonId },
-    create: { salonId },
-    update: {},
+  });
+
+  if (existing) return existing;
+
+  const ticketNumber = await generateTicketNumber();
+  return prisma.supportConversation.create({
+    data: {
+      salonId,
+      ticketNumber,
+      statusChangedAt: new Date(),
+    },
   });
 }
 
@@ -67,9 +126,7 @@ async function countUnreadForAdmin(conversationId: string, adminLastReadAt: Date
     where: {
       conversationId,
       senderType: "SALON",
-      ...(adminLastReadAt
-        ? { createdAt: { gt: adminLastReadAt } }
-        : {}),
+      ...(adminLastReadAt ? { createdAt: { gt: adminLastReadAt } } : {}),
     },
   });
 }
@@ -79,10 +136,94 @@ async function countUnreadForSalon(conversationId: string, salonLastReadAt: Date
     where: {
       conversationId,
       senderType: "ADMIN",
-      ...(salonLastReadAt
-        ? { createdAt: { gt: salonLastReadAt } }
-        : {}),
+      ...(salonLastReadAt ? { createdAt: { gt: salonLastReadAt } } : {}),
     },
+  });
+}
+
+function deriveSubjectFromMessage(body: string) {
+  const line = body.split("\n")[0]?.trim() ?? "";
+  if (!line) return "Support request";
+  return line.length > 80 ? `${line.slice(0, 77)}…` : line;
+}
+
+function serializeConversationSummary(
+  conversation: {
+    id: string;
+    salonId: string;
+    ticketNumber: string | null;
+    subject: string | null;
+    status: SupportConversationStatus;
+    priority: SupportTicketPriority;
+    lastMessageAt: Date;
+    createdAt: Date;
+    adminLastReadAt: Date | null;
+    salon: { name: string; slug: string };
+    messages: { body: string }[];
+  },
+  unreadCount: number
+): SupportConversationSummary {
+  return {
+    id: conversation.id,
+    salonId: conversation.salonId,
+    salonName: conversation.salon.name,
+    salonSlug: conversation.salon.slug,
+    ticketNumber: conversation.ticketNumber,
+    subject: conversation.subject,
+    status: conversation.status,
+    priority: conversation.priority,
+    lastMessageAt: conversation.lastMessageAt.toISOString(),
+    lastMessagePreview: conversation.messages[0]?.body ?? null,
+    unreadCount,
+    createdAt: conversation.createdAt.toISOString(),
+  };
+}
+
+function serializeConversationDetail(
+  conversation: {
+    id: string;
+    salonId: string;
+    ticketNumber: string | null;
+    subject: string | null;
+    status: SupportConversationStatus;
+    priority: SupportTicketPriority;
+    metadata: unknown;
+    createdAt: Date;
+    agentJoinedAt: Date | null;
+    statusChangedAt: Date | null;
+    salon: { name: string; slug: string };
+  },
+  messages: SupportMessageDTO[]
+): Omit<SupportConversationDetail, "messages"> {
+  return {
+    conversationId: conversation.id,
+    salonId: conversation.salonId,
+    salonName: conversation.salon.name,
+    salonSlug: conversation.salon.slug,
+    ticketNumber: conversation.ticketNumber,
+    subject: conversation.subject,
+    status: conversation.status,
+    priority: conversation.priority,
+    metadata: parseMetadata(conversation.metadata),
+    createdAt: conversation.createdAt.toISOString(),
+    agentJoinedAt: conversation.agentJoinedAt?.toISOString() ?? null,
+    statusChangedAt: conversation.statusChangedAt?.toISOString() ?? null,
+  };
+}
+
+export async function updateSalonSupportContext(metadata: SupportConversationMetadata) {
+  const session = await requireSession();
+  const conversation = await getOrCreateConversation(session.user.salonId);
+
+  const merged: SupportConversationMetadata = {
+    ...parseMetadata(conversation.metadata),
+    ...metadata,
+    userName: metadata.userName ?? session.user.name ?? undefined,
+  };
+
+  await prisma.supportConversation.update({
+    where: { id: conversation.id },
+    data: { metadata: merged },
   });
 }
 
@@ -113,6 +254,26 @@ export async function sendSalonSupportMessage(body: string) {
   const conversation = await getOrCreateConversation(session.user.salonId);
   const now = new Date();
 
+  const messageCount = await prisma.supportMessage.count({
+    where: { conversationId: conversation.id },
+  });
+
+  const updateData: {
+    lastMessageAt: Date;
+    status?: SupportConversationStatus;
+    statusChangedAt?: Date;
+    subject?: string;
+  } = { lastMessageAt: now };
+
+  if (conversation.status === "CLOSED") {
+    updateData.status = "OPEN";
+    updateData.statusChangedAt = now;
+  }
+
+  if (!conversation.subject && messageCount === 0) {
+    updateData.subject = deriveSubjectFromMessage(trimmed);
+  }
+
   const message = await prisma.supportMessage.create({
     data: {
       conversationId: conversation.id,
@@ -125,7 +286,7 @@ export async function sendSalonSupportMessage(body: string) {
 
   await prisma.supportConversation.update({
     where: { id: conversation.id },
-    data: { lastMessageAt: now },
+    data: updateData,
   });
 
   revalidatePath("/admin/support");
@@ -143,17 +304,36 @@ export async function getSalonSupportUnreadCount() {
   return countUnreadForSalon(conversation.id, conversation.salonLastReadAt);
 }
 
-export async function getAdminSupportConversations() {
+export async function getAdminSupportStatusCounts(): Promise<SupportStatusCounts> {
+  await requireSuperAdmin();
+
+  const [all, open, waiting, closed] = await Promise.all([
+    prisma.supportConversation.count(),
+    prisma.supportConversation.count({ where: { status: "OPEN" } }),
+    prisma.supportConversation.count({ where: { status: "WAITING" } }),
+    prisma.supportConversation.count({ where: { status: "CLOSED" } }),
+  ]);
+
+  return { all, open, waiting, closed };
+}
+
+export async function getAdminSupportConversations(
+  statusFilter?: SupportConversationStatus | "ALL"
+) {
   await requireSuperAdmin();
 
   const conversations = await prisma.supportConversation.findMany({
+    where:
+      statusFilter && statusFilter !== "ALL"
+        ? { status: statusFilter }
+        : undefined,
     orderBy: { lastMessageAt: "desc" },
     include: {
       salon: { select: { id: true, name: true, slug: true } },
       messages: {
         orderBy: { createdAt: "desc" },
         take: 1,
-        select: { body: true, senderType: true, createdAt: true },
+        select: { body: true },
       },
     },
   });
@@ -164,16 +344,7 @@ export async function getAdminSupportConversations() {
         conversation.id,
         conversation.adminLastReadAt
       );
-
-      return {
-        id: conversation.id,
-        salonId: conversation.salonId,
-        salonName: conversation.salon.name,
-        salonSlug: conversation.salon.slug,
-        lastMessageAt: conversation.lastMessageAt.toISOString(),
-        lastMessagePreview: conversation.messages[0]?.body ?? null,
-        unreadCount,
-      } satisfies SupportConversationSummary;
+      return serializeConversationSummary(conversation, unreadCount);
     })
   );
 
@@ -200,18 +371,19 @@ export async function getAdminSupportMessages(conversationId: string) {
     take: MESSAGE_FETCH_LIMIT,
   });
 
+  const now = new Date();
   await prisma.supportConversation.update({
     where: { id: conversationId },
-    data: { adminLastReadAt: new Date() },
+    data: {
+      adminLastReadAt: now,
+      agentJoinedAt: conversation.agentJoinedAt ?? now,
+    },
   });
 
   return {
-    conversationId: conversation.id,
-    salonId: conversation.salonId,
-    salonName: conversation.salon.name,
-    salonSlug: conversation.salon.slug,
+    ...serializeConversationDetail(conversation, messages.map(serializeMessage)),
     messages: messages.map(serializeMessage),
-  };
+  } satisfies SupportConversationDetail;
 }
 
 export async function sendAdminSupportMessage(conversationId: string, body: string) {
@@ -220,7 +392,7 @@ export async function sendAdminSupportMessage(conversationId: string, body: stri
 
   const conversation = await prisma.supportConversation.findUnique({
     where: { id: conversationId },
-    select: { id: true },
+    select: { id: true, status: true, agentJoinedAt: true },
   });
 
   if (!conversation) {
@@ -240,11 +412,66 @@ export async function sendAdminSupportMessage(conversationId: string, body: stri
 
   await prisma.supportConversation.update({
     where: { id: conversationId },
-    data: { lastMessageAt: now },
+    data: {
+      lastMessageAt: now,
+      agentJoinedAt: conversation.agentJoinedAt ?? now,
+      ...(conversation.status === "WAITING"
+        ? { status: "OPEN" as const, statusChangedAt: now }
+        : {}),
+    },
   });
 
   revalidatePath("/admin/support");
   return serializeMessage(message);
+}
+
+export async function updateAdminSupportConversationStatus(
+  conversationId: string,
+  status: SupportConversationStatus
+) {
+  await requireSuperAdmin();
+
+  const conversation = await prisma.supportConversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true },
+  });
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  const now = new Date();
+  await prisma.supportConversation.update({
+    where: { id: conversationId },
+    data: { status, statusChangedAt: now },
+  });
+
+  revalidatePath("/admin/support");
+  return { status, statusChangedAt: now.toISOString() };
+}
+
+export async function updateAdminSupportConversationPriority(
+  conversationId: string,
+  priority: SupportTicketPriority
+) {
+  await requireSuperAdmin();
+
+  const conversation = await prisma.supportConversation.findUnique({
+    where: { id: conversationId },
+    select: { id: true },
+  });
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  await prisma.supportConversation.update({
+    where: { id: conversationId },
+    data: { priority },
+  });
+
+  revalidatePath("/admin/support");
+  return { priority };
 }
 
 export async function getAdminSupportUnreadCount() {
