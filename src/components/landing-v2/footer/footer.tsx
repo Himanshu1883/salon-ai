@@ -9,11 +9,18 @@ import {
   FOOTER_SOCIAL,
   FOOTER_STATS,
 } from "../constants";
-import { LANDING_CONTAINER, primaryGradientButtonClass } from "../ui/landing-primitives";
+import {
+  LANDING_CONTAINER,
+  primaryGradientButtonClass,
+} from "../ui/landing-primitives";
 import { BrandMark } from "../ui/brand-logo";
 import { cn } from "@/lib/utils";
 
-function SocialIcon({ icon }: { icon: (typeof FOOTER_SOCIAL)[number]["icon"] }) {
+function SocialIcon({
+  icon,
+}: {
+  icon: (typeof FOOTER_SOCIAL)[number]["icon"];
+}) {
   const props = {
     className: "h-4 w-4",
     fill: "currentColor",
@@ -51,85 +58,22 @@ function SocialIcon({ icon }: { icon: (typeof FOOTER_SOCIAL)[number]["icon"] }) 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
 
 function FooterLinkItem({ label, href }: { label: string; href: string }) {
+  const className =
+    "text-sm text-white/50 transition-colors duration-300 hover:text-white";
+  const content = <span>{label}</span>;
+
   return (
     <li>
-      <a
-        href={href}
-        className="group inline-flex items-center gap-1.5 text-base text-[#F7F3EC]/55 no-underline transition-[color,transform] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)] hover:translate-x-0.5 hover:text-white"
-      >
-        <span>{label}</span>
-        <ArrowRight
-          className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)] group-hover:translate-x-0 group-hover:opacity-100"
-          strokeWidth={1.75}
-          aria-hidden
-        />
-      </a>
-    </li>
-  );
-}
-
-function AnimatedStat({
-  stat,
-  index,
-  instant,
-}: {
-  stat: (typeof FOOTER_STATS)[number];
-  index: number;
-  instant: boolean;
-}) {
-  const ref = useRef<HTMLDivElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const [display, setDisplay] = useState(
-    stat.value === null ? stat.display : instant ? formatStat(stat, stat.value) : "0"
-  );
-
-  useEffect(() => {
-    if (instant || stat.value === null || !inView) {
-      if (stat.value !== null && inView) {
-        setDisplay(formatStat(stat, stat.value));
-      }
-      return;
-    }
-
-    const duration = 1400;
-    const start = performance.now();
-    let frame = 0;
-
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = stat.value! * eased;
-      setDisplay(formatStat(stat, current));
-
-      if (progress < 1) {
-        frame = requestAnimationFrame(tick);
-      }
-    };
-
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [inView, instant, stat]);
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={instant ? false : { opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ delay: instant ? 0 : index * 0.08, duration: 0.5, ease: EASE }}
-      className={cn(
-        "rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 backdrop-blur-sm",
-        "shadow-[0_8px_32px_rgba(0,0,0,0.24)]",
-        "transition-[transform,box-shadow,background-color,border-color] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)]",
-        "hover:-translate-y-[3px] hover:border-white/[0.1] hover:bg-white/[0.04]",
-        "hover:shadow-[0_16px_48px_rgba(0,0,0,0.32)]"
+      {href.startsWith("mailto:") || href.startsWith("http") ? (
+        <a href={href} className={className}>
+          {content}
+        </a>
+      ) : (
+        <Link href={href} className={className}>
+          {content}
+        </Link>
       )}
-    >
-      <p className="landing-display text-2xl font-bold tracking-tight text-white md:text-[1.75rem]">
-        {display}
-      </p>
-      <p className="mt-1 text-sm text-[#F7F3EC]/50">{stat.label}</p>
-    </motion.div>
+    </li>
   );
 }
 
@@ -152,15 +96,80 @@ function formatStat(
   return `${Math.round(value).toLocaleString("en-IN")}${stat.suffix}`;
 }
 
+function AnimatedStat({
+  stat,
+  index,
+  instant,
+}: {
+  stat: (typeof FOOTER_STATS)[number];
+  index: number;
+  instant: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const [display, setDisplay] = useState(
+    stat.value === null
+      ? stat.display
+      : instant
+        ? formatStat(stat, stat.value)
+        : "0"
+  );
+
+  useEffect(() => {
+    if (instant || stat.value === null || !inView) {
+      if (stat.value !== null && inView) {
+        setDisplay(formatStat(stat, stat.value));
+      }
+      return;
+    }
+
+    const duration = 1400;
+    const start = performance.now();
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(formatStat(stat, stat.value! * eased));
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [inView, instant, stat]);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={instant ? false : { opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{
+        delay: instant ? 0 : index * 0.07,
+        duration: 0.5,
+        ease: EASE,
+      }}
+      className="relative px-1 py-1 sm:px-2"
+    >
+      <p className="landing-display text-3xl font-medium tracking-tight text-white md:text-4xl">
+        {display}
+      </p>
+      <p className="mt-2 text-xs font-medium uppercase tracking-[0.18em] text-white/40">
+        {stat.label}
+      </p>
+    </motion.div>
+  );
+}
+
 function StatusIndicator() {
   return (
-    <div className="flex items-center gap-2.5">
-      <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2F6F5E] opacity-40" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-[#2F6F5E] shadow-[0_0_8px_rgba(47,111,94,0.6)]" />
+    <div className="flex items-center gap-2">
+      <span className="relative flex h-1.5 w-1.5">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70 opacity-50" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
       </span>
-      <span className="text-sm text-[#F7F3EC]/60">
-        System <span className="text-[#F7F3EC]/85">Online</span>
+      <span className="text-xs tracking-wide text-white/45">
+        System online
       </span>
     </div>
   );
@@ -172,43 +181,49 @@ export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative overflow-hidden bg-[#0B0908] text-[#F7F3EC]">
-      {/* Layered background */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_0%_0%,rgba(124,58,237,0.14),transparent_55%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_100%_100%,rgba(198,162,93,0.06),transparent_50%)]"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 backdrop-blur-[1px]"
-        aria-hidden
-      />
+    <footer className="relative overflow-hidden bg-[#0C0A09] text-[#F7F3EC]">
+      <div className="pointer-events-none absolute inset-0" aria-hidden>
+        <div className="absolute -left-1/4 top-0 h-[420px] w-[70%] rounded-full bg-[#5B21B6]/20 blur-[120px]" />
+        <div className="absolute -right-1/4 bottom-0 h-[320px] w-[55%] rounded-full bg-[#4F46E5]/10 blur-[100px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(12,10,9,0)_0%,rgba(12,10,9,0.55)_100%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
+          }}
+        />
+      </div>
 
-      <div className={cn(LANDING_CONTAINER, "relative py-14 md:py-16 lg:py-20")}>
-        {/* TOP SECTION */}
-        <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-16 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] xl:gap-20">
-          {/* Brand column */}
-          <motion.div
-            initial={instant ? false : { opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, ease: EASE }}
-            className="flex flex-col items-center text-center lg:items-start lg:text-left"
-          >
-            <BrandMark size="footer" />
+      <div className={cn(LANDING_CONTAINER, "relative")}>
+        {/* CTA band */}
+        <motion.div
+          initial={instant ? false : { opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-60px" }}
+          transition={{ duration: 0.6, ease: EASE }}
+          className="border-b border-white/[0.08] py-16 md:py-20 lg:py-24"
+        >
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
+            <div className="max-w-2xl">
+              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-[#C4B5FD]/80">
+                Salon AI ERP
+              </p>
+              <h2 className="landing-display mt-4 text-3xl font-medium leading-[1.1] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
+                Ready to run a salon that{" "}
+                <span className="italic text-[#C4B5FD]">feels effortless?</span>
+              </h2>
+              <p className="mt-4 max-w-lg text-base leading-relaxed text-white/50">
+                Appointments, billing, inventory, and AI — one platform built for
+                how modern salons actually work.
+              </p>
+            </div>
 
-            <p className="mt-4 max-w-sm text-base leading-relaxed text-[#F7F3EC]/55">
-              Luxury AI-powered salon ERP trusted by modern salons across India.
-            </p>
-
-            <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:max-w-none lg:w-auto">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <Link
                 href="/login"
                 className={primaryGradientButtonClass(
-                  "flex-1 px-6 py-3 text-sm focus-visible:ring-offset-[#0B0908]"
+                  "rounded-full px-7 py-3.5 text-sm focus-visible:ring-offset-[#0C0A09]"
                 )}
               >
                 Start Free Trial
@@ -217,49 +232,70 @@ export function Footer() {
               <Link
                 href="mailto:support@salonai.com"
                 className={cn(
-                  "inline-flex flex-1 items-center justify-center rounded-lg border border-white/10 bg-transparent px-6 py-3 text-sm font-semibold text-[#F7F3EC]/90",
-                  "transition-[transform,background-color,border-color] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)]",
-                  "hover:-translate-y-px hover:border-white/20 hover:bg-white/[0.05]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A25D] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0908]"
+                  "inline-flex items-center justify-center rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/90",
+                  "transition-[transform,background-color,border-color] duration-300",
+                  "hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.04]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C4B5FD]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0C0A09]"
                 )}
               >
                 Book Demo
               </Link>
             </div>
+          </div>
+        </motion.div>
 
-            <div className="mt-6 flex items-center gap-3">
-              {FOOTER_SOCIAL.map(({ label, href, icon }) => (
+        {/* Brand + nav */}
+        <div className="grid gap-12 border-b border-white/[0.08] py-14 md:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+          <motion.div
+            initial={instant ? false : { opacity: 0, y: 18 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, ease: EASE }}
+          >
+            <BrandMark size="footer" />
+            <p className="mt-5 max-w-sm text-sm leading-relaxed text-white/45">
+              Luxury AI-powered salon ERP trusted by modern salons across India.
+            </p>
+
+            {FOOTER_SOCIAL.length > 0 && (
+              <div className="mt-6 flex items-center gap-2.5">
+                {FOOTER_SOCIAL.map(({ label, href, icon }) => (
                   <a
                     key={label}
                     href={href}
                     aria-label={label}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.06] bg-white/[0.02] text-[#F7F3EC]/50",
-                      "transition-[transform,color,background-color,border-color] duration-300 ease-[cubic-bezier(0.22,0.61,0.36,1)]",
-                      "hover:-translate-y-0.5 hover:rotate-3 hover:border-white/10 hover:bg-white/[0.05] hover:text-white"
+                      "flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-white/45",
+                      "transition-[transform,color,background-color,border-color] duration-300",
+                      "hover:-translate-y-0.5 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
                     )}
                   >
                     <SocialIcon icon={icon} />
                   </a>
                 ))}
-            </div>
+              </div>
+            )}
           </motion.div>
 
-          {/* Link columns */}
-          <div className="grid grid-cols-2 gap-8 sm:gap-10 md:grid-cols-4 lg:gap-8">
+          <div className="grid grid-cols-2 gap-10 sm:gap-12">
             {FOOTER_COLUMNS.map((column, colIndex) => (
               <motion.div
                 key={column.title}
-                initial={instant ? false : { opacity: 0, y: 20 }}
+                initial={instant ? false : { opacity: 0, y: 18 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: instant ? 0 : colIndex * 0.06, duration: 0.5, ease: EASE }}
-                className="text-center md:text-left"
+                transition={{
+                  delay: instant ? 0 : 0.08 + colIndex * 0.06,
+                  duration: 0.5,
+                  ease: EASE,
+                }}
               >
-                <h4 className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#D6A354]">
+                <h4 className="font-mono text-[10px] font-medium uppercase tracking-[0.22em] text-white/35">
                   {column.title}
                 </h4>
-                <ul className="space-y-3">
+                <ul className="mt-5 space-y-3">
                   {column.links.map((link) => (
                     <FooterLinkItem key={link.label} {...link} />
                   ))}
@@ -269,36 +305,30 @@ export function Footer() {
           </div>
         </div>
 
-        {/* MIDDLE SECTION — divider + stats */}
-        <div className="my-12 md:my-14 lg:my-16">
-          <div
-            className="h-px w-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent)]"
-            aria-hidden
-          />
-
-          <div className="mt-10 grid grid-cols-2 gap-4 md:gap-5 lg:mt-12 lg:grid-cols-4 lg:gap-6">
-            {FOOTER_STATS.map((stat, i) => (
-              <AnimatedStat key={stat.label} stat={stat} index={i} instant={instant} />
-            ))}
-          </div>
+        {/* Stats — editorial, no cards */}
+        <div className="grid grid-cols-2 gap-y-10 border-b border-white/[0.08] py-12 md:py-14 lg:grid-cols-4 lg:gap-0">
+          {FOOTER_STATS.map((stat, i) => (
+            <div
+              key={stat.label}
+              className={cn(
+                "lg:px-6",
+                i > 0 && "lg:border-l lg:border-white/[0.08]",
+                i === 0 && "lg:pl-0"
+              )}
+            >
+              <AnimatedStat stat={stat} index={i} instant={instant} />
+            </div>
+          ))}
         </div>
 
-        {/* BOTTOM SECTION */}
-        <div
-          className="h-px w-full bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.08),transparent)]"
-          aria-hidden
-        />
-
-        <div className="mt-8 flex flex-col items-center gap-6 text-center md:mt-10 lg:flex-row lg:justify-between lg:gap-4 lg:text-left">
-          <div className="space-y-0.5">
-            <p className="text-sm text-[#F7F3EC]/50">&copy; {year} Salon AI</p>
-            <p className="text-sm text-[#F7F3EC]/40">Made in India.</p>
-          </div>
-
+        {/* Bottom bar */}
+        <div className="flex flex-col items-start gap-4 py-8 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            &copy; {year} Salon AI · Made in India
+          </p>
           <StatusIndicator />
-
-          <p className="text-sm text-[#F7F3EC]/50">
-            Made with <span className="text-violet-400">♥</span> for salon professionals.
+          <p className="sm:text-right">
+            Built for salon professionals
           </p>
         </div>
       </div>

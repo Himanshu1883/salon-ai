@@ -426,42 +426,20 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "Product",
     links: [
-      { label: "Features", href: "#features" },
+      { label: "Features", href: "/#features" },
       { label: "Pricing", href: "/pricing" },
-      { label: "Modules", href: "#modules" },
-      { label: "AI Analytics", href: "#ai" },
+      { label: "Modules", href: "/#modules" },
+      { label: "AI Analytics", href: "/#ai" },
       { label: "Integrations", href: "/integrations" },
-      { label: "API", href: "/documentation" },
     ],
   },
   {
     title: "Company",
     links: [
       { label: "About", href: "/about" },
-      { label: "Careers", href: "#" },
-      { label: "Blog", href: "#" },
-      { label: "Press", href: "#" },
-      { label: "Contact", href: "mailto:support@salonai.com" },
-    ],
-  },
-  {
-    title: "Resources",
-    links: [
       { label: "Documentation", href: "/documentation" },
-      { label: "Help Center", href: "/documentation" },
-      { label: "Community", href: "#" },
-      { label: "Roadmap", href: "#" },
-      { label: "Changelog", href: "#" },
-    ],
-  },
-  {
-    title: "Legal",
-    links: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Pricing", href: "/pricing" },
-      { label: "GDPR", href: "#" },
-      { label: "Cookie Policy", href: "#" },
+      { label: "FAQ", href: "/#faq" },
+      { label: "Contact", href: "mailto:support@salonai.com" },
     ],
   },
 ];
@@ -470,8 +448,6 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
 export const FOOTER_LINKS = {
   product: FOOTER_COLUMNS[0].links.map((l) => l.label),
   company: FOOTER_COLUMNS[1].links.map((l) => l.label),
-  support: FOOTER_COLUMNS[2].links.map((l) => l.label),
-  legal: FOOTER_COLUMNS[3].links.map((l) => l.label),
 };
 
 export const FOOTER_STATS = [
@@ -481,12 +457,12 @@ export const FOOTER_STATS = [
   { value: null, display: "24/7", label: "Support" },
 ] as const;
 
-export const FOOTER_SOCIAL = [
-  { label: "LinkedIn", href: "#", icon: "linkedin" as const },
-  { label: "Instagram", href: "#", icon: "instagram" as const },
-  { label: "Twitter", href: "#", icon: "twitter" as const },
-  { label: "Facebook", href: "#", icon: "facebook" as const },
-];
+/** Only include entries with real URLs — empty until social profiles exist. */
+export const FOOTER_SOCIAL: {
+  label: string;
+  href: string;
+  icon: "linkedin" | "instagram" | "twitter" | "facebook";
+}[] = [];
 
 export const FLOATING_CARDS = [
   { id: "revenue", label: "Revenue", value: "₹2.4L", trend: "+12%", color: "emerald" },
