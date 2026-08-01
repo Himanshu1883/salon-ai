@@ -6,6 +6,7 @@ import {
   Calendar,
   Receipt,
   ListOrdered,
+  PackageMinus,
   Sparkles,
   ArrowRight,
 } from "lucide-react";
@@ -41,9 +42,19 @@ const actions = [
     icon: Receipt,
     action: "record-sale" as const,
     className:
-      "border-2 border-sky-200 bg-white text-sky-700 shadow-sm hover:border-sky-300 hover:bg-sky-50/50",
-    iconClassName: "bg-sky-100 text-sky-600",
-    descriptionClassName: "text-sky-600/80",
+      "bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-sm hover:from-indigo-600 hover:to-violet-700",
+    iconClassName: "bg-white/15",
+    descriptionClassName: "text-white/80",
+  },
+  {
+    href: "/inventory/low-stock",
+    label: "Low Stock",
+    description: "Restock inventory",
+    icon: PackageMinus,
+    className:
+      "border-2 border-red-200 bg-white text-red-700 shadow-sm hover:border-red-300 hover:bg-red-50/50",
+    iconClassName: "bg-red-100 text-red-600",
+    descriptionClassName: "text-red-600/80",
   },
   {
     href: "/queue",

@@ -6,6 +6,7 @@ import {
   Calendar,
   Receipt,
   ListOrdered,
+  PackageMinus,
 } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { cn } from "@/lib/utils";
@@ -21,8 +22,22 @@ type ActionStyle = {
   descriptionClassName: string;
 };
 
-const linkActions: Array<ActionStyle & { href: string; enterpriseOnly?: boolean }> = [
+type LinkAction = ActionStyle & {
+  type: "link";
+  href: string;
+  enterpriseOnly?: boolean;
+};
+
+type ButtonAction = ActionStyle & {
+  type: "button";
+  id: string;
+};
+
+type QuickAction = LinkAction | ButtonAction;
+
+const quickActions: QuickAction[] = [
   {
+    type: "link",
     href: "/check-in",
     label: "Check-in",
     description: "Add walk-in customer",
@@ -34,6 +49,7 @@ const linkActions: Array<ActionStyle & { href: string; enterpriseOnly?: boolean 
     descriptionClassName: "text-white/80",
   },
   {
+    type: "link",
     href: "/sales/appointments",
     label: "New Appointment",
     description: "Book a time slot",
@@ -44,6 +60,29 @@ const linkActions: Array<ActionStyle & { href: string; enterpriseOnly?: boolean 
     descriptionClassName: "text-white/80",
   },
   {
+    type: "button",
+    id: "record-sale",
+    label: "Record Sale",
+    description: "Create invoice",
+    icon: Receipt,
+    className:
+      "bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-md shadow-indigo-200/50 hover:from-indigo-600 hover:to-violet-700",
+    iconClassName: "bg-white/15",
+    descriptionClassName: "text-white/80",
+  },
+  {
+    type: "link",
+    href: "/inventory/low-stock",
+    label: "Low Stock",
+    description: "Restock inventory",
+    icon: PackageMinus,
+    className:
+      "border-2 border-red-200 bg-white text-red-700 shadow-sm hover:border-red-300 hover:bg-red-50/50",
+    iconClassName: "bg-red-100 text-red-600",
+    descriptionClassName: "text-red-600/80",
+  },
+  {
+    type: "link",
     href: "/queue",
     label: "View Queue",
     description: "Manage live queue",
@@ -56,33 +95,12 @@ const linkActions: Array<ActionStyle & { href: string; enterpriseOnly?: boolean 
   },
 ];
 
-const recordSaleAction: ActionStyle = {
-  label: "Record Sale",
-  description: "Create invoice",
-  icon: Receipt,
-  className:
-    "border-2 border-sky-200 bg-white text-sky-700 shadow-sm hover:border-sky-300 hover:bg-sky-50/50",
-  iconClassName: "bg-sky-100 text-sky-600",
-  descriptionClassName: "text-sky-600/80",
-};
-
 type QuickActionsWidgetProps = {
   delay?: number;
 };
 
-function ActionCard({
-  action,
-  onClick,
-}: {
-  action: ActionStyle;
-  onClick?: () => void;
-}) {
-  const className = cn(
-    "flex flex-col gap-3 rounded-2xl px-4 py-4 transition-all hover:scale-[1.02]",
-    action.className
-  );
-
-  const content = (
+function ActionCardContent({ action }: { action: ActionStyle }) {
+  return (
     <>
       <div
         className={cn(
@@ -100,24 +118,17 @@ function ActionCard({
       </div>
     </>
   );
-
-  if (onClick) {
-    return (
-      <button type="button" onClick={onClick} className={className}>
-        {content}
-      </button>
-    );
-  }
-
-  return null;
 }
 
 export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
   const { isEnterprise } = usePlan();
   const { openRecordSale } = useRecordSale();
 
-  const visibleLinkActions = linkActions.filter(
-    (action) => !action.enterpriseOnly || isEnterprise
+  const visibleActions = quickActions.filter(
+    (action) =>
+      action.type === "button" ||
+      !action.enterpriseOnly ||
+      isEnterprise
   );
 
   return (
@@ -125,52 +136,32 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
       <div className="p-6 pb-4">
         <h3 className="text-lg font-semibold text-dashboard-text">Quick Actions</h3>
       </div>
-      <div className="grid gap-3 px-6 pb-6 sm:grid-cols-2">
-        {visibleLinkActions.slice(0, 2).map((action) => (
-          <Link key={action.href} href={action.href} className={cn(
+      <div className="grid gap-3 px-6 pb-6 sm:grid-cols-2 lg:grid-cols-3">
+        {visibleActions.map((action) => {
+          const cardClassName = cn(
             "flex flex-col gap-3 rounded-2xl px-4 py-4 transition-all hover:scale-[1.02]",
             action.className
-          )}>
-            <div
-              className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
-                action.iconClassName
-              )}
-            >
-              <action.icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">{action.label}</p>
-              <p className={cn("text-xs", action.descriptionClassName)}>
-                {action.description}
-              </p>
-            </div>
-          </Link>
-        ))}
+          );
 
-        <ActionCard action={recordSaleAction} onClick={openRecordSale} />
+          if (action.type === "button") {
+            return (
+              <button
+                key={action.id}
+                type="button"
+                onClick={openRecordSale}
+                className={cardClassName}
+              >
+                <ActionCardContent action={action} />
+              </button>
+            );
+          }
 
-        {visibleLinkActions.slice(2).map((action) => (
-          <Link key={action.href} href={action.href} className={cn(
-            "flex flex-col gap-3 rounded-2xl px-4 py-4 transition-all hover:scale-[1.02]",
-            action.className
-          )}>
-            <div
-              className={cn(
-                "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
-                action.iconClassName
-              )}
-            >
-              <action.icon className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold">{action.label}</p>
-              <p className={cn("text-xs", action.descriptionClassName)}>
-                {action.description}
-              </p>
-            </div>
-          </Link>
-        ))}
+          return (
+            <Link key={action.href} href={action.href} className={cardClassName}>
+              <ActionCardContent action={action} />
+            </Link>
+          );
+        })}
       </div>
     </DashboardCard>
   );
