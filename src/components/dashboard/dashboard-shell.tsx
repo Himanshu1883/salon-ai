@@ -44,7 +44,7 @@ export function DashboardShell({
 
   return (
     <RecordSaleProvider>
-      <div className="flex min-h-screen bg-dashboard-bg font-[family-name:var(--font-inter)]">
+      <div className="flex h-dvh overflow-hidden bg-dashboard-bg font-[family-name:var(--font-inter)]">
       <HeaderDataLoader onData={handleHeaderData} />
       {mobileOpen && (
         <button
@@ -57,7 +57,7 @@ export function DashboardShell({
 
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 shrink-0 transition-transform duration-200 lg:relative lg:h-full lg:translate-x-0",
           collapsed ? "w-[72px]" : "w-[260px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -77,7 +77,7 @@ export function DashboardShell({
         />
       </div>
 
-      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-30 flex items-center gap-3 border-b border-dashboard-border bg-dashboard-card/95 px-4 py-3 backdrop-blur-sm lg:hidden">
           <button
             type="button"
@@ -103,7 +103,7 @@ export function DashboardShell({
           accessBlocked={accessBlocked}
         />
 
-        <main className="flex-1 overflow-auto">
+        <main className="min-h-0 flex-1 overflow-auto">
           <div className="mx-auto max-w-[1440px] p-4 sm:p-6 lg:p-8">{children}</div>
         </main>
       </div>
