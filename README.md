@@ -1,4 +1,4 @@
-# Salon AI
+# Glow Desk
 
 Multi-tenant salon management SaaS built with Next.js, Prisma, and NextAuth.
 
@@ -158,7 +158,7 @@ Enroll faces at **Team → Attendance → Enroll faces** (owner/manager only), t
 
 ## Deploy to Vercel
 
-Salon AI runs fully on Vercel: Next.js frontend/API on Vercel, PostgreSQL via **Vercel Postgres** (Neon) or the [Neon Vercel integration](https://vercel.com/integrations/neon).
+Glow Desk runs fully on Vercel: Next.js frontend/API on Vercel, PostgreSQL via **Vercel Postgres** (Neon) or the [Neon Vercel integration](https://vercel.com/integrations/neon).
 
 ### Fix production login (3 steps)
 

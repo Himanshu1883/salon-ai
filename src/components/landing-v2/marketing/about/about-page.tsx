@@ -61,7 +61,7 @@ const PROCESS = [
     num: "01",
     title: "Discover & Setup",
     description:
-      "We map your salon workflows, services, and staff — then configure Salon AI around how you already work.",
+      "We map your salon workflows, services, and staff — then configure Glow Desk around how you already work.",
     points: ["Salon audit", "Module setup", "Team onboarding"],
   },
   {
@@ -86,7 +86,7 @@ const STATS = [
   {
     value: FOOTER_STATS[0].value!,
     suffix: "+",
-    label: "Salons running daily operations on Salon AI",
+    label: "Salons running daily operations on Glow Desk",
   },
   {
     value: 50,
@@ -253,14 +253,14 @@ export function AboutPageContent() {
                     className="h-7 w-7 rounded-full object-contain"
                     aria-hidden
                   />
-                  Welcome to Salon AI
+                  Welcome to Glow Desk
                 </span>
               </div>
             </Reveal>
 
             <Reveal delay={0.08}>
               <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight text-[#1B1714] sm:text-5xl md:text-6xl lg:text-[3.75rem]">
-                Salons that run smarter on Salon AI
+                Salons that run smarter on Glow Desk
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
@@ -398,7 +398,7 @@ export function AboutPageContent() {
               </p>
               <div className="mt-8 border-t border-[#1B1714]/10 pt-5">
                 <p className="text-sm font-semibold tracking-wide text-[#1B1714]">
-                  SALON AI TEAM
+                  GLOW DESK TEAM
                 </p>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#1B1714]/45">
                   Product & Design
@@ -443,7 +443,7 @@ export function AboutPageContent() {
               </h3>
               <div className="mt-6 space-y-5 text-base leading-relaxed text-[#1B1714]/70">
                 <p>
-                  Salon AI grew from a simple belief: great salon software
+                  Glow Desk grew from a simple belief: great salon software
                   starts with listening. We spent time on real salon floors
                   before we designed a single screen.
                 </p>
@@ -723,7 +723,7 @@ export function AboutPageContent() {
               <span className="italic text-[#5B21B6]">your Salon?</span>
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-base text-[#1B1714]/65">
-              Start a complimentary trial and discover how Salon AI can bring
+              Start a complimentary trial and discover how Glow Desk can bring
               your entire floor onto one intelligent platform.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-3">

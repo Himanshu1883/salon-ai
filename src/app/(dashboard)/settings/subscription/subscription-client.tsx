@@ -39,7 +39,7 @@ export function SubscriptionClient({
       <div>
         <h1 className="text-3xl font-bold text-[#1C103D]">Plan & subscription</h1>
         <p className="mt-1 text-[#6B7280]">
-          Manage your Salon AI ERP tier. Switch plans anytime for demo purposes.
+          Manage your Glow Desk ERP tier. Switch plans anytime for demo purposes.
         </p>
       </div>
 

@@ -312,7 +312,7 @@ export function Sidebar({
               <p className="truncate text-base font-bold text-white">{salonName}</p>
               <p className="flex items-center gap-1 text-xs text-violet-300/70">
                 <Sparkles className="h-3 w-3" />
-                Salon AI
+                Glow Desk
               </p>
             </div>
           )}

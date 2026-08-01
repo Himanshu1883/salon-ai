@@ -117,7 +117,7 @@ export function ReportsFilterToolbar({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Created by</SelectItem>
-            <SelectItem value="Salon AI">Salon AI</SelectItem>
+            <SelectItem value="Glow Desk">Glow Desk</SelectItem>
           </SelectContent>
         </Select>
 

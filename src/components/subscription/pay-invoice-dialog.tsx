@@ -130,7 +130,7 @@ export function PayInvoiceDialog({
         ) : selectedMethod === "upi" ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-center">
-              <p className="text-sm text-stone-500">Pay to Salon AI UPI ID</p>
+              <p className="text-sm text-stone-500">Pay to Glow Desk UPI ID</p>
               <p className="mt-1 font-mono text-lg font-semibold text-stone-900">
                 salonai@upi
               </p>
@@ -157,7 +157,7 @@ export function PayInvoiceDialog({
           <div className="space-y-4">
             <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
               <p className="font-medium text-stone-900">Bank details</p>
-              <p className="mt-2">Account: Salon AI Technologies</p>
+              <p className="mt-2">Account: Glow Desk Technologies</p>
               <p>IFSC: SBIN0001234</p>
               <p>Account no: 123456789012</p>
               <p className="mt-2">Reference: {invoice.invoiceNumber}</p>

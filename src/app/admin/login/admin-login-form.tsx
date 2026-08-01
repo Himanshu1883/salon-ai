@@ -66,7 +66,7 @@ export default function AdminLoginForm() {
             <Shield className="h-6 w-6" />
           </div>
           <CardTitle>Platform Admin</CardTitle>
-          <CardDescription>Sign in to manage Salon AI tenants</CardDescription>
+          <CardDescription>Sign in to manage Glow Desk tenants</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

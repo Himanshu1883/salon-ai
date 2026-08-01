@@ -205,7 +205,7 @@ export function PricingPageContent() {
           <div className="max-w-4xl">
             <Reveal>
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#1B1714]/45">
-                Pricing · Salon AI ERP
+                Pricing · Glow Desk ERP
               </p>
             </Reveal>
 

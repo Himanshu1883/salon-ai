@@ -44,7 +44,7 @@ export function UpgradeScreen({
           </h1>
           <p className="mt-2 text-center text-sm text-violet-100/90">
             You&apos;re on the {PLAN_LABELS[currentPlan]} plan. Enterprise unlocks the full
-            Salon AI ERP experience.
+            Glow Desk ERP experience.
           </p>
         </div>
 

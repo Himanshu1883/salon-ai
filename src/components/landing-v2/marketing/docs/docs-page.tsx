@@ -22,7 +22,7 @@ const DOC_TOPICS = [
     id: "getting-started",
     title: "Getting Started",
     description:
-      "First-time with Salon AI? We walk you from signup to your first booked appointment.",
+      "First-time with Glow Desk? We walk you from signup to your first booked appointment.",
     image: IMAGES.reception,
     cta: "Learn about Getting Started",
   },
@@ -95,7 +95,7 @@ const STANDARDS = ERP_MODULES.slice(0, 8).map((mod) => ({
 const PROCESS_STEPS = [
   {
     title: "We start with your salon",
-    body: "Salon AI documentation is written around real floor workflows — not generic SaaS jargon. Every guide maps to how stylists, reception, and owners actually work.",
+    body: "Glow Desk documentation is written around real floor workflows — not generic SaaS jargon. Every guide maps to how stylists, reception, and owners actually work.",
     cta: "How It Works",
     href: "#process",
   },
@@ -122,7 +122,7 @@ const STATS = [
   },
   {
     value: `${FOOTER_STATS[0].value!.toLocaleString("en-IN")}+`,
-    label: "Salons using Salon AI documentation daily",
+    label: "Salons using Glow Desk documentation daily",
   },
 ];
 
@@ -191,7 +191,7 @@ export function DocsPageContent() {
           <div className="max-w-4xl">
             <Reveal>
               <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.75rem]">
-                The best way to set up and run your salon on Salon AI
+                The best way to set up and run your salon on Glow Desk
               </h1>
             </Reveal>
             <Reveal delay={0.1}>

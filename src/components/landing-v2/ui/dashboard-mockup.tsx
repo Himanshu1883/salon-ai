@@ -23,7 +23,7 @@ export function DashboardMockup({ variant = "dashboard", className, compact }: D
       <div className="hidden w-[22%] shrink-0 border-r border-gray-200 bg-white p-2 sm:block">
         <div className="mb-3 flex items-center gap-1.5">
           <div className="h-4 w-4 rounded-md bg-[#7C3AED]" />
-          <span className="text-[9px] font-bold text-[#1B1714] md:text-[10px]">Salon AI</span>
+          <span className="text-[9px] font-bold text-[#1B1714] md:text-[10px]">Glow Desk</span>
         </div>
         {sidebarItems.map((item, i) => (
           <div

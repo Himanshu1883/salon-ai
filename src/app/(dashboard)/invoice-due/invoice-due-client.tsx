@@ -45,7 +45,7 @@ export function InvoiceDueClient({
               Subscription Invoice Due
             </h1>
             <p className="mt-2 text-stone-600">
-              Your Salon AI subscription payment is overdue. Pay now to restore
+              Your Glow Desk subscription payment is overdue. Pay now to restore
               access to your salon dashboard.
             </p>
           </div>

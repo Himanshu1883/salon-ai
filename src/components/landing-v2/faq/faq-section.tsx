@@ -145,7 +145,7 @@ export function FaqSection() {
           </h2>
 
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#1B1714]/60 md:text-base">
-            Everything you need to know before getting started with Salon AI.
+            Everything you need to know before getting started with Glow Desk.
           </p>
 
           <div className="mt-8 border-t border-[#E4DDD1] lg:mt-10">

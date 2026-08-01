@@ -85,7 +85,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         {/* Logo */}
         <Link
           href="/"
-          aria-label="Salon AI home"
+          aria-label="Glow Desk home"
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
           onClick={() => setMobileOpen(false)}
         >

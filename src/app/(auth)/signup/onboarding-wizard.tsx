@@ -321,7 +321,7 @@ function OwnerAccountStep({
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-500">
-        This account will be the salon owner login for Salon AI.
+        This account will be the salon owner login for Glow Desk.
       </p>
       <div className="space-y-2">
         <Label htmlFor="ownerName">Owner full name *</Label>
@@ -684,7 +684,7 @@ function ReviewStep({
           className="mt-0.5"
         />
         <span className="text-sm text-stone-600">
-          I agree to Salon AI&apos;s Terms of Service and Privacy Policy, and
+          I agree to Glow Desk&apos;s Terms of Service and Privacy Policy, and
           confirm that the business information provided is accurate.
         </span>
       </label>

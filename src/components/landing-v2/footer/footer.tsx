@@ -272,7 +272,7 @@ export function Footer() {
         {/* Bottom bar */}
         <div className="flex flex-col items-start gap-4 py-8 text-xs text-white/40 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            &copy; {year} Salon AI · Made in India
+            &copy; {year} Glow Desk · Made in India
           </p>
           <StatusIndicator />
           <p className="sm:text-right">

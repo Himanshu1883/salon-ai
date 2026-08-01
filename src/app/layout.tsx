@@ -31,11 +31,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Salon AI Software | Smart Salon Management Software",
-    template: "%s | Salon AI",
+    default: "Glow Desk Software | Smart Salon Management Software",
+    template: "%s | Glow Desk",
   },
   description:
-    "Salon AI helps salons manage appointments, billing, CRM, inventory, staff, reports, WhatsApp reminders, and AI analytics.",
+    "Glow Desk helps salons manage appointments, billing, CRM, inventory, staff, reports, WhatsApp reminders, and AI analytics.",
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },

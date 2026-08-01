@@ -304,7 +304,7 @@ async function seedDemoProjects(
         salonId,
         name: "Old POS migration",
         status: "CANCELED",
-        description: "Replaced by Salon AI billing module",
+        description: "Replaced by Glow Desk billing module",
       },
     ],
   });

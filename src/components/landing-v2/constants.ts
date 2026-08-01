@@ -71,7 +71,7 @@ export const IMAGES = {
 } as const;
 
 export const BRAND = {
-  name: "Salon AI",
+  name: "Glow Desk",
   tagline: "Luxury Salon Management, Powered by Intelligence",
   emerald: "#059669",
   purple: "#7c3aed",
@@ -303,7 +303,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: "Priya Sharma",
     role: "Owner",
     salon: "Luxe Hair Studio, Mumbai",
-    quote: "Salon AI transformed how we manage 3 branches. Revenue is up 40% and our clients love the WhatsApp reminders.",
+    quote: "Glow Desk transformed how we manage 3 branches. Revenue is up 40% and our clients love the WhatsApp reminders.",
     rating: 5,
     image: IMAGES.owner1,
     alt: "Priya Sharma salon owner portrait",
@@ -407,7 +407,7 @@ export type FaqItem = {
 };
 
 export const FAQ_ITEMS: FaqItem[] = [
-  { question: "How quickly can I set up Salon AI?", answer: "Most salons are fully operational within 24 hours. Our onboarding team imports your services, staff, and client data for you." },
+  { question: "How quickly can I set up Glow Desk?", answer: "Most salons are fully operational within 24 hours. Our onboarding team imports your services, staff, and client data for you." },
   { question: "Does it work for multi-branch salons?", answer: "Yes. Manage unlimited branches from a single dashboard with centralized reporting, inventory sync, and staff management." },
   { question: "Can I migrate from my current software?", answer: "Absolutely. We offer free data migration from Fresha, Booksy, Zoho, and Excel spreadsheets with zero downtime." },
   { question: "Is WhatsApp integration included?", answer: "WhatsApp reminders, confirmations, and marketing messages are included in Professional and Enterprise plans." },

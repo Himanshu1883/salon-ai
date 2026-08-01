@@ -45,7 +45,7 @@ export function AdminSidebar({
             <Shield className="h-5 w-5 text-white" />
           </div>
           <div>
-            <p className="text-sm font-semibold tracking-tight text-white">Salon AI</p>
+            <p className="text-sm font-semibold tracking-tight text-white">Glow Desk</p>
             <p className="text-xs font-medium text-slate-400">Platform Admin</p>
           </div>
         </div>

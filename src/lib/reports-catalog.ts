@@ -38,7 +38,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Overview of sales quantity and value across all categories.",
     isPremium: false,
     route: "/reports/sales/summary",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "sales-by-period",
@@ -47,7 +47,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Daily or weekly sales totals for a selected date range.",
     isPremium: true,
     route: "/reports/sales/by-period",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "sales-list",
@@ -56,7 +56,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All paid invoices with customer, amount, and payment method.",
     isPremium: false,
     route: "/reports/sales/list",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "sales-log",
@@ -65,7 +65,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Detailed line-item log of every sale transaction.",
     isPremium: false,
     route: "/reports/sales/log",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "gift-cards-period",
@@ -74,7 +74,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Gift card sales aggregated by day or week.",
     isPremium: true,
     route: "/reports/sales/gift-cards-period",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "gift-cards-list",
@@ -83,7 +83,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All gift card sales with customer and amount details.",
     isPremium: false,
     route: "/reports/sales/gift-cards",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "memberships-list",
@@ -92,7 +92,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Memberships sold with customer and revenue details.",
     isPremium: false,
     route: "/reports/sales/memberships",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "packages-list",
@@ -101,7 +101,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All package sales with customer and amount details.",
     isPremium: false,
     route: "/reports/sales/packages",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "packages-summary",
@@ -110,7 +110,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Aggregated package sales quantity and revenue.",
     isPremium: false,
     route: "/reports/sales/packages-summary",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   // Finance
   {
@@ -120,7 +120,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Total revenue, tax, and invoice counts for a date range.",
     isPremium: false,
     route: "/reports/finance/revenue-summary",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "unpaid-invoices",
@@ -129,7 +129,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Outstanding invoices awaiting payment.",
     isPremium: false,
     route: "/reports/finance/unpaid-invoices",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "payment-methods",
@@ -138,7 +138,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Revenue split by cash, card, UPI, and other methods.",
     isPremium: false,
     route: "/reports/finance/payment-methods",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   // Appointments
   {
@@ -148,7 +148,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Appointment counts grouped by day or week.",
     isPremium: false,
     route: "/reports/appointments/by-period",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "no-shows",
@@ -157,7 +157,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Appointments marked as no-show in the selected period.",
     isPremium: false,
     route: "/reports/appointments/no-shows",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "completion-rate",
@@ -166,7 +166,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Percentage of appointments completed vs scheduled.",
     isPremium: false,
     route: "/reports/appointments/completion-rate",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   // Team
   {
@@ -176,7 +176,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Revenue attributed to each team member.",
     isPremium: false,
     route: "/reports/team/earnings",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "shift-hours",
@@ -185,7 +185,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Scheduled working hours per team member.",
     isPremium: false,
     route: "/reports/team/shift-hours",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   // Clients
   {
@@ -195,7 +195,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Clients added during the selected date range.",
     isPremium: false,
     route: "/reports/clients/new-clients",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "client-segments",
@@ -204,7 +204,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Overview of custom client segments and counts.",
     isPremium: false,
     route: "/reports/clients/segments",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "top-spenders",
@@ -213,7 +213,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Clients ranked by total spend in the selected period.",
     isPremium: false,
     route: "/reports/clients/top-spenders",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   // Inventory
   {
@@ -223,7 +223,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Current quantity on hand for all stock items.",
     isPremium: false,
     route: "/reports/inventory/stock-levels",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "low-stock",
@@ -232,7 +232,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Items at or below their reorder level.",
     isPremium: false,
     route: "/reports/inventory/low-stock",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
   {
     slug: "purchase-history",
@@ -241,7 +241,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Stock purchase records with supplier and cost details.",
     isPremium: false,
     route: "/reports/inventory/purchase-history",
-    createdBy: "Salon AI",
+    createdBy: "Glow Desk",
   },
 ];
 
