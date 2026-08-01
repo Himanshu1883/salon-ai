@@ -120,19 +120,10 @@ export function ModulesSection() {
       />
 
       <div id="modules-grid">
-        <div className="relative">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {initialModules.map((mod, i) => (
-              <ModuleCard key={mod.id} mod={mod} index={i} />
-            ))}
-          </div>
-
-          {!expanded && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-gradient-to-b from-transparent to-white"
-            />
-          )}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {initialModules.map((mod, i) => (
+            <ModuleCard key={mod.id} mod={mod} index={i} />
+          ))}
         </div>
 
         <AnimatePresence initial={false}>
