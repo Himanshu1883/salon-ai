@@ -392,7 +392,7 @@ export function BillingInvoiceForm({
       customerName: customer.name.trim(),
       customerPhone: customer.phone.trim() || null,
       status: invoiceStatus,
-      subtotal,
+      subtotal: displaySubtotal,
       tax: displayTax,
       total: displayTotal,
       dueDate: dueDate ? new Date(dueDate) : null,
