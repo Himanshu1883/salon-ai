@@ -65,8 +65,11 @@ export function getPlatformSubscriptionLineItem(
   planName: string,
   baseAmount: number
 ): PlatformSubscriptionLineItem {
+  const isTrial = baseAmount === 0;
   return {
-    description: `Glow Desk ${planName} Plan — Monthly Subscription`,
+    description: isTrial
+      ? `Glow Desk ${planName} Plan — Free Trial`
+      : `Glow Desk ${planName} Plan — Monthly Subscription`,
     amount: baseAmount,
   };
 }

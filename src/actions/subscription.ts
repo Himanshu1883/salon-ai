@@ -166,6 +166,47 @@ export async function getSalonSubscriptionStatus(salonId: string) {
   };
 }
 
+export async function generateTrialInvoice(salonId: string) {
+  const subscription = await prisma.salonSubscription.findUnique({
+    where: { salonId },
+  });
+  if (!subscription?.trialEndsAt) {
+    throw new Error("Trial subscription not found");
+  }
+
+  const periodStart = subscription.currentPeriodStart;
+  const periodEnd = subscription.trialEndsAt;
+
+  const existing = await prisma.platformInvoice.findFirst({
+    where: {
+      salonId,
+      amount: 0,
+      periodStart,
+      status: { not: "cancelled" },
+    },
+  });
+  if (existing) return existing;
+
+  const now = new Date();
+  const invoiceNumber = await generateInvoiceNumber(salonId, now);
+
+  return prisma.platformInvoice.create({
+    data: {
+      salonId,
+      invoiceNumber,
+      amount: 0,
+      tax: 0,
+      total: 0,
+      periodStart,
+      periodEnd,
+      dueDate: subscription.trialEndsAt,
+      status: "paid",
+      paidAt: now,
+      notes: "Free trial period — no charge",
+    },
+  });
+}
+
 export async function createTrialSubscription(salonId: string) {
   const salon = await prisma.salon.findUnique({
     where: { id: salonId },
@@ -177,7 +218,7 @@ export async function createTrialSubscription(salonId: string) {
   const { periodStart, periodEnd } = getMonthPeriod(now);
   const trialEndsAt = addDays(now, TRIAL_DAYS);
 
-  return prisma.salonSubscription.create({
+  const subscription = await prisma.salonSubscription.create({
     data: {
       salonId,
       status: "trial",
@@ -189,6 +230,10 @@ export async function createTrialSubscription(salonId: string) {
       trialEndsAt,
     },
   });
+
+  await generateTrialInvoice(salonId);
+
+  return subscription;
 }
 
 export async function generateMonthlyInvoice(salonId: string) {
@@ -284,6 +329,7 @@ export async function payPlatformInvoice(
   });
 
   revalidatePath("/settings/billing");
+  revalidatePath("/settings/subscription");
   revalidatePath("/invoice-due");
   revalidatePath("/dashboard");
 
@@ -299,6 +345,11 @@ export async function payPlatformInvoice(
 }
 
 export async function getBillingPageData() {
+  const session = await requireOwnerOrManager();
+  return getSalonSubscriptionStatus(session.user.salonId);
+}
+
+export async function getSubscriptionPageData() {
   const session = await requireOwnerOrManager();
   return getSalonSubscriptionStatus(session.user.salonId);
 }

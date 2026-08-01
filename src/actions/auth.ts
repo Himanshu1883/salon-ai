@@ -23,7 +23,7 @@ import {
   onboardingSchema,
   resetPasswordSchema,
 } from "@/lib/validations";
-import { createTrialSubscription, generateMonthlyInvoice } from "@/actions/subscription";
+import { createTrialSubscription } from "@/actions/subscription";
 import { generateUniqueSalonSlug } from "@/lib/salon-slug";
 
 const PASSWORD_RESET_SUCCESS_MESSAGE =
@@ -289,7 +289,6 @@ export async function onboardingSignupAction(data: unknown) {
   });
 
   await createTrialSubscription(salon.id);
-  await generateMonthlyInvoice(salon.id);
 
   return {
     success: true,
