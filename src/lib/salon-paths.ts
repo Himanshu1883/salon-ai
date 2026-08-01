@@ -40,6 +40,7 @@ const SALON_ROUTE_MATCHERS = [
   "/settings",
   "/schedule",
   "/invoice-due",
+  "/projects",
 ];
 
 export function isSalonProtectedRoute(pathname: string) {

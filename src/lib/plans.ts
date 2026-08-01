@@ -16,6 +16,7 @@ import {
   Wallet,
   LineChart,
   Receipt,
+  FolderKanban,
 } from "lucide-react";
 
 export type SalonPlan = "BASIC" | "ENTERPRISE";
@@ -35,7 +36,8 @@ export type PlanModule =
   | "marketing"
   | "expense"
   | "analytics"
-  | "settings";
+  | "settings"
+  | "projects";
 
 export type NavItem = {
   href: string;
@@ -91,6 +93,7 @@ const BASIC_MODULES: PlanModule[] = [
   "staff",
   "inventory",
   "reports",
+  "projects",
 ];
 
 const ENTERPRISE_MODULES: PlanModule[] = [
@@ -106,6 +109,7 @@ const ENTERPRISE_MODULES: PlanModule[] = [
 
 export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: "dashboard" },
+  { href: "/projects", label: "Projects", icon: FolderKanban, module: "projects" },
   { href: "/sales/appointments", label: "Appointments", icon: Calendar, module: "appointments" },
   { href: "/check-in", label: "Walk-ins", icon: UserCheck, module: "walk-in" },
   { href: "/clients", label: "Customers", icon: Contact, module: "customers" },
@@ -155,6 +159,7 @@ function matchPath(pathname: string, prefix: string): boolean {
 
 export function getModuleForPath(pathname: string): PlanModule | null {
   if (pathname === "/dashboard" || pathname.startsWith("/dashboard/")) return "dashboard";
+  if (matchPath(pathname, "/projects")) return "projects";
   if (
     matchPath(pathname, "/sales/appointments") ||
     matchPath(pathname, "/appointments")
@@ -216,6 +221,7 @@ export function getRestrictedModuleLabel(module: PlanModule): string {
     expense: "Expenses",
     analytics: "Analytics",
     settings: "Settings",
+    projects: "Projects",
   };
   return labels[module];
 }

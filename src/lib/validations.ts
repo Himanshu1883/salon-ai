@@ -368,3 +368,14 @@ export const shiftSchema = z
     },
     { message: "Start and end time required when working" }
   );
+
+export const projectSchema = z.object({
+  name: z.string().min(1, "Project name is required"),
+  description: z.string().optional(),
+  status: z
+    .enum(["PLANNING", "IN_PROGRESS", "ON_HOLD", "COMPLETED", "CANCELED"])
+    .optional(),
+  dueDate: z.string().optional(),
+  assignedEmployeeId: z.string().optional(),
+  priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]).optional(),
+});

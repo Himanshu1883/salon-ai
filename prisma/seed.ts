@@ -241,6 +241,63 @@ async function seedDemoShifts(salonId: string, employeeIds: string[]) {
   await prisma.shift.createMany({ data: shifts });
 }
 
+async function seedDemoProjects(
+  salonId: string,
+  employeeIds: string[]
+) {
+  const existing = await prisma.project.count({ where: { salonId } });
+  if (existing > 0) return;
+
+  const [ownerId, stylistId] = employeeIds;
+  const now = new Date();
+
+  await prisma.project.createMany({
+    data: [
+      {
+        salonId,
+        name: "Summer menu refresh",
+        description: "Update service pricing and add seasonal packages",
+        status: "PLANNING",
+        priority: "MEDIUM",
+        dueDate: new Date(now.getFullYear(), now.getMonth() + 1, 15),
+        assignedEmployeeId: ownerId ?? null,
+      },
+      {
+        salonId,
+        name: "Reception area renovation",
+        description: "New seating, lighting, and product display wall",
+        status: "IN_PROGRESS",
+        priority: "HIGH",
+        dueDate: new Date(now.getFullYear(), now.getMonth() + 2, 1),
+        assignedEmployeeId: stylistId ?? ownerId ?? null,
+      },
+      {
+        salonId,
+        name: "Staff training — balayage",
+        status: "ON_HOLD",
+        priority: "LOW",
+        assignedEmployeeId: stylistId ?? null,
+      },
+      {
+        salonId,
+        name: "Instagram launch campaign",
+        description: "Before/after reels and booking link in bio",
+        status: "COMPLETED",
+        priority: "MEDIUM",
+        dueDate: new Date(now.getFullYear(), now.getMonth() - 1, 20),
+      },
+      {
+        salonId,
+        name: "Old POS migration",
+        status: "CANCELED",
+        description: "Replaced by Salon AI billing module",
+      },
+    ],
+  });
+
+  console.log("Demo projects seeded.");
+}
+
 async function main() {
   await syncDemoUserPasswords(prisma);
 
@@ -301,6 +358,15 @@ async function main() {
         "test@abc.com",
       ]);
       await fixInvoiceLineItemDescriptions(prisma);
+      const allEmployees = await prisma.employee.findMany({
+        where: { salonId: salon.id, status: "active" },
+        orderBy: { name: "asc" },
+        take: 3,
+      });
+      await seedDemoProjects(
+        salon.id,
+        allEmployees.map((e) => e.id)
+      );
     }
     return;
   }
@@ -964,6 +1030,10 @@ async function main() {
   await seedSuperAdmin();
   await seedInventoryDemoForSalonEmails(prisma, ["demo@salon.ai", "test@abc.com"]);
   await fixInvoiceLineItemDescriptions(prisma);
+  await seedDemoProjects(
+    salon.id,
+    employees.map((e) => e.id)
+  );
 }
 
 main()
