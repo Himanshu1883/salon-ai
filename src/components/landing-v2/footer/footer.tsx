@@ -2,17 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight } from "lucide-react";
 import { motion, useInView, useReducedMotion } from "framer-motion";
 import {
   FOOTER_COLUMNS,
   FOOTER_SOCIAL,
   FOOTER_STATS,
 } from "../constants";
-import {
-  LANDING_CONTAINER,
-  primaryGradientButtonClass,
-} from "../ui/landing-primitives";
+import { LANDING_CONTAINER } from "../ui/landing-primitives";
 import { BrandMark } from "../ui/brand-logo";
 import { cn } from "@/lib/utils";
 
@@ -196,56 +192,8 @@ export function Footer() {
       </div>
 
       <div className={cn(LANDING_CONTAINER, "relative")}>
-        {/* CTA band */}
-        <motion.div
-          initial={instant ? false : { opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-60px" }}
-          transition={{ duration: 0.6, ease: EASE }}
-          className="border-b border-white/[0.08] py-16 md:py-20 lg:py-24"
-        >
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between lg:gap-12">
-            <div className="max-w-2xl">
-              <p className="font-mono text-[11px] font-medium uppercase tracking-[0.22em] text-[#C4B5FD]/80">
-                Salon AI ERP
-              </p>
-              <h2 className="landing-display mt-4 text-3xl font-medium leading-[1.1] tracking-tight text-white sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-                Ready to run a salon that{" "}
-                <span className="italic text-[#C4B5FD]">feels effortless?</span>
-              </h2>
-              <p className="mt-4 max-w-lg text-base leading-relaxed text-white/50">
-                Appointments, billing, inventory, and AI — one platform built for
-                how modern salons actually work.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                href="/login"
-                className={primaryGradientButtonClass(
-                  "rounded-full px-7 py-3.5 text-sm focus-visible:ring-offset-[#0C0A09]"
-                )}
-              >
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link
-                href="mailto:support@salonai.com"
-                className={cn(
-                  "inline-flex items-center justify-center rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/90",
-                  "transition-[transform,background-color,border-color] duration-300",
-                  "hover:-translate-y-px hover:border-white/30 hover:bg-white/[0.04]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C4B5FD]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0C0A09]"
-                )}
-              >
-                Book Demo
-              </Link>
-            </div>
-          </div>
-        </motion.div>
-
         {/* Brand + nav */}
-        <div className="grid gap-12 border-b border-white/[0.08] py-14 md:py-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+        <div className="grid gap-12 border-b border-white/[0.08] pt-14 pb-14 md:pt-16 md:pb-16 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
           <motion.div
             initial={instant ? false : { opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}

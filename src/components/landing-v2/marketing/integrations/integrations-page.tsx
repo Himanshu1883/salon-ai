@@ -133,7 +133,7 @@ export function IntegrationsPageContent() {
 
   return (
     <div className="bg-[#FAF9F7] text-[#1B1714]">
-      {/* Hero — 100vh, /bgg.jpg (different from homepage /salon.jpg) */}
+      {/* Hero — Docs-style centered 100vh banner */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
@@ -144,65 +144,77 @@ export function IntegrationsPageContent() {
             className="object-cover object-center"
             sizes="100vw"
           />
-          <div className="absolute inset-0 bg-[#F7F3EC]/25" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/88 via-[#F7F3EC]/55 to-[#F7F3EC]/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/45 via-transparent to-[#F7F3EC]/15" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_50%_at_80%_0%,rgba(91,33,182,0.1),transparent_55%)]" />
+          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
           <div className="hero-editorial__grain absolute inset-0 opacity-90" />
         </div>
 
         <div
           className={cn(
             CONTAINER,
-            "relative z-10 flex min-h-[100svh] flex-col justify-center",
-            "pb-16 pt-[calc(var(--landing-nav-h)+3rem)]"
+            "relative z-10 flex min-h-[100svh] flex-col items-center justify-center text-center",
+            "pb-16 pt-[calc(var(--landing-nav-h)+2rem)]"
           )}
         >
-          <Reveal>
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#1B1714]/45">
-              Integrations · Salon AI ERP
-            </p>
-          </Reveal>
+          <div className="max-w-4xl">
+            <Reveal>
+              <div className="mb-6 flex flex-col items-center gap-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/45">
+                  Integrations · Salon AI ERP
+                </p>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 px-4 py-1.5 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-[#5B21B6]"
+                    aria-hidden
+                  />
+                  One connected platform
+                </span>
+              </div>
+            </Reveal>
 
-          <Reveal delay={0.08}>
-            <h1 className="landing-display mt-6 max-w-4xl text-[2.5rem] font-medium leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-[4.25rem]">
-              Complex workflows.
-              <br />
-              Busy salon floors.
-              <br />
-              <span className="italic text-[#5B21B6]">One connected platform.</span>
-            </h1>
-          </Reveal>
+            <Reveal delay={0.08}>
+              <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight text-[#1B1714] sm:text-5xl md:text-6xl lg:text-[3.75rem]">
+                Complex workflows. Busy floors.{" "}
+                <span className="italic text-[#5B21B6]">
+                  One connected platform.
+                </span>
+              </h1>
+            </Reveal>
 
-          <Reveal delay={0.16}>
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
-              Salon AI connects WhatsApp, UPI payments, POS, inventory, marketing,
-              and multi-branch ops — so your team runs one system from booking to
-              checkout.
-            </p>
-          </Reveal>
+            <Reveal delay={0.14}>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
+                Salon AI connects WhatsApp, UPI payments, POS, inventory,
+                marketing, and multi-branch ops — so your team runs one system
+                from booking to checkout.
+              </p>
+            </Reveal>
 
-          <Reveal delay={0.24} className="mt-10 flex flex-wrap gap-3">
-            <Link href="/login" className={primaryBtn}>
-              Start Free Trial
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-            <Link href="/documentation" className={outlineBtn}>
-              View Documentation
-            </Link>
-          </Reveal>
+            <Reveal
+              delay={0.22}
+              className="mt-10 flex flex-wrap items-center justify-center gap-3"
+            >
+              <Link href="/login" className={primaryBtn}>
+                Start Free Trial
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link href="/documentation" className={outlineBtn}>
+                View Documentation
+              </Link>
+            </Reveal>
 
-          <Reveal delay={0.32} className="mt-16">
-            <p className="text-sm text-[#1B1714]/45">
-              Shaping the{" "}
-              <em className="not-italic italic text-[#5B21B6]">future</em> of
-              salon operations
-            </p>
-            <p className="mt-2 text-xs text-[#1B1714]/35">
-              Trusted by {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+ salons
-              across India
-            </p>
-          </Reveal>
+            <Reveal delay={0.3} className="mt-12">
+              <p className="text-sm text-[#1B1714]/45">
+                Shaping the{" "}
+                <em className="not-italic italic text-[#5B21B6]">future</em> of
+                salon operations
+              </p>
+              <p className="mt-2 text-xs text-[#1B1714]/35">
+                Trusted by {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+
+                salons across India
+              </p>
+            </Reveal>
+          </div>
         </div>
       </section>
 

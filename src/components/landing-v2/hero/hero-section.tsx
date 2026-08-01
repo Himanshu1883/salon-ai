@@ -36,8 +36,8 @@ export function HeroSection() {
           className="object-cover object-center"
           sizes="100vw"
         />
-        <div className="absolute inset-0 bg-[#F7F3EC]/5" />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/52 via-[#F7F3EC]/10 to-[#F7F3EC]/10" />
+        <div className="absolute inset-0 bg-[#F7F3EC]/10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/88 via-[#F7F3EC]/45 to-[#F7F3EC]/15" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" />
         <div className="hero-editorial__grain absolute inset-0 opacity-95" />
       </div>
@@ -71,7 +71,7 @@ export function HeroSection() {
           <motion.p
             data-motion=""
             {...fadeUp(STAGGER * 2, reduced)}
-            className="mx-auto mt-3 max-w-[20rem] text-sm leading-relaxed text-[#1B1714]/75 sm:mt-4 sm:max-w-md sm:text-[15px] md:text-base lg:mx-0 lg:max-w-xl"
+            className="mx-auto mt-3 max-w-[20rem] text-sm font-medium leading-relaxed text-[#1B1714] sm:mt-4 sm:max-w-md sm:text-[15px] md:text-base lg:mx-0 lg:max-w-xl"
           >
             {HERO.subtitle}
           </motion.p>
@@ -85,10 +85,10 @@ export function HeroSection() {
               <span
                 key={feature}
                 className={cn(
-                  "rounded-full border border-[#1B1714]/20 bg-transparent px-3 py-1.5",
-                  "text-xs text-[#1B1714]/80 md:text-[13px]",
+                  "rounded-full border border-[#1B1714]/15 bg-[#F7F3EC]/90 px-3 py-1.5 shadow-sm backdrop-blur-sm",
+                  "text-xs font-medium text-[#1B1714] md:text-[13px]",
                   "transition-colors duration-200",
-                  "hover:border-[#2F6F5E] hover:bg-[#2F6F5E] hover:text-[#F7F3EC]"
+                  "hover:border-[#5B21B6] hover:bg-[#5B21B6] hover:text-[#F7F3EC]"
                 )}
               >
                 {feature}
@@ -121,7 +121,7 @@ export function HeroSection() {
                 "transition-[transform,box-shadow,background-color,border-color] duration-200",
                 "hover:-translate-y-0.5 hover:border-[#1B1714]/50 hover:bg-white/80",
                 "hover:shadow-[0_4px_16px_-6px_rgba(27,23,20,0.12)]",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2F6F5E] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B21B6]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]",
                 "lg:w-auto lg:bg-transparent lg:px-8 lg:py-3.5 lg:backdrop-blur-none"
               )}
             >

@@ -214,7 +214,7 @@ export function AboutPageContent() {
 
   return (
     <div className="bg-[#FAF9F7] text-[#1B1714]">
-      {/* ── Hero ── */}
+      {/* ── Hero — Docs-style centered 100vh banner ── */}
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
@@ -225,69 +225,63 @@ export function AboutPageContent() {
             className="object-cover object-center"
             sizes="100vw"
           />
-          {/* Light wash — keep photo readable under ivory copy */}
-          <div className="absolute inset-0 bg-[#F7F3EC]/25" />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/88 via-[#F7F3EC]/55 to-[#F7F3EC]/20" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/50 via-transparent to-[#F7F3EC]/15" />
+          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
           <div className="hero-editorial__grain absolute inset-0 opacity-90" />
         </div>
 
         <div
           className={cn(
             ABOUT_CONTAINER,
-            "relative z-10 flex min-h-[100svh] flex-col justify-center",
-            "pb-16 pt-[calc(var(--landing-nav-h)+3rem)]"
+            "relative z-10 flex min-h-[100svh] flex-col items-center justify-center text-center",
+            "pb-16 pt-[calc(var(--landing-nav-h)+2rem)]"
           )}
         >
-          <Reveal>
-            <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/50">
-              Trusted by {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+ salons
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.08} className="mt-6">
-            <BracketLabel>Welcome to Salon AI</BracketLabel>
-          </Reveal>
-
-          <Reveal delay={0.12}>
-            <h1 className="landing-display mt-5 max-w-4xl text-[2.5rem] font-medium leading-[1.05] tracking-tight text-[#1B1714] sm:text-5xl md:text-6xl lg:text-[4.5rem]">
-              salons that{" "}
-              <span className="italic text-[#5B21B6]">run smarter</span>
-            </h1>
-          </Reveal>
-
-          <Reveal delay={0.2}>
-            <p className="mt-6 max-w-xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
-              {BRAND.tagline}. Appointments, billing, inventory, and AI — one
-              platform built for how modern salons actually work.
-            </p>
-          </Reveal>
-
-          <Reveal delay={0.28} className="mt-10 flex flex-wrap gap-3">
-            <Link
-              href="/login"
-              className={aboutGradientButtonClass("px-7 py-3.5 text-sm")}
-            >
-              Start Free Trial
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-            <Link href="/#pricing" className={aboutOutlineButtonClass()}>
-              Explore Platform
-            </Link>
-          </Reveal>
-
-          <Reveal delay={0.36} className="mt-14 flex flex-wrap gap-x-6 gap-y-2">
-            {["Appointments", "POS & Billing", "CRM", "AI Analytics"].map(
-              (item) => (
-                <span
-                  key={item}
-                  className="text-sm text-[#1B1714]/45"
-                >
-                  {item}
+          <div className="max-w-4xl">
+            <Reveal>
+              <div className="mb-6 flex flex-col items-center gap-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/45">
+                  Trusted by {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+
+                  salons
+                </p>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 px-4 py-1.5 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-[#5B21B6]"
+                    aria-hidden
+                  />
+                  Welcome to Salon AI
                 </span>
-              )
-            )}
-          </Reveal>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.08}>
+              <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight text-[#1B1714] sm:text-5xl md:text-6xl lg:text-[3.75rem]">
+                Salons that run smarter on Salon AI
+              </h1>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
+                {BRAND.tagline}. Appointments, billing, inventory, and AI — one
+                platform built for how modern salons actually work.
+              </p>
+            </Reveal>
+            <Reveal
+              delay={0.18}
+              className="mt-10 flex flex-wrap items-center justify-center gap-3"
+            >
+              <Link
+                href="/login"
+                className={aboutGradientButtonClass("px-7 py-3.5 text-sm")}
+              >
+                Start Free Trial
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <Link href="/#pricing" className={aboutOutlineButtonClass()}>
+                Explore Platform
+              </Link>
+            </Reveal>
+          </div>
         </div>
       </section>
 
