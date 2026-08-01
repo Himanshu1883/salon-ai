@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { Loader2, Mail, Phone, Plus, Search } from "lucide-react";
 import { searchCustomers, getCustomerStats } from "@/actions/customers";
 import { Input } from "@/components/ui/input";
@@ -40,6 +48,70 @@ type CustomerResult = {
   lastVisit?: Date | null;
 };
 
+function normalizePhoneDigits(phone: string | null | undefined): string {
+  return (phone ?? "").replace(/\D/g, "");
+}
+
+function phoneDigitsMatch(
+  storedPhone: string | null | undefined,
+  queryDigits: string
+): boolean {
+  const stored = normalizePhoneDigits(storedPhone);
+  if (!stored || !queryDigits) return false;
+  return (
+    stored === queryDigits ||
+    stored.endsWith(queryDigits) ||
+    queryDigits.endsWith(stored)
+  );
+}
+
+function SearchDropdownPortal({
+  anchorRef,
+  open,
+  children,
+  className,
+}: {
+  anchorRef: React.RefObject<HTMLElement | null>;
+  open: boolean;
+  children: ReactNode;
+  className?: string;
+}) {
+  const [style, setStyle] = useState<React.CSSProperties>({});
+
+  const updatePosition = useCallback(() => {
+    const anchor = anchorRef.current;
+    if (!anchor) return;
+    const rect = anchor.getBoundingClientRect();
+    setStyle({
+      position: "fixed",
+      top: rect.bottom + 8,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }, [anchorRef]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
+
+  if (!open || typeof document === "undefined") return null;
+
+  return createPortal(
+    <div style={style} className={className}>
+      {children}
+    </div>,
+    document.body
+  );
+}
+
 type CustomerSearchProps = {
   value: InvoiceCustomer;
   onChange: (customer: InvoiceCustomer) => void;
@@ -60,6 +132,7 @@ export function CustomerSearch({
   const [highlightIndex, setHighlightIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const searchSeq = useRef(0);
 
   useEffect(() => {
     setQuery(value.name);
@@ -73,12 +146,15 @@ export function CustomerSearch({
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (containerRef.current?.contains(target)) return;
       if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        target instanceof Element &&
+        target.closest("[data-invoice-customer-dropdown]")
       ) {
-        setOpen(false);
+        return;
       }
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -87,37 +163,54 @@ export function CustomerSearch({
   useEffect(() => {
     if (query.length < 2) {
       setResults([]);
+      setOpen(false);
+      setLoading(false);
       return;
     }
 
+    const seq = ++searchSeq.current;
     const timer = setTimeout(async () => {
       setLoading(true);
-      const customers = await searchCustomers(query);
-      const enriched = await Promise.all(
-        customers.map(async (customer) => {
-          let lastVisit: Date | null = null;
-          try {
-            const stats = await getCustomerStats(customer.id);
-            if (stats?.serviceHistory?.[0]?.date) {
-              lastVisit = new Date(stats.serviceHistory[0].date);
-            }
-          } catch {
-            lastVisit = null;
-          }
-          return {
-            id: customer.id,
-            name: customer.name,
-            phone: customer.phone,
-            email: customer.email,
-            loyaltyPoints: customer.loyaltyPoints ?? 0,
-            lastVisit,
-          };
-        })
-      );
-      setResults(enriched);
-      setLoading(false);
       setOpen(true);
-      setHighlightIndex(0);
+      try {
+        const customers = await searchCustomers(query);
+        if (seq !== searchSeq.current) return;
+
+        const basic: CustomerResult[] = customers.map((customer) => ({
+          id: customer.id,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email,
+          loyaltyPoints: customer.loyaltyPoints ?? 0,
+          lastVisit: null,
+        }));
+        setResults(basic);
+        setLoading(false);
+        setHighlightIndex(0);
+
+        void Promise.all(
+          basic.map(async (customer) => {
+            try {
+              const stats = await getCustomerStats(customer.id);
+              if (seq !== searchSeq.current) return;
+              const lastVisit = stats?.serviceHistory?.[0]?.date
+                ? new Date(stats.serviceHistory[0].date)
+                : null;
+              setResults((prev) =>
+                prev.map((row) =>
+                  row.id === customer.id ? { ...row, lastVisit } : row
+                )
+              );
+            } catch {
+              // Keep basic result if stats fail.
+            }
+          })
+        );
+      } catch {
+        if (seq !== searchSeq.current) return;
+        setResults([]);
+        setLoading(false);
+      }
     }, 250);
 
     return () => clearTimeout(timer);
@@ -165,6 +258,8 @@ export function CustomerSearch({
       selectCustomer(results[highlightIndex]);
     }
   }
+
+  const showDropdown = open && (loading || results.length > 0);
 
   return (
     <div className="space-y-2.5">
@@ -217,8 +312,12 @@ export function CustomerSearch({
           </button>
         </div>
 
-        {open && (loading || results.length > 0) && (
-          <div className="absolute z-50 mt-2 max-h-72 w-full overflow-auto rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]">
+        <SearchDropdownPortal
+          anchorRef={containerRef}
+          open={showDropdown}
+          className="max-h-72 overflow-auto rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
+        >
+          <div data-invoice-customer-dropdown>
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -274,7 +373,7 @@ export function CustomerSearch({
               })
             )}
           </div>
-        )}
+        </SearchDropdownPortal>
       </div>
       {error && <p className="text-xs text-[#EF4444]">{error}</p>}
     </div>
@@ -292,6 +391,8 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchSeq = useRef(0);
+  const autoSelectedRef = useRef<string | null>(null);
 
   useEffect(() => {
     setQuery(value.phone);
@@ -299,54 +400,89 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node;
+      if (containerRef.current?.contains(target)) return;
       if (
-        containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        target instanceof Element &&
+        target.closest("[data-invoice-phone-dropdown]")
       ) {
-        setOpen(false);
+        return;
       }
+      setOpen(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  const selectCustomer = useCallback(
+    (customer: CustomerResult) => {
+      onChange({
+        id: customer.id,
+        name: customer.name,
+        phone: customer.phone ?? "",
+        email: customer.email ?? "",
+        loyaltyPoints: customer.loyaltyPoints,
+      });
+      setQuery(customer.phone ?? "");
+      setOpen(false);
+    },
+    [onChange]
+  );
+
   useEffect(() => {
     const digits = query.replace(/\D/g, "");
     if (digits.length < 4) {
       setResults([]);
+      setOpen(false);
+      setLoading(false);
+      autoSelectedRef.current = null;
       return;
     }
 
+    const seq = ++searchSeq.current;
     const timer = setTimeout(async () => {
       setLoading(true);
-      const customers = await searchCustomers(query);
-      setResults(
-        customers.map((c) => ({
+      setOpen(true);
+      try {
+        const customers = await searchCustomers(digits);
+        if (seq !== searchSeq.current) return;
+
+        const mapped: CustomerResult[] = customers.map((c) => ({
           id: c.id,
           name: c.name,
           phone: c.phone,
           email: c.email,
           loyaltyPoints: c.loyaltyPoints ?? 0,
-        }))
-      );
-      setLoading(false);
-      setOpen(true);
+        }));
+        setResults(mapped);
+        setLoading(false);
+
+        const exactMatches = mapped.filter((customer) =>
+          phoneDigitsMatch(customer.phone, digits)
+        );
+
+        if (
+          exactMatches.length === 1 &&
+          autoSelectedRef.current !== exactMatches[0].id
+        ) {
+          autoSelectedRef.current = exactMatches[0].id;
+          selectCustomer(exactMatches[0]);
+          return;
+        }
+
+        setOpen(mapped.length > 0);
+      } catch {
+        if (seq !== searchSeq.current) return;
+        setResults([]);
+        setLoading(false);
+        setOpen(false);
+      }
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, selectCustomer]);
 
-  function selectCustomer(customer: CustomerResult) {
-    onChange({
-      id: customer.id,
-      name: customer.name,
-      phone: customer.phone ?? "",
-      email: customer.email ?? "",
-      loyaltyPoints: customer.loyaltyPoints,
-    });
-    setQuery(customer.phone ?? "");
-    setOpen(false);
-  }
+  const showDropdown = open && (loading || results.length > 0);
 
   return (
     <div className="space-y-2.5">
@@ -362,14 +498,25 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
           onChange={(e) => {
             const next = e.target.value;
             setQuery(next);
-            onChange({ ...value, phone: next, id: value.id });
+            autoSelectedRef.current = null;
+            onChange({
+              ...value,
+              phone: next,
+              id: undefined,
+              email: value.id ? "" : value.email,
+              loyaltyPoints: value.id ? 0 : value.loyaltyPoints,
+            });
           }}
           onFocus={() => query.replace(/\D/g, "").length >= 4 && setOpen(true)}
           placeholder="Search phone number..."
           className={cn(invoiceModalStyles.input, "pl-11")}
         />
-        {open && (loading || results.length > 0) && (
-          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]">
+        <SearchDropdownPortal
+          anchorRef={containerRef}
+          open={showDropdown}
+          className="overflow-hidden rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
+        >
+          <div data-invoice-phone-dropdown>
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -393,7 +540,7 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
               ))
             )}
           </div>
-        )}
+        </SearchDropdownPortal>
       </div>
     </div>
   );

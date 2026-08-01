@@ -16,19 +16,32 @@ function invalidateCustomersCache(salonId: string) {
   );
 }
 
+function buildCustomerSearchConditions(query: string) {
+  const q = query.trim();
+  const digits = q.replace(/\D/g, "");
+  const conditions: Array<Record<string, unknown>> = [
+    { name: { contains: q, mode: "insensitive" } },
+    { email: { contains: q, mode: "insensitive" } },
+  ];
+
+  if (digits.length >= 4) {
+    conditions.push({ phone: { contains: digits } });
+  }
+  if (q !== digits) {
+    conditions.push({ phone: { contains: q } });
+  }
+
+  return conditions;
+}
+
 export async function searchCustomers(query: string) {
   const session = await requireSession();
   if (!query.trim()) return [];
 
-  const q = query.trim();
   return prisma.customer.findMany({
     where: {
       salonId: session.user.salonId,
-      OR: [
-        { name: { contains: q } },
-        { phone: { contains: q } },
-        { email: { contains: q } },
-      ],
+      OR: buildCustomerSearchConditions(query),
     },
     orderBy: { name: "asc" },
     take: 10,
@@ -110,12 +123,7 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
 
   const where: Record<string, unknown> = { salonId };
   if (options?.search?.trim()) {
-    const q = options.search.trim();
-    where.OR = [
-      { name: { contains: q } },
-      { phone: { contains: q } },
-      { email: { contains: q } },
-    ];
+    where.OR = buildCustomerSearchConditions(options.search);
   }
 
   const [customers, totalCount, paidInvoices, completedCheckIns, completedAppointments] =
