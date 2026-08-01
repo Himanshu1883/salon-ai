@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { onboardingSignupAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -746,7 +745,6 @@ function getStepErrors(step: number, data: FormData): Record<string, string> {
 }
 
 export default function OnboardingWizard() {
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -792,34 +790,44 @@ export default function OnboardingWizard() {
     setLoading(true);
     setSubmitError("");
 
-    const result = await onboardingSignupAction(formData);
+    try {
+      const result = await onboardingSignupAction(formData);
 
-    if (result.error) {
-      setSubmitError(result.error);
+      if (result.error) {
+        setSubmitError(result.error);
+        return;
+      }
+
+      const signInResult = await signIn("credentials", {
+        email: formData.email,
+        password: formData.password,
+        salonSlug: result.salonSlug,
+        redirect: false,
+      });
+
+      const welcomeName = encodeURIComponent(
+        result.salonName ?? formData.salonName
+      );
+      const dashboardPath = result.salonSlug
+        ? `/${result.salonSlug}/dashboard?welcome=1&name=${welcomeName}`
+        : `/dashboard?welcome=1&name=${welcomeName}`;
+
+      if (signInResult?.error) {
+        window.location.assign(
+          result.salonSlug ? `/${result.salonSlug}/login` : "/"
+        );
+        return;
+      }
+
+      // Hard navigation: router.push often fails to leave /signup after credentials signIn.
+      window.location.assign(dashboardPath);
+    } catch {
+      setSubmitError(
+        "Something went wrong creating your salon. Please try again."
+      );
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const signInResult = await signIn("credentials", {
-      email: formData.email,
-      password: formData.password,
-      salonSlug: result.salonSlug,
-      redirect: false,
-    });
-
-    setLoading(false);
-
-    if (signInResult?.error) {
-      router.push(result.salonSlug ? `/${result.salonSlug}/login` : "/");
-      return;
-    }
-
-    const welcomeName = encodeURIComponent(result.salonName ?? formData.salonName);
-    const dashboardPath = result.salonSlug
-      ? `/${result.salonSlug}/dashboard?welcome=1&name=${welcomeName}`
-      : `/dashboard?welcome=1&name=${welcomeName}`;
-    router.push(dashboardPath);
-    router.refresh();
   }
 
   const currentStepMeta = ONBOARDING_STEPS[step - 1];

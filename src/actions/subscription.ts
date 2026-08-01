@@ -231,7 +231,11 @@ export async function createTrialSubscription(salonId: string) {
     },
   });
 
-  await generateTrialInvoice(salonId);
+  try {
+    await generateTrialInvoice(salonId);
+  } catch (error) {
+    console.error("[subscription] trial invoice generation failed:", error);
+  }
 
   return subscription;
 }

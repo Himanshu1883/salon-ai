@@ -288,7 +288,11 @@ export async function onboardingSignupAction(data: unknown) {
     return createdSalon;
   });
 
-  await createTrialSubscription(salon.id);
+  try {
+    await createTrialSubscription(salon.id);
+  } catch (error) {
+    console.error("[signup] trial subscription setup failed:", error);
+  }
 
   return {
     success: true,
