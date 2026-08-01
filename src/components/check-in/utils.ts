@@ -32,11 +32,11 @@ export function getServiceIconColors(category: string): {
   text: string;
 } {
   const key = category.toLowerCase();
-  if (key.includes("color")) return { bg: "bg-[#FEF3C7]", text: "text-[#D97706]" };
-  if (key.includes("spa")) return { bg: "bg-[#D1FAE5]", text: "text-[#059669]" };
-  if (key.includes("facial")) return { bg: "bg-[#DBEAFE]", text: "text-[#2563EB]" };
-  if (key.includes("nail")) return { bg: "bg-[#FCE7F3]", text: "text-[#DB2777]" };
-  return { bg: "bg-[#EDE9FE]", text: "text-[#6C3BFF]" };
+  if (key.includes("color")) return { bg: "bg-amber-100", text: "text-amber-600" };
+  if (key.includes("spa")) return { bg: "bg-emerald-100", text: "text-emerald-600" };
+  if (key.includes("facial")) return { bg: "bg-blue-100", text: "text-blue-600" };
+  if (key.includes("nail")) return { bg: "bg-pink-100", text: "text-pink-600" };
+  return { bg: "bg-violet-100", text: "text-violet-700" };
 }
 
 export function filterServices(

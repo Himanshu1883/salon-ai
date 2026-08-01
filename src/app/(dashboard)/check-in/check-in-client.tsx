@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, Undo2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Shield,
+  Radio,
+  Bell,
+  Undo2,
+} from "lucide-react";
 import { checkInCustomer } from "@/actions/queue";
 import { CheckInHeader } from "@/components/check-in/check-in-header";
 import { CustomerInfoCard } from "@/components/check-in/customer-info-card";
@@ -189,150 +195,164 @@ export function CheckInClient({
     });
   }
 
+  const trustItems = [
+    {
+      icon: Shield,
+      title: "Secure & Private",
+      desc: "Customer data encrypted and protected",
+    },
+    {
+      icon: Radio,
+      title: "Real-time Queue",
+      desc: "Instant updates across all devices",
+    },
+    {
+      icon: Bell,
+      title: "Smart Notifications",
+      desc: "Alerts when your turn is near",
+    },
+  ];
+
   return (
-    <div className="-mx-4 min-h-[calc(100vh-8rem)] bg-[#F7F8FC] px-4 pb-24 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-      <div className="space-y-6 py-2">
-        <CheckInHeader
-          recentCustomers={recentCustomers}
-          onSelectRecent={handleSelectRecent}
-          queueCount={queueEntries.length}
-        />
+    <div className="space-y-5 pb-24 sm:space-y-6">
+      <CheckInHeader
+        recentCustomers={recentCustomers}
+        onSelectRecent={handleSelectRecent}
+        queueCount={queueEntries.length}
+        selectedServicesCount={selectedServices.length}
+      />
 
-        <AnimatePresence>
-          {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-emerald-800">
-                  Customer checked in successfully!
-                </p>
-                <p className="text-sm text-emerald-700">
-                  Queue position #{success.position}
-                </p>
-              </div>
-              {showUndo && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-emerald-700 hover:bg-emerald-100"
-                  onClick={() => {
-                    setSuccess(null);
-                    setShowUndo(false);
-                  }}
-                >
-                  <Undo2 className="h-4 w-4" />
-                  Dismiss
-                </Button>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <div className="grid gap-6 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px]">
-          <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-            <CustomerInfoCard
-              key={`${prefill?.customerId}-${prefill?.name}`}
-              defaultCustomerId={prefill?.customerId}
-              defaultName={prefill?.name}
-              defaultPhone={prefill?.phone}
-              preferredStylist={preferredStylist}
-              onPreferredStylistChange={setPreferredStylist}
-              stylists={employees}
-            />
-
-            <ServiceSelection
-              services={services}
-              selectedIds={selectedServices}
-              onToggle={toggleService}
-            />
-
-            <StylistSelection
-              employees={employees}
-              services={services}
-              selectedServiceIds={selectedServices}
-              selectedStylistId={selectedStylist}
-              onSelect={setSelectedStylist}
-            />
-
-            {selectedServices.length > 0 && (
-              <div className="lg:hidden">
-                <EstimatedBillCard
-                  services={services}
-                  selectedIds={selectedServices}
-                />
-              </div>
-            )}
-
-            {error && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600"
-              >
-                {error}
-              </motion.p>
-            )}
-
-            <CheckInActionBar
-              loading={loading}
-              canSubmit={selectedServices.length > 0}
-              onCancel={handleCancel}
-              onSaveDraft={handleSaveDraft}
-              onCheckInAndStart={handleCheckInAndStart}
-            />
-          </form>
-
-          <aside className="space-y-4">
-            {selectedServices.length > 0 && (
-              <div className="hidden lg:block">
-                <EstimatedBillCard
-                  services={services}
-                  selectedIds={selectedServices}
-                />
-              </div>
-            )}
-            <QueueDashboard
-              queueEntries={queueEntries}
-              completedEntries={completedEntries}
-              estimatedWait={localEstimatedWait}
-              billingStats={billingStats}
-              employeeCount={employees.length}
-            />
-          </aside>
-        </div>
-
-        <div className="grid gap-4 border-t border-[#E8ECF4] pt-6 sm:grid-cols-3">
-          {[
-            {
-              title: "Secure & Private",
-              desc: "Customer data encrypted and protected",
-            },
-            {
-              title: "Real-time Queue",
-              desc: "Instant updates across all devices",
-            },
-            {
-              title: "Smart Notifications",
-              desc: "Alerts when your turn is near",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="rounded-2xl bg-white p-4 text-center shadow-sm"
-            >
-              <p className="text-sm font-semibold text-[#1C103D]">{item.title}</p>
-              <p className="mt-1 text-xs text-[#6B7280]">{item.desc}</p>
+      <AnimatePresence>
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="flex items-center gap-3 rounded-[20px] border border-emerald-200/60 bg-emerald-50/90 p-4 shadow-sm backdrop-blur-sm"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 ring-2 ring-emerald-200/60">
+              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
-          ))}
-        </div>
+            <div className="flex-1">
+              <p className="font-semibold text-emerald-800">
+                Customer checked in successfully!
+              </p>
+              <p className="text-sm text-emerald-700">
+                Queue position #{success.position}
+              </p>
+            </div>
+            {showUndo && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="rounded-xl text-emerald-700 hover:bg-emerald-100/80"
+                onClick={() => {
+                  setSuccess(null);
+                  setShowUndo(false);
+                }}
+              >
+                <Undo2 className="h-4 w-4" />
+                Dismiss
+              </Button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="grid gap-5 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] xl:gap-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+          <CustomerInfoCard
+            key={`${prefill?.customerId}-${prefill?.name}`}
+            defaultCustomerId={prefill?.customerId}
+            defaultName={prefill?.name}
+            defaultPhone={prefill?.phone}
+            preferredStylist={preferredStylist}
+            onPreferredStylistChange={setPreferredStylist}
+            stylists={employees}
+          />
+
+          <ServiceSelection
+            services={services}
+            selectedIds={selectedServices}
+            onToggle={toggleService}
+          />
+
+          <StylistSelection
+            employees={employees}
+            services={services}
+            selectedServiceIds={selectedServices}
+            selectedStylistId={selectedStylist}
+            onSelect={setSelectedStylist}
+          />
+
+          {selectedServices.length > 0 && (
+            <div className="lg:hidden">
+              <EstimatedBillCard
+                services={services}
+                selectedIds={selectedServices}
+              />
+            </div>
+          )}
+
+          {error && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="rounded-xl border border-red-200/60 bg-red-50/90 px-4 py-3 text-sm text-red-600 backdrop-blur-sm"
+            >
+              {error}
+            </motion.p>
+          )}
+
+          <CheckInActionBar
+            loading={loading}
+            canSubmit={selectedServices.length > 0}
+            onCancel={handleCancel}
+            onSaveDraft={handleSaveDraft}
+            onCheckInAndStart={handleCheckInAndStart}
+          />
+        </form>
+
+        <aside className="space-y-4">
+          {selectedServices.length > 0 && (
+            <div className="hidden lg:block">
+              <EstimatedBillCard
+                services={services}
+                selectedIds={selectedServices}
+              />
+            </div>
+          )}
+          <QueueDashboard
+            queueEntries={queueEntries}
+            completedEntries={completedEntries}
+            estimatedWait={localEstimatedWait}
+            billingStats={billingStats}
+            employeeCount={employees.length}
+          />
+        </aside>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        {trustItems.map((item, index) => (
+          <motion.div
+            key={item.title}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 + index * 0.05 }}
+            className="flex items-center gap-3 rounded-[20px] border border-dashboard-border/40 bg-dashboard-card/80 p-4 shadow-sm backdrop-blur-sm"
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-dashboard-primary">
+              <item.icon className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-dashboard-text">
+                {item.title}
+              </p>
+              <p className="mt-0.5 text-xs text-dashboard-muted">{item.desc}</p>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </div>
   );

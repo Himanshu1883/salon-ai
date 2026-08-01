@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { formatCurrency } from "@/lib/currency";
 import type { CheckInService } from "./types";
 import { computeEstimatedFinish } from "./utils";
+import { CheckInCard, CheckInCardContent } from "./check-in-card";
 
 type EstimatedBillCardProps = {
   services: CheckInService[];
@@ -37,55 +38,68 @@ export function EstimatedBillCard({
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 16 }}
-        className="sticky top-4 rounded-[20px] border border-[#EDE9FE] bg-white p-5 shadow-lg shadow-[#6C3BFF]/10"
+        transition={{ duration: 0.3 }}
       >
-        <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EDE9FE]">
-            <Receipt className="h-4 w-4 text-[#6C3BFF]" />
-          </div>
-          <h3 className="font-semibold text-[#1C103D]">Estimated Bill</h3>
-        </div>
-
-        <ul className="mb-4 space-y-2 border-b border-[#F3F4F6] pb-4">
-          {selected.map((service) => (
-            <li
-              key={service.id}
-              className="flex items-center justify-between text-sm"
-            >
-              <span className="text-[#374151]">{service.name}</span>
-              <span className="font-medium text-[#1C103D]">
-                {formatCurrency(service.price)}
-              </span>
-            </li>
-          ))}
-        </ul>
-
-        <div className="space-y-1.5 text-sm">
-          {discount > 0 && (
-            <div className="flex justify-between text-emerald-600">
-              <span>Membership discount</span>
-              <span>-{formatCurrency(discount)}</span>
+        <CheckInCard glow className="sticky top-4">
+          <CheckInCardContent>
+            <div className="mb-4 flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-dashboard-primary">
+                <Receipt className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-dashboard-text">
+                  Estimated Bill
+                </h3>
+                <p className="text-xs text-dashboard-muted">
+                  {selected.length} service{selected.length > 1 ? "s" : ""}
+                </p>
+              </div>
             </div>
-          )}
-          <div className="flex justify-between text-[#6B7280]">
-            <span>Tax (18% GST)</span>
-            <span>{formatCurrency(tax)}</span>
-          </div>
-          <div className="flex justify-between border-t border-[#F3F4F6] pt-2 text-base font-bold text-[#1C103D]">
-            <span>Grand total</span>
-            <span className="text-[#6C3BFF]">{formatCurrency(total)}</span>
-          </div>
-        </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-xl bg-[#F7F8FC] px-3 py-2.5">
-          <div className="flex items-center gap-2 text-xs text-[#6B7280]">
-            <Clock className="h-3.5 w-3.5 text-[#6C3BFF]" />
-            <span>{totalDuration} min total</span>
-          </div>
-          <span className="text-xs font-medium text-[#1C103D]">
-            Finish ~ {format(finishTime, "h:mm a")}
-          </span>
-        </div>
+            <ul className="mb-4 space-y-2.5 border-b border-dashboard-border/50 pb-4">
+              {selected.map((service) => (
+                <li
+                  key={service.id}
+                  className="flex items-center justify-between text-sm"
+                >
+                  <span className="text-dashboard-text/80">{service.name}</span>
+                  <span className="font-medium tabular-nums text-dashboard-text">
+                    {formatCurrency(service.price)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <div className="space-y-2 text-sm">
+              {discount > 0 && (
+                <div className="flex justify-between text-emerald-600">
+                  <span>Membership discount</span>
+                  <span>-{formatCurrency(discount)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-dashboard-muted">
+                <span>Tax (18% GST)</span>
+                <span className="tabular-nums">{formatCurrency(tax)}</span>
+              </div>
+              <div className="flex justify-between border-t border-dashboard-border/50 pt-2.5 text-base font-bold text-dashboard-text">
+                <span>Grand total</span>
+                <span className="tabular-nums text-dashboard-primary">
+                  {formatCurrency(total)}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between rounded-xl bg-violet-50/60 px-3.5 py-2.5 ring-1 ring-violet-100/80">
+              <div className="flex items-center gap-2 text-xs text-dashboard-muted">
+                <Clock className="h-3.5 w-3.5 text-dashboard-primary" />
+                <span>{totalDuration} min total</span>
+              </div>
+              <span className="text-xs font-medium text-dashboard-text">
+                Finish ~ {format(finishTime, "h:mm a")}
+              </span>
+            </div>
+          </CheckInCardContent>
+        </CheckInCard>
       </motion.div>
     </AnimatePresence>
   );

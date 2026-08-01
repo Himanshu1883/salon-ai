@@ -20,14 +20,14 @@ export function CheckInActionBar({
   onCheckInAndStart,
 }: CheckInActionBarProps) {
   return (
-    <div className="sticky bottom-0 z-30 -mx-4 border-t border-[#E8ECF4] bg-white/95 px-4 py-4 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+    <div className="sticky bottom-0 z-30 -mx-4 border-t border-dashboard-border/60 bg-white/90 px-4 py-4 shadow-[0_-8px_32px_rgba(91,33,182,0.08)] backdrop-blur-md sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 rounded-2xl border-[#E5E7EB] px-4"
+            className="h-11 rounded-xl border-dashboard-border bg-white/80 px-4 backdrop-blur-sm hover:bg-violet-50/80"
           >
             <X className="h-4 w-4" />
             Cancel
@@ -36,10 +36,11 @@ export function CheckInActionBar({
             type="button"
             variant="outline"
             onClick={onSaveDraft}
-            className="h-11 rounded-2xl border-[#E5E7EB] px-4"
+            className="h-11 rounded-xl border-dashboard-border bg-white/80 px-4 backdrop-blur-sm hover:bg-violet-50/80"
           >
             <Save className="h-4 w-4" />
-            Save Draft
+            <span className="hidden sm:inline">Save Draft</span>
+            <span className="sm:hidden">Draft</span>
           </Button>
         </div>
 
@@ -49,18 +50,19 @@ export function CheckInActionBar({
             variant="outline"
             disabled={!canSubmit || loading}
             onClick={onCheckInAndStart}
-            className="h-11 rounded-2xl border-[#6C3BFF]/30 px-4 text-[#6C3BFF] hover:bg-[#EDE9FE]"
+            className="h-11 rounded-xl border-violet-300/60 bg-white/80 px-4 text-dashboard-primary backdrop-blur-sm hover:bg-violet-50/80"
             title="Assign stylist after check-in from the queue page"
           >
             <Play className="h-4 w-4" />
-            Check-in & Start
+            <span className="hidden sm:inline">Check-in & Start</span>
+            <span className="sm:hidden">Start</span>
           </Button>
           <Button
             type="submit"
             disabled={loading || !canSubmit}
             className={cn(
-              "h-11 min-w-[160px] rounded-2xl border-0 bg-gradient-to-r from-[#6C3BFF] to-[#8B5CF6] px-6 text-white shadow-lg shadow-[#6C3BFF]/30",
-              "hover:from-[#5B2FE6] hover:to-[#7C4FE6] disabled:opacity-50"
+              "h-11 min-w-[140px] rounded-xl border-0 bg-gradient-to-r from-dashboard-primary to-violet-500 px-5 text-white shadow-lg shadow-violet-500/30 sm:min-w-[160px]",
+              "hover:from-dashboard-primary-hover hover:to-violet-600 disabled:opacity-50"
             )}
           >
             {loading ? (
@@ -79,10 +81,16 @@ export function CheckInActionBar({
           </Button>
         </div>
       </div>
-      <p className="mt-2 hidden text-center text-[10px] text-[#9CA3AF] sm:block">
-        Press <kbd className="rounded bg-[#F7F8FC] px-1.5 py-0.5 font-mono">⌘</kbd>+
-        <kbd className="rounded bg-[#F7F8FC] px-1.5 py-0.5 font-mono">Enter</kbd> to
-        add to queue
+      <p className="mt-2 hidden text-center text-[10px] text-dashboard-muted/70 sm:block">
+        Press{" "}
+        <kbd className="rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-dashboard-muted">
+          ⌘
+        </kbd>
+        +
+        <kbd className="rounded-md bg-violet-50 px-1.5 py-0.5 font-mono text-dashboard-muted">
+          Enter
+        </kbd>{" "}
+        to add to queue
       </p>
     </div>
   );

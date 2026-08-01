@@ -42,16 +42,16 @@ export function FloatingInput({
         placeholder={placeholder ?? " "}
         onChange={(e) => onChange(e.target.value)}
         className={cn(
-          "peer h-14 w-full rounded-2xl border border-[#E8ECF4] bg-white px-4 pt-5 pb-2 text-sm text-[#1C103D] shadow-sm transition-all",
-          "placeholder:text-transparent focus:border-[#6C3BFF]/40 focus:outline-none focus:ring-2 focus:ring-[#6C3BFF]/20",
+          "peer h-14 w-full rounded-xl border border-dashboard-border bg-white/90 px-4 pt-5 pb-2 text-sm text-dashboard-text shadow-sm backdrop-blur-sm transition-all",
+          "placeholder:text-transparent focus:border-violet-400/60 focus:outline-none focus:ring-2 focus:ring-violet-500/15",
           Icon && "pr-11"
         )}
       />
       <label
         htmlFor={id}
         className={cn(
-          "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-[#9CA3AF] transition-all",
-          "peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-[#6C3BFF]",
+          "pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm text-dashboard-muted transition-all",
+          "peer-focus:top-3 peer-focus:translate-y-0 peer-focus:text-xs peer-focus:text-dashboard-primary",
           "peer-[:not(:placeholder-shown)]:top-3 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:not(:placeholder-shown)]:text-xs"
         )}
       >
@@ -59,7 +59,7 @@ export function FloatingInput({
         {required && " *"}
       </label>
       {Icon && (
-        <Icon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
+        <Icon className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted/70" />
       )}
     </div>
   );
