@@ -54,6 +54,7 @@ export const ALLOWED_PATHS_WHEN_BLOCKED = [
   "/invoice-due",
   "/settings/billing",
   "/settings/subscription",
+  "/support",
 ] as const;
 
 function normalizeAppPath(pathname: string): string {

@@ -4,16 +4,37 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { signOutCallbackUrl } from "@/lib/salon-paths";
-import { LayoutDashboard, Building2, LogOut, Shield, ChevronRight } from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  LogOut,
+  Shield,
+  ChevronRight,
+  HeadphonesIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { AdminSupportUnreadBadge } from "@/components/admin/admin-support-unread-badge";
 
-const NAV_ITEMS = [
+const NAV_ITEMS: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  showUnread?: boolean;
+}[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/salons", label: "Salons", icon: Building2 },
+  { href: "/admin/support", label: "Support", icon: HeadphonesIcon, showUnread: true },
 ];
 
-export function AdminSidebar({ userName }: { userName: string }) {
+export function AdminSidebar({
+  userName,
+  supportUnreadCount = 0,
+}: {
+  userName: string;
+  supportUnreadCount?: number;
+}) {
   const pathname = usePathname();
 
   return (
@@ -34,7 +55,7 @@ export function AdminSidebar({ userName }: { userName: string }) {
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Navigation
         </p>
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact }) => {
+        {NAV_ITEMS.map(({ href, label, icon: Icon, exact, showUnread }) => {
           const active = exact
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`);
@@ -57,6 +78,9 @@ export function AdminSidebar({ userName }: { userName: string }) {
                 )}
               />
               <span className="flex-1">{label}</span>
+              {showUnread && (
+                <AdminSupportUnreadBadge initialCount={supportUnreadCount} />
+              )}
               {active && <ChevronRight className="h-3.5 w-3.5 text-dashboard-secondary" />}
             </Link>
           );

@@ -11,6 +11,7 @@ import {
   PanelLeft,
   Sparkles,
   LogOut,
+  HeadphonesIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -83,6 +84,9 @@ function isActive(pathname: string, href: string, label: string) {
   }
   if (href === "/projects") {
     return pathname === "/projects" || pathname.startsWith("/projects/");
+  }
+  if (href === "/support") {
+    return pathname === "/support" || pathname.startsWith("/support/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -285,7 +289,10 @@ export function Sidebar({
   const salonInitial = salonName.charAt(0).toUpperCase() || "S";
 
   const visibleNavItems: NavLink[] = accessBlocked
-    ? [{ href: "/invoice-due", label: "Invoice due", icon: CreditCard, module: "billing" }]
+    ? [
+        { href: "/invoice-due", label: "Invoice due", icon: CreditCard, module: "billing" },
+        { href: "/support", label: "Customer Support", icon: HeadphonesIcon, module: "settings" },
+      ]
     : getSidebarItems(plan);
 
   return (
@@ -343,6 +350,19 @@ export function Sidebar({
             onNavigate={onNavigate}
           />
         ))}
+        {!accessBlocked && (
+          <NavLinkItem
+            item={{
+              href: "/support",
+              label: "Customer Support",
+              icon: HeadphonesIcon,
+              module: "settings",
+            }}
+            pathname={pathname}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+          />
+        )}
       </nav>
 
       {!accessBlocked && (
