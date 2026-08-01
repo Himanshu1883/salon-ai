@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -14,6 +16,8 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import { getPlanMonthlyAmount } from "@/lib/plans";
 import { PayInvoiceButton } from "@/components/subscription/pay-invoice-dialog";
+import { PlatformInvoiceDialog } from "@/components/subscription/platform-invoice-dialog";
+import type { PlatformInvoiceDetailData } from "@/components/subscription/platform-invoice-detail";
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
 
 type Subscription = {
@@ -74,6 +78,28 @@ export function BillingClient({
   blocked: boolean;
   planMonthlyFallback?: number;
 }) {
+  const [selectedInvoice, setSelectedInvoice] = useState<PlatformInvoiceDetailData | null>(
+    null
+  );
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const planName = subscription?.planName ?? "Enterprise";
+
+  function openInvoiceDialog(invoice: PlatformInvoice) {
+    setSelectedInvoice({
+      invoiceNumber: invoice.invoiceNumber,
+      amount: invoice.amount,
+      tax: invoice.tax,
+      total: invoice.total,
+      periodStart: invoice.periodStart,
+      periodEnd: invoice.periodEnd,
+      dueDate: invoice.dueDate,
+      paidAt: invoice.paidAt,
+      status: invoice.status,
+      planName,
+    });
+    setInvoiceDialogOpen(true);
+  }
+
   const nextDue =
     overdueInvoice?.dueDate ??
     invoices.find((inv) => inv.status === "sent" && !inv.paidAt)?.dueDate ??
@@ -110,9 +136,15 @@ export function BillingClient({
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-stone-600">Monthly amount</span>
+              <span className="text-stone-600">Monthly amount (excl. GST)</span>
               <span className="font-medium">
                 {formatCurrency(subscription?.monthlyAmount ?? planMonthlyFallback)}/month
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-stone-600">GST</span>
+              <span className="font-medium">
+                18% (9% CGST + 9% SGST)
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -175,8 +207,10 @@ export function BillingClient({
                 <TableRow>
                   <TableHead>Invoice</TableHead>
                   <TableHead>Period</TableHead>
+                  <TableHead>Base</TableHead>
+                  <TableHead>GST</TableHead>
+                  <TableHead>Total</TableHead>
                   <TableHead>Due</TableHead>
-                  <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Action</TableHead>
                 </TableRow>
@@ -191,18 +225,29 @@ export function BillingClient({
                       {format(new Date(invoice.periodStart), "MMM d")} –{" "}
                       {format(new Date(invoice.periodEnd), "MMM d, yyyy")}
                     </TableCell>
+                    <TableCell>{formatCurrency(invoice.amount)}</TableCell>
+                    <TableCell>{formatCurrency(invoice.tax)}</TableCell>
+                    <TableCell>{formatCurrency(invoice.total)}</TableCell>
                     <TableCell>
                       {format(new Date(invoice.dueDate), "MMM d, yyyy")}
                     </TableCell>
-                    <TableCell>{formatCurrency(invoice.total)}</TableCell>
                     <TableCell>
                       <SubscriptionStatusBadge status={invoice.status} />
                     </TableCell>
                     <TableCell className="text-right">
-                      {["sent", "overdue"].includes(invoice.status) &&
-                        !invoice.paidAt && (
-                          <PayInvoiceButton invoice={invoice} size="sm" />
-                        )}
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openInvoiceDialog(invoice)}
+                        >
+                          View
+                        </Button>
+                        {["sent", "overdue"].includes(invoice.status) &&
+                          !invoice.paidAt && (
+                            <PayInvoiceButton invoice={invoice} size="sm" />
+                          )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -211,6 +256,12 @@ export function BillingClient({
           )}
         </CardContent>
       </Card>
+
+      <PlatformInvoiceDialog
+        invoice={selectedInvoice}
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+      />
     </div>
   );
 }

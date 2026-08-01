@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
+import { PLATFORM_BILLING_ENTITY } from "@/lib/platform-billing";
 import { CreditCard, Smartphone, Building2, Zap } from "lucide-react";
 import type { PaymentMethod } from "@/lib/subscription";
 
@@ -130,9 +131,9 @@ export function PayInvoiceDialog({
         ) : selectedMethod === "upi" ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-center">
-              <p className="text-sm text-stone-500">Pay to Glow Desk UPI ID</p>
+              <p className="text-sm text-stone-500">Pay to {PLATFORM_BILLING_ENTITY.legalName}</p>
               <p className="mt-1 font-mono text-lg font-semibold text-stone-900">
-                salonai@upi
+                {PLATFORM_BILLING_ENTITY.upiId}
               </p>
               <p className="mt-2 text-sm text-stone-600">
                 Amount: {formatCurrency(invoice.total)}
@@ -157,9 +158,10 @@ export function PayInvoiceDialog({
           <div className="space-y-4">
             <div className="rounded-lg border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
               <p className="font-medium text-stone-900">Bank details</p>
-              <p className="mt-2">Account: Glow Desk Technologies</p>
-              <p>IFSC: SBIN0001234</p>
-              <p>Account no: 123456789012</p>
+              <p className="mt-2">Account: {PLATFORM_BILLING_ENTITY.bankAccountName}</p>
+              <p>GSTIN: {PLATFORM_BILLING_ENTITY.gstin}</p>
+              <p>IFSC: {PLATFORM_BILLING_ENTITY.bankIfsc}</p>
+              <p>Account no: {PLATFORM_BILLING_ENTITY.bankAccountNumber}</p>
               <p className="mt-2">Reference: {invoice.invoiceNumber}</p>
             </div>
             <Button

@@ -6,7 +6,9 @@ import { signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/currency";
+import { calculatePlatformInvoiceGst } from "@/lib/platform-billing";
 import { PayInvoiceButton } from "@/components/subscription/pay-invoice-dialog";
+import { PlatformInvoiceDetail } from "@/components/subscription/platform-invoice-detail";
 import { AlertTriangle, LogOut, Mail } from "lucide-react";
 
 type Subscription = {
@@ -17,10 +19,13 @@ type Subscription = {
 type OverdueInvoice = {
   id: string;
   invoiceNumber: string;
+  amount: number;
+  tax: number;
   total: number;
   dueDate: Date;
   periodStart: Date;
   periodEnd: Date;
+  status: string;
 } | null;
 
 export function InvoiceDueClient({
@@ -32,6 +37,10 @@ export function InvoiceDueClient({
   subscription: Subscription;
   signOutUrl?: string;
 }) {
+  const gst = overdueInvoice
+    ? calculatePlatformInvoiceGst(overdueInvoice.amount)
+    : null;
+
   return (
     <div className="mx-auto flex min-h-[70vh] max-w-lg flex-col items-center justify-center">
       <Card className="w-full border-red-200 shadow-lg">
@@ -51,36 +60,61 @@ export function InvoiceDueClient({
           </div>
 
           {overdueInvoice ? (
-            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 text-left">
-              <p className="text-sm text-stone-500">Amount due</p>
-              <p className="text-3xl font-bold text-stone-900">
-                {formatCurrency(overdueInvoice.total)}
-              </p>
-              <dl className="mt-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <dt className="text-stone-500">Invoice</dt>
-                  <dd className="font-medium">{overdueInvoice.invoiceNumber}</dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-stone-500">Due date</dt>
-                  <dd className="font-medium text-red-600">
-                    {format(new Date(overdueInvoice.dueDate), "MMM d, yyyy")}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-stone-500">Billing period</dt>
-                  <dd className="font-medium">
-                    {format(new Date(overdueInvoice.periodStart), "MMM d")} –{" "}
-                    {format(new Date(overdueInvoice.periodEnd), "MMM d, yyyy")}
-                  </dd>
-                </div>
-                <div className="flex justify-between">
-                  <dt className="text-stone-500">Plan</dt>
-                  <dd className="font-medium">
-                    {subscription?.planName ?? "Enterprise"}
-                  </dd>
-                </div>
-              </dl>
+            <div className="space-y-4 text-left">
+              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+                <p className="text-sm text-stone-500">Amount due (incl. GST)</p>
+                <p className="text-3xl font-bold text-stone-900">
+                  {formatCurrency(overdueInvoice.total)}
+                </p>
+                <dl className="mt-4 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <dt className="text-stone-500">Invoice</dt>
+                    <dd className="font-medium">{overdueInvoice.invoiceNumber}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-stone-500">Due date</dt>
+                    <dd className="font-medium text-red-600">
+                      {format(new Date(overdueInvoice.dueDate), "MMM d, yyyy")}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-stone-500">Plan</dt>
+                    <dd className="font-medium">
+                      {subscription?.planName ?? "Enterprise"}
+                    </dd>
+                  </div>
+                  {gst && (
+                    <>
+                      <div className="flex justify-between border-t border-stone-200 pt-2">
+                        <dt className="text-stone-500">Taxable value</dt>
+                        <dd className="font-medium">{formatCurrency(gst.baseAmount)}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-stone-500">CGST @ 9%</dt>
+                        <dd className="font-medium">{formatCurrency(gst.cgst)}</dd>
+                      </div>
+                      <div className="flex justify-between">
+                        <dt className="text-stone-500">SGST @ 9%</dt>
+                        <dd className="font-medium">{formatCurrency(gst.sgst)}</dd>
+                      </div>
+                    </>
+                  )}
+                </dl>
+              </div>
+
+              <PlatformInvoiceDetail
+                invoice={{
+                  invoiceNumber: overdueInvoice.invoiceNumber,
+                  amount: overdueInvoice.amount,
+                  tax: overdueInvoice.tax,
+                  total: overdueInvoice.total,
+                  periodStart: overdueInvoice.periodStart,
+                  periodEnd: overdueInvoice.periodEnd,
+                  dueDate: overdueInvoice.dueDate,
+                  status: overdueInvoice.status,
+                  planName: subscription?.planName ?? "Enterprise",
+                }}
+              />
             </div>
           ) : (
             <p className="text-sm text-stone-600">

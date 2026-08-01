@@ -14,6 +14,7 @@ import {
   getSubscriptionPlanName,
   type SalonPlan,
 } from "../src/lib/plans";
+import { calculatePlatformInvoiceGst } from "../src/lib/platform-billing";
 
 function getSubscriptionAmountForPlan(plan: SalonPlan) {
   return getPlanMonthlyAmount(plan);
@@ -22,7 +23,11 @@ function getSubscriptionAmountForPlan(plan: SalonPlan) {
 function getSubscriptionNameForPlan(plan: SalonPlan) {
   return getSubscriptionPlanName(plan);
 }
-const TAX_RATE = 0.18;
+
+function getPlatformInvoiceTotals(baseAmount: number) {
+  const { tax, total } = calculatePlatformInvoiceGst(baseAmount);
+  return { amount: baseAmount, tax, total };
+}
 
 function getMonthPeriod(date = new Date()) {
   const periodStart = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -39,8 +44,7 @@ async function seedActiveSubscription(salonId: string, plan: SalonPlan = "ENTERP
   const now = new Date();
   const { periodStart, periodEnd } = getMonthPeriod(now);
   const amount = getSubscriptionAmountForPlan(plan);
-  const tax = Math.round(amount * TAX_RATE * 100) / 100;
-  const total = amount + tax;
+  const { tax, total } = getPlatformInvoiceTotals(amount);
 
   await prisma.salonSubscription.create({
     data: {
@@ -112,8 +116,7 @@ async function seedOverdueTestSalon() {
   const now = new Date();
   const { periodStart, periodEnd } = getMonthPeriod(now);
   const amount = getSubscriptionAmountForPlan("ENTERPRISE");
-  const tax = Math.round(amount * TAX_RATE * 100) / 100;
-  const total = amount + tax;
+  const { tax, total } = getPlatformInvoiceTotals(amount);
   const trialEnded = new Date(now);
   trialEnded.setDate(trialEnded.getDate() - 30);
   const dueDate = new Date(now);

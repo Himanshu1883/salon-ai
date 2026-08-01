@@ -25,9 +25,10 @@ export function getSubscriptionBillingForPlan(plan: string | null | undefined): 
     monthlyAmount: getPlanMonthlyAmount(normalized),
   };
 }
+export { PLATFORM_GST_RATE, PLATFORM_TAX_RATE } from "@/lib/platform-billing";
+
 export const TRIAL_DAYS = 14;
 export const INVOICE_DUE_DAYS = 7;
-export const PLATFORM_TAX_RATE = 0.18;
 
 export const SUBSCRIPTION_STATUSES = [
   "active",

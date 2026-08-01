@@ -5,13 +5,13 @@ import { requireSession, requireOwnerOrManager } from "@/lib/auth";
 import { revalidatePath, unstable_cache } from "next/cache";
 import {
   getSubscriptionBillingForPlan,
-  PLATFORM_TAX_RATE,
   INVOICE_DUE_DAYS,
   TRIAL_DAYS,
   getMonthPeriod,
   addDays,
   type PaymentMethod,
 } from "@/lib/subscription";
+import { calculatePlatformInvoiceGst } from "@/lib/platform-billing";
 
 export async function syncOverdueState(salonId: string) {
   const now = new Date();
@@ -213,8 +213,7 @@ export async function generateMonthlyInvoice(salonId: string) {
   if (existing) return existing;
 
   const amount = subscription.monthlyAmount;
-  const tax = Math.round(amount * PLATFORM_TAX_RATE * 100) / 100;
-  const total = amount + tax;
+  const { tax, total } = calculatePlatformInvoiceGst(amount);
   const invoiceNumber = await generateInvoiceNumber(salonId, now);
 
   return prisma.platformInvoice.create({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
 import {
@@ -44,6 +44,8 @@ import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
 import { SalonLoginUrl } from "@/components/admin/salon-login-url";
 import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
 import { SalonAccessActions } from "@/components/admin/salon-access-actions";
+import { PlatformInvoiceDialog } from "@/components/subscription/platform-invoice-dialog";
+import type { PlatformInvoiceDetailData } from "@/components/subscription/platform-invoice-detail";
 import { PLAN_LABELS, getPlanMonthlyAmount, type SalonPlan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
@@ -119,6 +121,10 @@ export function SalonDetailClient({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [selectedInvoice, setSelectedInvoice] = useState<PlatformInvoiceDetailData | null>(
+    null
+  );
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
 
   function runAction(action: SalonSubscriptionAction) {
     startTransition(async () => {
@@ -136,6 +142,30 @@ export function SalonDetailClient({
 
   const subscription = salon.subscription;
   const planMonthlyAmount = getPlanMonthlyAmount(salon.plan as SalonPlan);
+  const planName = subscription?.planName ?? PLAN_LABELS[salon.plan as SalonPlan] ?? salon.plan;
+
+  function openInvoiceDialog(invoice: SalonDetail["platformInvoices"][number]) {
+    setSelectedInvoice({
+      invoiceNumber: invoice.invoiceNumber,
+      amount: invoice.amount,
+      tax: invoice.tax,
+      total: invoice.total,
+      periodStart: invoice.periodStart,
+      periodEnd: invoice.periodEnd,
+      dueDate: invoice.dueDate,
+      paidAt: invoice.paidAt,
+      status: invoice.status,
+      planName,
+      billTo: {
+        name: salon.name,
+        address: salon.address ?? salon.addressLine1,
+        city: salon.city,
+        state: salon.state,
+        gstin: salon.gstin,
+      },
+    });
+    setInvoiceDialogOpen(true);
+  }
 
   return (
     <div className="space-y-6">
@@ -448,13 +478,22 @@ export function SalonDetailClient({
                       Period
                     </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
-                      Amount
+                      Base
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
+                      GST (18%)
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
+                      Total
                     </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
                       Due
                     </TableHead>
                     <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
                       Status
+                    </TableHead>
+                    <TableHead className="text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
+                      View
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -469,6 +508,12 @@ export function SalonDetailClient({
                         {format(new Date(invoice.periodEnd), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="font-medium text-dashboard-text">
+                        ₹{invoice.amount.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="font-medium text-dashboard-text">
+                        ₹{invoice.tax.toLocaleString("en-IN")}
+                      </TableCell>
+                      <TableCell className="font-medium text-dashboard-text">
                         ₹{invoice.total.toLocaleString("en-IN")}
                       </TableCell>
                       <TableCell className="text-sm text-dashboard-muted">
@@ -476,6 +521,16 @@ export function SalonDetailClient({
                       </TableCell>
                       <TableCell>
                         <PlatformInvoiceStatusBadge status={invoice.status} />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="rounded-lg"
+                          onClick={() => openInvoiceDialog(invoice)}
+                        >
+                          View
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -485,6 +540,12 @@ export function SalonDetailClient({
           )}
         </AdminCardContent>
       </AdminCard>
+
+      <PlatformInvoiceDialog
+        invoice={selectedInvoice}
+        open={invoiceDialogOpen}
+        onOpenChange={setInvoiceDialogOpen}
+      />
     </div>
   );
 }

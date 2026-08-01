@@ -8,7 +8,6 @@ import {
   addDays,
   getMonthPeriod,
   getSubscriptionBillingForPlan,
-  PLATFORM_TAX_RATE,
   TRIAL_DAYS,
   type SubscriptionStatus,
 } from "@/lib/subscription";
@@ -280,6 +279,7 @@ export async function updateSalonSubscription(
           currentPeriodEnd: periodEnd,
         },
       });
+      await generateMonthlyInvoice(salonId);
       break;
     }
     case "suspend": {
