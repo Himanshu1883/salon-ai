@@ -1,3 +1,5 @@
+import { parseSalonPrefixedPath } from "@/lib/salon-paths";
+
 export const SUBSCRIPTION_PLAN_NAME = "Salon AI Pro";
 export const MONTHLY_AMOUNT_INR = 750;
 export const TRIAL_DAYS = 14;
@@ -31,9 +33,15 @@ export const ALLOWED_PATHS_WHEN_BLOCKED = [
   "/settings/subscription",
 ] as const;
 
+function normalizeAppPath(pathname: string): string {
+  const salonPath = parseSalonPrefixedPath(pathname);
+  return salonPath?.innerPath ?? pathname;
+}
+
 export function isAllowedPathWhenBlocked(pathname: string): boolean {
+  const path = normalizeAppPath(pathname);
   return ALLOWED_PATHS_WHEN_BLOCKED.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
+    (allowedPath) => path === allowedPath || path.startsWith(`${allowedPath}/`)
   );
 }
 

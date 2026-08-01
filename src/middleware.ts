@@ -72,6 +72,34 @@ export default auth((req) => {
       return NextResponse.redirect(url);
     }
 
+    if (innerPath === "/services" || innerPath.startsWith("/services/")) {
+      const url = req.nextUrl.clone();
+      const suffix = innerPath.slice("/services".length);
+      url.pathname = `/${salonSlug}/catalog/services${suffix}`;
+      return NextResponse.redirect(url);
+    }
+
+    if (innerPath === "/employees" || innerPath.startsWith("/employees/")) {
+      const url = req.nextUrl.clone();
+      const suffix = innerPath.slice("/employees".length);
+      url.pathname = `/${salonSlug}/team/members${suffix}`;
+      return NextResponse.redirect(url);
+    }
+
+    if (innerPath === "/customers" || innerPath.startsWith("/customers/")) {
+      const url = req.nextUrl.clone();
+      const suffix = innerPath.slice("/customers".length);
+      url.pathname = `/${salonSlug}/clients${suffix}`;
+      return NextResponse.redirect(url);
+    }
+
+    if (innerPath === "/stock" || innerPath.startsWith("/stock/")) {
+      const url = req.nextUrl.clone();
+      const suffix = innerPath.slice("/stock".length);
+      url.pathname = `/${salonSlug}/inventory/stock${suffix}`;
+      return NextResponse.redirect(url);
+    }
+
     if (innerPath === "/login") {
       if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
         return NextResponse.redirect(

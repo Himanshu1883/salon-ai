@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function ServicesRedirect() {
-  redirect("/catalog/services");
-}
+export { default } from "../catalog/services/page";

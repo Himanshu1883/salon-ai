@@ -1,5 +1,1 @@
-import { redirect } from "next/navigation";
-
-export default function StockRedirect() {
-  redirect("/inventory/stock");
-}
+export { default } from "../inventory/stock/page";
