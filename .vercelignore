@@ -3,5 +3,3 @@ uploads/
 *.db-journal
 prisma/dev.db
 .env
-.env.*
-!.env.example
