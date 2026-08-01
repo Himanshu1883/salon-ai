@@ -190,7 +190,7 @@ export function PricingSection() {
                 </div>
 
                 <Link
-                  href={plan.id === "enterprise" ? "#" : "/register"}
+                  href={plan.id === "enterprise" ? "#" : "/login"}
                   className={cn(
                     plan.highlighted
                       ? primaryGradientButtonClass("mt-6 block w-full py-3 text-center text-sm")

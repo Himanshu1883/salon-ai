@@ -38,7 +38,7 @@ export function HeroSection() {
         />
         <div className="absolute inset-0 bg-[#F7F3EC]/5" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/52 via-[#F7F3EC]/10 to-[#F7F3EC]/10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" />
+        {/* <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/55 via-transparent to-[#F7F3EC]/20" /> */}
         <div className="hero-editorial__grain absolute inset-0 opacity-95" />
       </div>
 

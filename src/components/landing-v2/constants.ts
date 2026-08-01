@@ -427,17 +427,17 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     title: "Product",
     links: [
       { label: "Features", href: "#features" },
-      { label: "Pricing", href: "#pricing" },
+      { label: "Pricing", href: "/pricing" },
       { label: "Modules", href: "#modules" },
       { label: "AI Analytics", href: "#ai" },
-      { label: "Integrations", href: "#" },
-      { label: "API", href: "#" },
+      { label: "Integrations", href: "/integrations" },
+      { label: "API", href: "/documentation" },
     ],
   },
   {
     title: "Company",
     links: [
-      { label: "About", href: "#" },
+      { label: "About", href: "/about" },
       { label: "Careers", href: "#" },
       { label: "Blog", href: "#" },
       { label: "Press", href: "#" },
@@ -447,8 +447,8 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
   {
     title: "Resources",
     links: [
-      { label: "Documentation", href: "#" },
-      { label: "Help Center", href: "#" },
+      { label: "Documentation", href: "/documentation" },
+      { label: "Help Center", href: "/documentation" },
       { label: "Community", href: "#" },
       { label: "Roadmap", href: "#" },
       { label: "Changelog", href: "#" },
@@ -459,7 +459,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     links: [
       { label: "Privacy", href: "#" },
       { label: "Terms", href: "#" },
-      { label: "Security", href: "#" },
+      { label: "Pricing", href: "/pricing" },
       { label: "GDPR", href: "#" },
       { label: "Cookie Policy", href: "#" },
     ],
@@ -500,11 +500,8 @@ export const FLOATING_CARDS = [
 ] as const;
 
 export const NAV_LINKS = [
-  { href: "#modules", label: "Modules" },
-  { href: "#preview", label: "Platform" },
-  { href: "#salon-types", label: "Salon Types" },
-  { href: "#features", label: "Features" },
-  { href: "#ai", label: "AI" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/about", label: "About" },
+  { href: "/integrations", label: "Integrations" },
+  { href: "/documentation", label: "Docs" },
+  { href: "/pricing", label: "Pricing" },
 ];

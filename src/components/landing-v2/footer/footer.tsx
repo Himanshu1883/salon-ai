@@ -206,7 +206,7 @@ export function Footer() {
 
             <div className="mt-6 flex w-full max-w-sm flex-col gap-3 sm:flex-row sm:max-w-none lg:w-auto">
               <Link
-                href="/register"
+                href="/login"
                 className={primaryGradientButtonClass(
                   "flex-1 px-6 py-3 text-sm focus-visible:ring-offset-[#0B0908]"
                 )}

@@ -24,13 +24,27 @@ function NavLink({
   label: string;
   onClick?: () => void;
 }) {
+  const className = navLinkClass;
+  const underline = (
+    <span
+      aria-hidden
+      className="absolute bottom-0.5 left-1/2 h-[1.5px] w-0 -translate-x-1/2 bg-[#7C3AED] transition-all duration-200 ease-out group-hover:w-[calc(100%-1.5rem)]"
+    />
+  );
+
+  if (href.startsWith("/") && !href.includes("#")) {
+    return (
+      <Link href={href} onClick={onClick} className={cn(className, "group")}>
+        {label}
+        {underline}
+      </Link>
+    );
+  }
+
   return (
-    <a href={href} onClick={onClick} className={navLinkClass}>
+    <a href={href} onClick={onClick} className={cn(className, "group")}>
       {label}
-      <span
-        aria-hidden
-        className="absolute bottom-0.5 left-1/2 h-[1.5px] w-0 -translate-x-1/2 bg-[#7C3AED] transition-all duration-200 ease-out group-hover:w-[calc(100%-1.5rem)]"
-      />
+      {underline}
     </a>
   );
 }
@@ -79,7 +93,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-0.5 lg:flex">
+        <div className="hidden items-center gap-1 lg:flex">
           {NAV_LINKS.map((link) => (
             <NavLink key={link.href} href={link.href} label={link.label} />
           ))}
@@ -151,20 +165,35 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
           )}
         >
           <div className="space-y-1">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                className={cn(
-                  "block rounded-md px-3 py-3.5 text-base text-[#1B1714]/75",
-                  "transition-colors duration-200 hover:text-[#1B1714]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
-                )}
-              >
-                {link.label}
-              </a>
-            ))}
+            {NAV_LINKS.map((link) =>
+              link.href.startsWith("/") && !link.href.includes("#") ? (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "block rounded-md px-3 py-3.5 text-base text-[#1B1714]/75",
+                    "transition-colors duration-200 hover:text-[#1B1714]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ) : (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "block rounded-md px-3 py-3.5 text-base text-[#1B1714]/75",
+                    "transition-colors duration-200 hover:text-[#1B1714]",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#F7F3EC]"
+                  )}
+                >
+                  {link.label}
+                </a>
+              )
+            )}
           </div>
 
           <div className="mt-4 space-y-3 border-t border-[#E4DDD1] pt-5">
