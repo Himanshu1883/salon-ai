@@ -43,6 +43,7 @@ import { updateSalonPlanAsAdmin } from "@/actions/plans";
 import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
 import { SalonLoginUrl } from "@/components/admin/salon-login-url";
 import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
+import { SalonAccessActions } from "@/components/admin/salon-access-actions";
 import { PLAN_LABELS, getPlanMonthlyAmount, type SalonPlan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
@@ -321,6 +322,23 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
       </AdminCard>
 
       {/* Admin actions */}
+      <AdminCard>
+        <AdminCardHeader
+          title="Salon Access"
+          description="Reset owner credentials or open the salon dashboard as the owner"
+          icon={ShieldAlert}
+        />
+        <AdminCardContent>
+          <SalonAccessActions
+            salonId={salon.id}
+            salonSlug={salon.slug}
+            subscriptionStatus={subscription?.status ?? "trial"}
+            ownerEmail={salon.owner?.email ?? ""}
+            ownerName={salon.owner?.name}
+          />
+        </AdminCardContent>
+      </AdminCard>
+
       <AdminCard>
         <AdminCardHeader
           title="Admin Actions"

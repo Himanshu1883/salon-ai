@@ -9,6 +9,7 @@ import { loginSchema } from "@/lib/validations";
 import { authConfig } from "@/lib/auth.config";
 import { normalizeSalonPlan, type SalonPlan } from "@/lib/plans";
 import { signOutCallbackUrl } from "@/lib/salon-paths";
+import { consumeAdminImpersonationToken } from "@/lib/platform-admin-access";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -20,8 +21,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         email: {},
         password: {},
         salonSlug: {},
+        impersonationToken: {},
       },
       authorize: async (credentials) => {
+        const impersonationToken =
+          typeof credentials?.impersonationToken === "string" &&
+          credentials.impersonationToken.trim()
+            ? credentials.impersonationToken.trim()
+            : undefined;
+
+        if (impersonationToken) {
+          const impersonation =
+            await consumeAdminImpersonationToken(impersonationToken);
+          if (!impersonation) return null;
+
+          const { owner } = impersonation;
+          return {
+            id: owner.id,
+            email: owner.email,
+            name: owner.name,
+            role: owner.role,
+            isSuperAdmin: false,
+            salonId: owner.salonId!,
+            salonName: owner.salon!.name,
+            salonSlug: owner.salon!.slug,
+            plan: owner.salon!.plan,
+          };
+        }
+
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 

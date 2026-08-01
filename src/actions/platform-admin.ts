@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/auth";
 import {
@@ -12,6 +13,12 @@ import {
   type SubscriptionStatus,
 } from "@/lib/subscription";
 import { generateMonthlyInvoice } from "@/actions/subscription";
+import {
+  canPlatformAdminAccessSalon,
+  createAdminImpersonationToken,
+  generateTemporaryPasswordServer,
+  logPlatformAdminAction,
+} from "@/lib/platform-admin-access";
 
 export type SalonStatusFilter =
   | "all"
@@ -207,6 +214,7 @@ export async function getSalonDetail(salonId: string) {
     totalSeats: salon.totalSeats,
     owner: owner
       ? {
+          id: owner.id,
           name: owner.name,
           email: owner.email,
           phone: owner.phone,
@@ -294,4 +302,109 @@ export async function updateSalonSubscription(
   revalidatePath(`/admin/salons/${salonId}`);
 
   return { success: true };
+}
+
+export async function resetSalonOwnerPassword(
+  salonId: string,
+  newPassword?: string
+) {
+  const session = await requireSuperAdmin();
+
+  const trimmedPassword = newPassword?.trim();
+  if (trimmedPassword && trimmedPassword.length < 6) {
+    return { error: "Password must be at least 6 characters" };
+  }
+
+  const owner = await prisma.user.findFirst({
+    where: { salonId, role: "owner" },
+    select: { id: true, email: true, name: true },
+  });
+
+  if (!owner) {
+    return { error: "Owner account not found for this salon" };
+  }
+
+  const tempPassword = trimmedPassword || generateTemporaryPasswordServer();
+  const hashed = await bcrypt.hash(tempPassword, 10);
+
+  await prisma.user.update({
+    where: { id: owner.id },
+    data: { password: hashed },
+  });
+
+  await logPlatformAdminAction({
+    action: "reset_owner_password",
+    adminUserId: session.user.id,
+    salonId,
+    targetUserId: owner.id,
+    metadata: {
+      ownerEmail: owner.email,
+      passwordMode: trimmedPassword ? "custom" : "generated",
+    },
+  });
+
+  revalidatePath("/admin/salons");
+  revalidatePath(`/admin/salons/${salonId}`);
+
+  return {
+    success: true,
+    ownerEmail: owner.email,
+    ownerName: owner.name,
+    temporaryPassword: tempPassword,
+  };
+}
+
+export async function createSalonImpersonationLink(salonId: string) {
+  const session = await requireSuperAdmin();
+
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    include: {
+      subscription: { select: { status: true } },
+      users: {
+        where: { role: "owner" },
+        take: 1,
+        select: { id: true, email: true },
+      },
+    },
+  });
+
+  if (!salon) {
+    return { error: "Salon not found" };
+  }
+
+  if (!canPlatformAdminAccessSalon(salon.subscription?.status)) {
+    return {
+      error:
+        "This salon must have an active or trial subscription before you can access it.",
+    };
+  }
+
+  const owner = salon.users[0];
+  if (!owner) {
+    return { error: "Owner account not found for this salon" };
+  }
+
+  const rawToken = await createAdminImpersonationToken({
+    salonId: salon.id,
+    ownerUserId: owner.id,
+    adminUserId: session.user.id,
+  });
+
+  await logPlatformAdminAction({
+    action: "impersonation_token_created",
+    adminUserId: session.user.id,
+    salonId: salon.id,
+    targetUserId: owner.id,
+    metadata: {
+      salonSlug: salon.slug,
+      ownerEmail: owner.email,
+    },
+  });
+
+  return {
+    success: true,
+    url: `/api/admin/impersonate?token=${encodeURIComponent(rawToken)}&salon=${encodeURIComponent(salon.slug)}`,
+    salonSlug: salon.slug,
+  };
 }

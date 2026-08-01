@@ -84,7 +84,37 @@ model Salon {
   subscription    SalonSubscription?
   platformInvoices PlatformInvoice[]
   passwordResetTokens PasswordResetToken[]
+  adminImpersonationTokens AdminImpersonationToken[]
   projects         Project[]
+}
+
+model AdminImpersonationToken {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  salonId     String
+  salon       Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  ownerUserId String
+  adminUserId String
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([salonId])
+  @@index([adminUserId])
+}
+
+model PlatformAdminAuditLog {
+  id           String   @id @default(cuid())
+  action       String
+  adminUserId  String
+  salonId      String?
+  targetUserId String?
+  metadata     String?
+  createdAt    DateTime @default(now())
+
+  @@index([adminUserId])
+  @@index([salonId])
+  @@index([createdAt])
 }
 
 model SalonSubscription {

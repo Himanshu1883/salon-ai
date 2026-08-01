@@ -41,6 +41,7 @@ import {
 import { SubscriptionStatusBadge } from "@/components/admin/subscription-status-badge";
 import { SalonPlanBadge } from "@/components/admin/salon-plan-badge";
 import { SalonLoginUrl } from "@/components/admin/salon-login-url";
+import { SalonAccessActions } from "@/components/admin/salon-access-actions";
 import { AdminCard, AdminCardContent, AdminCardHeader } from "@/components/admin/admin-card";
 import { updateSalonPlanAsAdmin } from "@/actions/plans";
 import type {
@@ -523,7 +524,16 @@ export function SalonsListClient({
                         {format(new Date(salon.createdAt), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-1.5 opacity-100 transition-opacity sm:opacity-70 sm:group-hover:opacity-100">
+                        <div className="flex flex-col items-end gap-2 opacity-100 transition-opacity sm:opacity-70 sm:group-hover:opacity-100">
+                          <SalonAccessActions
+                            salonId={salon.id}
+                            salonSlug={salon.slug}
+                            subscriptionStatus={salon.status}
+                            ownerEmail={salon.ownerEmail}
+                            ownerName={salon.ownerName}
+                            compact
+                          />
+                          <div className="flex items-center gap-1.5">
                           <Button
                             variant="outline"
                             size="sm"
@@ -552,6 +562,7 @@ export function SalonsListClient({
                               Upgrade
                             </Button>
                           )}
+                          </div>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -686,6 +697,14 @@ function SalonGridCard({
         </div>
 
         <SalonLoginUrl slug={salon.slug} />
+
+        <SalonAccessActions
+          salonId={salon.id}
+          salonSlug={salon.slug}
+          subscriptionStatus={salon.status}
+          ownerEmail={salon.ownerEmail}
+          ownerName={salon.ownerName}
+        />
 
         <div className="flex items-center justify-between border-t border-dashboard-border/60 pt-4">
           <span className="text-xs text-dashboard-muted">
