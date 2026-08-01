@@ -218,14 +218,14 @@ export function AboutPageContent() {
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src="/salon.jpg"
+            src="/bg.png"
             alt=""
             fill
             priority
             className="object-cover object-center"
             sizes="100vw"
           />
-          {/* Light wash — image stays visible (matches homepage hero) */}
+          {/* Light wash — keep photo readable under ivory copy */}
           <div className="absolute inset-0 bg-[#F7F3EC]/25" />
           <div className="absolute inset-0 bg-gradient-to-r from-[#F7F3EC]/88 via-[#F7F3EC]/55 to-[#F7F3EC]/20" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#F7F3EC]/50 via-transparent to-[#F7F3EC]/15" />
@@ -292,17 +292,96 @@ export function AboutPageContent() {
       </section>
 
       {/* ── Philosophy ── */}
-      <section className={cn(aboutSectionPadding, "border-b border-[#E8E4DE]")}>
-        <div className={ABOUT_CONTAINER}>
-          <Reveal>
-            <BracketLabel>Our Philosophy</BracketLabel>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <h2 className="landing-display mt-6 max-w-4xl text-3xl font-medium leading-[1.15] tracking-tight md:text-4xl lg:text-5xl">
-              Where every appointment matters & every{" "}
-              <span className="italic text-[#5B21B6]">salon has a system</span>
-            </h2>
-          </Reveal>
+      <section className="relative overflow-hidden border-b border-[#E8E4DE]">
+        <div
+          className="pointer-events-none absolute inset-0"
+          aria-hidden
+        >
+          <div className="absolute inset-0 bg-[#F7F3EC]" />
+          <div className="absolute -left-1/4 top-0 h-[70%] w-[70%] rounded-full bg-[#5B21B6]/[0.06] blur-3xl" />
+          <div className="absolute -right-1/4 bottom-0 h-[55%] w-[55%] rounded-full bg-[#4F46E5]/[0.05] blur-3xl" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-60" />
+          <p className="landing-display absolute -right-4 top-1/2 hidden -translate-y-1/2 select-none text-[clamp(6rem,18vw,14rem)] font-medium leading-none tracking-tight text-[#1B1714]/[0.035] lg:block">
+            System
+          </p>
+        </div>
+
+        <div className={cn(ABOUT_CONTAINER, aboutSectionPadding, "relative z-10")}>
+          <div className="grid items-end gap-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-16 xl:gap-20">
+            <div>
+              <Reveal>
+                <div className="flex items-center gap-4">
+                  <span
+                    className="h-px w-10 bg-[#5B21B6]/50"
+                    aria-hidden
+                  />
+                  <BracketLabel>Our Philosophy</BracketLabel>
+                </div>
+              </Reveal>
+
+              <Reveal delay={0.1}>
+                <h2 className="landing-display mt-8 max-w-xl text-[2rem] font-medium leading-[1.12] tracking-tight sm:text-4xl md:text-5xl lg:max-w-none lg:text-[3.25rem]">
+                  Where every appointment matters & every{" "}
+                  <span className="italic text-[#5B21B6]">
+                    salon has a system
+                  </span>
+                </h2>
+              </Reveal>
+
+              <Reveal delay={0.18}>
+                <p className="mt-7 max-w-md text-base leading-relaxed text-[#1B1714]/60 md:text-lg">
+                  Software should disappear into the rhythm of the floor —
+                  so owners see the business, and stylists stay with the client.
+                </p>
+              </Reveal>
+
+              <Reveal delay={0.26}>
+                <ul className="mt-10 flex flex-col gap-5 border-t border-[#1B1714]/10 pt-8 sm:flex-row sm:gap-10">
+                  {[
+                    { label: "Clarity", detail: "One source of truth" },
+                    { label: "Rhythm", detail: "Built for peak hours" },
+                    { label: "Care", detail: "Clients come back" },
+                  ].map((item) => (
+                    <li key={item.label} className="min-w-0">
+                      <p className="text-sm font-semibold tracking-wide text-[#1B1714]">
+                        {item.label}
+                      </p>
+                      <p className="mt-1 text-sm text-[#1B1714]/45">
+                        {item.detail}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            </div>
+
+            <Reveal delay={0.14} className="relative">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[1.5rem] sm:aspect-[5/6] lg:aspect-auto lg:min-h-[480px]">
+                <Image
+                  src={IMAGES.salonWorkspace}
+                  alt="Calm salon workspace with styling stations"
+                  fill
+                  className="object-cover object-center transition-transform duration-700 ease-out hover:scale-[1.03]"
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1B1714]/55 via-[#1B1714]/10 to-transparent" />
+                <div className="absolute inset-0 ring-1 ring-inset ring-[#1B1714]/10" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/55">
+                    Built for the floor
+                  </p>
+                  <p className="landing-display mt-2 text-xl font-medium leading-snug text-white md:text-2xl">
+                    Operations that feel{" "}
+                    <span className="italic text-[#C4B5FD]">intentional</span>
+                  </p>
+                </div>
+              </div>
+              <div
+                className="pointer-events-none absolute -bottom-4 -left-4 hidden h-24 w-24 rounded-full border border-[#5B21B6]/20 bg-[#5B21B6]/[0.06] blur-sm lg:block"
+                aria-hidden
+              />
+            </Reveal>
+          </div>
         </div>
       </section>
 
