@@ -10,6 +10,8 @@ import { authConfig } from "@/lib/auth.config";
 import { normalizeSalonPlan, type SalonPlan } from "@/lib/plans";
 import { signOutCallbackUrl } from "@/lib/salon-paths";
 import { consumeAdminImpersonationToken } from "@/lib/platform-admin-access";
+import type { PlatformRole } from "@/lib/platform-permissions";
+import { resolvePlatformRole } from "@/lib/platform-permissions";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -76,13 +78,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const valid = await bcrypt.compare(parsed.data.password, user.password);
         if (!valid) return null;
 
-        if (user.isSuperAdmin) {
+        if (!user.isActive) return null;
+
+        const platformRole: PlatformRole | null =
+          user.platformRole ?? (user.isSuperAdmin ? "SUPER_ADMIN" : null);
+
+        if (platformRole) {
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
-            isSuperAdmin: true,
+            isSuperAdmin: platformRole === "SUPER_ADMIN",
+            platformRole,
             salonId: null,
             salonName: null,
             salonSlug: null,
@@ -205,10 +213,20 @@ export async function requireSession() {
 
 export async function requireSuperAdmin() {
   const session = await getAuthSession();
-  if (!session?.user?.isSuperAdmin) {
+  const platformRole = resolvePlatformRole(session?.user ?? {});
+  if (platformRole !== "SUPER_ADMIN") {
     throw new Error("Unauthorized");
   }
-  return session;
+  return session!;
+}
+
+export async function requirePlatformAdmin() {
+  const session = await getAuthSession();
+  const platformRole = resolvePlatformRole(session?.user ?? {});
+  if (!platformRole) {
+    throw new Error("Unauthorized");
+  }
+  return session!;
 }
 
 export async function requireOwnerOrManager() {

@@ -174,6 +174,7 @@ export function SalonsListClient({
   status,
   plan,
   stats,
+  readOnly = false,
 }: {
   salons: SalonRow[];
   total: number;
@@ -183,6 +184,7 @@ export function SalonsListClient({
   status: SalonStatusFilter;
   plan: SalonPlanFilter;
   stats: AdminStats;
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -522,6 +524,7 @@ export function SalonsListClient({
               salon={salon}
               isPending={isPending}
               onUpgrade={() => handleUpgrade(salon.id)}
+              readOnly={readOnly}
             />
           ))}
         </div>
@@ -619,6 +622,7 @@ export function SalonsListClient({
                           salon={salon}
                           isPending={isPending}
                           onUpgrade={() => handleUpgrade(salon.id)}
+                          readOnly={readOnly}
                         />
                       </TableCell>
                     </TableRow>
@@ -698,23 +702,27 @@ function SalonRowActions({
   salon,
   isPending,
   onUpgrade,
+  readOnly = false,
 }: {
   salon: SalonRow;
   isPending: boolean;
   onUpgrade: () => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="flex flex-col items-end gap-2 opacity-100 transition-opacity sm:opacity-80 sm:group-hover:opacity-100">
-      <div className="inline-flex flex-wrap items-center justify-end gap-1 rounded-xl border border-dashboard-border/70 bg-white p-1 shadow-sm">
-        <SalonAccessActions
-          salonId={salon.id}
-          salonSlug={salon.slug}
-          subscriptionStatus={salon.status}
-          ownerEmail={salon.ownerEmail}
-          ownerName={salon.ownerName}
-          compact
-        />
-      </div>
+      {!readOnly && (
+        <div className="inline-flex flex-wrap items-center justify-end gap-1 rounded-xl border border-dashboard-border/70 bg-white p-1 shadow-sm">
+          <SalonAccessActions
+            salonId={salon.id}
+            salonSlug={salon.slug}
+            subscriptionStatus={salon.status}
+            ownerEmail={salon.ownerEmail}
+            ownerName={salon.ownerName}
+            compact
+          />
+        </div>
+      )}
       <div className="inline-flex flex-wrap items-center justify-end gap-1.5">
         <Button
           variant="outline"
@@ -727,7 +735,7 @@ function SalonRowActions({
             <ArrowRight className="ml-1 h-3 w-3" />
           </Link>
         </Button>
-        {salon.plan !== "ENTERPRISE" && (
+        {salon.plan !== "ENTERPRISE" && !readOnly && (
           <Button
             variant="ghost"
             size="sm"
@@ -763,10 +771,12 @@ function SalonGridCard({
   salon,
   isPending,
   onUpgrade,
+  readOnly = false,
 }: {
   salon: SalonRow;
   isPending: boolean;
   onUpgrade: () => void;
+  readOnly?: boolean;
 }) {
   const isEnterprise = salon.plan === "ENTERPRISE";
 
@@ -837,22 +847,24 @@ function SalonGridCard({
           <SalonLoginUrl slug={salon.slug} />
         </div>
 
-        <div className="rounded-xl border border-dashboard-border/60 bg-slate-50/60 p-2">
-          <SalonAccessActions
-            salonId={salon.id}
-            salonSlug={salon.slug}
-            subscriptionStatus={salon.status}
-            ownerEmail={salon.ownerEmail}
-            ownerName={salon.ownerName}
-          />
-        </div>
+        {!readOnly && (
+          <div className="rounded-xl border border-dashboard-border/60 bg-slate-50/60 p-2">
+            <SalonAccessActions
+              salonId={salon.id}
+              salonSlug={salon.slug}
+              subscriptionStatus={salon.status}
+              ownerEmail={salon.ownerEmail}
+              ownerName={salon.ownerName}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between border-t border-dashboard-border/60 pt-4">
           <span className="text-xs tabular-nums text-dashboard-muted">
             Joined {format(new Date(salon.createdAt), "MMM d, yyyy")}
           </span>
           <div className="flex gap-1.5">
-            {salon.plan !== "ENTERPRISE" && (
+            {salon.plan !== "ENTERPRISE" && !readOnly && (
               <Button
                 variant="ghost"
                 size="sm"

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { getAdminSupportUnreadCount } from "@/actions/support-chat";
+import { resolvePlatformRole } from "@/lib/platform-permissions";
 
 export default async function AdminLayout({
   children,
@@ -9,8 +10,9 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const platformRole = resolvePlatformRole(session?.user ?? {});
 
-  if (!session?.user?.isSuperAdmin) {
+  if (!platformRole) {
     redirect("/admin/login");
   }
 
@@ -19,7 +21,8 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-dashboard-bg">
       <AdminSidebar
-        userName={session.user.name}
+        userName={session!.user.name}
+        platformRole={platformRole}
         supportUnreadCount={supportUnreadCount}
       />
       <main className="flex-1 overflow-auto">

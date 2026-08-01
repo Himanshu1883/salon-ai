@@ -12,6 +12,7 @@ export const authConfig = {
       if (user) {
         token.role = user.role ?? "owner";
         token.isSuperAdmin = user.isSuperAdmin ?? false;
+        token.platformRole = user.platformRole ?? undefined;
         token.salonId = user.salonId ?? undefined;
         token.salonName = user.salonName ?? undefined;
         token.salonSlug = user.salonSlug ?? undefined;
@@ -24,6 +25,9 @@ export const authConfig = {
         session.user.id = token.sub!;
         session.user.role = (token.role as string | undefined) ?? "owner";
         session.user.isSuperAdmin = Boolean(token.isSuperAdmin);
+        session.user.platformRole = token.platformRole as
+          | import("@/lib/platform-permissions").PlatformRole
+          | undefined;
         session.user.salonId = token.salonId as string | undefined;
         session.user.salonName = token.salonName as string | undefined;
         session.user.salonSlug = token.salonSlug as string | undefined;

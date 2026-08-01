@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireSession, requireSuperAdmin } from "@/lib/auth";
+import { requireSession, requirePlatformAdmin } from "@/lib/auth";
 
 const MESSAGE_MAX_LENGTH = 4000;
 const MESSAGE_FETCH_LIMIT = 200;
@@ -305,7 +305,7 @@ export async function getSalonSupportUnreadCount() {
 }
 
 export async function getAdminSupportStatusCounts(): Promise<SupportStatusCounts> {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const [all, open, waiting, closed] = await Promise.all([
     prisma.supportConversation.count(),
@@ -320,7 +320,7 @@ export async function getAdminSupportStatusCounts(): Promise<SupportStatusCounts
 export async function getAdminSupportConversations(
   statusFilter?: SupportConversationStatus | "ALL"
 ) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const conversations = await prisma.supportConversation.findMany({
     where:
@@ -352,7 +352,7 @@ export async function getAdminSupportConversations(
 }
 
 export async function getAdminSupportMessages(conversationId: string) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const conversation = await prisma.supportConversation.findUnique({
     where: { id: conversationId },
@@ -387,7 +387,7 @@ export async function getAdminSupportMessages(conversationId: string) {
 }
 
 export async function sendAdminSupportMessage(conversationId: string, body: string) {
-  const session = await requireSuperAdmin();
+  const session = await requirePlatformAdmin();
   const trimmed = validateMessageBody(body);
 
   const conversation = await prisma.supportConversation.findUnique({
@@ -429,7 +429,7 @@ export async function updateAdminSupportConversationStatus(
   conversationId: string,
   status: SupportConversationStatus
 ) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const conversation = await prisma.supportConversation.findUnique({
     where: { id: conversationId },
@@ -454,7 +454,7 @@ export async function updateAdminSupportConversationPriority(
   conversationId: string,
   priority: SupportTicketPriority
 ) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const conversation = await prisma.supportConversation.findUnique({
     where: { id: conversationId },
@@ -475,7 +475,7 @@ export async function updateAdminSupportConversationPriority(
 }
 
 export async function getAdminSupportUnreadCount() {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const conversations = await prisma.supportConversation.findMany({
     select: { id: true, adminLastReadAt: true },

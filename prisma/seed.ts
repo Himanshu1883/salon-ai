@@ -94,6 +94,7 @@ async function seedSuperAdmin() {
       name: "Platform Admin",
       role: "owner",
       isSuperAdmin: true,
+      platformRole: "SUPER_ADMIN",
       salonId: null,
     },
   });

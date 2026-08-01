@@ -17,6 +17,11 @@ import {
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import {
+  canAccessAdminRoute,
+  defaultAdminHome,
+  resolvePlatformRole,
+} from "@/lib/platform-permissions";
 
 const PLATFORM_FEATURES = [
   {
@@ -75,13 +80,21 @@ export default function AdminLoginForm() {
     const sessionRes = await fetch("/api/auth/session");
     const session = await sessionRes.json();
 
-    if (!session?.user?.isSuperAdmin) {
+    const platformRole = resolvePlatformRole(session?.user ?? {});
+
+    if (!platformRole) {
       setError("This account is not authorized for platform admin access");
       await fetch("/api/auth/signout", { method: "POST" });
       return;
     }
 
-    router.push(callbackUrl);
+    const destination =
+      platformRole === "CUSTOMER_SUPPORT" &&
+      !canAccessAdminRoute(callbackUrl, platformRole)
+        ? defaultAdminHome(platformRole)
+        : callbackUrl;
+
+    router.push(destination);
     router.refresh();
   }
 

@@ -110,7 +110,13 @@ const USAGE_STATS: {
   },
 ];
 
-export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
+export function SalonDetailClient({
+  salon,
+  readOnly = false,
+}: {
+  salon: SalonDetail;
+  readOnly?: boolean;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -212,7 +218,7 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
               value={PLAN_LABELS[salon.plan as SalonPlan] ?? salon.plan}
             />
             <div className="flex flex-wrap gap-2 border-t border-dashboard-border/60 pt-4">
-              {salon.plan !== "ENTERPRISE" && (
+              {!readOnly && salon.plan !== "ENTERPRISE" && (
                 <Button
                   size="sm"
                   disabled={isPending}
@@ -223,7 +229,7 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
                   Upgrade to Enterprise
                 </Button>
               )}
-              {salon.plan !== "BASIC" && (
+              {!readOnly && salon.plan !== "BASIC" && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -322,30 +328,32 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
       </AdminCard>
 
       {/* Admin actions */}
-      <AdminCard>
-        <AdminCardHeader
-          title="Salon Access"
-          description="Reset owner credentials or open the salon dashboard as the owner"
-          icon={ShieldAlert}
-        />
-        <AdminCardContent>
-          <SalonAccessActions
-            salonId={salon.id}
-            salonSlug={salon.slug}
-            subscriptionStatus={subscription?.status ?? "trial"}
-            ownerEmail={salon.owner?.email ?? ""}
-            ownerName={salon.owner?.name}
-          />
-        </AdminCardContent>
-      </AdminCard>
+      {!readOnly && (
+        <>
+          <AdminCard>
+            <AdminCardHeader
+              title="Salon Access"
+              description="Reset owner credentials or open the salon dashboard as the owner"
+              icon={ShieldAlert}
+            />
+            <AdminCardContent>
+              <SalonAccessActions
+                salonId={salon.id}
+                salonSlug={salon.slug}
+                subscriptionStatus={subscription?.status ?? "trial"}
+                ownerEmail={salon.owner?.email ?? ""}
+                ownerName={salon.owner?.name}
+              />
+            </AdminCardContent>
+          </AdminCard>
 
-      <AdminCard>
-        <AdminCardHeader
-          title="Admin Actions"
-          description="Manage subscription and billing for this salon"
-          icon={ShieldAlert}
-        />
-        <AdminCardContent className="space-y-4">
+          <AdminCard>
+            <AdminCardHeader
+              title="Admin Actions"
+              description="Manage subscription and billing for this salon"
+              icon={ShieldAlert}
+            />
+            <AdminCardContent className="space-y-4">
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-dashboard-muted">
               Subscription
@@ -396,6 +404,8 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
           </div>
         </AdminCardContent>
       </AdminCard>
+        </>
+      )}
 
       {/* Platform invoices */}
       <AdminCard>
@@ -414,15 +424,17 @@ export function SalonDetailClient({ salon }: { salon: SalonDetail }) {
               <p className="mt-1 max-w-sm text-sm text-dashboard-muted">
                 Invoices will appear here once generated for this salon&apos;s subscription.
               </p>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isPending}
-                className="mt-5 rounded-xl border-dashboard-border"
-                onClick={() => runAction("generate_invoice")}
-              >
-                Generate first invoice
-              </Button>
+              {!readOnly && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isPending}
+                  className="mt-5 rounded-xl border-dashboard-border"
+                  onClick={() => runAction("generate_invoice")}
+                >
+                  Generate first invoice
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">

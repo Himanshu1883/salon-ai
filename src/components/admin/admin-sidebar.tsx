@@ -11,31 +11,36 @@ import {
   Shield,
   ChevronRight,
   HeadphonesIcon,
+  Users,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { AdminSupportUnreadBadge } from "@/components/admin/admin-support-unread-badge";
+import {
+  getVisibleAdminNavItems,
+  PLATFORM_ROLE_LABELS,
+  type PlatformRole,
+} from "@/lib/platform-permissions";
 
-const NAV_ITEMS: {
-  href: string;
-  label: string;
-  icon: typeof LayoutDashboard;
-  exact?: boolean;
-  showUnread?: boolean;
-}[] = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/admin/salons", label: "Salons", icon: Building2 },
-  { href: "/admin/support", label: "Support", icon: HeadphonesIcon, showUnread: true },
-];
+const NAV_ICONS: Record<string, LucideIcon> = {
+  Dashboard: LayoutDashboard,
+  Salons: Building2,
+  Support: HeadphonesIcon,
+  Users: Users,
+};
 
 export function AdminSidebar({
   userName,
+  platformRole,
   supportUnreadCount = 0,
 }: {
   userName: string;
+  platformRole: PlatformRole;
   supportUnreadCount?: number;
 }) {
   const pathname = usePathname();
+  const navItems = getVisibleAdminNavItems(platformRole);
 
   return (
     <aside className="flex w-64 shrink-0 flex-col border-r border-slate-800/50 bg-gradient-to-b from-slate-900 to-slate-950">
@@ -55,7 +60,8 @@ export function AdminSidebar({
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
           Navigation
         </p>
-        {NAV_ITEMS.map(({ href, label, icon: Icon, exact, showUnread }) => {
+        {navItems.map(({ href, label, exact, showUnread }) => {
+          const Icon = NAV_ICONS[label] ?? LayoutDashboard;
           const active = exact
             ? pathname === href
             : pathname === href || pathname.startsWith(`${href}/`);
@@ -93,6 +99,9 @@ export function AdminSidebar({
             Signed in as
           </p>
           <p className="mt-0.5 truncate text-sm font-medium text-slate-200">{userName}</p>
+          <p className="mt-1 text-[11px] font-medium text-violet-300/80">
+            {PLATFORM_ROLE_LABELS[platformRole]}
+          </p>
         </div>
         <Button
           variant="outline"

@@ -5,6 +5,11 @@ import {
   isSalonProtectedRoute,
   parseSalonPrefixedPath,
 } from "@/lib/salon-paths";
+import {
+  canAccessAdminRoute,
+  defaultAdminHome,
+  resolvePlatformRole,
+} from "@/lib/platform-permissions";
 
 const { auth } = NextAuth({
   ...authConfig,
@@ -37,20 +42,30 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth?.user;
   const isSuperAdmin = !!req.auth?.user?.isSuperAdmin;
+  const platformRole = resolvePlatformRole(req.auth?.user ?? {});
+  const isPlatformAdmin = platformRole !== null;
   const sessionSalonSlug = req.auth?.user?.salonSlug;
 
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {
-      if (isSuperAdmin) {
-        return NextResponse.redirect(new URL("/admin", req.url));
+      if (isPlatformAdmin) {
+        return NextResponse.redirect(
+          new URL(defaultAdminHome(platformRole), req.url)
+        );
       }
       return NextResponse.next();
     }
 
-    if (!isSuperAdmin) {
+    if (!isPlatformAdmin) {
       const loginUrl = new URL("/admin/login", req.url);
       loginUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(loginUrl);
+    }
+
+    if (!canAccessAdminRoute(pathname, platformRole)) {
+      return NextResponse.redirect(
+        new URL(defaultAdminHome(platformRole), req.url)
+      );
     }
 
     return NextResponse.next();
@@ -125,8 +140,10 @@ export default auth((req) => {
         return NextResponse.redirect(loginUrl);
       }
 
-      if (isSuperAdmin) {
-        return NextResponse.redirect(new URL("/admin", req.url));
+      if (isPlatformAdmin) {
+        return NextResponse.redirect(
+          new URL(defaultAdminHome(platformRole), req.url)
+        );
       }
 
       if (sessionSalonSlug && sessionSalonSlug !== salonSlug) {
@@ -157,8 +174,10 @@ export default auth((req) => {
       return NextResponse.redirect(new URL("/", req.url));
     }
 
-    if (isSuperAdmin) {
-      return NextResponse.redirect(new URL("/admin", req.url));
+    if (isPlatformAdmin) {
+      return NextResponse.redirect(
+        new URL(defaultAdminHome(platformRole), req.url)
+      );
     }
 
     if (sessionSalonSlug) {

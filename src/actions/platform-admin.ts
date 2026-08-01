@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { requireSuperAdmin } from "@/lib/auth";
+import { requireSuperAdmin, requirePlatformAdmin } from "@/lib/auth";
 import {
   addDays,
   getMonthPeriod,
@@ -36,7 +36,7 @@ export type SalonSubscriptionAction =
   | "generate_invoice";
 
 export async function getAdminStats() {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -79,7 +79,7 @@ export async function getAllSalons(options?: {
   page?: number;
   pageSize?: number;
 }) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const search = options?.search?.trim() ?? "";
   const status = options?.status ?? "all";
@@ -163,7 +163,7 @@ export async function getAllSalons(options?: {
 }
 
 export async function getSalonDetail(salonId: string) {
-  await requireSuperAdmin();
+  await requirePlatformAdmin();
 
   const salon = await prisma.salon.findUnique({
     where: { id: salonId },
