@@ -9,7 +9,7 @@ export default async function AdminSupportPage() {
   const selected = conversations[0] ?? null;
 
   const thread = selected
-    ? await getAdminSupportMessages(selected.id, { revalidate: false })
+    ? await getAdminSupportMessages(selected.id)
     : null;
 
   return (
