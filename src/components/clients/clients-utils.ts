@@ -6,7 +6,14 @@ import {
   subDays,
 } from "date-fns";
 import type { CustomerListItem } from "@/actions/customers";
+import { parseSalonPrefixedPath, salonPath } from "@/lib/salon-paths";
 import type { ClientSummaryStats } from "./types";
+
+export function getClientDetailPath(pathname: string, clientId: string): string {
+  const parsed = parseSalonPrefixedPath(pathname);
+  const innerPath = `/clients/${clientId}`;
+  return parsed ? salonPath(parsed.salonSlug, innerPath) : innerPath;
+}
 
 const ACTIVE_DAYS = 90;
 const VIP_LOYALTY_THRESHOLD = 500;

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { Star } from "lucide-react";
@@ -12,10 +13,10 @@ import type { CustomerListItem } from "@/actions/customers";
 import {
   computeAvgTicket,
   formatLastVisit,
+  getClientDetailPath,
   getClientStatus,
 } from "./clients-utils";
 import { ClientsRowActions } from "./clients-row-actions";
-import { ClientsDetailDialog } from "./clients-detail-dialog";
 import { ClientsEmptyState } from "./clients-empty-state";
 
 const STATUS_STYLES = {
@@ -44,27 +45,13 @@ export function ClientsTable({
   onAdd,
   onImport,
 }: ClientsTableProps) {
-  const [detailCustomer, setDetailCustomer] = useState<CustomerListItem | null>(
-    null
-  );
-  const [detailOpen, setDetailOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
   const allSelected =
     customers.length > 0 && customers.every((c) => selected.has(c.id));
 
   function openDetail(customer: CustomerListItem) {
-    setDetailCustomer(customer);
-    setDetailOpen(true);
-  }
-
-  function handleDetailOpenChange(open: boolean) {
-    setDetailOpen(open);
-    if (!open) {
-      setDetailCustomer(null);
-    }
-  }
-
-  function handleCustomerUpdated(updated: CustomerListItem) {
-    setDetailCustomer(updated);
+    router.push(getClientDetailPath(pathname, customer.id));
   }
 
   if (customers.length === 0) {
@@ -80,8 +67,7 @@ export function ClientsTable({
   }
 
   return (
-    <>
-      <div className="overflow-hidden rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
+    <div className="overflow-hidden rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px] border-collapse">
             <thead className="sticky top-0 z-10 bg-[#F7F8FC]">
@@ -140,9 +126,12 @@ export function ClientsTable({
                           {getInitials(customer.name)}
                         </div>
                         <div>
-                          <p className="font-semibold text-[#1C103D]">
+                          <Link
+                            href={getClientDetailPath(pathname, customer.id)}
+                            className="font-semibold text-[#1C103D] transition-colors hover:text-[#6C3BFF] hover:underline"
+                          >
                             {customer.name}
-                          </p>
+                          </Link>
                         </div>
                       </div>
                     </td>
@@ -202,13 +191,5 @@ export function ClientsTable({
           </table>
         </div>
       </div>
-
-      <ClientsDetailDialog
-        customer={detailCustomer}
-        open={detailOpen}
-        onOpenChange={handleDetailOpenChange}
-        onCustomerUpdated={handleCustomerUpdated}
-      />
-    </>
   );
 }

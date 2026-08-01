@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Calendar,
@@ -25,6 +25,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { CustomerListItem } from "@/actions/customers";
 import { usePlan } from "@/components/plans/plan-provider";
+import { getClientDetailPath } from "./clients-utils";
 
 type ClientsRowActionsProps = {
   customer: CustomerListItem;
@@ -36,7 +37,9 @@ export function ClientsRowActions({
   onActionClick,
 }: ClientsRowActionsProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const { isEnterprise } = usePlan();
+  const profilePath = getClientDetailPath(pathname, customer.id);
 
   function handleClick(e: React.MouseEvent, action: () => void) {
     e.stopPropagation();
@@ -63,9 +66,7 @@ export function ClientsRowActions({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 rounded-xl">
         <DropdownMenuItem
-          onClick={(e) =>
-            handleClick(e, () => router.push(`/clients/${customer.id}`))
-          }
+          onClick={(e) => handleClick(e, () => router.push(profilePath))}
         >
           <User className="h-4 w-4" />
           Open Profile
@@ -111,9 +112,7 @@ export function ClientsRowActions({
           Email
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={(e) =>
-            handleClick(e, () => router.push(`/clients/${customer.id}`))
-          }
+          onClick={(e) => handleClick(e, () => router.push(profilePath))}
         >
           <FileText className="h-4 w-4" />
           Notes
