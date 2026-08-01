@@ -25,6 +25,12 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   CANCELED: "Canceled",
 };
 
+/** Status filter tabs — labels match salon UX; values are Prisma ProjectStatus. */
+export const PROJECT_STATUS_TABS = PROJECT_STATUSES.map((value) => ({
+  value,
+  label: PROJECT_STATUS_LABELS[value],
+}));
+
 export const PROJECT_PRIORITY_LABELS: Record<ProjectPriority, string> = {
   LOW: "Low",
   MEDIUM: "Medium",

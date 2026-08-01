@@ -17,6 +17,7 @@ import {
   Wallet,
   LineChart,
   Receipt,
+  FolderKanban,
 } from "lucide-react";
 
 export type SalonPlan = "BASIC" | "ENTERPRISE";
@@ -109,8 +110,7 @@ const ENTERPRISE_MODULES: PlanModule[] = [
 
 export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, module: "dashboard" },
-  // Hidden from sidebar nav — /projects route remains accessible via direct URL
-  // { href: "/projects", label: "Projects", icon: FolderKanban, module: "projects" },
+  { href: "/projects", label: "Projects", icon: FolderKanban, module: "projects" },
   { href: "/sales/appointments", label: "Appointments", icon: Calendar, module: "appointments" },
   { href: "/check-in", label: "Walk-ins", icon: UserCheck, module: "walk-in" },
   { href: "/clients", label: "Customers", icon: Contact, module: "customers" },

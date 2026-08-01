@@ -53,6 +53,7 @@ import {
   PROJECT_STATUSES,
   PROJECT_STATUS_COLORS,
   PROJECT_STATUS_LABELS,
+  PROJECT_STATUS_TABS,
   type ProjectPriority,
   type ProjectStatus,
 } from "@/lib/projects";
@@ -417,27 +418,35 @@ export function ProjectsClient({
         </Dialog>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {PROJECT_STATUSES.map((status) => {
-          const active = visibleStatuses.has(status);
-          const count = grouped[status].length;
+      <div
+        role="tablist"
+        aria-label="Filter projects by status"
+        className="flex gap-1 overflow-x-auto rounded-2xl border border-[#E8ECF4] bg-stone-50/90 p-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {PROJECT_STATUS_TABS.map((tab) => {
+          const active = visibleStatuses.has(tab.value);
+          const count = grouped[tab.value].length;
           return (
             <button
-              key={status}
+              key={tab.value}
               type="button"
-              onClick={() => toggleStatus(status)}
+              role="tab"
+              aria-selected={active}
+              onClick={() => toggleStatus(tab.value)}
               className={cn(
-                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-all",
+                "inline-flex shrink-0 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium transition-colors",
                 active
-                  ? PROJECT_STATUS_COLORS[status].chip
-                  : "border-stone-200 bg-white text-stone-400 hover:border-stone-300 hover:text-stone-600"
+                  ? "bg-violet-600/10 text-violet-900 shadow-sm shadow-violet-600/10"
+                  : "text-stone-500 hover:bg-white hover:text-stone-800"
               )}
             >
-              {PROJECT_STATUS_LABELS[status]}
+              {tab.label}
               <span
                 className={cn(
-                  "rounded-full px-1.5 py-0.5 text-xs",
-                  active ? "bg-white/60" : "bg-stone-100"
+                  "rounded-md px-1.5 py-0.5 text-xs tabular-nums",
+                  active
+                    ? "bg-violet-600/10 text-violet-800"
+                    : "bg-stone-200/70 text-stone-500"
                 )}
               >
                 {count}
