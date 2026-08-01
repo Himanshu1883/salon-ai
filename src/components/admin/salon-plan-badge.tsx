@@ -19,7 +19,7 @@ export function SalonPlanBadge({ plan }: { plan: string }) {
   const { className, icon: Icon } = planStyles[normalized];
 
   return (
-    <Badge className={cn("gap-1.5 px-2.5 py-1 text-xs font-semibold", className)}>
+    <Badge className={cn("gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm", className)}>
       <Icon className="h-3 w-3" />
       {PLAN_LABELS[normalized]}
     </Badge>

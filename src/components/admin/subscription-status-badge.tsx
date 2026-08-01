@@ -50,7 +50,7 @@ function StatusBadge({
   return (
     <Badge
       variant={variant === "outline" || variant === "default" ? "outline" : variant}
-      className={cn("gap-1.5 px-2.5 py-1 text-xs font-semibold", className)}
+      className={cn("gap-1.5 px-2.5 py-1 text-xs font-semibold shadow-sm", className)}
     >
       {dotClassName && (
         <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", dotClassName)} />
