@@ -165,26 +165,49 @@ export function DocsPageContent() {
 
   return (
     <div className="bg-[#F7F3EC] text-[#1B1714]">
-      {/* Hero — Huts-style centered headline */}
-      <section className="border-b border-[#E4DDD1] pt-[calc(var(--landing-nav-h)+4rem)] pb-16 md:pb-24 md:pt-[calc(var(--landing-nav-h)+5.5rem)]">
-        <div className={cn(CONTAINER, "max-w-4xl text-center")}>
-          <Reveal>
-            <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.75rem]">
-              The best way to set up and run your salon on Salon AI
-            </h1>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
-              Clear guides for every module — from first login to multi-branch
-              ERP. Written for salon owners, not developers.
-            </p>
-          </Reveal>
-          <Reveal delay={0.18} className="mt-10">
-            <Link href="/login" className={primaryBtn}>
-              Get Started
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Reveal>
+      {/* Hero — 100vh, centered (unique bg vs other marketing pages) */}
+      <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E4DDD1]">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <Image
+            src={IMAGES.bannerModern}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+        </div>
+
+        <div
+          className={cn(
+            CONTAINER,
+            "relative z-10 flex min-h-[100svh] flex-col items-center justify-center text-center",
+            "pb-16 pt-[calc(var(--landing-nav-h)+2rem)]"
+          )}
+        >
+          <div className="max-w-4xl">
+            <Reveal>
+              <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight sm:text-5xl md:text-6xl lg:text-[3.75rem]">
+                The best way to set up and run your salon on Salon AI
+              </h1>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
+                Clear guides for every module — from first login to multi-branch
+                ERP. Written for salon owners, not developers.
+              </p>
+            </Reveal>
+            <Reveal delay={0.18} className="mt-10">
+              <Link href="/login" className={primaryBtn}>
+                Get Started
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </Reveal>
+          </div>
         </div>
       </section>
 

@@ -218,7 +218,7 @@ export function AboutPageContent() {
       <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
         <div className="pointer-events-none absolute inset-0" aria-hidden>
           <Image
-            src="/bg.png"
+            src="/bg2.png"
             alt=""
             fill
             priority

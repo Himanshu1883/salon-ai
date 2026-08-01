@@ -1,10 +1,16 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { FAQ_ITEMS, PRICING_PLANS, type PricingPlan } from "../../constants";
+import {
+  FAQ_ITEMS,
+  IMAGES,
+  PRICING_PLANS,
+  type PricingPlan,
+} from "../../constants";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
@@ -174,24 +180,80 @@ export function PricingPageContent() {
 
   return (
     <div className="bg-[#FAF9F7] text-[#1B1714]">
-      {/* Hero — ReflexAI style */}
-      <section className="border-b border-[#E8E4DE] pt-[calc(var(--landing-nav-h)+3.5rem)] pb-12 md:pb-16 md:pt-[calc(var(--landing-nav-h)+5rem)]">
-        <div className={cn(CONTAINER, "max-w-3xl text-center")}>
-          <Reveal>
-            <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#5B21B6]">
-              Pricing
-            </p>
-            <h1 className="landing-display mt-4 text-3xl font-medium leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-[3.25rem]">
-              Pricing that scales with your salon,{" "}
-              <span className="italic text-[#5B21B6]">and your ROI</span>
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-[#1B1714]/60 md:text-lg">
-              Flexible plans designed to reduce ops cost, save floor time, and
-              deliver value from day one.
-            </p>
-          </Reveal>
+      {/* Hero — 100vh banner */}
+      <section className="hero-editorial relative min-h-[100svh] overflow-hidden border-b border-[#E8E4DE]">
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <Image
+            src={IMAGES.hairStyling}
+            alt=""
+            fill
+            priority
+            className="object-cover object-center"
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-[#F7F3EC]/35" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F7F3EC]/75 via-[#F7F3EC]/55 to-[#F7F3EC]/70" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_45%,rgba(247,243,236,0.55),transparent_70%)]" />
+          <div className="hero-editorial__grain absolute inset-0 opacity-90" />
+        </div>
 
-          <Reveal delay={0.1} className="mt-8 flex justify-center">
+        <div
+          className={cn(
+            CONTAINER,
+            "relative z-10 flex min-h-[100svh] flex-col items-center justify-center text-center",
+            "pb-16 pt-[calc(var(--landing-nav-h)+2rem)]"
+          )}
+        >
+          <div className="max-w-4xl">
+            <Reveal>
+              <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#1B1714]/45">
+                Pricing · Salon AI ERP
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.08}>
+              <h1 className="landing-display mt-6 text-[2.5rem] font-medium leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-[4rem]">
+                Pricing that scales with your salon,{" "}
+                <span className="italic text-[#5B21B6]">and your ROI</span>
+              </h1>
+            </Reveal>
+
+            <Reveal delay={0.16}>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-[#1B1714]/65 md:text-lg">
+                Flexible plans designed to reduce ops cost, save floor time, and
+                deliver value from day one.
+              </p>
+            </Reveal>
+
+            <Reveal
+              delay={0.24}
+              className="mt-10 flex flex-wrap items-center justify-center gap-3"
+            >
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] px-7 py-3.5 text-sm font-semibold text-white shadow-[0_8px_28px_-6px_rgba(91,33,182,0.4)] transition-[transform,box-shadow] hover:-translate-y-px"
+              >
+                Start Free Trial
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+              <a
+                href="#plans"
+                className="inline-flex items-center rounded-full border border-[#1B1714]/25 bg-white/70 px-7 py-3.5 text-sm font-semibold text-[#1B1714] backdrop-blur-sm transition-colors hover:border-[#5B21B6]/35 hover:bg-white"
+              >
+                View plans
+              </a>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* Plan cards */}
+      <section
+        id="plans"
+        className="scroll-mt-24 border-b border-[#E8E4DE] pb-16 pt-12 md:pb-24 md:pt-16"
+      >
+        <div className={CONTAINER}>
+          <Reveal className="mb-10 flex justify-center">
             <div
               className="inline-flex rounded-full border border-[#E8E4DE] bg-white p-1 shadow-[0_2px_8px_rgba(27,23,20,0.04)]"
               role="group"
@@ -224,12 +286,7 @@ export function PricingPageContent() {
               </button>
             </div>
           </Reveal>
-        </div>
-      </section>
 
-      {/* Plan cards */}
-      <section className="border-b border-[#E8E4DE] pb-16 pt-4 md:pb-24">
-        <div className={CONTAINER}>
           <div className="grid gap-5 md:grid-cols-3 md:gap-6">
             {standardPlans.map((plan, index) => (
               <PlanCard
