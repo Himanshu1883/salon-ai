@@ -93,7 +93,7 @@ export function Navbar({ isAuthenticated = false }: NavbarProps) {
         {/* Logo */}
         <Link
           href="/"
-          aria-label="GlowDesk home"
+          aria-label="Gotix home"
           className="rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B21B6]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
           onClick={() => setMobileOpen(false)}
         >

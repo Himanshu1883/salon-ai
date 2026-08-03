@@ -41,10 +41,10 @@ const QUICK_ACTIONS = [
 ] as const;
 
 const FOOTER_LINKS = [
-  { label: "Knowledge Base", href: "https://docs.glowdesk.app" },
-  { label: "Video Guides", href: "https://docs.glowdesk.app/guides" },
-  { label: "System Status", href: "https://status.glowdesk.app" },
-  { label: "Community", href: "https://community.glowdesk.app" },
+  { label: "Knowledge Base", href: "https://docs.Gotix.app" },
+  { label: "Video Guides", href: "https://docs.Gotix.app/guides" },
+  { label: "System Status", href: "https://status.Gotix.app" },
+  { label: "Community", href: "https://community.Gotix.app" },
 ];
 
 function statusBadgeVariant(status: SupportConversationDetail["status"]) {

@@ -51,7 +51,7 @@ export function BrandMark({ className, size = "nav", priority }: BrandMarkProps)
             : "text-xl text-white sm:text-2xl"
         )}
       >
-        GlowDesk
+        Gotix
       </span>
     </div>
   );

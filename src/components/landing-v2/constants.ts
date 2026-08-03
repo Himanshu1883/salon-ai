@@ -72,7 +72,7 @@ export const IMAGES = {
 } as const;
 
 export const BRAND = {
-  name: "GlowDesk",
+  name: "Gotix",
   tagline: "Luxury Salon Management, Powered by Intelligence",
   emerald: "#059669",
   purple: "#7c3aed",
@@ -173,14 +173,14 @@ export type PreviewTab = {
 };
 
 export const PREVIEW_TABS: PreviewTab[] = [
-  { id: "dashboard", label: "Dashboard", title: "Command Center", description: "See revenue, appointments, and inventory in one unified view.", image: "/dashboard.png", alt: "GlowDesk dashboard command center" },
-  { id: "appointment", label: "Appointment", title: "Smart Scheduling", description: "Drag-and-drop calendar with conflict detection and auto-reminders.", image: "/appoinment.png", alt: "GlowDesk appointments calendar" },
-  { id: "billing", label: "Billing", title: "Fast Checkout", description: "Split bills, apply memberships, and print receipts in seconds.", image: "/biling.png", alt: "GlowDesk billing and checkout" },
-  { id: "crm", label: "CRM", title: "Client Relationships", description: "360° client profiles with visit history and personalized offers.", image: "/customers.png", alt: "GlowDesk customer CRM profiles" },
-  { id: "inventory", label: "Inventory", title: "Stock Control", description: "Real-time stock levels with low-inventory alerts and PO tracking.", image: "/inventory.png", alt: "GlowDesk inventory stock control" },
-  { id: "marketing", label: "Marketing", title: "Grow Your Salon", description: "Campaign builder with SMS, email, and WhatsApp automation.", image: "/services.png", alt: "GlowDesk services and offers" },
-  { id: "reports", label: "Reports", title: "Business Reports", description: "Export-ready reports for accounting, staff, and service analysis.", image: "/report.png", alt: "GlowDesk business reports" },
-  { id: "analytics", label: "Analytics", title: "AI Analytics", description: "Predictive insights on demand, churn, and revenue optimization.", image: "/report.png", alt: "GlowDesk AI analytics and insights" },
+  { id: "dashboard", label: "Dashboard", title: "Command Center", description: "See revenue, appointments, and inventory in one unified view.", image: "/dashboard.png", alt: "Gotix dashboard command center" },
+  { id: "appointment", label: "Appointment", title: "Smart Scheduling", description: "Drag-and-drop calendar with conflict detection and auto-reminders.", image: "/appoinment.png", alt: "Gotix appointments calendar" },
+  { id: "billing", label: "Billing", title: "Fast Checkout", description: "Split bills, apply memberships, and print receipts in seconds.", image: "/biling.png", alt: "Gotix billing and checkout" },
+  { id: "crm", label: "CRM", title: "Client Relationships", description: "360° client profiles with visit history and personalized offers.", image: "/customers.png", alt: "Gotix customer CRM profiles" },
+  { id: "inventory", label: "Inventory", title: "Stock Control", description: "Real-time stock levels with low-inventory alerts and PO tracking.", image: "/inventory.png", alt: "Gotix inventory stock control" },
+  { id: "marketing", label: "Marketing", title: "Grow Your Salon", description: "Campaign builder with SMS, email, and WhatsApp automation.", image: "/services.png", alt: "Gotix services and offers" },
+  { id: "reports", label: "Reports", title: "Business Reports", description: "Export-ready reports for accounting, staff, and service analysis.", image: "/report.png", alt: "Gotix business reports" },
+  { id: "analytics", label: "Analytics", title: "AI Analytics", description: "Predictive insights on demand, churn, and revenue optimization.", image: "/report.png", alt: "Gotix AI analytics and insights" },
 ];
 
 export type SalonType = {
@@ -307,7 +307,7 @@ export const TESTIMONIALS: Testimonial[] = [
     name: "Priya Sharma",
     role: "Owner",
     salon: "Luxe Hair Studio, Mumbai",
-    quote: "GlowDesk transformed how we manage 3 branches. Revenue is up 40% and our clients love the WhatsApp reminders.",
+    quote: "Gotix transformed how we manage 3 branches. Revenue is up 40% and our clients love the WhatsApp reminders.",
     rating: 5,
     image: IMAGES.owner1,
     alt: "Priya Sharma salon owner portrait",
@@ -411,7 +411,7 @@ export type FaqItem = {
 };
 
 export const FAQ_ITEMS: FaqItem[] = [
-  { question: "How quickly can I set up GlowDesk?", answer: "Most salons are fully operational within 24 hours. Our onboarding team imports your services, staff, and client data for you." },
+  { question: "How quickly can I set up Gotix?", answer: "Most salons are fully operational within 24 hours. Our onboarding team imports your services, staff, and client data for you." },
   { question: "Does it work for multi-branch salons?", answer: "Yes. Manage unlimited branches from a single dashboard with centralized reporting, inventory sync, and staff management." },
   { question: "Can I migrate from my current software?", answer: "Absolutely. We offer free data migration from Fresha, Booksy, Zoho, and Excel spreadsheets with zero downtime." },
   { question: "Is WhatsApp integration included?", answer: "WhatsApp reminders, confirmations, and marketing messages are included in Professional and Enterprise plans." },
@@ -443,7 +443,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "About", href: "/about" },
       { label: "Documentation", href: "/documentation" },
       { label: "FAQ", href: "/#faq" },
-      { label: "Contact", href: "mailto:support@glowdesk.com" },
+      { label: "Contact", href: "mailto:support@Gotix.com" },
     ],
   },
 ];

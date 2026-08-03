@@ -1,6 +1,7 @@
 "use client";
 
 import { LandingSection } from "../ui/landing-primitives";
+import { ProcessSection } from "./preview-photo";
 import { PreviewShowcase } from "./preview-showcase";
 
 export function PreviewSection() {
@@ -32,7 +33,7 @@ export function PreviewSection() {
       </div>
 
       <div className="relative z-10">
-        <PreviewShowcase />
+        <ProcessSection />
       </div>
     </LandingSection>
   );

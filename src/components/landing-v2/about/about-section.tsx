@@ -61,7 +61,7 @@ export function AboutSection() {
             viewport={{ once: true, margin: "-40px" }}
             transition={{ duration: reduced ? 0.2 : 0.5, ease: EASE }}
           >
-            <SectionEyebrow centered={false}>About GlowDesk</SectionEyebrow>
+            <SectionEyebrow centered={false}>About Gotix</SectionEyebrow>
             <h2 className="landing-display mt-1 text-3xl font-semibold leading-[1.12] tracking-tight text-[#1B1714] md:text-4xl lg:text-[2.75rem]">
               The modern desk for{" "}
               <span className="bg-[linear-gradient(135deg,#6D28D9,#4F46E5)] bg-clip-text text-transparent">
@@ -159,7 +159,7 @@ export function AboutSection() {
           <div className="relative h-[70vh] max-h-[70vh] min-h-[70vh] overflow-hidden rounded-2xl border border-[#5B21B6]/25 bg-white">
             <Image
               src="/about.png"
-              alt="GlowDesk — modern salon operations"
+              alt="Gotix — modern salon operations"
               fill
               unoptimized
               className="object-cover object-center"
@@ -204,7 +204,7 @@ export function AboutSection() {
               {FOOTER_STATS[0].suffix}
             </p>
             <p className="mt-0.5 text-[11px] font-medium text-[#1B1714]/55">
-              Salons on GlowDesk
+              Salons on Gotix
             </p>
           </motion.div>
         </motion.div>

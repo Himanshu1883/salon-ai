@@ -5,6 +5,7 @@ import { HeroSection } from "./hero/hero-section";
 import { HeroTrustBridge } from "./hero/hero-trust-bridge";
 import { Footer } from "./footer/footer";
 import dynamic from "next/dynamic";
+import { ProcessSection } from "./preview/preview-photo";
 
 const AboutSection = dynamic(() =>
   import("./about/about-section").then((m) => ({ default: m.AboutSection }))
@@ -45,7 +46,8 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
           <HeroTrustBridge />
         </div>
         <AboutSection />
-        <PreviewSection />
+        <ProcessSection />
+        {/* <PreviewSection /> */}
         <SalonTypesSection />
         <FeaturesSection />
         <AiSection />

@@ -61,7 +61,7 @@ const PROCESS = [
     num: "01",
     title: "Discover & Setup",
     description:
-      "We map your salon workflows, services, and staff — then configure GlowDesk around how you already work.",
+      "We map your salon workflows, services, and staff — then configure Gotix around how you already work.",
     points: ["Salon audit", "Module setup", "Team onboarding"],
   },
   {
@@ -86,7 +86,7 @@ const STATS = [
   {
     value: FOOTER_STATS[0].value!,
     suffix: "+",
-    label: "Salons running daily operations on GlowDesk",
+    label: "Salons running daily operations on Gotix",
   },
   {
     value: 50,
@@ -253,14 +253,14 @@ export function AboutPageContent() {
                     className="h-7 w-7 rounded-full object-contain"
                     aria-hidden
                   />
-                  Welcome to GlowDesk
+                  Welcome to Gotix
                 </span>
               </div>
             </Reveal>
 
             <Reveal delay={0.08}>
               <h1 className="landing-display text-[2.25rem] font-medium leading-[1.1] tracking-tight text-[#1B1714] sm:text-5xl md:text-6xl lg:text-[3.75rem]">
-                Salons that run smarter on GlowDesk
+                Salons that run smarter on Gotix
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
@@ -398,7 +398,7 @@ export function AboutPageContent() {
               </p>
               <div className="mt-8 border-t border-[#1B1714]/10 pt-5">
                 <p className="text-sm font-semibold tracking-wide text-[#1B1714]">
-                  GLOWDESK TEAM
+                  Gotix TEAM
                 </p>
                 <p className="mt-1 text-xs uppercase tracking-[0.16em] text-[#1B1714]/45">
                   Product & Design
@@ -443,7 +443,7 @@ export function AboutPageContent() {
               </h3>
               <div className="mt-6 space-y-5 text-base leading-relaxed text-[#1B1714]/70">
                 <p>
-                  GlowDesk grew from a simple belief: great salon software
+                  Gotix grew from a simple belief: great salon software
                   starts with listening. We spent time on real salon floors
                   before we designed a single screen.
                 </p>
@@ -723,7 +723,7 @@ export function AboutPageContent() {
               <span className="italic text-[#5B21B6]">your Salon?</span>
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-base text-[#1B1714]/65">
-              Start a complimentary trial and discover how GlowDesk can bring
+              Start a complimentary trial and discover how Gotix can bring
               your entire floor onto one intelligent platform.
             </p>
             <div className="mt-10 flex flex-wrap justify-center gap-3">

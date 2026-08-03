@@ -12,13 +12,13 @@ type TabId = (typeof PREVIEW_TABS)[number]["id"];
 const SIDE_PHOTOS = {
   left: {
     image: "/services.png",
-    alt: "GlowDesk services catalog",
+    alt: "Gotix services catalog",
     rotate: -5,
   },
   right: {
     image: "/support.png",
-    alt: "GlowDesk customer support workspace",
-    caption: "Live product · GlowDesk",
+    alt: "Gotix customer support workspace",
+    caption: "Live product · Gotix",
     rotate: 4,
   },
 } as const;
@@ -218,7 +218,7 @@ export function PreviewShowcase() {
                   </div>
                   <div className="mx-auto flex max-w-md flex-1 items-center justify-center rounded-md border border-[#5B21B6]/12 bg-white px-3 py-1">
                     <span className="truncate text-[10px] text-[#1B1714]/55 sm:text-[11px]">
-                      app.glowdesk.com/{active === "dashboard" ? "dashboard" : active}
+                      app.Gotix.com/{active === "dashboard" ? "dashboard" : active}
                     </span>
                   </div>
                   <div className="hidden w-[52px] sm:block" aria-hidden />

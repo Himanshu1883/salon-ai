@@ -17,7 +17,7 @@ export function MonitorMockup({ className, variant = "dashboard" }: MonitorMocku
           <div className="h-2.5 w-2.5 rounded-full bg-yellow-500" />
           <div className="h-2.5 w-2.5 rounded-full bg-green-500" />
           <div className="ml-4 flex-1 rounded bg-gray-700 px-3 py-0.5 text-[10px] text-gray-400">
-            app.glowdesk.com/dashboard
+            app.Gotix.com/dashboard
           </div>
         </div>
         <div className="bg-white">

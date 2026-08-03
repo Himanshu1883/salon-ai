@@ -15,19 +15,19 @@ import { cn } from "@/lib/utils";
 const AI_SHOTS = [
   {
     src: "/dashboard.png",
-    alt: "GlowDesk dashboard with AI-powered salon analytics",
+    alt: "Gotix dashboard with AI-powered salon analytics",
     label: "AI Analytics",
     featured: true,
   },
   {
     src: "/report.png",
-    alt: "GlowDesk reports with predictive insights",
+    alt: "Gotix reports with predictive insights",
     label: "Insights",
     featured: false,
   },
   {
     src: "/inventory.png",
-    alt: "GlowDesk inventory intelligence",
+    alt: "Gotix inventory intelligence",
     label: "Forecasting",
     featured: false,
   },
@@ -69,7 +69,7 @@ function DashboardShot({
         "shadow-[0_8px_24px_rgba(91,33,182,0.1)] ring-1 ring-[#5B21B6]/[0.06]"
       )}
     >
-      <BrowserChrome label={`app.glowdesk.com · ${label}`} />
+      <BrowserChrome label={`app.Gotix.com · ${label}`} />
       <div
         className={cn(
           "relative overflow-hidden bg-[#FAF5FF]",

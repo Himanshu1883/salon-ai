@@ -1,297 +1,306 @@
 "use client";
 
 import Image from "next/image";
-import {
-  motion,
-  useReducedMotion,
-  useScroll,
-  useTransform,
-  type Variants,
-} from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { FEATURE_BLOCKS } from "../constants";
-import type { FeatureBlock } from "../constants";
-import { LandingSection, sectionHeadingClass } from "../ui/landing-primitives";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useState } from "react";
+import { ArrowRight, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const bulletAccentClass = "bg-[#1B1714]/35";
+/* ------------------------------------------------------------------ */
+/* Content                                                              */
+/* ------------------------------------------------------------------ */
 
-function FeatureNumberMarker({ index }: { index: number }) {
-  const num = String(index + 1).padStart(2, "0");
+interface FeatureItem {
+  id: string;
+  number: string;
+  title: string;
+  description: string;
+  tags: string[];
+  image: string;
+  alt: string;
+  ctaLabel: string;
+}
+
+const FEATURES: FeatureItem[] = [
+  {
+    id: "employees",
+    number: "01",
+    title: "Employee Management",
+    description:
+      "One record for every staff member — roles, shifts, attendance, and performance in a single view.",
+    tags: ["Shifts", "Access control", "Performance"],
+    image: "/dashboard.png",
+    alt: "Employee management dashboard",
+    ctaLabel: "Explore",
+  },
+  {
+    id: "clients",
+    number: "02",
+    title: "Client CRM",
+    description:
+      "Every client's full history — visits, preferences, and spend — available the moment they walk in.",
+    tags: ["History", "Preferences", "Retention"],
+    image: "/customers.png",
+    alt: "Client CRM dashboard",
+    ctaLabel: "Explore",
+  },
+  {
+    id: "pos",
+    number: "03",
+    title: "Smart POS & Billing",
+    description: "Checkout built for salon speed — split payments, tips, and memberships in one tap.",
+    tags: ["Payments", "Memberships", "Receipts"],
+    image: "/biling.png",
+    alt: "Point of sale checkout screen",
+    ctaLabel: "Explore",
+  },
+  {
+    id: "inventory",
+    number: "04",
+    title: "Inventory Control",
+    description: "Real-time stock across every branch, with alerts before you run out mid-service.",
+    tags: ["Stock sync", "Reorder alerts", "Usage"],
+    image: "/inventory.png",
+    alt: "Inventory dashboard",
+    ctaLabel: "Explore",
+  },
+  {
+    id: "analytics",
+    number: "05",
+    title: "Analytics & Reports",
+    description: "Revenue, retention, and staff performance — visualized so decisions take minutes.",
+    tags: ["Revenue", "Retention", "Reports"],
+    image: "/report.png",
+    alt: "Analytics dashboard",
+    ctaLabel: "Explore",
+  },
+];
+
+/* ------------------------------------------------------------------ */
+/* Decorative rotating graphic                                         */
+/* ------------------------------------------------------------------ */
+
+function RotatingBloom() {
+  const reduced = useReducedMotion();
   return (
-    <div className="mb-4 flex items-center gap-3">
-      <span className="h-px w-6 shrink-0 bg-[#1B1714]/20" aria-hidden />
-      <span className="landing-display text-[11px] font-semibold tabular-nums tracking-[0.18em] text-[#1B1714]/50">
-        {num}
-      </span>
-      <span className="hidden h-px w-6 shrink-0 bg-[#1B1714]/20 sm:block" aria-hidden />
+    <motion.svg
+      viewBox="0 0 200 200"
+      className="pointer-events-none absolute -left-16 top-24 h-64 w-64 opacity-[0.06] md:h-80 md:w-80"
+      animate={reduced ? undefined : { rotate: 360 }}
+      transition={reduced ? undefined : { duration: 60, repeat: Infinity, ease: "linear" }}
+      aria-hidden
+    >
+      {Array.from({ length: 9 }).map((_, i) => (
+        <ellipse
+          key={i}
+          cx="100"
+          cy="100"
+          rx="14"
+          ry="70"
+          fill="#5B21B6"
+          transform={`rotate(${(360 / 9) * i} 100 100)`}
+        />
+      ))}
+    </motion.svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Grid overlay                                                        */
+/* ------------------------------------------------------------------ */
+
+function GridOverlay() {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 grid grid-cols-4">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div
+          key={i}
+          className="border-l border-[#1B1714]/[0.06] first:border-l-0 last:border-r last:border-r-[#1B1714]/[0.06]"
+        />
+      ))}
     </div>
   );
 }
 
-function useIsDesktop() {
-  const [isDesktop, setIsDesktop] = useState(false);
+/* ------------------------------------------------------------------ */
+/* Accordion row                                                       */
+/* ------------------------------------------------------------------ */
 
-  useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
-    const update = () => setIsDesktop(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  return isDesktop;
-}
-
-function FeatureImage({
-  block,
-  parallax,
-  imageVariants,
+function FeatureRow({
+  item,
+  active,
+  onToggle,
 }: {
-  block: FeatureBlock;
-  parallax: boolean;
-  imageVariants: Variants;
+  item: FeatureItem;
+  active: boolean;
+  onToggle: () => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const parallaxY = useTransform(scrollYProgress, [0, 1], [24, -24]);
-
   return (
-    <div ref={ref} className="max-lg:mx-auto max-lg:w-full">
-      <motion.div style={parallax ? { y: parallaxY } : undefined}>
-        <motion.div
-          variants={imageVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
+    <div className="border-b border-[#1B1714]/10">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="group flex w-full items-start justify-between gap-6 px-6 py-7 text-left transition-colors hover:bg-[#1B1714]/[0.02] md:px-10"
+      >
+        <div>
+          <span className="block text-[11px] font-medium uppercase tracking-[0.15em] text-[#1B1714]/35">
+            {item.number} / Feature
+          </span>
+          <span
+            className={cn(
+              "landing-display mt-1.5 block text-2xl font-semibold transition-colors md:text-[2rem]",
+              active ? "text-[#1B1714]" : "text-[#1B1714]/55 group-hover:text-[#1B1714]/80"
+            )}
+          >
+            {item.title}
+          </span>
+        </div>
+
+        <span
           className={cn(
-            "group relative overflow-hidden rounded-2xl",
-            "border-2 border-[#5B21B6]/45",
-            "shadow-[0_20px_40px_rgba(91,33,182,0.12)]",
-            "ring-1 ring-inset ring-[#C4B5FD]/40"
+            "mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-full border transition-all",
+            active
+              ? "rotate-45 border-[#5B21B6]/30 bg-gradient-to-br from-[#5B21B6]/10 to-[#7C3AED]/10 text-[#5B21B6]"
+              : "border-[#1B1714]/15 text-[#1B1714]/45 group-hover:border-[#1B1714]/30 group-hover:text-[#1B1714]/70"
           )}
         >
-          <div className="relative aspect-[4/3] overflow-hidden md:aspect-[5/4] lg:aspect-[4/3] lg:h-[420px] lg:aspect-auto">
-            <Image
-              src={block.image}
-              alt={block.alt}
-              fill
-              className={cn(
-                "object-cover saturate-[0.85] sepia-[0.06]",
-                "transition-transform duration-[400ms] ease-out",
-                "lg:group-hover:scale-[1.02]"
-              )}
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
-        </motion.div>
-      </motion.div>
+          {active ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+        </span>
+      </button>
+
+      <AnimatePresence initial={false}>
+        {active && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="px-6 pb-8 md:px-10">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <p className="max-w-md text-sm leading-relaxed text-[#1B1714]/55">{item.description}</p>
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.map((t) => (
+                    <span
+                      key={t}
+                      className="rounded-full border border-[#5B21B6]/15 bg-[#5B21B6]/5 px-3 py-1 text-[11px] font-medium text-[#5B21B6]"
+                    >
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="relative mt-6 overflow-hidden rounded-2xl border border-[#1B1714]/10 shadow-[0_20px_50px_-20px_rgba(91,33,182,0.25)]">
+                <div className="relative aspect-[16/8] w-full bg-[#F5F1FA]">
+                  <Image
+                    src={item.image}
+                    alt={item.alt}
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 768px) 100vw, 800px"
+                  />
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1B1714]/55 via-[#1B1714]/5 to-transparent" />
+
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-between p-5 md:p-6">
+                    <div>
+                      <span className="landing-display block text-lg font-semibold text-white md:text-xl">
+                        {item.title}
+                      </span>
+                      <p className="mt-1 max-w-sm text-xs leading-relaxed text-white/80 md:text-sm">
+                        {item.description}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="flex shrink-0 items-center gap-1.5 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-4 py-2 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(91,33,182,0.35)] transition-transform hover:scale-[1.03]"
+                    >
+                      {item.ctaLabel}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function FeatureBlockRow({
-  block,
-  index,
-  enhanced,
-}: {
-  block: FeatureBlock;
-  index: number;
-  enhanced: boolean;
-}) {
-  const reversed = index % 2 === 1;
-  const slideFrom = reversed ? 28 : -28;
-
-  const imageVariants: Variants = enhanced
-    ? {
-        hidden: {
-          opacity: 0,
-          scale: 0.96,
-          x: slideFrom,
-          clipPath: reversed ? "inset(0 0 0 100%)" : "inset(0 100% 0 0)",
-        },
-        visible: {
-          opacity: 1,
-          scale: 1,
-          x: 0,
-          clipPath: "inset(0 0 0 0)",
-          transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
-        },
-      }
-    : {
-        hidden: { opacity: 0, y: 16 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
-        },
-      };
-
-  const headingVariants: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.45,
-        delay: enhanced ? 0.1 : 0.06,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  const subheadVariants: Variants = {
-    hidden: { opacity: 0, y: 16 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.45,
-        delay: enhanced ? 0.18 : 0.1,
-        ease: [0.22, 1, 0.36, 1],
-      },
-    },
-  };
-
-  const bulletContainerVariants: Variants = {
-    hidden: { opacity: 1 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: enhanced ? 0.06 : 0,
-        delayChildren: enhanced ? 0.26 : 0.08,
-      },
-    },
-  };
-
-  const bulletItemVariants: Variants = {
-    hidden: { opacity: 0, y: enhanced ? 12 : 8 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-    },
-  };
-
-  return (
-    <article className="relative">
-      {/* Connector dot — desktop center line */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute left-1/2 top-6 z-10 hidden h-2 w-2 -translate-x-1/2 rounded-full border border-[#1B1714]/10 bg-[#EFE8DC] lg:block"
-      />
-
-      <div
-        className={cn(
-          "relative grid items-center gap-8 md:gap-10 lg:grid-cols-2 lg:gap-16",
-          reversed && "lg:[&>*:first-child]:order-2 lg:[&>*:last-child]:order-1"
-        )}
-      >
-        <FeatureImage
-          block={block}
-          parallax={enhanced}
-          imageVariants={imageVariants}
-        />
-
-        <div className="relative">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={{
-              visible: {
-                transition: { staggerChildren: 0, when: "beforeChildren" },
-              },
-            }}
-          >
-            <FeatureNumberMarker index={index} />
-
-            <motion.h3
-              variants={headingVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              className="landing-display text-2xl font-semibold text-[#1B1714] md:text-3xl lg:text-4xl"
-            >
-              {block.title}
-            </motion.h3>
-
-            <motion.p
-              variants={subheadVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              className="mt-4 text-base leading-relaxed text-[#1B1714]/65 md:text-lg"
-            >
-              {block.description}
-            </motion.p>
-
-            <motion.ul
-              variants={bulletContainerVariants}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              className="mt-6 space-y-3"
-            >
-              {block.bullets.map((b) => (
-                <motion.li
-                  key={b}
-                  variants={bulletItemVariants}
-                  className="flex list-none items-start gap-3 text-[#1B1714]/80"
-                >
-                  <span
-                    className={cn("mt-[0.55rem] h-px w-3 shrink-0", bulletAccentClass)}
-                    aria-hidden
-                  />
-                  <span>{b}</span>
-                </motion.li>
-              ))}
-            </motion.ul>
-          </motion.div>
-        </div>
-      </div>
-    </article>
-  );
-}
+/* ------------------------------------------------------------------ */
+/* Section                                                              */
+/* ------------------------------------------------------------------ */
 
 export function FeaturesSection() {
-  const prefersReducedMotion = useReducedMotion();
-  const isDesktop = useIsDesktop();
-  const enhanced = isDesktop && !prefersReducedMotion;
+  const [activeId, setActiveId] = useState<string>(FEATURES[1].id);
 
   return (
-    <LandingSection
-      id="features"
-      band="band"
-      className="landing-features-band !relative !overflow-hidden"
-    >
-      <div className="relative z-10 mb-12 text-center md:mb-16">
-        <div className="mb-4 flex items-center justify-center gap-3">
-          <span className="h-px w-8 shrink-0 bg-[#5B21B6]/25" aria-hidden />
-          <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-[#5B21B6]">
-            Salon-First Features
-          </span>
-          <span className="hidden h-px w-8 shrink-0 bg-[#5B21B6]/25 sm:block" aria-hidden />
+    <section className="relative overflow-hidden bg-[#EFE8DC] py-24 md:py-32">
+      <GridOverlay />
+      <RotatingBloom />
+
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-[#7C3AED]/10 blur-[120px]"
+      />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 md:px-10">
+        {/* Header */}
+        <div className="mb-16 flex flex-col justify-between gap-8 md:flex-row md:items-end">
+          <div>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="h-4 w-1 rounded-full bg-gradient-to-b from-[#5B21B6] to-[#7C3AED]" aria-hidden />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#5B21B6]">
+                Features
+              </span>
+            </div>
+            <h2 className="landing-display max-w-xl text-4xl font-semibold leading-[1.1] text-[#1B1714] md:text-5xl">
+              Everything Your Salon Runs On,{" "}
+              <span className="bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] bg-clip-text text-transparent">
+                Built In
+              </span>
+            </h2>
+            <p className="mt-4 max-w-md text-sm leading-relaxed text-[#1B1714]/55 md:text-base">
+              Staff, clients, billing, stock, and reporting — one system built to run every part of the floor.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-[#5B21B6]">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span key={i} className="text-sm">★</span>
+                ))}
+              </div>
+              <p className="mt-1 text-xs text-[#1B1714]/45">
+                4.9 rating 
+              </p>
+            </div>
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(91,33,182,0.3)] transition-transform hover:scale-[1.02]"
+            >
+              Learn more
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <h2 className={sectionHeadingClass}>Designed Around Your Salon Floor</h2>
-      </div>
 
-      <div className="relative z-10">
-        {/* Vertical journey connector — desktop only */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 left-1/2 top-0 hidden w-px -translate-x-1/2 bg-[#5B21B6]/15 lg:block"
-        />
-
-        <div className="relative space-y-16 md:space-y-20 lg:space-y-24">
-          {FEATURE_BLOCKS.map((block, i) => (
-            <FeatureBlockRow key={block.id} block={block} index={i} enhanced={enhanced} />
+        {/* Accordion list */}
+        <div className="border-t border-[#1B1714]/10">
+          {FEATURES.map((item) => (
+            <FeatureRow
+              key={item.id}
+              item={item}
+              active={activeId === item.id}
+              onToggle={() => setActiveId((cur) => (cur === item.id ? "" : item.id))}
+            />
           ))}
         </div>
       </div>
-    </LandingSection>
+    </section>
   );
 }

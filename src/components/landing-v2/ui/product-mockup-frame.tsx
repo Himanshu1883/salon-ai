@@ -47,7 +47,7 @@ export function ProductMockupFrame({
           </div>
           <div className="mx-auto flex max-w-xs flex-1 items-center justify-center rounded-md border border-[#E4DDD1] bg-white px-3 py-1">
             <span className="truncate text-[10px] text-[#1B1714]/45 sm:text-[11px]">
-              app.glowdesk.com/{variant === "dashboard" ? "dashboard" : variant}
+              app.Gotix.com/{variant === "dashboard" ? "dashboard" : variant}
             </span>
           </div>
           <span className="hidden rounded-full bg-[#2F6F5E]/12 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-[#2F6F5E] sm:inline">

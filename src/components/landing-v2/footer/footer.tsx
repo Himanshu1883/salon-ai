@@ -148,7 +148,7 @@ export function Footer() {
                 Salon tips & product updates
               </h2>
               <p className="mt-4 max-w-sm text-xs leading-relaxed text-white/45 md:text-[13px]">
-                Get GlowDesk release notes, booking & billing tips, and WhatsApp
+                Get Gotix release notes, booking & billing tips, and WhatsApp
                 automation ideas. By subscribing you agree to our privacy policy.
               </p>
             </div>
@@ -255,7 +255,7 @@ export function Footer() {
           <div className="max-w-xs">
             <Link
               href="/"
-              aria-label="GlowDesk home"
+              aria-label="Gotix home"
               className="inline-flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] p-1.5"
             >
               <BrandLogo size="nav" className="!h-8 !w-8 rounded-lg" />
@@ -304,7 +304,7 @@ export function Footer() {
               <ul className="mt-4 space-y-2.5">
                 <FooterLinkItem
                   label="Contact us"
-                  href="mailto:support@glowdesk.com"
+                  href="mailto:support@Gotix.com"
                 />
                 <FooterLinkItem label="Documentation" href="/documentation" />
                 {FOOTER_SOCIAL.map((social) => (
@@ -321,7 +321,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 flex flex-col gap-2 border-t border-white/[0.08] pt-6 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
-          <p>&copy; {year} GlowDesk · Made in India</p>
+          <p>&copy; {year} Gotix · Made in India</p>
           <p>Built for salon professionals</p>
         </div>
       </div>
