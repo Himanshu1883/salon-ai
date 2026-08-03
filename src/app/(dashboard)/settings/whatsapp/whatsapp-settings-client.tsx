@@ -17,6 +17,7 @@ import {
   buildBillingWhatsAppMessage,
 } from "@/lib/whatsapp";
 import { MessageCircle, RotateCcw, Save } from "lucide-react";
+import { getAppOrigin } from "@/lib/salon-paths";
 
 type Settings = {
   billingMessageTemplate: string;
@@ -52,7 +53,7 @@ export function WhatsAppSettingsClient({
     return buildBillingWhatsAppMessage(
       template,
       SAMPLE_CONTEXT,
-      "https://salon-ai-sandy.vercel.app/billing/preview"
+      `${getAppOrigin()}/billing/preview`
     );
   }, [template]);
 

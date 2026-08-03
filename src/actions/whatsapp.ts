@@ -10,6 +10,7 @@ import {
   buildTemplateVariables,
 } from "@/lib/whatsapp";
 import type { WhatsAppInvoiceContext } from "@/lib/whatsapp";
+import { getAppOrigin } from "@/lib/salon-paths";
 
 async function getOrCreateWhatsAppSettings(salonId: string) {
   let settings = await prisma.whatsAppSettings.findUnique({
@@ -89,7 +90,7 @@ export async function getBillingWhatsAppPreview(
     services: sampleContext?.services ?? "Hair Spa, Blow Dry",
   };
 
-  const invoiceUrl = "https://salon-ai-sandy.vercel.app/billing/sample-id";
+  const invoiceUrl = `${getAppOrigin()}/billing/sample-id`;
   return buildBillingWhatsAppMessage(template, ctx, invoiceUrl);
 }
 

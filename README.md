@@ -191,9 +191,9 @@ source .env.production.local  # or export POSTGRES_URL manually
 npm run db:seed
 ```
 
-Then sign in at [https://salon-ai-sandy.vercel.app/login](https://salon-ai-sandy.vercel.app/login) with `demo@salon.ai` / `demo1234`.
+Then sign in at [https://www.gotix.io/login](https://www.gotix.io/login) with `demo@salon.ai` / `demo1234`.
 
-**Already configured on production:** `AUTH_SECRET`, `AUTH_URL` (`https://salon-ai-sandy.vercel.app`).
+**Already configured on production:** `AUTH_SECRET`, `AUTH_URL`, `NEXT_PUBLIC_APP_URL` (`https://www.gotix.io`).
 
 Optional explicit env mapping (only if you want named vars in the dashboard):
 
@@ -232,7 +232,8 @@ In **Project Settings → Environment Variables**, add:
 | `DATABASE_URL` | Same as `POSTGRES_URL` (pooled connection) |
 | `DIRECT_DATABASE_URL` | Same as `POSTGRES_URL_NON_POOLING` |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
-| `AUTH_URL` | `https://your-app.vercel.app` (your production URL) |
+| `AUTH_URL` | `https://www.gotix.io` (canonical production URL; apex `gotix.io` redirects here) |
+| `NEXT_PUBLIC_APP_URL` | Same as `AUTH_URL` |
 
 Optional: `TWILIO_*`, `OPENAI_API_KEY`, `BLOB_READ_WRITE_TOKEN`.
 
