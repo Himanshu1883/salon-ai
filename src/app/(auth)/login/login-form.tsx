@@ -243,6 +243,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
   const defaultCallback = salonDashboardPath(salon.slug);
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
   const resetSuccess = searchParams.get("reset") === "success";
+  const emailUpdated = searchParams.get("email") === "updated";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -390,6 +391,11 @@ export default function LoginForm({ salon }: LoginFormProps) {
               {resetSuccess && (
                 <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                   Your password has been updated. Sign in with your new password.
+                </p>
+              )}
+              {emailUpdated && (
+                <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+                  Your login email has been updated. Sign in with your new email address.
                 </p>
               )}
               <div className="space-y-2">
