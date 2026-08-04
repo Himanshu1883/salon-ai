@@ -12,28 +12,42 @@ export const v3 = {
     secondary: "#6B7280",
   },
   modal: cn(
-    "flex h-[88vh] w-[95vw] max-w-[1700px] flex-col gap-0 overflow-hidden rounded-[18px]",
-    "border border-[#ECECF5] bg-white p-0",
+    // Mobile: near full-screen
+    "fixed inset-0 z-50 flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none",
+    "border-0 p-0",
+    // Tablet+: centered dialog
+    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[min(88dvh,900px)] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
+    // Laptop
+    "lg:h-[min(85vh,860px)] lg:max-w-[1200px]",
+    // Large laptop / small desktop
+    "xl:h-[min(88vh,900px)] xl:max-w-[1400px]",
+    // Desktop
+    "2xl:max-w-[1700px]",
+    "bg-white",
     "shadow-[0_20px_60px_-12px_rgba(124,58,237,0.16),0_6px_24px_rgba(17,24,39,0.06)]"
   ),
   header: cn(
-    "sticky top-0 z-20 flex h-[72px] shrink-0 items-center border-b border-[#ECECF5] bg-white/95 px-5 backdrop-blur-md"
+    "sticky top-0 z-20 flex shrink-0 items-center border-b border-[#ECECF5] bg-white/95 backdrop-blur-md",
+    "h-14 px-3 sm:h-16 sm:px-4 lg:h-[68px] lg:px-5"
   ),
   footer: cn(
-    "sticky bottom-0 z-20 shrink-0 border-t border-[#ECECF5] bg-white/95 px-5 py-3 backdrop-blur-md"
+    "sticky bottom-0 z-20 shrink-0 border-t border-[#ECECF5] bg-white/95 backdrop-blur-md",
+    "px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5",
+    "pb-[max(0.625rem,env(safe-area-inset-bottom))]"
   ),
-  section: "pb-4",
-  sectionTitle: "mb-2.5 text-[13px] font-semibold tracking-tight text-[#111827]",
-  sectionDivider: "mb-4 border-b border-[#ECECF5]",
+  section: "pb-3 sm:pb-4",
+  sectionTitle:
+    "mb-2 text-[12px] font-semibold tracking-tight text-[#111827] sm:mb-2.5 sm:text-[13px]",
+  sectionDivider: "mb-3 border-b border-[#ECECF5] sm:mb-4",
   label: "mb-1 block text-[11px] font-medium text-[#6B7280]",
   input: cn(
-    "h-9 rounded-[14px] border border-[#ECECF5] bg-white text-[13px] text-[#111827]",
+    "h-10 rounded-[14px] border border-[#ECECF5] bg-white text-[13px] text-[#111827] sm:h-9",
     "transition-all duration-200 placeholder:text-[#6B7280]/50",
     "focus-visible:border-[#7C3AED]/40 focus-visible:shadow-[0_0_0_2px_rgba(124,58,237,0.1)]",
     "focus-visible:outline-none"
   ),
   selectTrigger: cn(
-    "h-9 rounded-[14px] border border-[#ECECF5] bg-white text-[13px]",
+    "h-10 rounded-[14px] border border-[#ECECF5] bg-white text-[13px] sm:h-9",
     "transition-all duration-200",
     "focus:border-[#7C3AED]/40 focus:ring-2 focus:ring-[#7C3AED]/10"
   ),
@@ -44,18 +58,18 @@ export const v3 = {
     "focus-visible:outline-none"
   ),
   primaryButton: cn(
-    "inline-flex h-9 items-center justify-center gap-1.5 rounded-[12px] px-4",
+    "inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[12px] px-4 sm:min-h-9",
     "bg-[#7C3AED] text-[13px] font-semibold text-white",
     "shadow-[0_2px_8px_rgba(124,58,237,0.28)] transition-all duration-200",
     "hover:bg-[#6D28D9] disabled:pointer-events-none disabled:opacity-50"
   ),
   outlineButton: cn(
-    "inline-flex h-9 items-center justify-center gap-1.5 rounded-[12px] border border-[#ECECF5]",
+    "inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[12px] border border-[#ECECF5] sm:min-h-9",
     "bg-white px-3.5 text-[13px] font-medium text-[#6B7280]",
     "transition-all duration-200 hover:border-[#7C3AED]/25 hover:bg-[#FAFBFF] hover:text-[#111827]"
   ),
   ghostButton: cn(
-    "inline-flex h-9 items-center justify-center gap-1.5 rounded-[12px] px-3.5",
+    "inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-[12px] px-3.5 sm:min-h-9",
     "text-[13px] font-medium text-[#6B7280] transition-all duration-200",
     "hover:bg-[#FAFBFF] hover:text-[#111827]"
   ),
@@ -64,18 +78,30 @@ export const v3 = {
     "inline-flex shrink-0 rounded-[8px] border border-[#ECECF5] bg-[#FAFBFF] p-0.5"
   ),
   segmentedItem: cn(
-    "rounded-[6px] px-2 py-1 text-[11px] font-medium transition-all duration-200",
+    "min-h-[36px] min-w-[36px] rounded-[6px] px-2 py-1 text-[11px] font-medium transition-all duration-200 sm:min-h-0 sm:min-w-0",
     "text-[#6B7280] hover:text-[#111827]"
   ),
   segmentedItemActive: "bg-white text-[#7C3AED] shadow-sm",
   itemRow: cn(
-    "grid h-14 items-center gap-2 border-b border-[#ECECF5]/80 px-1",
-    "grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]",
+    "hidden items-center gap-2 border-b border-[#ECECF5]/80 px-1 md:grid md:h-14",
+    "md:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]",
+    "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]",
     "transition-colors duration-200 hover:bg-[#FAFBFF]/60"
   ),
+  itemRowNoGst: cn(
+    "md:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]",
+    "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+  ),
   itemHeader: cn(
-    "grid gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]",
-    "grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]"
+    "hidden gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] lg:grid",
+    "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]"
+  ),
+  itemHeaderNoGst: cn(
+    "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+  ),
+  itemCard: cn(
+    "space-y-2.5 border-b border-[#ECECF5]/80 p-3 md:hidden",
+    "transition-colors duration-200"
   ),
   summaryPanel: "sticky top-0 flex flex-col",
 } as const;

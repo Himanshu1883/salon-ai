@@ -31,6 +31,7 @@ import {
   CustomerSection,
   ItemsSection,
   SummaryPanel,
+  MobileSummaryBar,
   NotesSection,
   PaymentStepContent,
   trackRecentItem,
@@ -586,11 +587,11 @@ export function BillingInvoiceForm({
   if (step === 3 && successContext) {
     return (
       <>
-        <div className="relative flex h-full flex-col overflow-hidden rounded-[20px] bg-white">
+        <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-none bg-white sm:rounded-[20px]">
           <button
             type="button"
             onClick={() => onCancel?.()}
-            className="absolute right-4 top-4 z-10 rounded-xl p-2 text-[#6B7280] hover:bg-[#FAFBFF]"
+            className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-xl text-[#6B7280] hover:bg-[#FAFBFF] sm:right-4 sm:top-4 sm:h-auto sm:w-auto sm:p-2"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -617,11 +618,11 @@ export function BillingInvoiceForm({
 
   return (
     <>
-      <div className="flex h-full flex-col overflow-hidden bg-[#FAFBFF]">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#FAFBFF]">
         <ModalHeader step={currentStep} onClose={onCancel} />
 
-        <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 lg:flex-[0_0_70%]">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-4">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.div
@@ -708,7 +709,7 @@ export function BillingInvoiceForm({
             )}
           </div>
 
-          <div className="hidden min-h-0 shrink-0 overflow-y-auto border-l border-[#ECECF5] bg-white px-4 py-4 lg:block lg:flex-[0_0_30%]">
+          <aside className="hidden min-h-0 shrink-0 overflow-y-auto border-l border-[#ECECF5] bg-white px-3 py-3 lg:block lg:w-[280px] lg:px-4 xl:w-[320px] xl:px-4">
             <SummaryPanel
               step={currentStep}
               items={summaryItems}
@@ -730,8 +731,30 @@ export function BillingInvoiceForm({
                 step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
               }
             />
-          </div>
+          </aside>
         </div>
+
+        <MobileSummaryBar
+          step={currentStep}
+          items={summaryItems}
+          subtotal={displaySubtotal}
+          discount={totalDiscount}
+          tax={displayTax}
+          total={displayTotal}
+          gstEnabled={gstEnabled}
+          customer={customer}
+          paymentStatus={paymentStatusLabel}
+          loading={loading}
+          onProceed={
+            step === 1
+              ? () => void handleCreateInvoice()
+              : () => void handleReceivePayment()
+          }
+          disableProceed={step === 2 && selectedPayment === "pay_later"}
+          proceedLabel={
+            step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
+          }
+        />
 
         <ModalFooter
           step={currentStep}

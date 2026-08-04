@@ -46,7 +46,8 @@ export function BillingInvoiceDialog({
       <DialogContent
         className={cn(
           v3.modal,
-          "[&>button]:hidden"
+          "[&>button]:hidden",
+          "!max-w-none sm:!translate-x-[-50%] sm:!translate-y-[-50%]"
         )}
       >
         <BillingInvoiceForm

@@ -56,7 +56,7 @@ export function PaymentStepContent({
         transition={{ duration: 0.2 }}
         className="rounded-[12px] border border-[#ECECF5] bg-white p-3"
       >
-        <div className="grid gap-3 text-[12px] sm:grid-cols-3">
+        <div className="grid gap-3 text-[12px] sm:grid-cols-2 md:grid-cols-3">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-wide text-[#6B7280]">
               Customer

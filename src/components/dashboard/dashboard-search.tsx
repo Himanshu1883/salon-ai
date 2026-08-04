@@ -165,7 +165,7 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
     <div ref={containerRef} className={cn("relative w-full", className)}>
       <div
         className={cn(
-          "flex h-11 w-full items-center gap-3 rounded-2xl border bg-dashboard-bg px-4 transition-colors",
+          "flex h-11 w-full items-center gap-2 rounded-2xl border bg-dashboard-bg px-3 transition-colors sm:gap-3 sm:px-4",
           open
             ? "border-violet-300 bg-white shadow-sm ring-2 ring-violet-100"
             : "border-dashboard-border hover:border-violet-200 hover:bg-white"
@@ -183,7 +183,7 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={handleInputKeyDown}
-          placeholder="Search clients, appointments, invoices..."
+          placeholder="Search clients, appointments..."
           aria-label="Global search"
           aria-expanded={showDropdown}
           aria-controls="dashboard-search-results"

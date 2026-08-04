@@ -102,8 +102,8 @@ export function CustomerSection({
         👤 Customer
       </h3>
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
-        <div className="sm:col-span-5 [&_label]:hidden [&_input]:h-9 [&_input]:rounded-[14px] [&_input]:text-[13px]">
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
+        <div className="md:col-span-5 [&_label]:hidden [&_input]:h-10 [&_input]:rounded-[14px] [&_input]:text-[13px] sm:[&_input]:h-9">
           <CompactField label="Customer" required>
             <CustomerSearch
               value={customer}
@@ -114,14 +114,14 @@ export function CustomerSection({
           </CompactField>
         </div>
 
-        <div className="sm:col-span-3 [&_label]:hidden [&_input]:h-9 [&_input]:rounded-[14px] [&_input]:text-[13px]">
+        <div className="md:col-span-3 [&_label]:hidden [&_input]:h-10 [&_input]:rounded-[14px] [&_input]:text-[13px] sm:[&_input]:h-9">
           <CompactField label="Phone" required>
             <PhoneSearch value={customer} onChange={onChange} />
           </CompactField>
         </div>
 
         {requiresEmployee ? (
-          <div className="sm:col-span-3">
+          <div className="md:col-span-3">
             <CompactField label="Staff" required>
               <Select value={employeeId} onValueChange={onEmployeeChange}>
                 <SelectTrigger
@@ -146,30 +146,30 @@ export function CustomerSection({
             )}
           </div>
         ) : (
-          <div className="hidden sm:col-span-3 sm:block" aria-hidden />
+          <div className="hidden md:col-span-3 md:block" aria-hidden />
         )}
 
-        <div className="flex items-end sm:col-span-1">
+        <div className="flex items-end md:col-span-1">
           <button
             type="button"
             onClick={startNewCustomer}
             className={cn(
               v3.outlineButton,
-              "h-9 w-full whitespace-nowrap px-2 text-[11px] text-[#7C3AED]"
+              "h-10 w-full whitespace-nowrap px-2 text-[11px] text-[#7C3AED] sm:h-9"
             )}
             title="New customer"
           >
-            <Plus className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             <span className="hidden lg:inline">New</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <p className="mt-1 text-[11px] text-red-500 sm:hidden">{error}</p>
+        <p className="mt-1 text-[11px] text-red-500 md:hidden">{error}</p>
       )}
 
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
         <CompactField label="Email">
           <div className="relative">
             <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6B7280]" />

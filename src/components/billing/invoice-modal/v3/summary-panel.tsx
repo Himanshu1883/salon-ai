@@ -1,8 +1,9 @@
 "use client";
 
-import { motion, useSpring, useTransform } from "framer-motion";
+import { useState } from "react";
+import { motion, useSpring, useTransform, AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
-import { ArrowRight, Loader2, Wallet } from "lucide-react";
+import { ArrowRight, ChevronDown, ChevronUp, Loader2, Wallet } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { InvoiceCustomer } from "../customer-search";
 import type { SummaryLineItem } from "../invoice-summary";
@@ -36,6 +37,9 @@ type SummaryPanelProps = {
   onProceed?: () => void;
   proceedLabel?: string;
   disableProceed?: boolean;
+  /** Hide proceed button (e.g. when footer handles actions on mobile) */
+  hideProceed?: boolean;
+  compact?: boolean;
 };
 
 export function SummaryPanel({
@@ -52,64 +56,75 @@ export function SummaryPanel({
   onProceed,
   proceedLabel,
   disableProceed = false,
+  hideProceed = false,
+  compact = false,
 }: SummaryPanelProps) {
   const label =
     proceedLabel ??
     (step === 1 ? "Proceed to Payment" : "Receive Payment & Complete");
 
   return (
-    <aside className={cn(v3.summaryPanel, "w-[320px] max-w-full")}>
-      <h3 className="mb-3 text-[13px] font-semibold text-[#111827]">Summary</h3>
+    <aside
+      className={cn(
+        v3.summaryPanel,
+        compact ? "w-full" : "w-full lg:w-[280px] xl:w-[320px]"
+      )}
+    >
+      <h3 className="mb-2 text-[12px] font-semibold text-[#111827] sm:mb-3 sm:text-[13px]">
+        Summary
+      </h3>
 
-      <dl className="space-y-2 text-[12px]">
+      <dl className="space-y-1.5 text-[12px] sm:space-y-2">
         <Row label="Subtotal" value={subtotal} />
         <Row label="Discount" value={discount} negative />
         {gstEnabled ? <Row label="GST" value={tax} /> : null}
       </dl>
 
-      <div className="my-3 h-px bg-[#ECECF5]" />
+      <div className="my-2 h-px bg-[#ECECF5] sm:my-3" />
 
-      <div className="mb-3 flex items-baseline justify-between">
+      <div className="mb-2 flex items-baseline justify-between sm:mb-3">
         <span className="text-[12px] font-semibold text-[#111827]">Total</span>
-        <span className="text-xl font-bold text-[#7C3AED]">
+        <span className="text-lg font-bold text-[#7C3AED] sm:text-xl">
           <AnimatedAmount value={total} />
         </span>
       </div>
 
-      <div className="mb-3 space-y-1.5 rounded-[12px] bg-[#FAFBFF] p-3 text-[11px]">
-        <InfoRow
-          icon={<Wallet className="h-3.5 w-3.5 text-[#7C3AED]" />}
-          label="Wallet"
-          value={formatCurrency(0)}
-        />
-        <InfoRow
-          label="Reward Points"
-          value={`${customer?.loyaltyPoints ?? 0} pts`}
-        />
-        <InfoRow
-          label="Outstanding"
-          value={formatCurrency(outstandingBalance)}
-        />
-        <InfoRow
-          label="Payment Status"
-          value={paymentStatus}
-          valueClassName={
-            paymentStatus === "Paid"
-              ? "text-[#22C55E]"
-              : paymentStatus === "Draft"
-                ? "text-[#6B7280]"
-                : "text-amber-600"
-          }
-        />
-      </div>
+      {!compact && (
+        <div className="mb-3 space-y-1.5 rounded-[12px] bg-[#FAFBFF] p-2.5 text-[11px] sm:p-3">
+          <InfoRow
+            icon={<Wallet className="h-3.5 w-3.5 text-[#7C3AED]" />}
+            label="Wallet"
+            value={formatCurrency(0)}
+          />
+          <InfoRow
+            label="Reward Points"
+            value={`${customer?.loyaltyPoints ?? 0} pts`}
+          />
+          <InfoRow
+            label="Outstanding"
+            value={formatCurrency(outstandingBalance)}
+          />
+          <InfoRow
+            label="Payment Status"
+            value={paymentStatus}
+            valueClassName={
+              paymentStatus === "Paid"
+                ? "text-[#22C55E]"
+                : paymentStatus === "Draft"
+                  ? "text-[#6B7280]"
+                  : "text-amber-600"
+            }
+          />
+        </div>
+      )}
 
-      {onProceed && (
+      {onProceed && !hideProceed && (
         <motion.button
           type="button"
           whileTap={{ scale: 0.98 }}
           disabled={loading || disableProceed}
           onClick={onProceed}
-          className={cn(v3.primaryButton, "w-full")}
+          className={cn(v3.primaryButton, "hidden w-full lg:inline-flex")}
         >
           {loading ? (
             <>
@@ -125,6 +140,69 @@ export function SummaryPanel({
         </motion.button>
       )}
     </aside>
+  );
+}
+
+type MobileSummaryBarProps = Omit<
+  SummaryPanelProps,
+  "hideProceed" | "compact"
+>;
+
+export function MobileSummaryBar(props: MobileSummaryBarProps) {
+  const [expanded, setExpanded] = useState(false);
+  const { total, paymentStatus } = props;
+
+  return (
+    <div className="shrink-0 border-t border-[#ECECF5] bg-white lg:hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex min-h-[48px] w-full items-center justify-between gap-3 px-3 py-2 sm:px-4"
+        aria-expanded={expanded}
+        aria-controls="mobile-invoice-summary"
+      >
+        <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+          <span className="text-[12px] font-medium text-[#6B7280]">Total</span>
+          <span className="text-lg font-bold text-[#7C3AED]">
+            <AnimatedAmount value={total} />
+          </span>
+          <span
+            className={cn(
+              "truncate rounded-full px-2 py-0.5 text-[10px] font-medium",
+              paymentStatus === "Paid"
+                ? "bg-green-50 text-[#22C55E]"
+                : paymentStatus === "Draft"
+                  ? "bg-[#FAFBFF] text-[#6B7280]"
+                  : "bg-amber-50 text-amber-600"
+            )}
+          >
+            {paymentStatus}
+          </span>
+        </div>
+        {expanded ? (
+          <ChevronUp className="h-4 w-4 shrink-0 text-[#6B7280]" />
+        ) : (
+          <ChevronDown className="h-4 w-4 shrink-0 text-[#6B7280]" />
+        )}
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            id="mobile-invoice-summary"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-t border-[#ECECF5] bg-[#FAFBFF]"
+          >
+            <div className="px-3 py-3 sm:px-4">
+              <SummaryPanel {...props} hideProceed compact />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
