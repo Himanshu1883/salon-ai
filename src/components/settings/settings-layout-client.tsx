@@ -20,7 +20,7 @@ export function SettingsLayoutClient({
       <div>
         <h1 className="text-3xl font-bold text-stone-900">Settings</h1>
         <p className="mt-1 text-stone-500">
-          Manage your salon profile and Glow Desk subscription
+          Manage your salon profile and Go Tix subscription
         </p>
       </div>
       <SettingsNav pathname={pathname} showOwnerSettings={showOwnerSettings} plan={plan} />

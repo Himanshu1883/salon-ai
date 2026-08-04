@@ -19,7 +19,7 @@ export function BillingHeader({
           Billing
         </h1>
         <p className="mt-1 text-sm text-[#6B7280] sm:text-base">
-          Customer invoices for your salon, and Glow Desk subscription invoices from the platform.
+          Customer invoices for your salon, and Go Tix subscription invoices from the platform.
         </p>
       </div>
 

@@ -246,7 +246,7 @@ export function TestimonialsSection() {
       <SectionHeader
         eyebrow="Trusted by Salon Owners"
         title="Real Stories. Real Results."
-        subtitle="Real stories from salon owners who trust Glow Desk to run their floor every day."
+        subtitle="Real stories from salon owners who trust Go Tix to run their floor every day."
       />
 
       <RatingSummary instant={instant} />

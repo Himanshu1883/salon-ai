@@ -151,7 +151,7 @@ export function AccountSecuritySection({
       </CardHeader>
       <CardContent className="space-y-8">
         <p className="text-sm text-stone-500">
-          Update the email and password you use to sign in to Glow Desk. Your current
+          Update the email and password you use to sign in to Go Tix. Your current
           login email is{" "}
           <span className="font-medium text-stone-700">{currentEmail}</span>.
         </p>

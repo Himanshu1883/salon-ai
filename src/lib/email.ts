@@ -3,7 +3,7 @@ export function isEmailConfigured(): boolean {
 }
 
 export function getEmailFromAddress(): string {
-  return process.env.EMAIL_FROM ?? "Glow Desk <onboarding@resend.dev>";
+  return process.env.EMAIL_FROM ?? "Go Tix <onboarding@resend.dev>";
 }
 
 export async function sendEmail(options: {
@@ -61,13 +61,13 @@ export function buildPasswordResetEmail(options: {
   resetUrl: string;
 }): { subject: string; html: string; text: string } {
   const subject = `Reset your ${options.salonName} password`;
-  const text = `Hi ${options.recipientName},\n\nWe received a request to reset your password for ${options.salonName} on Glow Desk.\n\nReset your password: ${options.resetUrl}\n\nThis link expires in 1 hour. If you did not request this, you can ignore this email.\n\n— Glow Desk`;
+  const text = `Hi ${options.recipientName},\n\nWe received a request to reset your password for ${options.salonName} on Go Tix.\n\nReset your password: ${options.resetUrl}\n\nThis link expires in 1 hour. If you did not request this, you can ignore this email.\n\n— Go Tix`;
 
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 520px; margin: 0 auto; color: #1c1917;">
       <p style="font-size: 16px;">Hi ${escapeHtml(options.recipientName)},</p>
       <p style="font-size: 15px; line-height: 1.6; color: #57534e;">
-        We received a request to reset your password for <strong>${escapeHtml(options.salonName)}</strong> on Glow Desk.
+        We received a request to reset your password for <strong>${escapeHtml(options.salonName)}</strong> on Go Tix.
       </p>
       <p style="margin: 28px 0;">
         <a href="${options.resetUrl}" style="display: inline-block; background: linear-gradient(90deg, #6d28d9, #8b5cf6); color: #fff; text-decoration: none; font-weight: 600; padding: 12px 24px; border-radius: 12px;">
@@ -77,7 +77,7 @@ export function buildPasswordResetEmail(options: {
       <p style="font-size: 13px; line-height: 1.6; color: #78716c;">
         This link expires in 1 hour. If you did not request a password reset, you can safely ignore this email.
       </p>
-      <p style="font-size: 12px; color: #a8a29e; margin-top: 32px;">— Glow Desk</p>
+      <p style="font-size: 12px; color: #a8a29e; margin-top: 32px;">— Go Tix</p>
     </div>
   `.trim();
 

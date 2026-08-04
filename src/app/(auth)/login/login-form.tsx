@@ -323,7 +323,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
               </div>
               <div className="min-w-0">
                 <p className="text-lg font-semibold leading-tight tracking-tight text-white">
-                  Glow Desk
+                  Go Tix
                 </p>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/60">
                   Salon ERP
@@ -515,7 +515,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
           </div>
 
           <p className="mt-8 text-center text-sm text-stone-500">
-            New to Glow Desk?{" "}
+            New to Go Tix?{" "}
             <Link
               href="/signup"
               className="font-semibold text-dashboard-primary transition hover:text-dashboard-primary-hover"

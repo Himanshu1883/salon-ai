@@ -193,7 +193,7 @@ export function BillingClient({
             value="subscription"
             className="rounded-lg px-4 py-2 data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white"
           >
-            Glow Desk Subscription
+            Go Tix Subscription
           </TabsTrigger>
         </TabsList>
 

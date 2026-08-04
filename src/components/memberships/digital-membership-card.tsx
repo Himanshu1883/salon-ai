@@ -33,7 +33,7 @@ export function DigitalMembershipCard({
   function handleShare() {
     if (navigator.share) {
       void navigator.share({
-        title: `${planName} Membership — Glow Desk`,
+        title: `${planName} Membership — Go Tix`,
         text: `Membership #${membershipNumber} for ${customerName}`,
       });
     }
@@ -55,7 +55,7 @@ export function DigitalMembershipCard({
           <div className="flex items-start justify-between">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/70">
-                Glow Desk
+                Go Tix
               </p>
               <p className="mt-1 text-xl font-bold">{planName}</p>
             </div>

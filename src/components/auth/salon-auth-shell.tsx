@@ -193,7 +193,7 @@ export function SalonAuthShell({
               </div>
               <div className="min-w-0">
                 <p className="text-lg font-semibold leading-tight tracking-tight text-white">
-                  Glow Desk
+                  Go Tix
                 </p>
                 <p className="text-[11px] font-medium uppercase tracking-[0.22em] text-white/60">
                   Salon ERP

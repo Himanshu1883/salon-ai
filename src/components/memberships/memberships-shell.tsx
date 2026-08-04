@@ -23,7 +23,7 @@ export function MembershipsSubNav() {
             Memberships
           </p>
           <p className="text-xs text-stone-500 dark:text-stone-400">
-            Glow Desk Loyalty & Rewards
+            Go Tix Loyalty & Rewards
           </p>
         </div>
       </div>
@@ -134,7 +134,7 @@ export function MembershipComingSoon({
       <h2 className="text-xl font-bold text-stone-900 dark:text-white">{title}</h2>
       <p className="mt-2 max-w-md text-sm text-stone-500 dark:text-stone-400">
         {description ??
-          "This section is coming soon. We're building premium membership tools for Glow Desk."}
+          "This section is coming soon. We're building premium membership tools for Go Tix."}
       </p>
       <span
         className="mt-6 inline-flex rounded-full px-4 py-1.5 text-xs font-semibold text-white"

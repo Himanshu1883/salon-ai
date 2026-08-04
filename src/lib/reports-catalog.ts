@@ -38,7 +38,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Overview of sales quantity and value across all categories.",
     isPremium: false,
     route: "/reports/sales/summary",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "sales-by-period",
@@ -47,7 +47,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Daily or weekly sales totals for a selected date range.",
     isPremium: true,
     route: "/reports/sales/by-period",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "sales-list",
@@ -56,7 +56,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All paid invoices with customer, amount, and payment method.",
     isPremium: false,
     route: "/reports/sales/list",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "sales-log",
@@ -65,7 +65,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Detailed line-item log of every sale transaction.",
     isPremium: false,
     route: "/reports/sales/log",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "gift-cards-period",
@@ -74,7 +74,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Gift card sales aggregated by day or week.",
     isPremium: true,
     route: "/reports/sales/gift-cards-period",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "gift-cards-list",
@@ -83,7 +83,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All gift card sales with customer and amount details.",
     isPremium: false,
     route: "/reports/sales/gift-cards",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "memberships-list",
@@ -92,7 +92,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Memberships sold with customer and revenue details.",
     isPremium: false,
     route: "/reports/sales/memberships",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "packages-list",
@@ -101,7 +101,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "All package sales with customer and amount details.",
     isPremium: false,
     route: "/reports/sales/packages",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "packages-summary",
@@ -110,7 +110,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Aggregated package sales quantity and revenue.",
     isPremium: false,
     route: "/reports/sales/packages-summary",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   // Finance
   {
@@ -120,7 +120,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Total revenue, tax, and invoice counts for a date range.",
     isPremium: false,
     route: "/reports/finance/revenue-summary",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "unpaid-invoices",
@@ -129,7 +129,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Outstanding invoices awaiting payment.",
     isPremium: false,
     route: "/reports/finance/unpaid-invoices",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "payment-methods",
@@ -138,7 +138,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Revenue split by cash, card, UPI, and other methods.",
     isPremium: false,
     route: "/reports/finance/payment-methods",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   // Appointments
   {
@@ -148,7 +148,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Appointment counts grouped by day or week.",
     isPremium: false,
     route: "/reports/appointments/by-period",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "no-shows",
@@ -157,7 +157,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Appointments marked as no-show in the selected period.",
     isPremium: false,
     route: "/reports/appointments/no-shows",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "completion-rate",
@@ -166,7 +166,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Percentage of appointments completed vs scheduled.",
     isPremium: false,
     route: "/reports/appointments/completion-rate",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   // Team
   {
@@ -176,7 +176,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Revenue attributed to each team member.",
     isPremium: false,
     route: "/reports/team/earnings",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "shift-hours",
@@ -185,7 +185,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Scheduled working hours per team member.",
     isPremium: false,
     route: "/reports/team/shift-hours",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   // Clients
   {
@@ -195,7 +195,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Clients added during the selected date range.",
     isPremium: false,
     route: "/reports/clients/new-clients",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "client-segments",
@@ -204,7 +204,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Overview of custom client segments and counts.",
     isPremium: false,
     route: "/reports/clients/segments",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "top-spenders",
@@ -213,7 +213,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Clients ranked by total spend in the selected period.",
     isPremium: false,
     route: "/reports/clients/top-spenders",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   // Inventory
   {
@@ -223,7 +223,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Current quantity on hand for all stock items.",
     isPremium: false,
     route: "/reports/inventory/stock-levels",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "low-stock",
@@ -232,7 +232,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Items at or below their reorder level.",
     isPremium: false,
     route: "/reports/inventory/low-stock",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
   {
     slug: "purchase-history",
@@ -241,7 +241,7 @@ export const REPORTS_CATALOG: ReportDefinition[] = [
     description: "Stock purchase records with supplier and cost details.",
     isPremium: false,
     route: "/reports/inventory/purchase-history",
-    createdBy: "Glow Desk",
+    createdBy: "Go Tix",
   },
 ];
 

@@ -68,7 +68,7 @@ export function SalonSupportClient({
               Customer Support
             </h1>
             <p className="text-sm text-dashboard-muted">
-              Chat with the Glow Desk team — we typically reply within one business day.
+              Chat with the Go Tix team — we typically reply within one business day.
             </p>
           </div>
         </div>

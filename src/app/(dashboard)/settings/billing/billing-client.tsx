@@ -114,7 +114,7 @@ export function BillingClient({
             <p className="font-medium text-red-900">Subscription invoice overdue</p>
             <p className="mt-1 text-sm text-red-700">
               Pay {formatCurrency(overdueInvoice.total)} for invoice{" "}
-              {overdueInvoice.invoiceNumber} to restore full access to Glow Desk.
+              {overdueInvoice.invoiceNumber} to restore full access to Go Tix.
             </p>
             <div className="mt-3">
               <PayInvoiceButton invoice={overdueInvoice} size="sm" />
@@ -185,7 +185,7 @@ export function BillingClient({
               pending
             </div>
             <p className="text-sm text-stone-500">
-              Glow Desk platform invoices are separate from your customer billing
+              Go Tix platform invoices are separate from your customer billing
               in the Billing section.
             </p>
           </CardContent>

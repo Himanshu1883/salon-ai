@@ -101,10 +101,10 @@ export function PlatformSubscriptionInvoices({
       {!compact && (
         <div className="border-b border-[#ECECEC] px-5 py-4">
           <h2 className="text-lg font-semibold text-[#1C103D]">
-            Glow Desk Subscription Invoices
+            Go Tix Subscription Invoices
           </h2>
           <p className="mt-1 text-sm text-[#6B7280]">
-            Platform invoices from {PLATFORM_BILLING_ENTITY.legalName} for your Glow Desk ERP
+            Platform invoices from {PLATFORM_BILLING_ENTITY.legalName} for your Go Tix ERP
             subscription — not invoices you create for salon customers.
           </p>
         </div>

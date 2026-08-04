@@ -6,7 +6,7 @@ export const PLATFORM_BILLING_ENTITY = {
   gstin: "07AAKCV1678G1ZZ",
   stateName: "Delhi",
   stateCode: "07",
-  brandName: "Glow Desk",
+  brandName: "Go Tix",
   supportEmail: "support@salon.ai",
   upiId: "salonai@upi",
   bankAccountName: "VSACHI TECH PRIVATE LIMITED",
@@ -68,8 +68,8 @@ export function getPlatformSubscriptionLineItem(
   const isTrial = baseAmount === 0;
   return {
     description: isTrial
-      ? `Glow Desk ${planName} Plan — Free Trial`
-      : `Glow Desk ${planName} Plan — Monthly Subscription`,
+      ? `Go Tix ${planName} Plan — Free Trial`
+      : `Go Tix ${planName} Plan — Monthly Subscription`,
     amount: baseAmount,
   };
 }

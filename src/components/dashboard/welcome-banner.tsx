@@ -21,7 +21,7 @@ export function WelcomeBanner() {
       </div>
       <div className="flex-1">
         <p className="text-sm font-medium text-violet-900">
-          Welcome to Glow Desk, {displayName}!
+          Welcome to Go Tix, {displayName}!
         </p>
         <p className="mt-0.5 text-xs text-violet-700/80">
           Your salon is ready. Start by checking in a customer or exploring your
