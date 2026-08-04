@@ -42,7 +42,7 @@ export default async function BillingPage({
       getSeats(),
       prisma.salon.findUnique({
         where: { id: session.user.salonId },
-        select: { name: true },
+        select: { name: true, gstEnabled: true },
       }),
       getSalonSubscriptionStatus(session.user.salonId),
       getWhatsAppSettingsAction(),
@@ -84,6 +84,7 @@ export default async function BillingPage({
       autoOpenCreate={Boolean(params.customerName)}
       isBasicPlan={basicBilling}
       salonName={salon?.name ?? "Salon"}
+      gstEnabled={salon?.gstEnabled ?? true}
       whatsappSettings={whatsappSettings}
       platformInvoices={platformBilling.invoices}
       subscriptionPlanName={

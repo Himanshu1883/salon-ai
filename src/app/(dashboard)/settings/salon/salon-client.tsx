@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   removeSalonLogo,
@@ -20,6 +20,7 @@ type SalonProfile = {
   slug: string;
   businessType: string | null;
   gstin: string | null;
+  gstEnabled: boolean;
   addressLine1: string | null;
   city: string | null;
   state: string | null;
@@ -34,11 +35,16 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [logoLoading, setLogoLoading] = useState(false);
+  const [gstEnabled, setGstEnabled] = useState(profile?.gstEnabled ?? true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { fullUrl: salonLoginUrl } = useSalonLoginUrl(profile?.slug ?? "");
 
   const logoPreviewUrl = getSalonLogoUrl(profile?.logoUrl);
+
+  useEffect(() => {
+    setGstEnabled(profile?.gstEnabled ?? true);
+  }, [profile?.gstEnabled]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,6 +57,7 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
       name: formData.get("name") as string,
       businessType: (formData.get("businessType") as string) || undefined,
       gstin: (formData.get("gstin") as string) || undefined,
+      gstEnabled,
       addressLine1: (formData.get("addressLine1") as string) || undefined,
       city: (formData.get("city") as string) || undefined,
       state: (formData.get("state") as string) || undefined,
@@ -221,7 +228,39 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="gstin">GSTIN</Label>
-              <Input id="gstin" name="gstin" defaultValue={profile?.gstin ?? ""} />
+              <Input
+                id="gstin"
+                name="gstin"
+                defaultValue={profile?.gstin ?? ""}
+                disabled={!gstEnabled}
+              />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+              <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-stone-200 p-4">
+                <div>
+                  <p className="text-sm font-medium text-stone-900">
+                    Enable GST on invoices
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    When disabled, GST options are hidden when creating customer invoices
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={gstEnabled}
+                  onClick={() => setGstEnabled((v) => !v)}
+                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                    gstEnabled ? "bg-violet-600" : "bg-stone-200"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                      gstEnabled ? "left-[22px]" : "left-0.5"
+                    }`}
+                  />
+                </button>
+              </label>
             </div>
             <div className="space-y-2">
               <Label htmlFor="businessPhone">Business phone</Label>

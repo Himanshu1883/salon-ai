@@ -15,6 +15,7 @@ type ItemsSectionProps = {
   servicesByCategory: Map<string, BillingService[]>;
   catalogOptions: CatalogOption[];
   gstIncluded: boolean;
+  gstEnabled?: boolean;
   fieldErrors?: Record<number, string>;
   itemsError?: string;
   onSelectItem: (index: number, value: string) => void;
@@ -29,6 +30,7 @@ export function ItemsSection({
   servicesByCategory,
   catalogOptions,
   gstIncluded,
+  gstEnabled = true,
   fieldErrors,
   itemsError,
   onSelectItem,
@@ -66,12 +68,21 @@ export function ItemsSection({
       </h3>
 
       <div className="hidden lg:block">
-        <div className={v3.itemHeader}>
+        <div
+          className={
+            gstEnabled
+              ? v3.itemHeader
+              : cn(
+                  v3.itemHeader,
+                  "grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+                )
+          }
+        >
           <span>Product</span>
           <span>Qty</span>
           <span>Price</span>
           <span>Discount</span>
-          <span>GST</span>
+          {gstEnabled ? <span>GST</span> : null}
           <span className="text-right">Amount</span>
           <span aria-hidden />
         </div>
@@ -95,6 +106,7 @@ export function ItemsSection({
               servicesByCategory={categoryMap}
               products={productList}
               gstIncluded={gstIncluded}
+              gstEnabled={gstEnabled}
               error={fieldErrors?.[i]}
               canRemove={lineItems.length > 1}
               onSelect={(v) => onSelectItem(i, v)}

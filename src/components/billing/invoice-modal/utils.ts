@@ -42,7 +42,8 @@ export function lineNet(item: LineItem) {
   return Math.max(0, lineGross(item) - lineDiscount(item));
 }
 
-export function lineTax(item: LineItem, gstIncluded: boolean) {
+export function lineTax(item: LineItem, gstIncluded: boolean, gstEnabled = true) {
+  if (!gstEnabled) return 0;
   const net = lineNet(item);
   if (gstIncluded) {
     return net - net / (1 + item.taxRate);
@@ -50,9 +51,10 @@ export function lineTax(item: LineItem, gstIncluded: boolean) {
   return net * item.taxRate;
 }
 
-export function lineTotal(item: LineItem, gstIncluded: boolean) {
+export function lineTotal(item: LineItem, gstIncluded: boolean, gstEnabled = true) {
   const net = lineNet(item);
-  return gstIncluded ? net : net + lineTax(item, gstIncluded);
+  if (!gstEnabled) return net;
+  return gstIncluded ? net : net + lineTax(item, gstIncluded, gstEnabled);
 }
 
 export function formatInvoiceNumber(id: string, createdAt = new Date()) {

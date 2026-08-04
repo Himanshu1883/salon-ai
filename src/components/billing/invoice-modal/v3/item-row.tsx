@@ -24,6 +24,7 @@ type ItemRowProps = {
   servicesByCategory: Map<string, { id: string; name: string; duration: number; price: number }[]>;
   products: { id: string; name: string; category: string; retailPrice: number }[];
   gstIncluded: boolean;
+  gstEnabled?: boolean;
   error?: string;
   canRemove: boolean;
   onSelect: (value: string) => void;
@@ -39,20 +40,25 @@ export function ItemRow({
   servicesByCategory,
   products,
   gstIncluded,
+  gstEnabled = true,
   error,
   canRemove,
   onSelect,
   onUpdate,
   onRemove,
 }: ItemRowProps) {
-  const amount = lineTotal(item, gstIncluded);
+  const amount = lineTotal(item, gstIncluded, gstEnabled);
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.2, delay: index * 0.02 }}
-      className={v3.itemRow}
+      className={cn(
+        v3.itemRow,
+        !gstEnabled &&
+          "grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+      )}
     >
       <div className="min-w-0 [&_input]:h-9 [&_input]:rounded-[12px] [&_input]:text-[13px] [&_label]:hidden [&_.space-y-1\\.5]:space-y-0">
         <ItemSelector
@@ -127,21 +133,23 @@ export function ItemRow({
         />
       </div>
 
-      <Select
-        value={String(item.taxRate)}
-        onValueChange={(v) => onUpdate({ taxRate: Number(v) })}
-      >
-        <SelectTrigger className={cn(v3.selectTrigger, "h-9 px-2")}>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="rounded-[12px]">
-          {GST_OPTIONS.map((opt) => (
-            <SelectItem key={opt.label} value={String(opt.value)}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {gstEnabled ? (
+        <Select
+          value={String(item.taxRate)}
+          onValueChange={(v) => onUpdate({ taxRate: Number(v) })}
+        >
+          <SelectTrigger className={cn(v3.selectTrigger, "h-9 px-2")}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="rounded-[12px]">
+            {GST_OPTIONS.map((opt) => (
+              <SelectItem key={opt.label} value={String(opt.value)}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
 
       <span className="truncate text-right text-[13px] font-semibold tabular-nums text-[#111827]">
         ₹{Math.round(amount).toLocaleString("en-IN")}

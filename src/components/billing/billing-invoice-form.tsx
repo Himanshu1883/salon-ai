@@ -72,6 +72,7 @@ type BillingInvoiceFormProps = {
   prefilledCustomer?: { name: string; phone: string };
   isBasicPlan?: boolean;
   salonName?: string;
+  gstEnabled?: boolean;
   whatsappSettings?: {
     billingMessageTemplate: string;
     autoOpenAfterPayment: boolean;
@@ -101,6 +102,7 @@ export function BillingInvoiceForm({
   prefilledCustomer,
   isBasicPlan = false,
   salonName = "Salon",
+  gstEnabled = true,
   whatsappSettings,
   onSuccess,
   onCancel,
@@ -230,24 +232,29 @@ export function BillingInvoiceForm({
 
   const subtotal = lineItems.reduce((sum, item) => sum + lineNet(item), 0);
   const totalDiscount = lineItems.reduce((sum, item) => sum + lineDiscount(item), 0);
-  const totalTax = lineItems.reduce(
-    (sum, item) => sum + lineTax(item, gstIncluded),
-    0
-  );
+  const totalTax = gstEnabled
+    ? lineItems.reduce((sum, item) => sum + lineTax(item, gstIncluded, gstEnabled), 0)
+    : 0;
   const grandTotal = lineItems.reduce(
-    (sum, item) => sum + lineTotal(item, gstIncluded),
+    (sum, item) => sum + lineTotal(item, gstIncluded, gstEnabled),
     0
   );
 
-  const displaySubtotal = gstIncluded
-    ? Math.round((subtotal - totalTax) * 100) / 100
+  const displaySubtotal = gstEnabled
+    ? gstIncluded
+      ? Math.round((subtotal - totalTax) * 100) / 100
+      : subtotal
     : subtotal;
-  const displayTax = gstIncluded
-    ? totalTax
-    : Math.round(subtotal * TAX_RATE * 100) / 100;
-  const displayTotal = gstIncluded
-    ? grandTotal
-    : Math.round((subtotal + displayTax) * 100) / 100;
+  const displayTax = gstEnabled
+    ? gstIncluded
+      ? totalTax
+      : Math.round(subtotal * TAX_RATE * 100) / 100
+    : 0;
+  const displayTotal = gstEnabled
+    ? gstIncluded
+      ? grandTotal
+      : Math.round((subtotal + displayTax) * 100) / 100
+    : subtotal;
   const requiresEmployee = !isBasicPlan && employees.length > 0;
 
   const servicesSummary = useMemo(
@@ -330,10 +337,10 @@ export function BillingInvoiceForm({
               serviceName: option?.label,
               description: item.description,
             }),
-            amount: lineTotal(item, gstIncluded),
+            amount: lineTotal(item, gstIncluded, gstEnabled),
           };
         }),
-    [lineItems, catalogOptions, gstIncluded]
+    [lineItems, catalogOptions, gstIncluded, gstEnabled]
   );
 
   const updateLineItem = useCallback((index: number, patch: Partial<LineItem>) => {
@@ -357,7 +364,7 @@ export function BillingInvoiceForm({
         stockItemId: "",
         description: svc?.name || option.label,
         unitPrice: option.price,
-        taxRate: option.taxRate,
+        taxRate: gstEnabled ? option.taxRate : 0,
       });
     } else {
       updateLineItem(index, {
@@ -366,7 +373,7 @@ export function BillingInvoiceForm({
         stockItemId: option.id,
         description: option.label,
         unitPrice: option.price,
-        taxRate: option.taxRate,
+        taxRate: gstEnabled ? option.taxRate : 0,
       });
     }
   }
@@ -488,7 +495,7 @@ export function BillingInvoiceForm({
         }),
         quantity: item.quantity,
         unitPrice: item.unitPrice,
-        total: lineTotal(item, gstIncluded),
+        total: lineTotal(item, gstIncluded, gstEnabled),
         service: item.serviceId
           ? {
               name:
@@ -646,6 +653,7 @@ export function BillingInvoiceForm({
                     servicesByCategory={servicesByCategory}
                     catalogOptions={catalogOptions}
                     gstIncluded={gstIncluded}
+                    gstEnabled={gstEnabled}
                     fieldErrors={fieldErrors.lineItems}
                     itemsError={fieldErrors.items}
                     onSelectItem={selectCatalogItem}
@@ -708,6 +716,7 @@ export function BillingInvoiceForm({
               discount={totalDiscount}
               tax={displayTax}
               total={displayTotal}
+              gstEnabled={gstEnabled}
               customer={customer}
               paymentStatus={paymentStatusLabel}
               loading={loading}

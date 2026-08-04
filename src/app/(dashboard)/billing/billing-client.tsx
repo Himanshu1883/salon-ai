@@ -37,6 +37,7 @@ export function BillingClient({
   autoOpenCreate = false,
   isBasicPlan = false,
   salonName = "Salon",
+  gstEnabled = true,
   whatsappSettings,
   platformInvoices = [],
   subscriptionPlanName = "Enterprise",
@@ -52,6 +53,7 @@ export function BillingClient({
   autoOpenCreate?: boolean;
   isBasicPlan?: boolean;
   salonName?: string;
+  gstEnabled?: boolean;
   whatsappSettings?: {
     billingMessageTemplate: string;
     autoOpenAfterPayment: boolean;
@@ -257,6 +259,7 @@ export function BillingClient({
         prefilledCustomer={prefilledCustomer}
         isBasicPlan={isBasicPlan}
         salonName={salonName}
+        gstEnabled={gstEnabled}
         whatsappSettings={whatsappSettings}
         onSuccess={handleInvoiceCreated}
       />

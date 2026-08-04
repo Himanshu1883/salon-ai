@@ -75,14 +75,27 @@ async function deductProductLineItems(
   });
 }
 
-function calcTotals(lineItems: { quantity: number; unitPrice: number }[]) {
+function calcTotals(
+  lineItems: { quantity: number; unitPrice: number }[],
+  gstEnabled = true
+) {
   const subtotal = lineItems.reduce(
     (sum, item) => sum + item.quantity * item.unitPrice,
     0
   );
-  const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+  const tax = gstEnabled
+    ? Math.round(subtotal * TAX_RATE * 100) / 100
+    : 0;
   const total = Math.round((subtotal + tax) * 100) / 100;
   return { subtotal, tax, total };
+}
+
+async function getSalonGstEnabled(salonId: string) {
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    select: { gstEnabled: true },
+  });
+  return salon?.gstEnabled ?? true;
 }
 
 async function validateEmployeeAndSeat(
@@ -393,7 +406,8 @@ export async function createInvoice(formData: FormData) {
   );
   if ("error" in validation) return validation;
 
-  let totals = calcTotals(parsed.data.lineItems);
+  const gstEnabled = await getSalonGstEnabled(session.user.salonId);
+  let totals = calcTotals(parsed.data.lineItems, gstEnabled);
   let invoiceNotes = parsed.data.notes ?? "";
 
   const serviceIds = [
@@ -450,7 +464,9 @@ export async function createInvoice(formData: FormData) {
       totals.subtotal,
       membershipDiscount.discountPercent
     );
-    const tax = Math.round(discountedSubtotal * TAX_RATE * 100) / 100;
+    const tax = gstEnabled
+      ? Math.round(discountedSubtotal * TAX_RATE * 100) / 100
+      : 0;
     const total = Math.round((discountedSubtotal + tax) * 100) / 100;
     totals = { subtotal: discountedSubtotal, tax, total };
     invoiceNotes = [
@@ -541,7 +557,7 @@ export async function createInvoiceFromAppointment(appointmentId: string) {
       serviceId: appointment.serviceId,
     },
   ];
-  const totals = calcTotals(lineItems);
+  const totals = calcTotals(lineItems, await getSalonGstEnabled(session.user.salonId));
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -621,7 +637,10 @@ export async function createInvoiceFromCheckIn(
     return { error: "Add at least one service to the invoice" };
   }
 
-  const totals = calcTotals(lineItems);
+  const totals = calcTotals(
+    lineItems,
+    await getSalonGstEnabled(session.user.salonId)
+  );
   const isPaid = !!parsedOptions.data.paymentMethod;
 
   const invoice = await prisma.invoice.create({
@@ -754,7 +773,7 @@ export async function getBillingInvoiceFormData() {
     }),
     prisma.salon.findUnique({
       where: { id: salonId },
-      select: { name: true },
+      select: { name: true, gstEnabled: true },
     }),
     getSalonPlan(salonId),
     getSalonBillingWhatsAppTemplate(salonId),
@@ -773,6 +792,7 @@ export async function getBillingInvoiceFormData() {
     seats,
     isBasicPlan: isBasicPlan(plan),
     salonName: salon?.name ?? "Salon",
+    gstEnabled: salon?.gstEnabled ?? true,
     whatsappSettings,
   };
 }

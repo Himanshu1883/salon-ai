@@ -28,6 +28,7 @@ type SummaryPanelProps = {
   coupon?: number;
   roundOff?: number;
   total: number;
+  gstEnabled?: boolean;
   customer?: InvoiceCustomer;
   paymentStatus?: string;
   outstandingBalance?: number;
@@ -43,6 +44,7 @@ export function SummaryPanel({
   discount,
   tax,
   total,
+  gstEnabled = true,
   customer,
   paymentStatus = "Unpaid",
   outstandingBalance = 0,
@@ -62,7 +64,7 @@ export function SummaryPanel({
       <dl className="space-y-2 text-[12px]">
         <Row label="Subtotal" value={subtotal} />
         <Row label="Discount" value={discount} negative />
-        <Row label="GST" value={tax} />
+        {gstEnabled ? <Row label="GST" value={tax} /> : null}
       </dl>
 
       <div className="my-3 h-px bg-[#ECECF5]" />

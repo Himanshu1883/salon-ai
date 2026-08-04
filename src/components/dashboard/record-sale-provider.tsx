@@ -22,6 +22,7 @@ type BillingFormData = {
   seats: BillingSeat[];
   isBasicPlan: boolean;
   salonName: string;
+  gstEnabled: boolean;
   whatsappSettings: {
     billingMessageTemplate: string;
     autoOpenAfterPayment: boolean;
@@ -82,6 +83,7 @@ export function RecordSaleProvider({ children }: { children: React.ReactNode }) 
         seats={formData?.seats ?? []}
         isBasicPlan={formData?.isBasicPlan}
         salonName={formData?.salonName}
+        gstEnabled={formData?.gstEnabled ?? true}
         whatsappSettings={formData?.whatsappSettings}
         onSuccess={handleSuccess}
       />
