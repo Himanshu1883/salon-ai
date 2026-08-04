@@ -46,22 +46,6 @@ export function BillingInvoiceDialog({
           v3.modal,
           "[&>button]:hidden"
         )}
-        onPointerDownOutside={(e) => {
-          if (
-            e.target instanceof Element &&
-            e.target.closest("[data-invoice-item-dropdown]")
-          ) {
-            e.preventDefault();
-          }
-        }}
-        onInteractOutside={(e) => {
-          if (
-            e.target instanceof Element &&
-            e.target.closest("[data-invoice-item-dropdown]")
-          ) {
-            e.preventDefault();
-          }
-        }}
       >
         <BillingInvoiceForm
           services={services}

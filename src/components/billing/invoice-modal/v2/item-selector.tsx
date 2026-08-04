@@ -70,6 +70,11 @@ export function trackRecentItem(catalogKey: string) {
   saveJsonArray(RECENT_KEY, recent);
 }
 
+function resolvePortalContainer(anchor: HTMLElement | null): HTMLElement {
+  if (!anchor) return document.body;
+  return anchor.closest('[role="dialog"]') ?? document.body;
+}
+
 function ItemDropdownPortal({
   anchorRef,
   open,
@@ -80,6 +85,9 @@ function ItemDropdownPortal({
   children: ReactNode;
 }) {
   const [style, setStyle] = useState<React.CSSProperties>({});
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null
+  );
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
@@ -96,6 +104,7 @@ function ItemDropdownPortal({
 
   useLayoutEffect(() => {
     if (!open) return;
+    setPortalContainer(resolvePortalContainer(anchorRef.current));
     updatePosition();
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
@@ -103,19 +112,20 @@ function ItemDropdownPortal({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePosition, anchorRef]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!open || typeof document === "undefined" || !portalContainer) return null;
 
   return createPortal(
     <div
       style={style}
       className="max-h-80 overflow-y-auto rounded-[14px] border border-[#ECECF5] bg-white shadow-[0_16px_48px_rgba(124,58,237,0.14)]"
       data-invoice-item-dropdown
+      onPointerDown={(e) => e.stopPropagation()}
     >
       {children}
     </div>,
-    document.body
+    portalContainer
   );
 }
 
@@ -165,7 +175,9 @@ export function ItemSelector({
   }, [selected?.label]);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    if (!open) return;
+
+    function handlePointerDownOutside(e: PointerEvent) {
       const target = e.target as Node;
       if (containerRef.current?.contains(target)) return;
       if (
@@ -176,9 +188,11 @@ export function ItemSelector({
       }
       setOpen(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    document.addEventListener("pointerdown", handlePointerDownOutside, true);
+    return () =>
+      document.removeEventListener("pointerdown", handlePointerDownOutside, true);
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -245,7 +259,11 @@ export function ItemSelector({
         key={key}
         role="button"
         tabIndex={0}
-        onClick={() => pick(key)}
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          pick(key);
+        }}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
@@ -265,6 +283,7 @@ export function ItemSelector({
         </div>
         <button
           type="button"
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => toggleFavorite(key, e)}
           className={cn(
             "rounded-lg p-1.5 transition-colors",
