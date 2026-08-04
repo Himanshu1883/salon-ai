@@ -729,6 +729,29 @@ export function BillingInvoiceForm({
           </div>
         </div>
 
+        <div className="shrink-0 border-t border-[#ECECF5] bg-white px-8 py-6 lg:hidden">
+          <SummaryPanel
+            step={currentStep}
+            items={summaryItems}
+            subtotal={displaySubtotal}
+            discount={totalDiscount}
+            tax={displayTax}
+            total={displayTotal}
+            customer={customer}
+            paymentStatus={paymentStatusLabel}
+            loading={loading}
+            onProceed={
+              step === 1
+                ? () => void handleCreateInvoice()
+                : () => void handleReceivePayment()
+            }
+            disableProceed={step === 2 && selectedPayment === "pay_later"}
+            proceedLabel={
+              step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
+            }
+          />
+        </div>
+
         <ModalFooter
           step={currentStep}
           loading={loading}
