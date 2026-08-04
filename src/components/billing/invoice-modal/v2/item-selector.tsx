@@ -32,6 +32,20 @@ export type CatalogOption = {
   taxRate: number;
 };
 
+function catalogKey(opt: CatalogOption) {
+  return `${opt.type}:${opt.id}`;
+}
+
+function dedupeOptions(opts: CatalogOption[]) {
+  const seen = new Set<string>();
+  return opts.filter((o) => {
+    const key = catalogKey(o);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 const FAVORITES_KEY = "glowdesk-invoice-favorites";
 const RECENT_KEY = "glowdesk-invoice-recent-items";
 
@@ -137,7 +151,9 @@ export function ItemSelector({
   const [recentKeys, setRecentKeys] = useState<string[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selected = options.find((o) => `${o.type}:${o.id}` === value);
+  const uniqueOptions = useMemo(() => dedupeOptions(options), [options]);
+
+  const selected = uniqueOptions.find((o) => catalogKey(o) === value);
 
   useEffect(() => {
     setFavorites(loadJsonArray(FAVORITES_KEY));
@@ -166,26 +182,38 @@ export function ItemSelector({
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter(
+    if (!q) return uniqueOptions;
+    return uniqueOptions.filter(
       (o) =>
         o.label.toLowerCase().includes(q) ||
         o.category.toLowerCase().includes(q)
     );
-  }, [options, query]);
+  }, [uniqueOptions, query]);
 
   const favoriteOptions = useMemo(
-    () => options.filter((o) => favorites.includes(`${o.type}:${o.id}`)),
-    [options, favorites]
+    () =>
+      dedupeOptions(
+        uniqueOptions.filter((o) => favorites.includes(catalogKey(o)))
+      ),
+    [uniqueOptions, favorites]
   );
 
   const recentOptions = useMemo(
     () =>
-      recentKeys
-        .map((key) => options.find((o) => `${o.type}:${o.id}` === key))
-        .filter(Boolean) as CatalogOption[],
-    [options, recentKeys]
+      dedupeOptions(
+        recentKeys
+          .map((key) => uniqueOptions.find((o) => catalogKey(o) === key))
+          .filter(Boolean) as CatalogOption[]
+      ),
+    [uniqueOptions, recentKeys]
   );
+
+  const pinnedKeys = useMemo(() => {
+    if (query.trim()) return new Set<string>();
+    return new Set(
+      [...favoriteOptions, ...recentOptions].map((o) => catalogKey(o))
+    );
+  }, [favoriteOptions, recentOptions, query]);
 
   function toggleFavorite(catalogKey: string, e: React.MouseEvent) {
     e.stopPropagation();
@@ -198,26 +226,33 @@ export function ItemSelector({
     });
   }
 
-  function pick(catalogKey: string) {
-    const opt = options.find((o) => `${o.type}:${o.id}` === catalogKey);
+  function pick(key: string) {
+    const opt = uniqueOptions.find((o) => catalogKey(o) === key);
     if (opt) {
       setQuery(opt.label);
-      trackRecentItem(catalogKey);
+      trackRecentItem(key);
       setRecentKeys(loadJsonArray(RECENT_KEY));
     }
-    onSelect(catalogKey);
+    onSelect(key);
     setOpen(false);
   }
 
   function renderOption(opt: CatalogOption) {
-    const key = `${opt.type}:${opt.id}`;
+    const key = catalogKey(opt);
     const isFav = favorites.includes(key);
     return (
-      <button
+      <div
         key={key}
-        type="button"
+        role="button"
+        tabIndex={0}
         onClick={() => pick(key)}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#7C3AED]/5"
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            pick(key);
+          }
+        }}
+        className="flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#7C3AED]/5"
       >
         <ItemIcon type={opt.type} />
         <div className="min-w-0 flex-1">
@@ -239,7 +274,7 @@ export function ItemSelector({
         >
           <Star className={cn("h-4 w-4", isFav && "fill-current")} />
         </button>
-      </button>
+      </div>
     );
   }
 
@@ -306,30 +341,44 @@ export function ItemSelector({
           )
         ) : (
           <>
-            {Array.from(servicesByCategory.entries()).map(([category, items]) => (
-              <div key={category}>
-                <p className="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
-                  {category}
-                </p>
-                {items.map((s) => {
-                  const opt = options.find(
-                    (o) => o.type === "SERVICE" && o.id === s.id
-                  );
-                  return opt ? renderOption(opt) : null;
-                })}
-              </div>
-            ))}
+            {Array.from(servicesByCategory.entries()).map(([category, items]) => {
+              const categoryItems = dedupeOptions(
+                items
+                  .map((s) =>
+                    uniqueOptions.find(
+                      (o) => o.type === "SERVICE" && o.id === s.id
+                    )
+                  )
+                  .filter(Boolean) as CatalogOption[]
+              ).filter((o) => !pinnedKeys.has(catalogKey(o)));
+
+              if (categoryItems.length === 0) return null;
+
+              return (
+                <div key={category}>
+                  <p className="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
+                    {category}
+                  </p>
+                  {categoryItems.map(renderOption)}
+                </div>
+              );
+            })}
             {products.length > 0 && (
               <div>
                 <p className="px-4 py-2 text-[10px] font-semibold uppercase tracking-wider text-[#6B7280]">
                   Products
                 </p>
-                {products.map((p) => {
-                  const opt = options.find(
-                    (o) => o.type === "PRODUCT" && o.id === p.id
-                  );
-                  return opt ? renderOption(opt) : null;
-                })}
+                {dedupeOptions(
+                  products
+                    .map((p) =>
+                      uniqueOptions.find(
+                        (o) => o.type === "PRODUCT" && o.id === p.id
+                      )
+                    )
+                    .filter(Boolean) as CatalogOption[]
+                )
+                  .filter((o) => !pinnedKeys.has(catalogKey(o)))
+                  .map(renderOption)}
               </div>
             )}
           </>
