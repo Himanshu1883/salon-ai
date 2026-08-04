@@ -65,7 +65,7 @@ export function SettingsNav({
   });
 
   return (
-    <nav className="mb-6 flex flex-wrap gap-2 border-b border-stone-200 pb-4">
+    <nav className="mb-6 -mx-1 flex gap-2 overflow-x-auto border-b border-stone-200 pb-4 px-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {links.map((link) => {
         const Icon = link.icon;
         const active = isSettingsActive(pathname, link.href);
@@ -74,7 +74,7 @@ export function SettingsNav({
             key={link.href}
             href={link.href}
             className={cn(
-              "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "inline-flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors min-h-[var(--touch-target)] sm:min-h-0 sm:py-2",
               active
                 ? "bg-violet-50 text-violet-700"
                 : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"

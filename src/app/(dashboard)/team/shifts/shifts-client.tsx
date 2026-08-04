@@ -324,7 +324,7 @@ export function ShiftsClient({
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="min-w-[180px] px-2 text-center text-sm font-medium text-stone-700">
+            <span className="min-w-0 px-2 text-center text-sm font-medium text-stone-700 sm:min-w-[180px]">
               {formatWeekRange(weekStart)}
             </span>
             <Button
@@ -339,8 +339,8 @@ export function ShiftsClient({
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-stone-200 bg-white">
-        <table className="w-full min-w-[900px] border-collapse text-sm">
+      <div className="min-w-0 overflow-x-auto rounded-lg border border-stone-200 bg-white">
+        <table className="w-full min-w-[640px] border-collapse text-sm md:min-w-[900px]">
           <thead>
             <tr className="border-b border-stone-200 bg-stone-50/80">
               <th className="sticky left-0 z-10 min-w-[200px] bg-stone-50/95 px-4 py-3 text-left font-medium text-stone-600" />

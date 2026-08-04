@@ -27,7 +27,7 @@ export function MembershipsSubNav() {
           </p>
         </div>
       </div>
-      <nav className="flex flex-wrap gap-1">
+      <nav className="flex gap-1 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {MEMBERSHIP_NAV.map((item) => {
           const active =
             "exact" in item && item.exact
@@ -38,7 +38,7 @@ export function MembershipsSubNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "rounded-xl px-3 py-1.5 text-xs font-medium transition-all",
+                "shrink-0 rounded-xl px-3 py-2 text-xs font-medium transition-all min-h-[var(--touch-target)] flex items-center sm:min-h-0 sm:py-1.5",
                 active
                   ? "text-white shadow-sm"
                   : "text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 dark:text-stone-300 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300"
@@ -70,7 +70,7 @@ export function MembershipPageHeader({
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-stone-900 dark:text-white sm:text-3xl">
+        <h1 className="page-title text-stone-900 dark:text-white">
           {title}
         </h1>
         {description && (

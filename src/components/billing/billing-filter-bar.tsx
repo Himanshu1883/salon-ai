@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FilterDrawer } from "@/components/ui/filter-drawer";
 import type { BillingEmployee, BillingFilters } from "./types";
 
 type BillingFilterBarProps = {
@@ -20,20 +21,28 @@ type BillingFilterBarProps = {
   onReset: () => void;
 };
 
-export function BillingFilterBar({
+function BillingFilterFields({
   filters,
   employees,
   isBasicPlan,
-  onApply,
-  onReset,
-}: BillingFilterBarProps) {
+  stacked = false,
+}: {
+  filters: BillingFilters;
+  employees: BillingEmployee[];
+  isBasicPlan?: boolean;
+  stacked?: boolean;
+}) {
+  const triggerClass = stacked
+    ? "h-11 w-full rounded-xl border-[#ECECEC] bg-white text-sm"
+    : "h-9 w-full min-w-0 rounded-xl border-[#ECECEC] bg-white text-sm sm:w-[130px]";
+  const dateClass = stacked
+    ? "h-11 w-full rounded-xl border-[#ECECEC] text-sm"
+    : "h-9 w-full min-w-0 rounded-xl border-[#ECECEC] text-sm sm:w-[140px]";
+
   return (
-    <form
-      onSubmit={onApply}
-      className="flex w-full flex-wrap items-center justify-end gap-2 sm:gap-3"
-    >
+    <>
       <Select name="status" defaultValue={filters.status}>
-        <SelectTrigger className="h-9 w-[130px] rounded-xl border-[#ECECEC] bg-white text-sm">
+        <SelectTrigger className={triggerClass}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent className="rounded-xl">
@@ -50,18 +59,26 @@ export function BillingFilterBar({
         name="dateFrom"
         type="date"
         defaultValue={filters.dateFrom}
-        className="h-9 w-[140px] rounded-xl border-[#ECECEC] text-sm"
+        className={dateClass}
+        aria-label="From date"
       />
       <Input
         name="dateTo"
         type="date"
         defaultValue={filters.dateTo}
-        className="h-9 w-[140px] rounded-xl border-[#ECECEC] text-sm"
+        className={dateClass}
+        aria-label="To date"
       />
 
       {!isBasicPlan && (
         <Select name="employeeId" defaultValue={filters.employeeId}>
-          <SelectTrigger className="h-9 w-[150px] rounded-xl border-[#ECECEC] bg-white text-sm">
+          <SelectTrigger
+            className={
+              stacked
+                ? "h-11 w-full rounded-xl border-[#ECECEC] bg-white text-sm"
+                : "h-9 w-full min-w-0 rounded-xl border-[#ECECEC] bg-white text-sm sm:w-[150px]"
+            }
+          >
             <SelectValue placeholder="Stylist" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
@@ -74,25 +91,73 @@ export function BillingFilterBar({
           </SelectContent>
         </Select>
       )}
+    </>
+  );
+}
 
-      <Button
-        type="submit"
-        size="sm"
-        className="h-9 rounded-xl bg-[#6C3CF0] px-4 hover:bg-[#5B2FE0]"
+export function BillingFilterBar({
+  filters,
+  employees,
+  isBasicPlan,
+  onApply,
+  onReset,
+}: BillingFilterBarProps) {
+  const formId = "billing-invoice-filters";
+
+  return (
+    <div className="w-full min-w-0 lg:w-auto">
+      <form
+        id={formId}
+        onSubmit={onApply}
+        className="hidden w-full flex-wrap items-center justify-end gap-2 lg:flex lg:gap-3"
       >
-        <Filter className="h-3.5 w-3.5" />
-        Apply
-      </Button>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={onReset}
-        className="h-9 rounded-xl border-[#ECECEC]"
+        <BillingFilterFields
+          filters={filters}
+          employees={employees}
+          isBasicPlan={isBasicPlan}
+        />
+        <Button
+          type="submit"
+          size="sm"
+          className="h-9 rounded-xl bg-[#6C3CF0] px-4 hover:bg-[#5B2FE0]"
+        >
+          <Filter className="h-3.5 w-3.5" />
+          Apply
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={onReset}
+          className="h-9 rounded-xl border-[#ECECEC]"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Reset
+        </Button>
+      </form>
+
+      <form
+        id={`${formId}-mobile`}
+        onSubmit={onApply}
+        className="lg:hidden"
       >
-        <RotateCcw className="h-3.5 w-3.5" />
-        Reset
-      </Button>
-    </form>
+        <FilterDrawer
+          triggerLabel="Filter invoices"
+          onApply={() =>
+            (
+              document.getElementById(`${formId}-mobile`) as HTMLFormElement | null
+            )?.requestSubmit()
+          }
+          onReset={onReset}
+        >
+          <BillingFilterFields
+            filters={filters}
+            employees={employees}
+            isBasicPlan={isBasicPlan}
+            stacked
+          />
+        </FilterDrawer>
+      </form>
+    </div>
   );
 }
