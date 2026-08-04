@@ -15,6 +15,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn, getInitials } from "@/lib/utils";
 import { formatLastVisit } from "@/components/clients/clients-utils";
+import {
+  computeAnchoredDropdownStyle,
+  resolvePortalContainer,
+} from "./anchored-dropdown-portal";
 import { invoiceModalStyles } from "./styles";
 
 export type InvoiceCustomer = {
@@ -65,11 +69,6 @@ function phoneDigitsMatch(
   );
 }
 
-function resolvePortalContainer(anchor: HTMLElement | null): HTMLElement {
-  if (!anchor) return document.body;
-  return anchor.closest('[role="dialog"]') ?? document.body;
-}
-
 function SearchDropdownPortal({
   anchorRef,
   open,
@@ -91,14 +90,8 @@ function SearchDropdownPortal({
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
-    const rect = anchor.getBoundingClientRect();
-    setStyle({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: rect.left,
-      width: rect.width,
-      zIndex: 9999,
-    });
+    const container = resolvePortalContainer(anchor);
+    setStyle(computeAnchoredDropdownStyle(anchor, container));
   }, [anchorRef]);
 
   useLayoutEffect(() => {

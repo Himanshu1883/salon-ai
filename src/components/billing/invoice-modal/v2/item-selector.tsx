@@ -20,6 +20,10 @@ import {
   Star,
 } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
+import {
+  computeAnchoredDropdownStyle,
+  resolvePortalContainer,
+} from "../anchored-dropdown-portal";
 import { v2 } from "./tokens";
 
 export type CatalogOption = {
@@ -70,11 +74,6 @@ export function trackRecentItem(catalogKey: string) {
   saveJsonArray(RECENT_KEY, recent);
 }
 
-function resolvePortalContainer(anchor: HTMLElement | null): HTMLElement {
-  if (!anchor) return document.body;
-  return anchor.closest('[role="dialog"]') ?? document.body;
-}
-
 function ItemDropdownPortal({
   anchorRef,
   open,
@@ -92,14 +91,10 @@ function ItemDropdownPortal({
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
     if (!anchor) return;
-    const rect = anchor.getBoundingClientRect();
-    setStyle({
-      position: "fixed",
-      top: rect.bottom + 8,
-      left: rect.left,
-      width: Math.max(rect.width, 360),
-      zIndex: 9999,
-    });
+    const container = resolvePortalContainer(anchor);
+    setStyle(
+      computeAnchoredDropdownStyle(anchor, container, { minWidth: 360 })
+    );
   }, [anchorRef]);
 
   useLayoutEffect(() => {
