@@ -9,11 +9,11 @@ import {
 
 function KpiSkeleton() {
   return (
-    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 animate-pulse">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 animate-pulse">
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className="h-32 rounded-[20px] border border-[#E8ECF4] bg-white"
+          className="h-24 rounded-[20px] border border-[#E8ECF4] bg-white xl:h-32"
         />
       ))}
     </div>
@@ -24,11 +24,11 @@ function WidgetsSkeleton() {
   return (
     <>
       <div className="h-16 rounded-[20px] bg-[#E8ECF4] animate-pulse" />
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-5">
-        <div className="h-80 rounded-[20px] border border-[#E8ECF4] bg-white xl:col-span-3 animate-pulse" />
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="h-72 rounded-[20px] border border-[#E8ECF4] bg-white lg:col-span-3 animate-pulse xl:h-80" />
         <ChartLoadingSkeleton />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
@@ -42,7 +42,7 @@ function WidgetsSkeleton() {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 xl:space-y-6">
       <Suspense fallback={null}>
         <WelcomeBanner />
       </Suspense>

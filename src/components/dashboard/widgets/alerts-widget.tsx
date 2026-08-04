@@ -110,11 +110,11 @@ export function AlertsWidget({
 
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="p-6 pb-4">
-        <h3 className="text-lg font-semibold text-dashboard-text">Alerts</h3>
+      <div className="p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Alerts</h3>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
         {alerts.length === 0 ? (
           <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">

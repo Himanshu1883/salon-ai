@@ -36,8 +36,8 @@ function getAppointmentStatus(scheduledAt: Date, status: string) {
 export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-6 pb-4">
-        <h3 className="text-lg font-semibold text-dashboard-text">
+      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">
           Today&apos;s Schedule
         </h3>
         <Link
@@ -48,7 +48,7 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
         </Link>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
         {appointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-dashboard-border py-10 text-center">
             <Calendar className="mb-3 h-8 w-8 text-dashboard-border" />
@@ -87,7 +87,7 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
                       {time}
                     </p>
                   </div>
-                  <div className="min-w-0 flex-1 rounded-2xl border border-dashboard-border bg-dashboard-bg/60 p-4">
+                  <div className="min-w-0 flex-1 rounded-xl border border-dashboard-border bg-dashboard-bg/60 p-3 xl:rounded-2xl xl:p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold text-white">

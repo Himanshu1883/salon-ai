@@ -32,8 +32,8 @@ export function ActivityWidget({ recentActivity, delay = 0 }: ActivityWidgetProp
 
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-6 pb-4">
-        <h3 className="text-lg font-semibold text-dashboard-text">
+      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">
           Recent Activity
         </h3>
         {isEnterprise && (
@@ -46,7 +46,7 @@ export function ActivityWidget({ recentActivity, delay = 0 }: ActivityWidgetProp
         )}
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
         {recentActivity.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-dashboard-border py-10 text-center">
             <p className="text-sm font-medium text-dashboard-text">

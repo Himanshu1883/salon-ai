@@ -23,7 +23,7 @@ function MiniSparkline({ data }: { data: SparklinePoint[] }) {
   const max = Math.max(...data.map((d) => d.value), 1);
 
   return (
-    <div className="flex h-8 items-end gap-0.5">
+    <div className="flex h-6 items-end gap-0.5 xl:h-8">
       {data.map((point, i) => (
         <div
           key={i}
@@ -45,18 +45,18 @@ function KpiCardContent({
   sparkline,
 }: Omit<KpiCardProps, "href" | "delay">) {
   return (
-    <div className="flex items-start gap-4 p-5">
+    <div className="flex items-start gap-3 p-3 lg:p-4 xl:gap-4 xl:p-5">
       <div
         className={cn(
-          "flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-sm",
+          "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm xl:h-12 xl:w-12 xl:rounded-2xl",
           iconGradient
         )}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-dashboard-muted">{label}</p>
-        <p className="mt-1 text-2xl font-bold tracking-tight text-dashboard-text">
+        <p className="text-xs font-medium text-dashboard-muted xl:text-sm">{label}</p>
+        <p className="mt-0.5 text-lg font-bold tracking-tight text-dashboard-text xl:mt-1 xl:text-2xl">
           {value}
         </p>
         <div className="mt-2 flex items-end justify-between gap-2">

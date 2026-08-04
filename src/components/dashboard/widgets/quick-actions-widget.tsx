@@ -104,7 +104,7 @@ function ActionCardContent({ action }: { action: ActionStyle }) {
     <>
       <div
         className={cn(
-          "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-xl xl:h-10 xl:w-10 xl:rounded-2xl",
           action.iconClassName
         )}
       >
@@ -133,13 +133,13 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
 
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="p-6 pb-4">
-        <h3 className="text-lg font-semibold text-dashboard-text">Quick Actions</h3>
+      <div className="p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Quick Actions</h3>
       </div>
-      <div className="grid gap-3 px-6 pb-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2.5 px-4 pb-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 xl:gap-3 xl:px-6 xl:pb-6">
         {visibleActions.map((action) => {
           const cardClassName = cn(
-            "flex flex-col gap-3 rounded-2xl px-4 py-4 transition-all hover:scale-[1.02]",
+            "flex flex-col gap-2 rounded-xl px-3 py-3 transition-all hover:scale-[1.02] xl:gap-3 xl:rounded-2xl xl:px-4 xl:py-4",
             action.className
           );
 

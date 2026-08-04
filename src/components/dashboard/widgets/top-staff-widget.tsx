@@ -20,8 +20,8 @@ type TopStaffWidgetProps = {
 export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-6 pb-4">
-        <h3 className="text-lg font-semibold text-dashboard-text">Top Staff</h3>
+      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Top Staff</h3>
         <Link
           href="/reports/team/earnings"
           className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
@@ -30,7 +30,7 @@ export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
         </Link>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
         {topEarners.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-dashboard-border py-8 text-center">
             <p className="text-sm font-medium text-dashboard-text">No earnings data yet</p>

@@ -33,15 +33,15 @@ export function AiInsightsWidget({
     <DashboardCard delay={delay} className="h-full">
       <Link
         href="/schedule/ai"
-        className="flex h-full flex-col justify-between p-6 transition-colors hover:bg-violet-50/30"
+        className="flex h-full flex-col justify-between p-4 transition-colors hover:bg-violet-50/30 xl:p-6"
       >
         <div className="flex items-start gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-md shadow-violet-200/60">
-            <Sparkles className="h-5 w-5" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-md shadow-violet-200/60 xl:h-11 xl:w-11 xl:rounded-2xl">
+            <Sparkles className="h-4 w-4 xl:h-5 xl:w-5" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="text-lg font-semibold text-dashboard-text">AI Insights</h3>
-            <p className="mt-2 text-sm leading-relaxed text-dashboard-muted">{insight}</p>
+            <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">AI Insights</h3>
+            <p className="mt-1.5 text-sm leading-relaxed text-dashboard-muted xl:mt-2">{insight}</p>
           </div>
         </div>
         <div className="mt-4 flex items-center gap-2 text-sm font-medium text-dashboard-primary">

@@ -57,19 +57,19 @@ export function DashboardLoadingSkeleton() {
   return (
     <div className="space-y-6 animate-pulse">
       <div className="h-28 rounded-[20px] bg-gradient-to-r from-[#EDE9FE] to-[#E8ECF4]" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="h-32 rounded-[20px] border border-[#E8ECF4] bg-white"
+            className="h-24 rounded-[20px] border border-[#E8ECF4] bg-white xl:h-32"
           />
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-5">
-        <div className="h-80 rounded-[20px] border border-[#E8ECF4] bg-white xl:col-span-3" />
-        <div className="h-80 rounded-[20px] border border-[#E8ECF4] bg-white xl:col-span-2" />
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="h-72 rounded-[20px] border border-[#E8ECF4] bg-white lg:col-span-3 xl:h-80" />
+        <div className="h-72 rounded-[20px] border border-[#E8ECF4] bg-white lg:col-span-2 xl:h-80" />
       </div>
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
@@ -120,7 +120,7 @@ export function InventoryLoadingSkeleton() {
 
 export function ChartLoadingSkeleton() {
   return (
-    <div className="h-80 animate-pulse rounded-[20px] border border-[#E8ECF4] bg-white" />
+    <div className="h-72 animate-pulse rounded-[20px] border border-[#E8ECF4] bg-white xl:h-80" />
   );
 }
 

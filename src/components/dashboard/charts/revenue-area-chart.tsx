@@ -29,12 +29,12 @@ export function RevenueAreaChart({
 
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-start justify-between p-6 pb-2">
+      <div className="flex flex-row items-start justify-between p-4 pb-2 xl:p-6">
         <div>
-          <h3 className="text-lg font-semibold text-dashboard-text">
+          <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">
             Revenue Analytics
           </h3>
-          <p className="mt-1 text-sm text-dashboard-muted">Last 7 days</p>
+          <p className="mt-0.5 text-xs text-dashboard-muted xl:mt-1 xl:text-sm">Last 7 days</p>
         </div>
         <Link
           href="/reports/finance/revenue-summary"
@@ -44,9 +44,9 @@ export function RevenueAreaChart({
         </Link>
       </div>
 
-      <div className="px-6 pb-6">
-        <div className="mb-4">
-          <p className="text-3xl font-bold tracking-tight text-dashboard-text">
+      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
+        <div className="mb-3 xl:mb-4">
+          <p className="text-2xl font-bold tracking-tight text-dashboard-text xl:text-3xl">
             {formatCurrency(weekTotal)}
           </p>
           <p className="text-xs text-dashboard-muted">7-day total</p>
@@ -68,7 +68,7 @@ export function RevenueAreaChart({
             </Link>
           </div>
         ) : (
-          <div className="h-[220px] w-full">
+          <div className="h-[180px] w-full xl:h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                 <defs>
