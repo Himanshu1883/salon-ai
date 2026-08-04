@@ -25,6 +25,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowLeft, Download, ClipboardList } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import { FilterDrawer } from "@/components/ui/filter-drawer";
 
 type LogRow = {
   id: string;
@@ -113,46 +115,88 @@ export function AttendanceLogClient({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-end gap-4 rounded-lg border border-stone-200 bg-white p-4">
-        <div>
-          <Label htmlFor="date">Date</Label>
-          <Input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="mt-1 w-40"
-          />
+      <div className="rounded-lg border border-stone-200 bg-white p-4">
+        <div className="hidden flex-wrap items-end gap-4 lg:flex">
+          <div>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1 w-40"
+            />
+          </div>
+          <div>
+            <Label>Employee</Label>
+            <Select value={employeeId} onValueChange={setEmployeeId}>
+              <SelectTrigger className="mt-1 w-48">
+                <SelectValue placeholder="All employees" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All employees</SelectItem>
+                {employees.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button size="sm" onClick={applyFilters}>
+            Apply
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            disabled={exporting}
+            className="ml-auto gap-1"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
-        <div>
-          <Label>Employee</Label>
-          <Select value={employeeId} onValueChange={setEmployeeId}>
-            <SelectTrigger className="mt-1 w-48">
-              <SelectValue placeholder="All employees" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All employees</SelectItem>
-              {employees.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+        <div className="space-y-3 lg:hidden">
+          <FilterDrawer triggerLabel="Filter attendance" onApply={applyFilters}>
+            <div className="space-y-2">
+              <Label htmlFor="date-mobile">Date</Label>
+              <Input
+                id="date-mobile"
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                className="h-11 w-full rounded-xl"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Employee</Label>
+              <Select value={employeeId} onValueChange={setEmployeeId}>
+                <SelectTrigger className="h-11 w-full rounded-xl">
+                  <SelectValue placeholder="All employees" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All employees</SelectItem>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </FilterDrawer>
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={exporting}
+            className="h-11 min-h-[48px] w-full gap-1 rounded-xl"
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
         </div>
-        <Button size="sm" onClick={applyFilters}>
-          Apply
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExport}
-          disabled={exporting}
-          className="ml-auto gap-1"
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -186,40 +230,71 @@ export function AttendanceLogClient({
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-stone-200 bg-white">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Employee</TableHead>
-                <TableHead>Check-in</TableHead>
-                <TableHead>Check-out</TableHead>
-                <TableHead>Hours</TableHead>
-                <TableHead>Method</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {records.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>{format(parseISO(r.date), "MMM d")}</TableCell>
-                  <TableCell className="font-medium">{r.employeeName}</TableCell>
-                  <TableCell>
-                    {format(parseISO(r.checkInAt), "HH:mm")}
-                  </TableCell>
-                  <TableCell>
-                    {r.checkOutAt
-                      ? format(parseISO(r.checkOutAt), "HH:mm")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>{r.hours > 0 ? `${r.hours.toFixed(1)}h` : "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={methodVariant[r.method] ?? "secondary"}>
-                      {r.method}
-                    </Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ResponsiveTableWrapper
+            cards={
+              <div className="divide-y divide-stone-200">
+                {records.map((r) => (
+                  <div key={r.id} className="space-y-2 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-semibold text-stone-900">{r.employeeName}</p>
+                      <Badge variant={methodVariant[r.method] ?? "secondary"}>{r.method}</Badge>
+                    </div>
+                    <p className="text-sm text-stone-500">{format(parseISO(r.date), "MMM d, yyyy")}</p>
+                    <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <p className="text-xs text-stone-400">Check-in</p>
+                        <p>{format(parseISO(r.checkInAt), "HH:mm")}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-stone-400">Check-out</p>
+                        <p>{r.checkOutAt ? format(parseISO(r.checkOutAt), "HH:mm") : "—"}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-stone-400">Hours</p>
+                        <p>{r.hours > 0 ? `${r.hours.toFixed(1)}h` : "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Employee</TableHead>
+                    <TableHead>Check-in</TableHead>
+                    <TableHead>Check-out</TableHead>
+                    <TableHead>Hours</TableHead>
+                    <TableHead>Method</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {records.map((r) => (
+                    <TableRow key={r.id}>
+                      <TableCell>{format(parseISO(r.date), "MMM d")}</TableCell>
+                      <TableCell className="font-medium">{r.employeeName}</TableCell>
+                      <TableCell>
+                        {format(parseISO(r.checkInAt), "HH:mm")}
+                      </TableCell>
+                      <TableCell>
+                        {r.checkOutAt
+                          ? format(parseISO(r.checkOutAt), "HH:mm")
+                          : "—"}
+                      </TableCell>
+                      <TableCell>{r.hours > 0 ? `${r.hours.toFixed(1)}h` : "—"}</TableCell>
+                      <TableCell>
+                        <Badge variant={methodVariant[r.method] ?? "secondary"}>
+                          {r.method}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            }
+          />
         </div>
       )}
     </div>

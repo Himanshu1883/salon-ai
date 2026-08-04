@@ -663,10 +663,10 @@ export function CustomerDetailClient({
       >
         <Tabs defaultValue="history" className="w-full">
           <div className="border-b border-dashboard-border/60 px-4 pt-4 sm:px-6 sm:pt-5">
-            <TabsList className="h-auto w-full justify-start gap-1 rounded-xl bg-dashboard-bg p-1 sm:w-auto">
+            <TabsList className="h-auto w-full justify-start gap-1 overflow-x-auto rounded-xl bg-dashboard-bg p-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:w-auto [&::-webkit-scrollbar]:hidden">
               <TabsTrigger
                 value="history"
-                className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+                className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
                 <CalendarDays className="mr-1.5 h-4 w-4" />
                 Visits
@@ -678,7 +678,7 @@ export function CustomerDetailClient({
               </TabsTrigger>
               <TabsTrigger
                 value="invoices"
-                className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+                className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
                 <Receipt className="mr-1.5 h-4 w-4" />
                 Invoices
@@ -690,14 +690,14 @@ export function CustomerDetailClient({
               </TabsTrigger>
               <TabsTrigger
                 value="membership"
-                className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+                className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
                 <Crown className="mr-1.5 h-4 w-4" />
                 Membership
               </TabsTrigger>
               <TabsTrigger
                 value="profile"
-                className="rounded-lg px-4 py-2 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+                className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
                 <FileText className="mr-1.5 h-4 w-4" />
                 Profile

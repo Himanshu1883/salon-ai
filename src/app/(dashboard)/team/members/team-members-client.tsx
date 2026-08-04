@@ -50,6 +50,8 @@ import {
 } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { getRoleLabel } from "@/lib/team";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import { FilterDrawer } from "@/components/ui/filter-drawer";
 
 type TeamMember = {
   id: string;
@@ -349,32 +351,74 @@ export function TeamMembersClient({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[240px] flex-1 max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="relative min-w-0 flex-1 sm:max-w-md">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
           <Input
             placeholder="Search by name, email or phone"
-            className="pl-9"
+            className="h-11 pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <SlidersHorizontal className="h-4 w-4" />
-          Filters
-        </Button>
-        <Button variant="outline" size="sm">
-          <ArrowUpDown className="h-4 w-4" />
-          Custom order
-        </Button>
+        <div className="hidden flex-wrap gap-2 lg:flex">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </Button>
+          <Button variant="outline" size="sm">
+            <ArrowUpDown className="h-4 w-4" />
+            Custom order
+          </Button>
+        </div>
+        <div className="lg:hidden">
+          <FilterDrawer
+            triggerLabel="Filter team"
+            onApply={() => setShowFilters(true)}
+            onReset={() => {
+              setRoleFilter("all");
+              setStatusFilter("all");
+            }}
+          >
+            <div className="space-y-2">
+              <Label className="text-xs text-stone-500">Role</Label>
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
+                <SelectTrigger className="h-11 w-full rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="owner">Workspace owner</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="stylist">Stylist</SelectItem>
+                  <SelectItem value="receptionist">Receptionist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs text-stone-500">Status</Label>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="h-11 w-full rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All statuses</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="on_break">On break</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </FilterDrawer>
+        </div>
       </div>
 
       {showFilters && (
-        <div className="flex flex-wrap gap-3 rounded-lg border border-stone-200 bg-stone-50 p-4">
+        <div className="hidden flex-wrap gap-3 rounded-lg border border-stone-200 bg-stone-50 p-4 lg:flex">
           <div className="space-y-1">
             <Label className="text-xs text-stone-500">Role</Label>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
@@ -408,113 +452,169 @@ export function TeamMembersClient({
       )}
 
       <div className="overflow-hidden rounded-lg border border-stone-200 bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-stone-50/80">
-              <TableHead className="w-10">
-                <input
-                  type="checkbox"
-                  checked={
-                    filteredMembers.length > 0 &&
-                    selected.size === filteredMembers.length
-                  }
-                  onChange={toggleAll}
-                  className="rounded border-stone-300"
-                />
-              </TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredMembers.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-stone-500">
-                  No team members found
-                </TableCell>
-              </TableRow>
+        <ResponsiveTableWrapper
+          cards={
+            filteredMembers.length === 0 ? (
+              <p className="py-12 text-center text-stone-500">No team members found</p>
             ) : (
-              filteredMembers.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell>
+              <div className="divide-y divide-stone-200">
+                {filteredMembers.map((member) => (
+                  <div key={member.id} className="flex gap-3 p-4">
                     <input
                       type="checkbox"
                       checked={selected.has(member.id)}
                       onChange={() => toggleOne(member.id)}
+                      className="mt-1 rounded border-stone-300"
+                    />
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <Link
+                        href={`/team/members/${member.id}`}
+                        className="flex items-center gap-3"
+                      >
+                        <MemberAvatar name={member.name} avatarUrl={member.avatarUrl} />
+                        <span className="font-medium text-stone-900">{member.name}</span>
+                      </Link>
+                      <div className="text-sm text-stone-600">
+                        {member.email && <p>{member.email}</p>}
+                        {member.phone && <p>{member.phone}</p>}
+                        {!member.email && !member.phone && <span className="text-stone-400">—</span>}
+                      </div>
+                      <p className="text-sm text-stone-700">
+                        {member.status === "inactive" ? "No access" : getRoleLabel(member.role)}
+                      </p>
+                      <div className="flex justify-end border-t border-stone-100 pt-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-10 w-10 min-h-[48px] min-w-[48px]">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => { setEditing(member); setOpen(true); }}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeactivate(member.id)}>Deactivate</DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={`/team/shifts?employee=${member.id}`}>View shifts</Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+          table={
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-stone-50/80">
+                  <TableHead className="w-10">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredMembers.length > 0 &&
+                        selected.size === filteredMembers.length
+                      }
+                      onChange={toggleAll}
                       className="rounded border-stone-300"
                     />
-                  </TableCell>
-                  <TableCell>
-                    <Link
-                      href={`/team/members/${member.id}`}
-                      className="flex items-center gap-3 hover:opacity-80"
-                    >
-                      <MemberAvatar
-                        name={member.name}
-                        avatarUrl={member.avatarUrl}
-                      />
-                      <span className="font-medium text-stone-900">
-                        {member.name}
-                      </span>
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      {member.email && (
-                        <p className="text-stone-700">{member.email}</p>
-                      )}
-                      {member.phone && (
-                        <p className="text-stone-500">{member.phone}</p>
-                      )}
-                      {!member.email && !member.phone && (
-                        <span className="text-stone-400">—</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-stone-700">
-                      {member.status === "inactive"
-                        ? "No access"
-                        : getRoleLabel(member.role)}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => {
-                            setEditing(member);
-                            setOpen(true);
-                          }}
-                        >
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeactivate(member.id)}
-                        >
-                          Deactivate
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem asChild>
-                          <Link href={`/team/shifts?employee=${member.id}`}>
-                            View shifts
-                          </Link>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead className="w-12" />
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredMembers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-stone-500">
+                      No team members found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredMembers.map((member) => (
+                    <TableRow key={member.id}>
+                      <TableCell>
+                        <input
+                          type="checkbox"
+                          checked={selected.has(member.id)}
+                          onChange={() => toggleOne(member.id)}
+                          className="rounded border-stone-300"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Link
+                          href={`/team/members/${member.id}`}
+                          className="flex items-center gap-3 hover:opacity-80"
+                        >
+                          <MemberAvatar
+                            name={member.name}
+                            avatarUrl={member.avatarUrl}
+                          />
+                          <span className="font-medium text-stone-900">
+                            {member.name}
+                          </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm">
+                          {member.email && (
+                            <p className="text-stone-700">{member.email}</p>
+                          )}
+                          {member.phone && (
+                            <p className="text-stone-500">{member.phone}</p>
+                          )}
+                          {!member.email && !member.phone && (
+                            <span className="text-stone-400">—</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className="text-sm text-stone-700">
+                          {member.status === "inactive"
+                            ? "No access"
+                            : getRoleLabel(member.role)}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setEditing(member);
+                                setOpen(true);
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeactivate(member.id)}
+                            >
+                              Deactivate
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem asChild>
+                              <Link href={`/team/shifts?employee=${member.id}`}>
+                                View shifts
+                              </Link>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          }
+        />
       </div>
     </div>
   );

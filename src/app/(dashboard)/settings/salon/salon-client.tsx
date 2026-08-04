@@ -208,7 +208,7 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
             </p>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Business name</Label>
               <Input

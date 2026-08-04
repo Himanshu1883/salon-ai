@@ -264,7 +264,7 @@ export function SubscriptionClient({
         )}
       </motion.div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {plans.map((tier, index) => {
           const isCurrent = tier === plan;
           const pricing = PLAN_PRICING[tier];

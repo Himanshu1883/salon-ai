@@ -266,14 +266,14 @@ export function AppointmentsWeekCalendar({
   return (
     <div className="space-y-4">
       {viewMode === "week" && (
-        <div className="flex gap-1.5 overflow-x-auto pb-1 md:hidden">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] md:hidden [&::-webkit-scrollbar]:hidden">
           {weekDays.map((day) => (
             <button
               key={day.toISOString()}
               type="button"
               onClick={() => onSelectDay(day)}
               className={cn(
-                "shrink-0 rounded-xl px-3 py-2 text-center text-xs transition-all",
+                "min-h-[48px] shrink-0 rounded-xl px-4 py-2 text-center text-xs transition-all",
                 isSameDay(day, selectedDay)
                   ? "bg-[#6C3BFF] text-white shadow-md"
                   : isToday(day)
@@ -288,7 +288,58 @@ export function AppointmentsWeekCalendar({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_8px_40px_rgba(28,16,61,0.06)]">
+      {/* Mobile agenda list — avoids horizontal calendar scroll */}
+      <div className="space-y-2 md:hidden">
+        {(appointmentsByDay.get(format(selectedDay, "yyyy-MM-dd")) ?? [])
+          .sort(
+            (a, b) =>
+              new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+          )
+          .map((appointment) => (
+            <button
+              key={appointment.id}
+              type="button"
+              onClick={() => onAppointmentClick(appointment)}
+              className={cn(
+                "flex w-full min-h-[48px] items-start gap-3 rounded-xl border p-3 text-left shadow-sm transition-colors",
+                getBlockColor(appointment, employees),
+                statusBlockStyle(appointment.status)
+              )}
+            >
+              <div className="shrink-0 text-center">
+                <p className="text-xs font-semibold">
+                  {format(new Date(appointment.scheduledAt), "h:mm")}
+                </p>
+                <p className="text-[10px] opacity-75">
+                  {format(
+                    addMinutes(new Date(appointment.scheduledAt), appointment.service.duration),
+                    "h:mm a"
+                  )}
+                </p>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold">{appointment.customer.name}</p>
+                <p className="truncate text-sm opacity-85">{appointment.service.name}</p>
+                {appointment.employee && (
+                  <p className="truncate text-xs opacity-75">{appointment.employee.name}</p>
+                )}
+              </div>
+              <span
+                className={cn(
+                  "mt-1 h-2 w-2 shrink-0 rounded-full",
+                  getStatusColor(appointment.status)
+                )}
+              />
+            </button>
+          ))}
+        {(appointmentsByDay.get(format(selectedDay, "yyyy-MM-dd")) ?? []).length === 0 && (
+          <p className="rounded-xl border border-dashed border-[#E8ECF4] py-8 text-center text-sm text-[#9CA3AF]">
+            No appointments for {format(selectedDay, "EEEE, MMM d")}
+          </p>
+        )}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_8px_40px_rgba(28,16,61,0.06)] md:block">
         <div
           className="min-w-[680px]"
           style={{

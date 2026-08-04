@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/currency";
 import { Search, ExternalLink } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { FilterDrawer } from "@/components/ui/filter-drawer";
 
 type Membership = {
   id: string;
@@ -70,43 +71,74 @@ export function ActiveMembershipsClient({
         description={`${memberships.length} membership${memberships.length !== 1 ? "s" : ""} found`}
       />
 
-      <div className="flex flex-wrap gap-3 rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
-        <div className="relative min-w-[200px] flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-          <Input
-            placeholder="Search member, phone, number..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && applyFilters()}
-            className="rounded-xl pl-9"
-          />
+      <div className="rounded-2xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
+            <Input
+              placeholder="Search member, phone, number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyFilters()}
+              className="h-11 rounded-xl pl-9"
+            />
+          </div>
+          <div className="hidden flex-wrap items-center gap-3 lg:flex">
+            <Select value={planId} onValueChange={setPlanId}>
+              <SelectTrigger className="w-[160px] rounded-xl">
+                <SelectValue placeholder="All plans" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All plans</SelectItem>
+                {plans.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger className="w-[140px] rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ACTIVE">Active</SelectItem>
+                <SelectItem value="EXPIRED">Expired</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button onClick={applyFilters} className="rounded-xl bg-emerald-600 hover:bg-emerald-700">
+              Apply
+            </Button>
+          </div>
+          <div className="lg:hidden">
+            <FilterDrawer triggerLabel="Filter memberships" onApply={applyFilters}>
+              <Select value={planId} onValueChange={setPlanId}>
+                <SelectTrigger className="h-11 w-full rounded-xl">
+                  <SelectValue placeholder="All plans" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All plans</SelectItem>
+                  {plans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={status} onValueChange={setStatus}>
+                <SelectTrigger className="h-11 w-full rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ACTIVE">Active</SelectItem>
+                  <SelectItem value="EXPIRED">Expired</SelectItem>
+                  <SelectItem value="all">All statuses</SelectItem>
+                </SelectContent>
+              </Select>
+            </FilterDrawer>
+          </div>
         </div>
-        <Select value={planId} onValueChange={setPlanId}>
-          <SelectTrigger className="w-[160px] rounded-xl">
-            <SelectValue placeholder="All plans" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All plans</SelectItem>
-            {plans.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-[140px] rounded-xl">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ACTIVE">Active</SelectItem>
-            <SelectItem value="EXPIRED">Expired</SelectItem>
-            <SelectItem value="all">All statuses</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button onClick={applyFilters} className="rounded-xl bg-emerald-600 hover:bg-emerald-700">
-          Apply
-        </Button>
       </div>
 
       {memberships.length === 0 ? (

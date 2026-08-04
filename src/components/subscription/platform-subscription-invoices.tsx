@@ -18,6 +18,7 @@ import type { PlatformInvoiceDetailData } from "@/components/subscription/platfo
 import { formatCurrency } from "@/lib/currency";
 import { PLATFORM_BILLING_ENTITY } from "@/lib/platform-billing";
 import { Receipt } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
 
 export type PlatformSubscriptionInvoice = {
   id: string;
@@ -110,63 +111,116 @@ export function PlatformSubscriptionInvoices({
         </div>
       )}
 
-      <div className="overflow-x-auto p-1">
-        <Table>
-          <TableHeader>
-            <TableRow className="hover:bg-transparent">
-              <TableHead>Invoice #</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Plan</TableHead>
-              <TableHead>Base</TableHead>
-              <TableHead>GST</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedInvoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-medium text-[#1C103D]">
-                  {invoice.invoiceNumber}
-                </TableCell>
-                <TableCell className="text-[#6B7280]">
-                  {format(new Date(invoice.dueDate), "MMM d, yyyy")}
-                </TableCell>
-                <TableCell className="text-[#6B7280]">
-                  {getPlanLabel(invoice.amount, planName)}
-                </TableCell>
-                <TableCell className="tabular-nums">
-                  {formatCurrency(invoice.amount)}
-                </TableCell>
-                <TableCell className="tabular-nums">
-                  {formatCurrency(invoice.tax)}
-                </TableCell>
-                <TableCell className="font-medium tabular-nums text-[#1C103D]">
-                  {formatCurrency(invoice.total)}
-                </TableCell>
-                <TableCell>
-                  <PlatformInvoiceStatusBadge status={invoice.status} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
+      <div className="p-1">
+        <ResponsiveTableWrapper
+          cards={
+            <div className="divide-y divide-[#ECECEC]">
+              {sortedInvoices.map((invoice) => (
+                <div key={invoice.id} className="space-y-2.5 p-4">
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="font-semibold text-[#1C103D]">{invoice.invoiceNumber}</p>
+                    <PlatformInvoiceStatusBadge status={invoice.status} />
+                  </div>
+                  <p className="text-sm text-[#6B7280]">
+                    {format(new Date(invoice.dueDate), "MMM d, yyyy")}
+                  </p>
+                  <p className="text-sm text-[#6B7280]">
+                    {getPlanLabel(invoice.amount, planName)}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <p className="text-xs text-[#9CA3AF]">Base</p>
+                      <p className="font-medium tabular-nums">{formatCurrency(invoice.amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#9CA3AF]">GST</p>
+                      <p className="font-medium tabular-nums">{formatCurrency(invoice.tax)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-[#9CA3AF]">Total</p>
+                      <p className="font-semibold tabular-nums text-[#1C103D]">{formatCurrency(invoice.total)}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-[#6C3CF0] hover:text-[#5B2FE0]"
+                      className="h-11 min-h-[48px] flex-1 text-[#6C3CF0] hover:text-[#5B2FE0]"
                       onClick={() => openInvoiceDialog(invoice)}
                     >
                       View
                     </Button>
                     {["sent", "overdue"].includes(invoice.status) && !invoice.paidAt && (
-                      <PayInvoiceButton invoice={invoice} size="sm" />
+                      <div className="flex-1">
+                        <PayInvoiceButton invoice={invoice} size="sm" />
+                      </div>
                     )}
                   </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </div>
+              ))}
+            </div>
+          }
+          table={
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead>Invoice #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead>Base</TableHead>
+                    <TableHead>GST</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedInvoices.map((invoice) => (
+                    <TableRow key={invoice.id}>
+                      <TableCell className="font-medium text-[#1C103D]">
+                        {invoice.invoiceNumber}
+                      </TableCell>
+                      <TableCell className="text-[#6B7280]">
+                        {format(new Date(invoice.dueDate), "MMM d, yyyy")}
+                      </TableCell>
+                      <TableCell className="text-[#6B7280]">
+                        {getPlanLabel(invoice.amount, planName)}
+                      </TableCell>
+                      <TableCell className="tabular-nums">
+                        {formatCurrency(invoice.amount)}
+                      </TableCell>
+                      <TableCell className="tabular-nums">
+                        {formatCurrency(invoice.tax)}
+                      </TableCell>
+                      <TableCell className="font-medium tabular-nums text-[#1C103D]">
+                        {formatCurrency(invoice.total)}
+                      </TableCell>
+                      <TableCell>
+                        <PlatformInvoiceStatusBadge status={invoice.status} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-[#6C3CF0] hover:text-[#5B2FE0]"
+                            onClick={() => openInvoiceDialog(invoice)}
+                          >
+                            View
+                          </Button>
+                          {["sent", "overdue"].includes(invoice.status) && !invoice.paidAt && (
+                            <PayInvoiceButton invoice={invoice} size="sm" />
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          }
+        />
       </div>
 
       <PlatformInvoiceDialog
