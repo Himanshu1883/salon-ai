@@ -2,6 +2,8 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { BillingInvoiceForm } from "@/components/billing/billing-invoice-form";
+import { v2 } from "@/components/billing/invoice-modal/v2";
+import { cn } from "@/lib/utils";
 import type {
   BillingEmployee,
   BillingInvoice,
@@ -39,7 +41,12 @@ export function BillingInvoiceDialog({
 }: BillingInvoiceDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[800px] max-h-[calc(100vh-2rem)] w-[1200px] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-[24px] border border-violet-100/50 bg-white p-0 shadow-[0_32px_64px_-12px_rgba(109,40,217,0.18),0_0_0_1px_rgba(109,40,217,0.04)] [&>button]:hidden">
+      <DialogContent
+        className={cn(
+          v2.modal,
+          "[&>button]:hidden"
+        )}
+      >
         <BillingInvoiceForm
           services={services}
           employees={employees}

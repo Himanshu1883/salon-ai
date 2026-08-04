@@ -3,43 +3,19 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { format } from "date-fns";
-import { CalendarDays, X } from "lucide-react";
+import { X } from "lucide-react";
 import {
   createInvoice,
   markInvoicePaid,
   updateInvoiceStatus,
 } from "@/actions/billing";
 import { getProducts } from "@/actions/inventory/products";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { cn, formatCurrency } from "@/lib/utils";
 import { resolveLineItemLabel } from "@/lib/service-display";
-import {
-  CustomerEmailField,
-  CustomerSearch,
-  PhoneSearch,
-  type InvoiceCustomer,
-} from "./invoice-modal/customer-search";
-import { FooterActions } from "./invoice-modal/footer-actions";
-import { InvoiceItems } from "./invoice-modal/invoice-items";
-import { InvoiceModalHeader } from "./invoice-modal/invoice-modal-header";
-import { InvoiceSummary } from "./invoice-modal/invoice-summary";
-import { NotesSection } from "./invoice-modal/notes-section";
+import type { InvoiceCustomer } from "./invoice-modal/customer-search";
 import {
   getBackendPaymentMethod,
-  PaymentSelector,
   type PaymentMethodId,
 } from "./invoice-modal/payment-selector";
-import { SuccessBanner } from "./invoice-modal/success-banner";
-import { SectionHeader } from "./invoice-modal/section-header";
-import { invoiceModalStyles } from "./invoice-modal/styles";
 import {
   formatInvoiceNumber,
   lineDiscount,
@@ -49,6 +25,20 @@ import {
   newLineItem,
   type LineItem,
 } from "./invoice-modal/utils";
+import {
+  ModalHeader,
+  ModalFooter,
+  CustomerSection,
+  InvoiceDetailsSection,
+  ItemsSection,
+  SummaryPanel,
+  NotesSection,
+  PaymentStepContent,
+  trackRecentItem,
+  useInvoiceDraft,
+  loadInvoiceDraft,
+  clearInvoiceDraft,
+} from "./invoice-modal/v2";
 import type {
   BillingEmployee,
   BillingInvoice,
@@ -66,13 +56,6 @@ import { buildBillingWhatsAppMessage, openWhatsApp } from "@/lib/whatsapp";
 const TAX_RATE = 0.08;
 const NOTES_MAX = 300;
 const PAYMENT_NOTES_MAX = 200;
-
-const STATUS_OPTIONS = [
-  { value: "draft", label: "Draft" },
-  { value: "sent", label: "Sent" },
-  { value: "paid", label: "Paid" },
-  { value: "cancelled", label: "Cancelled" },
-] as const;
 
 type FieldErrors = {
   customer?: string;
@@ -102,6 +85,16 @@ function todayInputValue() {
   return format(new Date(), "yyyy-MM-dd");
 }
 
+function statusLabel(status: string) {
+  const map: Record<string, string> = {
+    draft: "Draft",
+    sent: "Unpaid",
+    paid: "Paid",
+    cancelled: "Cancelled",
+  };
+  return map[status] ?? "Unpaid";
+}
+
 export function BillingInvoiceForm({
   services,
   employees,
@@ -113,6 +106,8 @@ export function BillingInvoiceForm({
   onSuccess,
   onCancel,
 }: BillingInvoiceFormProps) {
+  const draftRestored = useRef(false);
+
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -151,6 +146,33 @@ export function BillingInvoiceForm({
 
   const billingMessageTemplate = whatsappSettings?.billingMessageTemplate;
 
+  useInvoiceDraft(
+    {
+      customer,
+      dueDate,
+      status,
+      notes,
+      employeeId,
+      seatId,
+      lineItems,
+    },
+    step === 1 && !createdInvoiceId
+  );
+
+  useEffect(() => {
+    if (draftRestored.current || prefilledCustomer) return;
+    const draft = loadInvoiceDraft();
+    if (!draft) return;
+    draftRestored.current = true;
+    setCustomer(draft.customer);
+    setDueDate(draft.dueDate);
+    setStatus(draft.status);
+    setNotes(draft.notes);
+    setEmployeeId(draft.employeeId);
+    setSeatId(draft.seatId);
+    if (draft.lineItems.length > 0) setLineItems(draft.lineItems);
+  }, [prefilledCustomer]);
+
   useEffect(() => {
     if (!isBasicPlan && employees.length > 0 && !employeeId) {
       setEmployeeId(employees[0].id);
@@ -174,16 +196,6 @@ export function BillingInvoiceForm({
       )
       .catch(() => setProducts([]));
   }, []);
-
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onCancel?.();
-      }
-    }
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onCancel]);
 
   const servicesByCategory = useMemo(() => {
     const map = new Map<string, BillingService[]>();
@@ -334,6 +346,7 @@ export function BillingInvoiceForm({
   }, []);
 
   function selectCatalogItem(index: number, value: string) {
+    trackRecentItem(value);
     const option = catalogOptions.find((o) => `${o.type}:${o.id}` === value);
     if (!option) return;
 
@@ -440,6 +453,7 @@ export function BillingInvoiceForm({
       return;
     }
 
+    clearInvoiceDraft();
     setCreatedInvoiceId(result.id);
     setInvoiceNumber(formatInvoiceNumber(result.id));
     setSplitRows([{ key: crypto.randomUUID(), method: "cash", amount: displayTotal }]);
@@ -496,6 +510,7 @@ export function BillingInvoiceForm({
     setLoading(true);
     await updateInvoiceStatus(createdInvoiceId, "draft");
     setLoading(false);
+    clearInvoiceDraft();
     onSuccess(buildInvoiceForCallback(createdInvoiceId, "draft", null));
   }
 
@@ -528,6 +543,7 @@ export function BillingInvoiceForm({
     );
     setCompletedInvoice(invoice);
     setSuccessContext(buildWhatsAppContext(createdInvoiceId, invoiceNumber, backendMethod, paidAt));
+    clearInvoiceDraft();
     setStep(3);
   }
 
@@ -545,14 +561,30 @@ export function BillingInvoiceForm({
     }
   }
 
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onCancel?.();
+        return;
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (step === 1) void handleCreateInvoice();
+        else if (step === 2) void handleReceivePayment();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [step, onCancel]);
+
   if (step === 3 && successContext) {
     return (
       <>
-        <div className="relative flex h-full flex-col overflow-hidden rounded-[20px]">
+        <div className="relative flex h-full flex-col overflow-hidden rounded-[20px] bg-white">
           <button
             type="button"
             onClick={() => onCancel?.()}
-            className="absolute right-4 top-4 z-10 rounded-xl p-2 text-[#6B7280] hover:bg-white/80"
+            className="absolute right-4 top-4 z-10 rounded-xl p-2 text-[#6B7280] hover:bg-[#FAFBFF]"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -573,115 +605,48 @@ export function BillingInvoiceForm({
     );
   }
 
+  const currentStep = step === 1 ? 1 : 2;
+  const paymentStatusLabel =
+    step === 2 ? "Pending Payment" : statusLabel(status);
+
   return (
     <>
-    <div className="flex h-full flex-col bg-gradient-to-b from-white via-white to-violet-50/25">
-      <InvoiceModalHeader step={step === 1 ? 1 : 2} onClose={onCancel} />
+      <div className="flex h-full flex-col overflow-hidden bg-[#FAFBFF]">
+        <ModalHeader step={currentStep} onClose={onCancel} />
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto px-8 py-8 sm:px-10">
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <motion.div
-                key="step-1"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-                className="grid gap-8 lg:grid-cols-[1fr_320px]"
-              >
-                <div className="space-y-8">
-                  <section aria-labelledby="customer-section">
-                    <SectionHeader id="customer-section">
-                      Customer Information
-                    </SectionHeader>
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <CustomerSearch
-                        value={customer}
-                        onChange={setCustomer}
-                        error={fieldErrors.customer}
-                        autoFocus
-                      />
-                      <PhoneSearch value={customer} onChange={setCustomer} />
-                      <CustomerEmailField
-                        value={customer.email}
-                        onChange={(email) => setCustomer({ ...customer, email })}
-                      />
-                    </div>
-                  </section>
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 flex-[0_0_72%] overflow-y-auto px-8 py-6">
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.div
+                  key="step-1"
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -12 }}
+                  transition={{ duration: 0.2 }}
+                  className="space-y-6"
+                >
+                  <CustomerSection
+                    customer={customer}
+                    onChange={setCustomer}
+                    error={fieldErrors.customer}
+                    autoFocus
+                  />
 
-                  <section aria-labelledby="details-section">
-                    <SectionHeader id="details-section">
-                      Invoice Details
-                    </SectionHeader>
-                    <div className="grid gap-5 sm:grid-cols-2">
-                      <div className="space-y-2.5">
-                        <Label htmlFor="due-date" className={invoiceModalStyles.label}>
-                          Due date
-                        </Label>
-                        <div className="relative">
-                          <CalendarDays className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted/70" />
-                          <Input
-                            id="due-date"
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className={cn(invoiceModalStyles.input, "pl-11")}
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2.5">
-                        <Label className={invoiceModalStyles.label}>
-                          Invoice status
-                        </Label>
-                        <Select value={status} onValueChange={setStatus}>
-                          <SelectTrigger className={invoiceModalStyles.selectTrigger}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-2xl">
-                            {STATUS_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      {requiresEmployee && (
-                        <div className="space-y-2.5 sm:col-span-2">
-                          <Label className={invoiceModalStyles.label}>
-                            Assigned stylist <span className="text-red-500">*</span>
-                          </Label>
-                          <Select value={employeeId} onValueChange={setEmployeeId}>
-                            <SelectTrigger
-                              className={cn(
-                                invoiceModalStyles.selectTrigger,
-                                fieldErrors.employee && invoiceModalStyles.inputError
-                              )}
-                            >
-                              <SelectValue placeholder="Select stylist" />
-                            </SelectTrigger>
-                            <SelectContent className="rounded-2xl">
-                              {employees.map((emp) => (
-                                <SelectItem key={emp.id} value={emp.id}>
-                                  {emp.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {fieldErrors.employee && (
-                            <p className="text-xs text-[#EF4444]">
-                              {fieldErrors.employee}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </section>
+                  <InvoiceDetailsSection
+                    dueDate={dueDate}
+                    onDueDateChange={setDueDate}
+                    status={status}
+                    onStatusChange={setStatus}
+                    employeeId={employeeId}
+                    onEmployeeChange={setEmployeeId}
+                    employees={employees}
+                    requiresEmployee={requiresEmployee}
+                    employeeError={fieldErrors.employee}
+                  />
 
-                  <InvoiceItems
+                  <ItemsSection
                     lineItems={lineItems}
-                    services={services}
                     products={products}
                     servicesByCategory={servicesByCategory}
                     catalogOptions={catalogOptions}
@@ -704,129 +669,90 @@ export function BillingInvoiceForm({
                     onChange={setNotes}
                     maxLength={NOTES_MAX}
                   />
-                </div>
-
-                <InvoiceSummary
-                  items={summaryItems}
-                  subtotal={displaySubtotal}
-                  discount={totalDiscount}
-                  tax={displayTax}
-                  total={displayTotal}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="step-2"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.25 }}
-                className="grid gap-8 lg:grid-cols-[1fr_320px]"
-              >
-                <div className="space-y-8">
-                  <SuccessBanner
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="step-2"
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 12 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <PaymentStepContent
                     invoiceNumber={invoiceNumber}
-                    onSendWhatsApp={openWhatsAppDrawerFromStep2}
-                  />
-
-                  <section className={cn(invoiceModalStyles.card, "p-6")}>
-                    <SectionHeader className="mb-4">Invoice Summary</SectionHeader>
-                    <dl className="grid gap-4 text-sm sm:grid-cols-3">
-                      <div>
-                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
-                          Customer
-                        </dt>
-                        <dd className="mt-1.5 font-medium text-dashboard-text">
-                          {customer.name}
-                          {customer.phone && (
-                            <span className="mt-0.5 block text-xs font-normal text-dashboard-muted">
-                              {customer.phone}
-                            </span>
-                          )}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
-                          Due Date
-                        </dt>
-                        <dd className="mt-1.5 font-medium text-dashboard-text">
-                          {dueDate
-                            ? format(new Date(dueDate), "d MMM yyyy")
-                            : "—"}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="text-xs font-medium uppercase tracking-wide text-dashboard-muted">
-                          Total Amount
-                        </dt>
-                        <dd className="mt-1.5 text-lg font-bold text-violet-600">
-                          {formatCurrency(displayTotal)}
-                        </dd>
-                      </div>
-                    </dl>
-                  </section>
-
-                  <PaymentSelector
-                    selected={selectedPayment}
-                    onSelect={setSelectedPayment}
+                    customer={customer}
+                    dueDate={dueDate}
+                    displayTotal={displayTotal}
+                    selectedPayment={selectedPayment}
+                    onSelectPayment={setSelectedPayment}
                     splitRows={splitRows}
                     onSplitRowsChange={setSplitRows}
-                    invoiceTotal={displayTotal}
+                    paymentNotes={paymentNotes}
+                    onPaymentNotesChange={setPaymentNotes}
                     splitError={fieldErrors.split}
+                    paymentError={fieldErrors.payment}
+                    onSendWhatsApp={openWhatsAppDrawerFromStep2}
+                    notesMaxLength={PAYMENT_NOTES_MAX}
                   />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
-                  {fieldErrors.payment && (
-                    <p className="text-sm text-[#EF4444]">{fieldErrors.payment}</p>
-                  )}
-
-                  <NotesSection
-                    id="payment-notes"
-                    label="Payment notes (optional)"
-                    value={paymentNotes}
-                    onChange={setPaymentNotes}
-                    maxLength={PAYMENT_NOTES_MAX}
-                    placeholder="Payment reference or notes..."
-                  />
-                </div>
-
-                <InvoiceSummary
-                  items={summaryItems}
-                  subtotal={displaySubtotal}
-                  discount={totalDiscount}
-                  tax={displayTax}
-                  total={displayTotal}
-                />
-              </motion.div>
+            {error && (
+              <p className="mt-4 rounded-[14px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </p>
             )}
-          </AnimatePresence>
+          </div>
 
-          {error && (
-            <p className="mt-4 rounded-2xl border border-red-100 bg-red-50/80 px-4 py-3 text-sm text-red-600">
-              {error}
-            </p>
-          )}
+          <div className="hidden min-h-0 flex-[0_0_28%] shrink-0 border-l border-[#ECECF5] bg-white px-6 py-6 lg:block">
+            <SummaryPanel
+              step={currentStep}
+              items={summaryItems}
+              subtotal={displaySubtotal}
+              discount={totalDiscount}
+              tax={displayTax}
+              total={displayTotal}
+              customer={customer}
+              paymentStatus={paymentStatusLabel}
+              loading={loading}
+              onProceed={
+                step === 1
+                  ? () => void handleCreateInvoice()
+                  : () => void handleReceivePayment()
+              }
+              disableProceed={step === 2 && selectedPayment === "pay_later"}
+              proceedLabel={
+                step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
+              }
+            />
+          </div>
         </div>
 
-        <FooterActions
-          step={step === 1 ? 1 : 2}
+        <ModalFooter
+          step={currentStep}
           loading={loading}
           onCancel={() => onCancel?.()}
-          onCreateInvoice={() => void handleCreateInvoice()}
+          onContinue={
+            step === 1
+              ? () => void handleCreateInvoice()
+              : () => void handleReceivePayment()
+          }
           onBack={() => setStep(1)}
-          onSaveDraft={() => void handleSaveDraft()}
-          onReceivePayment={() => void handleReceivePayment()}
-          disableReceive={selectedPayment === "pay_later"}
+          onSaveDraft={step === 2 ? () => void handleSaveDraft() : undefined}
+          disableContinue={step === 2 && selectedPayment === "pay_later"}
+          showSaveDraft={step === 2}
         />
       </div>
-    </div>
-    {successContext && (
-      <WhatsAppCommunicationDrawer
-        open={whatsappOpen}
-        onClose={() => setWhatsappOpen(false)}
-        context={successContext}
-        billingMessageTemplate={billingMessageTemplate}
-      />
-    )}
+
+      {successContext && (
+        <WhatsAppCommunicationDrawer
+          open={whatsappOpen}
+          onClose={() => setWhatsappOpen(false)}
+          context={successContext}
+          billingMessageTemplate={billingMessageTemplate}
+        />
+      )}
     </>
   );
 }
