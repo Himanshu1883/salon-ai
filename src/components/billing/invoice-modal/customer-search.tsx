@@ -65,18 +65,28 @@ function phoneDigitsMatch(
   );
 }
 
+function resolvePortalContainer(anchor: HTMLElement | null): HTMLElement {
+  if (!anchor) return document.body;
+  return anchor.closest('[role="dialog"]') ?? document.body;
+}
+
 function SearchDropdownPortal({
   anchorRef,
   open,
   children,
   className,
+  dataAttribute,
 }: {
   anchorRef: React.RefObject<HTMLElement | null>;
   open: boolean;
   children: ReactNode;
   className?: string;
+  dataAttribute: string;
 }) {
   const [style, setStyle] = useState<React.CSSProperties>({});
+  const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(
+    null
+  );
 
   const updatePosition = useCallback(() => {
     const anchor = anchorRef.current;
@@ -93,6 +103,7 @@ function SearchDropdownPortal({
 
   useLayoutEffect(() => {
     if (!open) return;
+    setPortalContainer(resolvePortalContainer(anchorRef.current));
     updatePosition();
     window.addEventListener("resize", updatePosition);
     window.addEventListener("scroll", updatePosition, true);
@@ -100,15 +111,20 @@ function SearchDropdownPortal({
       window.removeEventListener("resize", updatePosition);
       window.removeEventListener("scroll", updatePosition, true);
     };
-  }, [open, updatePosition]);
+  }, [open, updatePosition, anchorRef]);
 
-  if (!open || typeof document === "undefined") return null;
+  if (!open || typeof document === "undefined" || !portalContainer) return null;
 
   return createPortal(
-    <div style={style} className={className}>
+    <div
+      style={style}
+      className={className}
+      {...{ [dataAttribute]: true }}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       {children}
     </div>,
-    document.body
+    portalContainer
   );
 }
 
@@ -145,7 +161,9 @@ export function CustomerSearch({
   }, [autoFocus]);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    if (!open) return;
+
+    function handlePointerDownOutside(e: PointerEvent) {
       const target = e.target as Node;
       if (containerRef.current?.contains(target)) return;
       if (
@@ -156,9 +174,11 @@ export function CustomerSearch({
       }
       setOpen(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    document.addEventListener("pointerdown", handlePointerDownOutside, true);
+    return () =>
+      document.removeEventListener("pointerdown", handlePointerDownOutside, true);
+  }, [open]);
 
   useEffect(() => {
     if (query.length < 2) {
@@ -304,6 +324,7 @@ export function CustomerSearch({
           />
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={startNewCustomer}
             className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-medium text-violet-600 transition-colors hover:bg-violet-50"
           >
@@ -315,9 +336,10 @@ export function CustomerSearch({
         <SearchDropdownPortal
           anchorRef={containerRef}
           open={showDropdown}
+          dataAttribute="data-invoice-customer-dropdown"
           className="max-h-72 overflow-auto rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
         >
-          <div data-invoice-customer-dropdown>
+          <div>
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -330,7 +352,11 @@ export function CustomerSearch({
                   <button
                     key={customer.id}
                     type="button"
-                    onClick={() => selectCustomer(customer)}
+                    onPointerDown={(e) => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      selectCustomer(customer);
+                    }}
                     className={cn(
                       "flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#6D5DF6]/5",
                       index === highlightIndex && "bg-[#6D5DF6]/8"
@@ -399,7 +425,9 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
   }, [value.phone]);
 
   useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
+    if (!open) return;
+
+    function handlePointerDownOutside(e: PointerEvent) {
       const target = e.target as Node;
       if (containerRef.current?.contains(target)) return;
       if (
@@ -410,9 +438,11 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
       }
       setOpen(false);
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+
+    document.addEventListener("pointerdown", handlePointerDownOutside, true);
+    return () =>
+      document.removeEventListener("pointerdown", handlePointerDownOutside, true);
+  }, [open]);
 
   const selectCustomer = useCallback(
     (customer: CustomerResult) => {
@@ -514,9 +544,10 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
         <SearchDropdownPortal
           anchorRef={containerRef}
           open={showDropdown}
+          dataAttribute="data-invoice-phone-dropdown"
           className="overflow-hidden rounded-2xl border border-violet-100/80 bg-white shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
         >
-          <div data-invoice-phone-dropdown>
+          <div>
             {loading ? (
               <div className="flex items-center gap-2 px-4 py-3 text-sm text-[#6B7280]">
                 <Loader2 className="h-4 w-4 animate-spin text-[#6D5DF6]" />
@@ -527,7 +558,11 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
                 <button
                   key={customer.id}
                   type="button"
-                  onClick={() => selectCustomer(customer)}
+                  onPointerDown={(e) => {
+                    if (e.button !== 0) return;
+                    e.preventDefault();
+                    selectCustomer(customer);
+                  }}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[#6D5DF6]/5"
                 >
                   <div className="min-w-0 flex-1">
