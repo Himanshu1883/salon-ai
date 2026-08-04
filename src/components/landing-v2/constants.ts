@@ -435,6 +435,7 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Modules", href: "/#modules" },
       { label: "AI Analytics", href: "/#ai" },
       { label: "Integrations", href: "/integrations" },
+      { label: "Download App", href: "/download" },
     ],
   },
   {
@@ -484,4 +485,5 @@ export const NAV_LINKS = [
   { href: "/integrations", label: "Integrations" },
   { href: "/documentation", label: "Docs" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/download", label: "Download" },
 ];

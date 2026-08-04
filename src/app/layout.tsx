@@ -45,6 +45,12 @@ export const metadata: Metadata = {
     apple: [{ url: "/log.png", type: "image/png" }],
     shortcut: "/favicon.ico",
   },
+  appleWebApp: {
+    capable: true,
+    title: "Go Tix",
+    statusBarStyle: "default",
+  },
+  applicationName: "Go Tix",
 };
 
 export const viewport: Viewport = {
