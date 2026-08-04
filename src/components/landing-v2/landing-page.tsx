@@ -46,11 +46,12 @@ export function LandingPageV2({ isAuthenticated = false }: LandingPageV2Props) {
           <HeroTrustBridge />
         </div>
         <AboutSection />
+         <SalonTypesSection />
         <ProcessSection />
         {/* <PreviewSection /> */}
-        <SalonTypesSection />
-        <FeaturesSection />
         <AiSection />
+        <FeaturesSection />
+       
         <TestimonialsSection />
         <PricingSection />
         <FaqSection />

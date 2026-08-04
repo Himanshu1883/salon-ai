@@ -164,6 +164,7 @@ export function FaqSection() {
             })}
           </div>
 
+
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4 lg:mt-12">
             <p className="text-sm text-[#1B1714]/65 md:text-base">Still have questions?</p>
             <Link

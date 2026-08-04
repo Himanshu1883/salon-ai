@@ -14,6 +14,18 @@ import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
 const CONTAINER = "mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-10";
+export const aboutSectionPadding = "py-20 md:py-28 lg:py-32";
+export const ABOUT_CONTAINER =
+  "mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-10";
+
+
+
+  export const FOOTER_STATS = [
+    { value: 1000, suffix: "+", label: "Salons" },
+    { value: 50, suffix: "K+", label: "Appointments" },
+    { value: 99.9, suffix: "%", label: "Uptime", decimals: 1 },
+    { value: null, display: "24/7", label: "Support" },
+  ] as const;
 
 const TIER_LABELS: Record<string, string> = {
   starter: "essential",
@@ -203,10 +215,23 @@ export function PricingPageContent() {
           )}
         >
           <div className="max-w-4xl">
-            <Reveal>
-              <p className="text-xs font-medium uppercase tracking-[0.22em] text-[#1B1714]/45">
+          <Reveal>
+              <div className="mb-6 flex flex-col items-center gap-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#1B1714]/45">
                 Pricing · Gotix ERP
-              </p>
+                </p>
+                <span className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/20 bg-white/70 py-1 pl-1 pr-4 text-xs font-medium text-[#5B21B6] shadow-sm backdrop-blur-sm">
+                  <Image
+                    src="/log.png"
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 rounded-full object-contain"
+                    aria-hidden
+                  />
+                  One connected platform
+                </span>
+              </div>
             </Reveal>
 
             <Reveal delay={0.08}>
@@ -342,65 +367,360 @@ export function PricingPageContent() {
       </section>
 
       {/* FAQ strip */}
-      <section className="landing-preview-band border-b border-[#E8E4DE] py-16 md:py-20">
-        <div className={CONTAINER}>
-          <Reveal className="mb-10 text-center">
-            <h2 className="landing-display text-2xl font-medium md:text-3xl">
-              Common questions
-            </h2>
-          </Reveal>
-          <div className="mx-auto grid max-w-3xl gap-4">
-            {pricingFaqs.map((faq, index) => (
-              <Reveal key={faq.question} delay={index * 0.05}>
-                <details className="group rounded-xl border border-[#E8E4DE] bg-white px-5 py-4 open:shadow-[0_4px_20px_rgba(27,23,20,0.05)]">
-                  <summary className="cursor-pointer list-none text-sm font-semibold text-[#1B1714] marker:content-none [&::-webkit-details-marker]:hidden">
-                    <span className="flex items-center justify-between gap-4">
-                      {faq.question}
-                      <span className="text-[#5B21B6] transition-transform group-open:rotate-45">
-                        +
-                      </span>
-                    </span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-[#1B1714]/65">
-                    {faq.answer}
-                  </p>
-                </details>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <section className="relative overflow-hidden border-b border-[#E8E4DE] py-16 md:py-20" style={{
+  background: 'linear-gradient(135deg, #1A0B2E 0%, #2D1B69 30%, #4B1D8A 60%, #2D1B69 100%)'
+}}>
+  {/* Premium Animated Background */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Animated Gradient Orbs */}
+    <motion.div
+      className="absolute -right-40 top-1/4 h-[600px] w-[600px] rounded-full bg-[#8B5CF6]/20 blur-[120px]"
+      animate={{
+        x: [0, 40, 0],
+        y: [0, -30, 0],
+      }}
+      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute -left-40 bottom-1/4 h-[500px] w-[500px] rounded-full bg-[#5B21B6]/20 blur-[100px]"
+      animate={{
+        x: [0, -40, 0],
+        y: [0, 30, 0],
+      }}
+      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#7C3AED]/15 blur-[80px]"
+      animate={{
+        scale: [1, 1.2, 1],
+        opacity: [0.3, 0.6, 0.3],
+      }}
+      transition={{ duration: 8, repeat: Infinity }}
+    />
 
-      {/* Bottom CTA — ReflexAI style */}
-      <section className="bg-white py-20 md:py-28">
-        <div className={cn(CONTAINER, "max-w-2xl text-center")}>
-          <Reveal>
-            <h2 className="landing-display text-3xl font-medium md:text-4xl">
-              Ready to elevate every{" "}
-              <span className="italic text-[#5B21B6]">appointment?</span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-base text-[#1B1714]/60">
-              Start a 14-day free trial with full module access. No credit card
-              required.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                href="/login"
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-[#6D28D9] to-[#4F46E5] px-8 py-3.5 text-sm font-semibold text-white shadow-[0_8px_28px_-6px_rgba(91,33,182,0.4)] transition-[transform,box-shadow] hover:-translate-y-px"
-              >
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link
-                href="/about"
-                className="inline-flex items-center rounded-full border border-[#1B1714]/20 bg-white px-8 py-3.5 text-sm font-semibold text-[#1B1714] hover:border-[#5B21B6]/30"
-              >
-                Learn about us
-              </Link>
+    {/* 3D Perspective Grid */}
+    <div className="absolute inset-0 opacity-[0.03]" style={{
+      perspective: '1000px',
+      transform: 'rotateX(60deg)',
+      backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)
+      `,
+      backgroundSize: '60px 60px',
+      transformOrigin: 'bottom center',
+    }} />
+
+    {/* Floating Particles */}
+    <div className="absolute inset-0">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-white"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0, 0.4, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 4,
+            repeat: Infinity,
+            delay: Math.random() * 4,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+
+    {/* Floating Geometric Shapes */}
+    <motion.div
+      className="absolute right-[10%] top-[15%] h-16 w-16 rounded-xl border border-white/10"
+      animate={{
+        rotate: [0, 360],
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="absolute inset-0 bg-white/5 rounded-xl" />
+    </motion.div>
+
+    <motion.div
+      className="absolute left-[8%] bottom-[25%] h-12 w-12 rounded-full border border-white/10"
+      animate={{
+        rotate: [360, 0],
+        scale: [1, 1.15, 1],
+      }}
+      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="absolute inset-0 bg-white/5 rounded-full" />
+    </motion.div>
+
+    <motion.div
+      className="absolute right-[20%] bottom-[30%] h-8 w-8 rotate-45 border border-white/10"
+      animate={{
+        rotate: [0, 180, 360],
+        scale: [1, 1.2, 1],
+      }}
+      transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+    />
+  </div>
+
+  <div className={CONTAINER}>
+    <Reveal className="mb-12 text-center">
+      <div className="flex items-center justify-center gap-4">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-white/20" />
+        <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#C4B5FD]">
+          FAQ
+        </span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-white/20" />
+      </div>
+      <h2 className="mt-4 text-3xl font-bold tracking-tight text-white md:text-4xl lg:text-[3.5rem]">
+        Common{" "}
+        <span className="bg-gradient-to-r from-[#C4B5FD] to-[#8B5CF6] bg-clip-text text-transparent">
+          questions
+        </span>
+      </h2>
+      <p className="mt-3 text-sm text-white/40">
+        Everything you need to know about getting started with Gotix
+      </p>
+    </Reveal>
+
+    <div className="mx-auto max-w-3xl space-y-4">
+      {pricingFaqs.map((faq, index) => (
+        <Reveal key={faq.question} delay={index * 0.06}>
+          <motion.details
+            className="group rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 hover:border-white/20 hover:bg-white/10 open:border-[#8B5CF6]/50 open:bg-white/10 open:shadow-2xl open:shadow-[#5B21B6]/20"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.06 }}
+          >
+            <summary className="cursor-pointer list-none px-6 py-5 marker:content-none [&::-webkit-details-marker]:hidden">
+              <span className="flex items-center justify-between gap-4">
+                <span className="text-sm font-medium text-white/90 transition-colors duration-300 group-open:text-[#C4B5FD]">
+                  {faq.question}
+                </span>
+                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-sm text-[#C4B5FD] transition-all duration-300 group-open:rotate-45 group-open:border-[#8B5CF6]/50 group-open:bg-[#8B5CF6]/20">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                  </svg>
+                </span>
+              </span>
+            </summary>
+            <div className="px-6 pb-5">
+              <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4" />
+              <p className="text-sm leading-relaxed text-white/60">
+                {faq.answer}
+              </p>
             </div>
-          </Reveal>
+          </motion.details>
+        </Reveal>
+      ))}
+    </div>
+
+    {/* Bottom CTA */}
+    <Reveal delay={0.3}>
+      <div className="mt-12 text-center">
+        <div className="inline-flex items-center gap-6 rounded-full border border-white/10 bg-white/5 px-6 py-3 backdrop-blur-sm">
+          <span className="text-sm text-white/40">
+            Still have questions?
+          </span>
+          <span className="h-4 w-px bg-white/10" />
+          <Link
+            href="/contact"
+            className="group inline-flex items-center gap-2 text-sm font-medium text-[#C4B5FD] transition-all duration-300 hover:gap-3"
+          >
+            Contact our team
+            <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+          </Link>
         </div>
-      </section>
+      </div>
+    </Reveal>
+
+    {/* Bottom Decorative */}
+    <Reveal delay={0.35}>
+      <motion.div
+        className="mt-12 flex items-center justify-center gap-4"
+        whileHover={{ rotateX: 2 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <motion.span
+          className="h-px w-16 bg-gradient-to-r from-transparent to-white/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+        <motion.div
+          className="flex gap-1"
+          animate={{
+            rotateY: [0, 180, 360],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="h-2 w-2 rotate-45 border border-white/10" />
+          <span className="h-2 w-2 rotate-45 border border-white/10" />
+          <span className="h-2 w-2 rotate-45 border border-white/10" />
+        </motion.div>
+        <motion.span
+          className="h-px w-16 bg-gradient-to-l from-transparent to-white/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+      </motion.div>
+    </Reveal>
+  </div>
+</section>
+      {/* Bottom CTA — ReflexAI style */}
+      <section className={cn(aboutSectionPadding, "relative overflow-hidden bg-white")}>
+  {/* Premium Background Design Elements */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Gradient blobs */}
+    <div className="absolute -right-32 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-[#5B21B6]/[0.04] blur-3xl" />
+    <div className="absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-[#4F46E5]/[0.03] blur-3xl" />
+    <div className="absolute left-1/2 top-0 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[#5B21B6]/[0.02] blur-3xl" />
+    
+    {/* Geometric shapes */}
+    <div className="absolute left-[8%] top-[10%] h-16 w-16 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute right-[12%] top-[20%] h-12 w-12 rotate-45 border border-[#5B21B6]/5" />
+    <div className="absolute left-[5%] bottom-[25%] h-20 w-20 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute right-[8%] bottom-[15%] h-14 w-14 rotate-12 border border-[#5B21B6]/5" />
+    
+    {/* Floating diamonds */}
+    <div className="absolute left-[20%] top-[40%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute right-[25%] bottom-[35%] h-4 w-4 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute left-[45%] top-[15%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute right-[40%] bottom-[20%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    
+    {/* Dot pattern */}
+    <div className="absolute inset-0 opacity-[0.02]" style={{
+      backgroundImage: 'radial-gradient(circle, #5B21B6 1.5px, transparent 1.5px)',
+      backgroundSize: '30px 30px'
+    }} />
+    
+    {/* Diagonal line pattern */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <pattern id="diagonalLines" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="40" x2="40" y2="0" stroke="#5B21B6" strokeWidth="0.5" />
+      </pattern>
+      <rect width="100%" height="100%" fill="url(#diagonalLines)" />
+    </svg>
+    
+    {/* Animated glowing lines */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ctaLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#5B21B6" stopOpacity="0" />
+          <stop offset="50%" stopColor="#5B21B6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#5B21B6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <line x1="15%" y1="15%" x2="85%" y2="15%" stroke="url(#ctaLineGrad)" strokeWidth="0.5" />
+      <line x1="15%" y1="85%" x2="85%" y2="85%" stroke="url(#ctaLineGrad)" strokeWidth="0.5" />
+      <line x1="20%" y1="30%" x2="80%" y2="30%" stroke="url(#ctaLineGrad)" strokeWidth="0.3" />
+      <line x1="20%" y1="70%" x2="80%" y2="70%" stroke="url(#ctaLineGrad)" strokeWidth="0.3" />
+    </svg>
+    
+    {/* Corner decorative elements */}
+    <div className="absolute left-8 top-8 h-12 w-12 border-l-2 border-t-2 border-[#5B21B6]/5" />
+    <div className="absolute right-8 top-8 h-12 w-12 border-r-2 border-t-2 border-[#5B21B6]/5" />
+    <div className="absolute bottom-8 left-8 h-12 w-12 border-b-2 border-l-2 border-[#5B21B6]/5" />
+    <div className="absolute bottom-8 right-8 h-12 w-12 border-b-2 border-r-2 border-[#5B21B6]/5" />
+    
+    {/* Concentric circles */}
+    <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+  </div>
+
+  <div className={cn(ABOUT_CONTAINER, "relative max-w-3xl text-center")}>
+    <Reveal>
+      {/* Decorative top line */}
+      <div className="mb-6 flex items-center justify-center gap-4">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/20" />
+        <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5B21B6]/50">Let's Talk</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/20" />
+      </div>
+
+      {/* Badge with stats */}
+      <div className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/10 bg-[#5B21B6]/5 px-4 py-1.5">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#5B21B6] opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5B21B6]" />
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#1B1714]/50">
+          {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+ Salons Onboard
+        </span>
+      </div>
+
+      {/* Main heading */}
+      <h2 className="landing-display mt-6 text-3xl font-medium md:text-4xl lg:text-5xl">
+        Ready to Transform{" "}
+        <span className="relative inline-block">
+          <span className="relative z-10 italic text-[#5B21B6]">your Salon?</span>
+          <span className="absolute -bottom-1 left-0 h-2 w-full bg-[#5B21B6]/5" />
+        </span>
+      </h2>
+
+      {/* Description */}
+      <p className="mx-auto mt-4 max-w-lg text-base text-[#1B1714]/65">
+        Start a complimentary trial and discover how Gotix can bring
+        your entire floor onto one intelligent platform.
+      </p>
+
+      {/* Divider with decorative elements */}
+      <div className="my-8 flex items-center justify-center gap-4">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/10" />
+        <span className="text-[8px] text-[#5B21B6]/15">✦ ✦ ✦</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/10" />
+      </div>
+
+      {/* CTA Buttons */}
+      <div className="mt-10 flex flex-wrap justify-center gap-4">
+        <Link
+          href="/login"
+          className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-8 py-3.5 text-sm font-medium text-white shadow-lg shadow-[#5B21B6]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[#5B21B6]/30 hover:scale-105"
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+        </Link>
+        <Link
+          href="/#pricing"
+          className="group inline-flex items-center gap-2 rounded-full border-2 border-[#E8E4DE] px-8 py-3.5 text-sm font-medium text-[#1B1714] transition-all duration-300 hover:border-[#5B21B6]/30 hover:bg-[#5B21B6]/5 hover:text-[#5B21B6]"
+        >
+          View Pricing
+          <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Trust indicators */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+        {[
+          { icon: "✨", text: "Free 14-Day Trial" },
+          { icon: "💳", text: "No Credit Card" },
+          { icon: "🔄", text: "Cancel Anytime" },
+        ].map((item, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="text-sm">{item.icon}</span>
+            <span className="text-xs text-[#1B1714]/40">{item.text}</span>
+            {idx < 2 && <span className="h-3 w-px bg-[#1B1714]/10" />}
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom decorative line */}
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/10" />
+        <span className="text-[8px] text-[#1B1714]/10">◆</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/10" />
+      </div>
+    </Reveal>
+  </div>
+</section>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ERP_MODULES,
@@ -14,6 +14,9 @@ import { cn } from "@/lib/utils";
 
 const EASE = [0.22, 0.61, 0.36, 1] as const;
 const CONTAINER = "mx-auto w-full max-w-[1120px] px-5 sm:px-6 lg:px-8";
+export const aboutSectionPadding = "py-20 md:py-28 lg:py-32";
+export const ABOUT_CONTAINER =
+  "mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-10";
 
 /** Real integrations / connected capabilities from Gotix Product */
 const WORKFLOWS = [
@@ -222,70 +225,213 @@ export function IntegrationsPageContent() {
       </section>
 
       {/* Pick your workflow */}
-      <section className="border-b border-[#E8E4DE] bg-white py-20 md:py-28">
-        <div className={CONTAINER}>
-          <Reveal>
-            <h2 className="landing-display max-w-2xl text-3xl font-medium tracking-tight text-[#1B1714] md:text-4xl">
-              Pick your workflow. See Gotix at work.
-            </h2>
-          </Reveal>
+      <section className="relative overflow-hidden border-b border-[#E8E4DE] bg-white py-20 md:py-28">
+  {/* Premium Background Elements */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Gradient orbs */}
+    <div className="absolute -right-40 top-1/2 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-[#5B21B6]/[0.04] blur-3xl" />
+    <div className="absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full bg-[#4F46E5]/[0.03] blur-3xl" />
+    
+    {/* Dot pattern */}
+    <div className="absolute inset-0 opacity-[0.02]" style={{
+      backgroundImage: 'radial-gradient(circle, #5B21B6 1.5px, transparent 1.5px)',
+      backgroundSize: '30px 30px'
+    }} />
+    
+    {/* Diagonal lines */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <pattern id="workflowLines" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="40" x2="40" y2="0" stroke="#5B21B6" strokeWidth="0.5" />
+      </pattern>
+      <rect width="100%" height="100%" fill="url(#workflowLines)" />
+    </svg>
+  </div>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-3">
-            {WORKFLOWS.map((wf, index) => (
-              <Reveal key={wf.id} delay={index * 0.08}>
-                <article
-                  id={wf.id === "messaging" ? "whatsapp" : wf.id}
-                  className={cn(
-                    "group flex h-full flex-col overflow-hidden rounded-2xl border border-[#E8E4DE] bg-white",
-                    "shadow-[0_4px_24px_rgba(27,23,20,0.05)]",
-                    "transition-[transform,border-color,box-shadow] duration-300",
-                    "hover:-translate-y-1 hover:border-[#5B21B6]/30 hover:shadow-[0_16px_40px_rgba(91,33,182,0.12)]"
-                  )}
-                >
-                  <div className="relative aspect-[16/10] overflow-hidden">
-                    <Image
-                      src={wf.image}
-                      alt=""
-                      fill
-                      className="object-cover saturate-[0.88] transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 1024px) 100vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-40" />
-                  </div>
-                  <div className="flex flex-1 flex-col p-6 md:p-7">
-                    <h3 className="landing-display text-xl font-medium text-[#1B1714] md:text-2xl">
-                      {wf.title}
-                    </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-[#1B1714]/60">
-                      {wf.description}
-                    </p>
-                    <ul className="mt-6 flex flex-wrap gap-2">
-                      {wf.capabilities.map((cap) => (
-                        <li
-                          key={cap}
-                          className="rounded-full border border-[#E8E4DE] bg-[#FAF9F7] px-3 py-1 text-[11px] font-medium text-[#1B1714]/65"
-                        >
-                          {cap}
-                        </li>
-                      ))}
-                    </ul>
-                    <Link
-                      href={wf.href}
-                      className="mt-8 inline-flex items-center gap-1.5 text-sm font-semibold text-[#5B21B6] transition-colors hover:text-[#4C1D95]"
-                    >
-                      {wf.cta}
-                      <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-                    </Link>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
+  <div className={CONTAINER}>
+    {/* Header with Unique Design */}
+    <Reveal>
+      <div className="relative max-w-3xl">
+        <div className="flex items-center gap-4">
+          <span className="h-px w-12 bg-[#5B21B6]/40" />
+          <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5B21B6]">
+            Workflows
+          </span>
+          <span className="h-px flex-1 bg-[#5B21B6]/10" />
         </div>
-      </section>
+        
+        <div className="mt-6">
+          <h2 className="text-4xl font-light leading-[1.1] tracking-tight text-[#1B1714] md:text-5xl lg:text-[3.5rem]">
+            Pick your{" "}
+            <span className="relative inline-block">
+              <span className="relative z-10 font-bold text-[#5B21B6]">
+                Workflow
+              </span>
+              <span className="absolute -bottom-1 left-0 h-3 w-full bg-[#5B21B6]/5" />
+            </span>
+            <br className="hidden sm:block" />
+            See Gotix at{" "}
+            <span className="italic text-[#5B21B6]/70">work</span>
+          </h2>
+          <p className="mt-4 text-lg text-[#1B1714]/50">
+            Choose your workflow and experience the power of Gotix in action
+          </p>
+        </div>
+      </div>
+    </Reveal>
+
+    {/* Workflow Cards with Advanced Animations */}
+    <div className="mt-16 grid gap-8 lg:grid-cols-3">
+      {WORKFLOWS.map((wf, index) => (
+        <Reveal key={wf.id} delay={index * 0.1}>
+          <motion.article
+            className="group relative h-full"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: index * 0.1 }}
+            whileHover={{ 
+              y: -12,
+              transition: { duration: 0.3 }
+            }}
+          >
+            {/* 3D Shadow Effect */}
+            <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-[#5B21B6]/10 to-[#4F46E5]/10 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
+            
+            {/* Main Card */}
+            <div className="relative flex h-full flex-col overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_rgba(27,23,20,0.06)] transition-all duration-500 hover:shadow-[0_20px_60px_rgba(91,33,182,0.15)] ring-1 ring-[#1B1714]/5">
+              
+              {/* Image Container with Animated Overlay */}
+              <div className="relative aspect-[16/10] overflow-hidden">
+                <motion.div
+                  whileHover={{ scale: 1.08 }}
+                  transition={{ duration: 0.6 }}
+                  className="h-full w-full"
+                >
+                  <Image
+                    src={wf.image}
+                    alt=""
+                    fill
+                    className="object-cover saturate-[0.85]"
+                    sizes="(max-width: 1024px) 100vw, 33vw"
+                  />
+                </motion.div>
+                
+                {/* Animated Gradient Overlay */}
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60"
+                  initial={{ opacity: 0.6 }}
+                  whileHover={{ opacity: 0.3 }}
+                  transition={{ duration: 0.4 }}
+                />
+                
+                {/* Top Badge - Animated */}
+                <motion.div
+                  className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-[8px] font-medium uppercase tracking-[0.15em] text-[#5B21B6] shadow-lg backdrop-blur-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  {wf.id}
+                </motion.div>
+                
+                {/* Play Button Overlay */}
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-2xl backdrop-blur-sm">
+                    <svg className="h-6 w-6 text-[#5B21B6]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Content */}
+              <div className="relative flex flex-1 flex-col p-6 md:p-8">
+                {/* Title with underline animation */}
+                <div className="relative">
+                  <h3 className="text-xl font-semibold text-[#1B1714] transition-colors duration-300 group-hover:text-[#5B21B6] md:text-2xl">
+                    {wf.title}
+                  </h3>
+                  <motion.div 
+                    className="mt-2 h-0.5 w-12 bg-[#5B21B6]"
+                    initial={{ width: 48 }}
+                    whileHover={{ width: 80 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </div>
+
+                {/* Description */}
+                <p className="mt-4 text-sm leading-relaxed text-[#1B1714]/60">
+                  {wf.description}
+                </p>
+
+                {/* Capabilities with Animated Tags */}
+                <ul className="mt-6 flex flex-wrap gap-2">
+                  {wf.capabilities.map((cap, idx) => (
+                    <motion.li
+                      key={cap}
+                      className="rounded-full border border-[#E8E4DE] bg-[#FAF9F7] px-3 py-1 text-[10px] font-medium text-[#1B1714]/60 transition-all duration-300 hover:border-[#5B21B6]/30 hover:bg-[#5B21B6]/5 hover:text-[#5B21B6]"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.2 + idx * 0.05 }}
+                      whileHover={{ 
+                        scale: 1.05,
+                        y: -2
+                      }}
+                    >
+                      {cap}
+                    </motion.li>
+                  ))}
+                </ul>
+
+                {/* CTA with Animated Arrow */}
+                <Link
+                  href={wf.href}
+                  className="group/link mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#5B21B6] transition-all duration-300 hover:text-[#4C1D95]"
+                >
+                  <span className="relative">
+                    {wf.cta}
+                    <span className="absolute -bottom-1 left-0 h-0.5 w-0 bg-[#5B21B6] transition-all duration-300 group-hover/link:w-full" />
+                  </span>
+                  <motion.span
+                    animate={{ x: 0 }}
+                    whileHover={{ x: 8 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ArrowRight className="h-4 w-4" aria-hidden />
+                  </motion.span>
+                </Link>
+              </div>
+
+              {/* Bottom Glow Effect */}
+              <div className="absolute -bottom-px left-1/2 h-px w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#5B21B6]/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            </div>
+
+            {/* Floating Decorative Elements */}
+            <motion.div
+              className="pointer-events-none absolute -right-3 -top-3 h-12 w-12 rounded-full border border-[#5B21B6]/5 bg-[#5B21B6]/[0.02]"
+              whileHover={{ scale: 1.2, rotate: 45 }}
+              transition={{ duration: 0.5 }}
+            />
+            <motion.div
+              className="pointer-events-none absolute -bottom-3 -left-3 h-8 w-8 rounded-full border border-[#5B21B6]/5 bg-[#5B21B6]/[0.02]"
+              whileHover={{ scale: 1.2, rotate: -45 }}
+              transition={{ duration: 0.5 }}
+            />
+          </motion.article>
+        </Reveal>
+      ))}
+    </div>
+
+    {/* Bottom CTA with Animation */}
+    
+  </div>
+</section>
 
       {/* Quotes */}
-      <section className="landing-preview-band border-b border-[#E8E4DE] py-16 md:py-20">
+      {/* <section className="landing-preview-band border-b border-[#E8E4DE] py-16 md:py-20">
         <div className={CONTAINER}>
           <div className="grid gap-5 md:grid-cols-2">
             {QUOTES.map((q, index) => (
@@ -304,151 +450,994 @@ export function IntegrationsPageContent() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Platform */}
       <section
-        id="operations"
-        className="border-b border-[#E8E4DE] bg-white py-20 md:py-28"
-      >
-        <div className={CONTAINER}>
-          <Reveal className="max-w-3xl">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#5B21B6]">
+  id="operations"
+  className="relative overflow-hidden border-b border-[#E8E4DE] py-20 md:py-28"
+  style={{
+    background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8F6 100%)'
+  }}
+>
+  {/* 3D Immersive Background */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* 3D Perspective Grid */}
+    <div className="absolute inset-0" style={{
+      perspective: '1200px',
+      transform: 'rotateX(70deg)',
+      transformOrigin: 'bottom center',
+      backgroundImage: `
+        linear-gradient(rgba(91,33,182,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,33,182,0.06) 1px, transparent 1px)
+      `,
+      backgroundSize: '80px 80px',
+      opacity: 0.5,
+    }} />
+
+    {/* 3D Floating Cubes */}
+    <motion.div
+      className="absolute right-[10%] top-[15%] h-24 w-24 rounded-xl border-2 border-[#5B21B6]/10"
+      animate={{
+        rotateX: [0, 360],
+        rotateY: [0, 360],
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      <div className="absolute inset-0 bg-[#5B21B6]/5 rounded-xl" />
+      <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-[#5B21B6]/20 to-transparent blur-sm" />
+    </motion.div>
+
+    <motion.div
+      className="absolute left-[5%] bottom-[20%] h-16 w-16 rounded-xl border-2 border-[#4F46E5]/10"
+      animate={{
+        rotateX: [360, 0],
+        rotateY: [360, 0],
+        scale: [1, 1.15, 1],
+      }}
+      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+      style={{ transformStyle: 'preserve-3d' }}
+    >
+      <div className="absolute inset-0 bg-[#4F46E5]/5 rounded-xl" />
+    </motion.div>
+
+    <motion.div
+      className="absolute right-[20%] bottom-[30%] h-12 w-12 rounded-full border-2 border-[#5B21B6]/10"
+      animate={{
+        rotateX: [0, 180],
+        rotateY: [0, 180],
+        scale: [1, 1.2, 1],
+      }}
+      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+      style={{ transformStyle: 'preserve-3d' }}
+    />
+
+    {/* 3D Animated Orbs */}
+    <motion.div
+      className="absolute -right-40 top-1/2 h-[600px] w-[600px] -translate-y-1/2 rounded-full bg-[#5B21B6]/[0.06] blur-3xl"
+      animate={{
+        x: [0, 50, 0],
+        y: [0, -40, 0],
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute -left-40 bottom-0 h-[500px] w-[500px] rounded-full bg-[#4F46E5]/[0.05] blur-3xl"
+      animate={{
+        x: [0, -50, 0],
+        y: [0, 40, 0],
+        scale: [1, 1.15, 1],
+      }}
+      transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
+    />
+
+    {/* 3D Floating Particles */}
+    <div className="absolute inset-0">
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-[#5B21B6]"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0, 1, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 4,
+            repeat: Infinity,
+            delay: Math.random() * 4,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+  </div>
+
+  <div className={CONTAINER}>
+    <div className="grid items-center gap-20 lg:grid-cols-2">
+      {/* Left Column - Content with 3D Perspective */}
+      <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
+        <Reveal>
+          <motion.div
+            className="inline-flex items-center gap-3 rounded-full border border-[#5B21B6]/20 bg-white/80 px-4 py-1.5 backdrop-blur-sm shadow-lg shadow-[#5B21B6]/5"
+            whileHover={{ scale: 1.05, rotateX: 5 }}
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#5B21B6] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5B21B6]" />
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#5B21B6]">
               Connected Salon ERP
-            </p>
-            <h2 className="landing-display mt-4 text-3xl font-medium tracking-tight text-[#1B1714] md:text-4xl lg:text-5xl">
+            </span>
+          </motion.div>
+        </Reveal>
+
+        <Reveal delay={0.08}>
+          <motion.div
+            className="mt-6"
+            style={{ transformStyle: 'preserve-3d' }}
+            whileHover={{ rotateX: 2, rotateY: 2 }}
+          >
+            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#1B1714] md:text-5xl lg:text-[3.5rem]">
               Build once.
               <br />
               Deploy across chairs.
               <br />
-              <span className="italic text-[#5B21B6]">Improve over time.</span>
+              <motion.span
+                className="inline-block bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{ duration: 6, repeat: Infinity }}
+              >
+                Improve over time.
+              </motion.span>
             </h2>
-            <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#1B1714]/60">
-              Go beyond standalone tools with the context, integrations, and
-              controls needed to run appointments, billing, and clients from
-              start to finish.
-            </p>
-          </Reveal>
+          </motion.div>
+        </Reveal>
 
-          <div className="mt-14 grid gap-4 sm:grid-cols-2">
-            {PLATFORM_PILLARS.map((pillar, index) => (
-              <Reveal key={pillar.title} delay={index * 0.06}>
-                <div className="rounded-2xl border border-[#E8E4DE] bg-white p-6 shadow-[0_4px_20px_rgba(27,23,20,0.04)] transition-[border-color,box-shadow] hover:border-[#5B21B6]/30 hover:shadow-[0_12px_32px_rgba(91,33,182,0.08)] md:p-7">
-                  <h3 className="text-lg font-semibold text-[#1B1714]">
-                    {pillar.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-[#1B1714]/60">
-                    {pillar.body}
-                  </p>
+        <Reveal delay={0.16}>
+          <p className="mt-5 max-w-2xl text-base leading-relaxed text-[#1B1714]/60 md:text-lg">
+            Go beyond standalone tools with the context, integrations, and
+            controls needed to run appointments, billing, and clients from
+            start to finish.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.24}>
+          <motion.div
+            className="mt-8 inline-flex items-center gap-4 rounded-full bg-gradient-to-r from-[#5B21B6]/10 to-[#7C3AED]/10 px-6 py-2 text-sm shadow-lg shadow-[#5B21B6]/5 backdrop-blur-sm"
+            whileHover={{ scale: 1.02, x: 6 }}
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <span className="font-medium text-[#5B21B6]">✨ New</span>
+            <span className="h-4 w-px bg-[#5B21B6]/20" />
+            <span className="text-[#1B1714]/60">AI-powered insights now available</span>
+          </motion.div>
+        </Reveal>
+
+        <Reveal delay={0.3}>
+          <motion.div
+            className="mt-10 flex flex-wrap gap-4"
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <motion.div
+              whileHover={{ scale: 1.05, rotateX: 3 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link
+                href="/login"
+                className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-8 py-3.5 text-sm font-medium text-white shadow-lg shadow-[#5B21B6]/25 transition-all duration-300 hover:shadow-xl hover:shadow-[#5B21B6]/40"
+              >
+                See it on your salon
+                <span className="text-white/60 text-xs">· 14-day trial</span>
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </motion.span>
+              </Link>
+            </motion.div>
+            <motion.div
+              whileHover={{ scale: 1.05, rotateX: -3 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Link
+                href="/demo"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-[#E8E4DE] bg-white/80 px-8 py-3.5 text-sm font-medium text-[#1B1714] backdrop-blur-sm transition-all duration-300 hover:border-[#5B21B6]/30 hover:bg-[#5B21B6]/5 hover:text-[#5B21B6] hover:shadow-lg"
+              >
+                Watch Demo
+                <Play className="h-4 w-4" aria-hidden />
+              </Link>
+            </motion.div>
+          </motion.div>
+        </Reveal>
+      </div>
+
+      {/* Right Column - 3D Interactive Cards */}
+      <div className="relative" style={{ transformStyle: 'preserve-3d' }}>
+        <motion.div
+          className="relative grid grid-cols-2 gap-4"
+          animate={{
+            rotateY: [0, 2, 0, -2, 0],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+          style={{ transformStyle: 'preserve-3d' }}
+        >
+          {PLATFORM_PILLARS.slice(0, 4).map((pillar, index) => (
+            <motion.div
+              key={pillar.title}
+              className="group relative rounded-2xl bg-white/80 p-5 backdrop-blur-sm shadow-xl shadow-[#5B21B6]/5 ring-1 ring-[#1B1714]/5"
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: `perspective(800px) rotateX(${index % 2 === 0 ? 2 : -2}deg) rotateY(${index < 2 ? 2 : -2}deg)`,
+              }}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
+              whileHover={{
+                rotateX: 0,
+                rotateY: 0,
+                y: -10,
+                scale: 1.05,
+                transition: { duration: 0.3 },
+              }}
+            >
+              {/* 3D Depth Layers */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#5B21B6]/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-[#5B21B6]/20 via-transparent to-[#5B21B6]/20 opacity-0 blur-sm transition-opacity duration-500 group-hover:opacity-100" />
+
+              <div className="relative">
+                <div className="flex items-start justify-between">
+                  <motion.div
+                    className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#5B21B6]/10 to-[#7C3AED]/5 text-2xl shadow-lg shadow-[#5B21B6]/10"
+                    whileHover={{
+                      rotate: [0, 10, -10, 0],
+                      scale: 1.1,
+                    }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {index === 0 && "📊"}
+                    {index === 1 && "💳"}
+                    {index === 2 && "📦"}
+                    {index === 3 && "🤖"}
+                  </motion.div>
+                  <span className="text-xs font-mono text-[#1B1714]/10">
+                    {String(index + 1).padStart(2, '0')}
+                  </span>
                 </div>
-              </Reveal>
-            ))}
-          </div>
 
-          <Reveal delay={0.15} className="mt-10">
-            <Link href="/login" className={primaryBtn}>
-              See it on your salon
-              <span className="text-white/70">· 14-day trial</span>
-              <ArrowRight className="h-4 w-4" aria-hidden />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+                <h4 className="mt-4 text-sm font-semibold text-[#1B1714] transition-colors duration-300 group-hover:text-[#5B21B6]">
+                  {pillar.title}
+                </h4>
+
+                <motion.div
+                  className="mt-2 h-0.5 w-8 bg-[#5B21B6]/10 transition-all duration-300 group-hover:w-12 group-hover:bg-[#5B21B6]"
+                />
+
+                <p className="mt-3 text-xs leading-relaxed text-[#1B1714]/50">
+                  {pillar.body}
+                </p>
+
+                {/* 3D Floating Indicator */}
+                <motion.div
+                  className="mt-4 flex items-center gap-2 text-[8px] font-medium uppercase tracking-[0.15em] text-[#5B21B6]/30"
+                  whileHover={{ x: 4 }}
+                >
+                  <span>Explore</span>
+                  <span className="text-[#5B21B6]/15">→</span>
+                </motion.div>
+              </div>
+
+              {/* 3D Corner Accents */}
+              <div className="absolute -right-px -top-px h-8 w-8 rounded-tr-2xl border-r-2 border-t-2 border-[#5B21B6]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute -bottom-px -left-px h-8 w-8 rounded-bl-2xl border-b-2 border-l-2 border-[#5B21B6]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* 3D Floating Decorative Elements */}
+        <motion.div
+          className="absolute -right-8 -top-8 h-16 w-16 rounded-full border border-[#5B21B6]/10 bg-[#5B21B6]/5"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.5, 0.8, 0.5],
+          }}
+          transition={{ duration: 4, repeat: Infinity }}
+          style={{ transformStyle: 'preserve-3d' }}
+        />
+        <motion.div
+          className="absolute -bottom-8 -left-8 h-12 w-12 rounded-full border border-[#4F46E5]/10 bg-[#4F46E5]/5"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.3, 0.7, 0.3],
+          }}
+          transition={{ duration: 5, repeat: Infinity }}
+          style={{ transformStyle: 'preserve-3d' }}
+        />
+      </div>
+    </div>
+
+    {/* 3D Bottom Decorative */}
+    <Reveal delay={0.4}>
+      <motion.div
+        className="mt-20 flex items-center justify-center gap-4"
+        style={{ transformStyle: 'preserve-3d' }}
+        whileHover={{ rotateX: 3 }}
+      >
+        <motion.span
+          className="h-px w-16 bg-gradient-to-r from-transparent to-[#5B21B6]/20"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+        <motion.div
+          className="flex gap-1"
+          animate={{
+            rotateY: [0, 180, 360],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/20" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/20" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/20" />
+        </motion.div>
+        <motion.span
+          className="h-px w-16 bg-gradient-to-l from-transparent to-[#5B21B6]/20"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+      </motion.div>
+    </Reveal>
+  </div>
+</section>
 
       {/* Payments */}
       <section
-        id="payments"
-        className="landing-preview-band border-b border-[#E8E4DE] py-20 md:py-28"
-      >
-        <div className={CONTAINER}>
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-            <Reveal>
-              <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#5B21B6]">
-                Payments & POS
-              </p>
-              <h2 className="landing-display mt-4 text-3xl font-medium text-[#1B1714] md:text-4xl">
-                Checkout built for how Indian salons actually pay
-              </h2>
-              <p className="mt-4 text-base leading-relaxed text-[#1B1714]/60">
-                Cash, card, UPI, wallets, split payments, and membership credits
-                — all with automatic receipt generation. Same POS your
-                reception already trains on.
-              </p>
-              <ul className="mt-8 grid gap-3 sm:grid-cols-2">
-                {[
-                  "Cash, card & UPI",
-                  "Split & partial payments",
-                  "Membership credits",
-                  "Gift cards & wallets",
-                  "Auto receipts",
-                  "Multi-tender checkout",
-                ].map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-2 text-sm text-[#1B1714]/70"
+  id="payments"
+  className="landing-preview-band relative overflow-hidden border-b border-[#E8E4DE] py-20 md:py-28"
+>
+  {/* Premium Animated Background */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Animated Gradient Orbs */}
+    <motion.div
+      className="absolute -right-40 top-1/4 h-[600px] w-[600px] rounded-full bg-[#5B21B6]/[0.05] blur-3xl"
+      animate={{
+        x: [0, 40, 0],
+        y: [0, -30, 0],
+      }}
+      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute -left-40 bottom-1/4 h-[500px] w-[500px] rounded-full bg-[#4F46E5]/[0.04] blur-3xl"
+      animate={{
+        x: [0, -40, 0],
+        y: [0, 30, 0],
+      }}
+      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    />
+
+    {/* 3D Perspective Grid */}
+    <div className="absolute inset-0 opacity-[0.02]" style={{
+      perspective: '1000px',
+      transform: 'rotateX(60deg)',
+      backgroundImage: `
+        linear-gradient(rgba(91,33,182,0.15) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,33,182,0.15) 1px, transparent 1px)
+      `,
+      backgroundSize: '50px 50px',
+      transformOrigin: 'bottom center',
+    }} />
+
+    {/* Floating Geometric Shapes */}
+    <motion.div
+      className="absolute right-[15%] top-[20%] h-14 w-14 rounded-xl border-2 border-[#5B21B6]/10"
+      animate={{
+        rotate: [0, 360],
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="absolute inset-0 bg-[#5B21B6]/5 rounded-xl" />
+    </motion.div>
+
+    <motion.div
+      className="absolute left-[10%] bottom-[30%] h-10 w-10 rounded-full border-2 border-[#4F46E5]/10"
+      animate={{
+        rotate: [360, 0],
+        scale: [1, 1.15, 1],
+      }}
+      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+    />
+
+    <motion.div
+      className="absolute right-[25%] bottom-[20%] h-6 w-6 rotate-45 border-2 border-[#5B21B6]/10"
+      animate={{
+        rotate: [0, 180, 360],
+        scale: [1, 1.2, 1],
+      }}
+      transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+    />
+
+    {/* Floating Particles */}
+    <div className="absolute inset-0">
+      {[...Array(10)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute h-1 w-1 rounded-full bg-[#5B21B6]"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -30, 0],
+            opacity: [0, 0.5, 0],
+            scale: [0, 1.5, 0],
+          }}
+          transition={{
+            duration: 3 + Math.random() * 3,
+            repeat: Infinity,
+            delay: Math.random() * 3,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
+    </div>
+
+    {/* Decorative Lines */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="payLine" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#5B21B6" stopOpacity="0" />
+          <stop offset="50%" stopColor="#5B21B6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#5B21B6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <motion.line
+        x1="10%" y1="30%" x2="90%" y2="30%"
+        stroke="url(#payLine)" strokeWidth="0.5"
+        animate={{ y1: ["30%", "35%", "30%"], y2: ["30%", "35%", "30%"] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+      <motion.line
+        x1="10%" y1="70%" x2="90%" y2="70%"
+        stroke="url(#payLine)" strokeWidth="0.5"
+        animate={{ y1: ["70%", "65%", "70%"], y2: ["70%", "65%", "70%"] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+    </svg>
+
+    {/* Corner Accents */}
+    <div className="absolute left-6 top-6 h-12 w-12 border-l-2 border-t-2 border-[#5B21B6]/10" />
+    <div className="absolute right-6 top-6 h-12 w-12 border-r-2 border-t-2 border-[#5B21B6]/10" />
+    <div className="absolute bottom-6 left-6 h-12 w-12 border-b-2 border-l-2 border-[#5B21B6]/10" />
+    <div className="absolute bottom-6 right-6 h-12 w-12 border-b-2 border-r-2 border-[#5B21B6]/10" />
+  </div>
+
+  <div className={CONTAINER}>
+    <div className="grid items-center gap-16 lg:grid-cols-2 lg:gap-20">
+      {/* Left Column - Content */}
+      <div>
+        <Reveal>
+          <motion.div
+            className="inline-flex items-center gap-3 rounded-full border border-[#5B21B6]/20 bg-[#5B21B6]/5 px-4 py-1.5"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#5B21B6] opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5B21B6]" />
+            </span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#5B21B6]">
+              Payments & POS
+            </span>
+          </motion.div>
+        </Reveal>
+
+        <Reveal delay={0.08}>
+          <motion.div
+            className="mt-6"
+            whileHover={{ rotateX: 2 }}
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#1B1714] md:text-5xl lg:text-[3.5rem]">
+              Checkout built for{" "}
+              <motion.span
+                className="inline-block bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] bg-clip-text text-transparent"
+                animate={{
+                  backgroundPosition: ['0% 50%', '100% 50%', '0% 50%'],
+                }}
+                transition={{ duration: 6, repeat: Infinity }}
+              >
+                how Indian salons actually pay
+              </motion.span>
+            </h2>
+          </motion.div>
+        </Reveal>
+
+        <Reveal delay={0.16}>
+          <p className="mt-4 text-base leading-relaxed text-[#1B1714]/60 md:text-lg">
+            Cash, card, UPI, wallets, split payments, and membership credits
+            — all with automatic receipt generation. Same POS your
+            reception already trains on.
+          </p>
+        </Reveal>
+
+        <Reveal delay={0.22}>
+          <div className="mt-8">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="h-px w-8 bg-[#5B21B6]/20" />
+              <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#1B1714]/30">
+                Payment Methods
+              </span>
+              <span className="h-px flex-1 bg-[#5B21B6]/10" />
+            </div>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {[
+                { icon: "💳", text: "Cash, card & UPI" },
+                { icon: "💸", text: "Split & partial payments" },
+                { icon: "⭐", text: "Membership credits" },
+                { icon: "🎁", text: "Gift cards & wallets" },
+                { icon: "📄", text: "Auto receipts" },
+                { icon: "🔄", text: "Multi-tender checkout" },
+              ].map((item, idx) => (
+                <motion.li
+                  key={item.text}
+                  className="flex items-center gap-3 text-sm text-[#1B1714]/70"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + idx * 0.05 }}
+                >
+                  <motion.span
+                    className="flex h-6 w-6 items-center justify-center rounded-full bg-[#5B21B6]/10 text-xs"
+                    whileHover={{ scale: 1.2, rotate: 10 }}
                   >
-                    <span
-                      className="h-1.5 w-1.5 rounded-full bg-[#5B21B6]"
-                      aria-hidden
-                    />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#E8E4DE] shadow-[0_12px_40px_rgba(27,23,20,0.08)]">
+                    {item.icon}
+                  </motion.span>
+                  <span>{item.text}</span>
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        </Reveal>
+
+        <Reveal delay={0.3}>
+          <motion.div
+            className="mt-10 flex flex-wrap gap-4"
+            whileHover={{ rotateX: 2 }}
+            style={{ transformStyle: 'preserve-3d' }}
+          >
+            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <Link
+                href="/payments"
+                className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-8 py-3.5 text-sm font-medium text-white shadow-lg shadow-[#5B21B6]/25 transition-all duration-300 hover:shadow-xl hover:shadow-[#5B21B6]/40"
+              >
+                Explore Payments
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                >
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </motion.span>
+              </Link>
+            </motion.div>
+          </motion.div>
+        </Reveal>
+      </div>
+
+      {/* Right Column - 3D Image Card */}
+      <div className="relative">
+        <Reveal delay={0.1}>
+          <motion.div
+            className="relative"
+            animate={{
+              y: [0, -8, 0],
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            {/* Glow behind image */}
+            <div className="absolute -inset-8 rounded-3xl bg-[#5B21B6]/10 blur-[80px]" />
+
+            {/* Image Card with 3D Effect */}
+            <motion.div
+              className="relative overflow-hidden rounded-2xl border border-[#E8E4DE] bg-white shadow-2xl shadow-[#5B21B6]/10"
+              whileHover={{
+                rotateX: 3,
+                rotateY: 3,
+                scale: 1.02,
+              }}
+              transition={{ duration: 0.4 }}
+              style={{ transformStyle: 'preserve-3d' }}
+            >
+              <div className="relative aspect-[4/3] overflow-hidden">
                 <Image
                   src={IMAGES.salonChair}
                   alt="Salon POS and billing counter"
                   fill
-                  className="object-cover saturate-[0.9]"
+                  className="object-cover saturate-[0.9] transition-transform duration-700 hover:scale-105"
                   sizes="(max-width: 1024px) 100vw, 50vw"
                 />
+
+                {/* Animated Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1B1714]/20 via-transparent to-transparent" />
+
+                {/* Floating Badges */}
+                <motion.div
+                  className="absolute left-4 top-4 rounded-full bg-white/95 px-3 py-1 text-[8px] font-medium uppercase tracking-[0.15em] text-[#5B21B6] shadow-lg backdrop-blur-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  ✦ Live Demo
+                </motion.div>
+
+                <motion.div
+                  className="absolute right-4 top-4 rounded-full bg-[#5B21B6] px-3 py-1 text-[8px] font-medium uppercase tracking-[0.15em] text-white shadow-lg"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 }}
+                  whileHover={{ scale: 1.05 }}
+                >
+                  Popular
+                </motion.div>
+
+                {/* Bottom Info */}
+                <motion.div
+                  className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#1B1714]/80 via-[#1B1714]/40 to-transparent p-6 backdrop-blur-[2px]"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.7 }}
+                >
+                  <p className="text-[9px] font-medium uppercase tracking-[0.2em] text-white/50">
+                    Integrated POS
+                  </p>
+                  <p className="mt-1 text-sm font-light text-white">
+                    Seamless checkout experience
+                  </p>
+                </motion.div>
               </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
+
+              {/* Decorative 3D Elements */}
+              <motion.div
+                className="absolute -right-4 -top-4 h-12 w-12 rounded-full border border-[#5B21B6]/10 bg-[#5B21B6]/5"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  rotate: [0, 45, 0],
+                }}
+                transition={{ duration: 4, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute -bottom-4 -left-4 h-8 w-8 rounded-full border border-[#5B21B6]/10 bg-[#5B21B6]/5"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, -30, 0],
+                }}
+                transition={{ duration: 3, repeat: Infinity }}
+              />
+            </motion.div>
+          </motion.div>
+        </Reveal>
+      </div>
+    </div>
+
+    {/* Bottom Decorative */}
+    <Reveal delay={0.35}>
+      <motion.div
+        className="mt-16 flex items-center justify-center gap-4"
+        whileHover={{ rotateX: 2 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <motion.span
+          className="h-px w-16 bg-gradient-to-r from-transparent to-[#5B21B6]/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+        <motion.div
+          className="flex gap-1"
+          animate={{
+            rotateY: [0, 180, 360],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+        </motion.div>
+        <motion.span
+          className="h-px w-16 bg-gradient-to-l from-transparent to-[#5B21B6]/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+      </motion.div>
+    </Reveal>
+  </div>
+</section>
+
 
       {/* Native modules */}
-      <section className="border-b border-[#E8E4DE] bg-white py-20 md:py-28">
-        <div className={CONTAINER}>
-          <Reveal className="max-w-2xl">
-            <h2 className="landing-display text-3xl font-medium text-[#1B1714] md:text-4xl">
-              Native modules that power every integration
-            </h2>
-            <p className="mt-4 text-base text-[#1B1714]/60">
-              These aren&apos;t third-party plugins — they&apos;re built into
-              Gotix and share the same client, staff, and billing data.
-            </p>
-          </Reveal>
+      <section className="relative overflow-hidden border-b border-[#E8E4DE] bg-white py-20 md:py-28">
+  {/* Premium Animated Background */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Animated Gradient Orbs */}
+    <motion.div
+      className="absolute -right-40 top-1/4 h-[500px] w-[500px] rounded-full bg-[#5B21B6]/[0.04] blur-3xl"
+      animate={{
+        x: [0, 40, 0],
+        y: [0, -30, 0],
+      }}
+      transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+    />
+    <motion.div
+      className="absolute -left-40 bottom-1/4 h-[400px] w-[400px] rounded-full bg-[#4F46E5]/[0.03] blur-3xl"
+      animate={{
+        x: [0, -40, 0],
+        y: [0, 30, 0],
+      }}
+      transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+    />
 
-          <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {NATIVE.map((mod, index) => {
-              const Icon = mod.icon;
-              return (
-                <Reveal key={mod.id} delay={reduced ? 0 : (index % 4) * 0.04}>
-                  <div className="rounded-xl border border-[#E8E4DE] bg-white p-5 shadow-[0_4px_16px_rgba(27,23,20,0.04)] transition-[border-color,box-shadow] hover:border-[#5B21B6]/30 hover:shadow-[0_8px_24px_rgba(91,33,182,0.08)]">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#5B21B6]/10 text-[#5B21B6]">
-                      <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden />
-                    </div>
-                    <h3 className="mt-4 text-sm font-semibold text-[#1B1714]">
-                      {mod.title}
-                    </h3>
-                    <p className="mt-1.5 text-xs leading-relaxed text-[#1B1714]/55">
-                      {mod.description}
-                    </p>
-                  </div>
-                </Reveal>
-              );
-            })}
+    {/* 3D Perspective Grid */}
+    <div className="absolute inset-0 opacity-[0.015]" style={{
+      perspective: '1000px',
+      transform: 'rotateX(60deg)',
+      backgroundImage: `
+        linear-gradient(rgba(91,33,182,0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(91,33,182,0.1) 1px, transparent 1px)
+      `,
+      backgroundSize: '60px 60px',
+      transformOrigin: 'bottom center',
+    }} />
+
+    {/* Dot Pattern */}
+    <div className="absolute inset-0 opacity-[0.02]" style={{
+      backgroundImage: 'radial-gradient(circle, #5B21B6 1.5px, transparent 1.5px)',
+      backgroundSize: '30px 30px',
+    }} />
+
+    {/* Floating Geometric Shapes */}
+    <motion.div
+      className="absolute right-[10%] top-[15%] h-12 w-12 rounded-xl border-2 border-[#5B21B6]/10"
+      animate={{
+        rotate: [0, 360],
+        scale: [1, 1.1, 1],
+      }}
+      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+    >
+      <div className="absolute inset-0 bg-[#5B21B6]/5 rounded-xl" />
+    </motion.div>
+
+    <motion.div
+      className="absolute left-[8%] bottom-[25%] h-8 w-8 rounded-full border-2 border-[#4F46E5]/10"
+      animate={{
+        rotate: [360, 0],
+        scale: [1, 1.15, 1],
+      }}
+      transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+    />
+
+    <motion.div
+      className="absolute right-[20%] bottom-[30%] h-6 w-6 rotate-45 border-2 border-[#5B21B6]/10"
+      animate={{
+        rotate: [0, 180, 360],
+        scale: [1, 1.2, 1],
+      }}
+      transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+    />
+
+    {/* Decorative Lines */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="moduleLine" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#5B21B6" stopOpacity="0" />
+          <stop offset="50%" stopColor="#5B21B6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#5B21B6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <motion.line
+        x1="10%" y1="20%" x2="90%" y2="20%"
+        stroke="url(#moduleLine)" strokeWidth="0.5"
+        animate={{ y1: ["20%", "25%", "20%"], y2: ["20%", "25%", "20%"] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+      <motion.line
+        x1="10%" y1="80%" x2="90%" y2="80%"
+        stroke="url(#moduleLine)" strokeWidth="0.5"
+        animate={{ y1: ["80%", "75%", "80%"], y2: ["80%", "75%", "80%"] }}
+        transition={{ duration: 8, repeat: Infinity }}
+      />
+    </svg>
+  </div>
+
+  <div className={CONTAINER}>
+    {/* Header with Premium Design */}
+    <Reveal>
+      <div className="relative max-w-3xl">
+        <div className="flex items-center gap-4">
+          <span className="h-px w-12 bg-[#5B21B6]/40" />
+          <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5B21B6]">
+            Native Modules
+          </span>
+          <span className="h-px flex-1 bg-[#5B21B6]/10" />
+        </div>
+        
+        <div className="mt-6">
+          <h2 className="text-4xl font-bold leading-[1.1] tracking-tight text-[#1B1714] md:text-5xl lg:text-[3.5rem]">
+            <span className="relative inline-block">
+              <span className="relative z-10 bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] bg-clip-text text-transparent">
+                Native modules
+              </span>
+              <span className="absolute -bottom-1 left-0 h-2 w-full bg-[#5B21B6]/10" />
+            </span>{" "}
+            that power every integration
+          </h2>
+          <p className="mt-4 text-lg text-[#1B1714]/60">
+            These aren't third-party plugins — they're built into Gotix and share the same client, staff, and billing data.
+          </p>
+        </div>
+      </div>
+    </Reveal>
+
+    {/* Modules Grid - Premium Cards */}
+    <div className="mt-16 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {NATIVE.map((mod, index) => {
+        const Icon = mod.icon;
+        return (
+          <Reveal key={mod.id} delay={index * 0.06}>
+            <motion.div
+              className="group relative rounded-2xl bg-white p-6 shadow-[0_4px_20px_rgba(27,23,20,0.04)] transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_60px_rgba(91,33,182,0.12)] ring-1 ring-[#1B1714]/5"
+              whileHover={{
+                borderColor: '#5B21B6',
+              }}
+            >
+              {/* Gradient Hover Overlay */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#5B21B6]/5 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              {/* Number Badge */}
+              <div className="absolute right-4 top-4 text-[10px] font-mono text-[#1B1714]/10">
+                {String(index + 1).padStart(2, '0')}
+              </div>
+
+              {/* Icon with 3D Effect */}
+              <motion.div
+                className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#5B21B6]/10 to-[#7C3AED]/5 text-[#5B21B6] transition-all duration-500 group-hover:scale-110 group-hover:bg-[#5B21B6] group-hover:text-white group-hover:shadow-lg group-hover:shadow-[#5B21B6]/20"
+                whileHover={{
+                  rotate: [0, -5, 5, -5, 0],
+                }}
+                transition={{ duration: 0.5 }}
+              >
+                <Icon className="h-5 w-5" strokeWidth={1.75} aria-hidden />
+              </motion.div>
+
+              {/* Content */}
+              <div className="relative mt-4">
+                <h3 className="text-sm font-semibold text-[#1B1714] transition-colors duration-300 group-hover:text-[#5B21B6]">
+                  {mod.title}
+                </h3>
+                
+                {/* Animated Underline */}
+                <motion.div
+                  className="mt-1.5 h-0.5 w-8 bg-[#5B21B6]/10 transition-all duration-500 group-hover:w-12 group-hover:bg-[#5B21B6]"
+                  initial={{ width: 32 }}
+                  whileHover={{ width: 48 }}
+                />
+
+                <p className="mt-3 text-xs leading-relaxed text-[#1B1714]/55">
+                  {mod.description}
+                </p>
+              </div>
+
+              {/* Bottom Decorative Line */}
+              <div className="absolute -bottom-px left-1/2 h-px w-1/3 -translate-x-1/2 bg-gradient-to-r from-transparent via-[#5B21B6]/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              {/* Corner Accents */}
+              <div className="absolute -right-px -top-px h-6 w-6 rounded-tr-2xl border-r-2 border-t-2 border-[#5B21B6]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute -bottom-px -left-px h-6 w-6 rounded-bl-2xl border-b-2 border-l-2 border-[#5B21B6]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+              {/* Floating Decorative Element */}
+              <motion.div
+                className="absolute -right-2 -top-2 h-6 w-6 rounded-full border border-[#5B21B6]/5 bg-[#5B21B6]/[0.02]"
+                whileHover={{
+                  scale: 1.2,
+                  rotate: 45,
+                }}
+                transition={{ duration: 0.3 }}
+              />
+            </motion.div>
+          </Reveal>
+        );
+      })}
+    </div>
+
+    {/* Bottom CTA Section */}
+    <Reveal delay={0.3}>
+      <motion.div
+        className="mt-16 overflow-hidden rounded-2xl bg-gradient-to-r from-[#5B21B6]/5 to-[#4F46E5]/5 p-8 text-center ring-1 ring-[#5B21B6]/10"
+        whileHover={{ scale: 1.01 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
+          <div>
+            <p className="text-sm font-medium text-[#1B1714]">
+              All modules work together seamlessly
+            </p>
+            <p className="text-sm text-[#1B1714]/40">
+              Built on a unified data platform
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <span className="h-px w-8 bg-[#5B21B6]/20" />
+            <Link
+              href="/modules"
+              className="group inline-flex items-center gap-2 rounded-full bg-[#5B21B6] px-8 py-3 text-sm font-medium text-white transition-all duration-300 hover:bg-[#4B1B96] hover:shadow-lg hover:shadow-[#5B21B6]/25"
+            >
+              Explore All Modules
+              <motion.span
+                animate={{ x: [0, 4, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <ArrowRight className="h-4 w-4" aria-hidden />
+              </motion.span>
+            </Link>
+            <span className="h-px w-8 bg-[#5B21B6]/20" />
           </div>
         </div>
-      </section>
+      </motion.div>
+    </Reveal>
+
+    {/* Bottom Decorative */}
+    <Reveal delay={0.35}>
+      <motion.div
+        className="mt-12 flex items-center justify-center gap-4"
+        whileHover={{ rotateX: 2 }}
+        style={{ transformStyle: 'preserve-3d' }}
+      >
+        <motion.span
+          className="h-px w-16 bg-gradient-to-r from-transparent to-[#5B21B6]/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+        <motion.div
+          className="flex gap-1"
+          animate={{
+            rotateY: [0, 180, 360],
+          }}
+          transition={{ duration: 6, repeat: Infinity, ease: "linear" }}
+        >
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+          <span className="h-2 w-2 rotate-45 border border-[#5B21B6]/15" />
+        </motion.div>
+        <motion.span
+          className="h-px w-16 bg-gradient-to-l from-transparent to-[#5B21B6]/10"
+          initial={{ width: 0 }}
+          animate={{ width: 64 }}
+          transition={{ duration: 0.8 }}
+        />
+      </motion.div>
+    </Reveal>
+  </div>
+</section>
 
       {/* Migration + API */}
-      <section className="landing-preview-band border-b border-[#E8E4DE] py-20 md:py-28">
+      {/* <section className="landing-preview-band border-b border-[#E8E4DE] py-20 md:py-28">
         <div className={CONTAINER}>
           <div className="grid gap-5 lg:grid-cols-2">
             <Reveal>
@@ -500,38 +1489,156 @@ export function IntegrationsPageContent() {
             </Reveal>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Bottom CTA */}
-      <section className="bg-white py-24 md:py-32">
-        <div className={cn(CONTAINER, "max-w-3xl text-center")}>
-          <Reveal>
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-[#1B1714]/40">
-              Precision ERP for salon workflows
-            </p>
-            <h2 className="landing-display mt-4 text-3xl font-medium tracking-tight text-[#1B1714] md:text-4xl lg:text-5xl">
-              Build once.
-              <br />
-              Connect everything.
-              <br />
-              <span className="italic text-[#5B21B6]">Run the floor.</span>
-            </h2>
-            <p className="mx-auto mt-5 max-w-lg text-base text-[#1B1714]/60">
-              Start a 14-day free trial — WhatsApp, payments, POS, and inventory
-              in one platform. No credit card required.
-            </p>
-            <div className="mt-10 flex flex-wrap justify-center gap-3">
-              <Link href="/login" className={primaryBtn}>
-                Start Free Trial
-                <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link href="/#pricing" className={outlineBtn}>
-                View Pricing
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <section className={cn(aboutSectionPadding, "relative overflow-hidden bg-white")}>
+  {/* Premium Background Design Elements */}
+  <div className="pointer-events-none absolute inset-0" aria-hidden>
+    {/* Gradient blobs */}
+    <div className="absolute -right-32 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-[#5B21B6]/[0.04] blur-3xl" />
+    <div className="absolute -left-32 bottom-0 h-[400px] w-[400px] rounded-full bg-[#4F46E5]/[0.03] blur-3xl" />
+    <div className="absolute left-1/2 top-0 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-[#5B21B6]/[0.02] blur-3xl" />
+    
+    {/* Geometric shapes */}
+    <div className="absolute left-[8%] top-[10%] h-16 w-16 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute right-[12%] top-[20%] h-12 w-12 rotate-45 border border-[#5B21B6]/5" />
+    <div className="absolute left-[5%] bottom-[25%] h-20 w-20 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute right-[8%] bottom-[15%] h-14 w-14 rotate-12 border border-[#5B21B6]/5" />
+    
+    {/* Floating diamonds */}
+    <div className="absolute left-[20%] top-[40%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute right-[25%] bottom-[35%] h-4 w-4 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute left-[45%] top-[15%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    <div className="absolute right-[40%] bottom-[20%] h-3 w-3 rotate-45 border border-[#5B21B6]/10" />
+    
+    {/* Dot pattern */}
+    <div className="absolute inset-0 opacity-[0.02]" style={{
+      backgroundImage: 'radial-gradient(circle, #5B21B6 1.5px, transparent 1.5px)',
+      backgroundSize: '30px 30px'
+    }} />
+    
+    {/* Diagonal line pattern */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <pattern id="diagonalLines" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+        <line x1="0" y1="40" x2="40" y2="0" stroke="#5B21B6" strokeWidth="0.5" />
+      </pattern>
+      <rect width="100%" height="100%" fill="url(#diagonalLines)" />
+    </svg>
+    
+    {/* Animated glowing lines */}
+    <svg className="absolute inset-0 h-full w-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="ctaLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#5B21B6" stopOpacity="0" />
+          <stop offset="50%" stopColor="#5B21B6" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="#5B21B6" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <line x1="15%" y1="15%" x2="85%" y2="15%" stroke="url(#ctaLineGrad)" strokeWidth="0.5" />
+      <line x1="15%" y1="85%" x2="85%" y2="85%" stroke="url(#ctaLineGrad)" strokeWidth="0.5" />
+      <line x1="20%" y1="30%" x2="80%" y2="30%" stroke="url(#ctaLineGrad)" strokeWidth="0.3" />
+      <line x1="20%" y1="70%" x2="80%" y2="70%" stroke="url(#ctaLineGrad)" strokeWidth="0.3" />
+    </svg>
+    
+    {/* Corner decorative elements */}
+    <div className="absolute left-8 top-8 h-12 w-12 border-l-2 border-t-2 border-[#5B21B6]/5" />
+    <div className="absolute right-8 top-8 h-12 w-12 border-r-2 border-t-2 border-[#5B21B6]/5" />
+    <div className="absolute bottom-8 left-8 h-12 w-12 border-b-2 border-l-2 border-[#5B21B6]/5" />
+    <div className="absolute bottom-8 right-8 h-12 w-12 border-b-2 border-r-2 border-[#5B21B6]/5" />
+    
+    {/* Concentric circles */}
+    <div className="absolute left-1/2 top-1/2 h-[600px] w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute left-1/2 top-1/2 h-[400px] w-[400px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+    <div className="absolute left-1/2 top-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#5B21B6]/5" />
+  </div>
+
+  <div className={cn(ABOUT_CONTAINER, "relative max-w-3xl text-center")}>
+    <Reveal>
+      {/* Decorative top line */}
+      <div className="mb-6 flex items-center justify-center gap-4">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/20" />
+        <span className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5B21B6]/50">Let's Talk</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/20" />
+      </div>
+
+      {/* Badge with stats */}
+      <div className="inline-flex items-center gap-2 rounded-full border border-[#5B21B6]/10 bg-[#5B21B6]/5 px-4 py-1.5">
+        <span className="relative flex h-2 w-2">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#5B21B6] opacity-75" />
+          <span className="relative inline-flex h-2 w-2 rounded-full bg-[#5B21B6]" />
+        </span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[#1B1714]/50">
+          {FOOTER_STATS[0].value!.toLocaleString("en-IN")}+ Salons Onboard
+        </span>
+      </div>
+
+      {/* Main heading */}
+      <h2 className="landing-display mt-6 text-3xl font-medium md:text-4xl lg:text-5xl">
+        Ready to Transform{" "}
+        <span className="relative inline-block">
+          <span className="relative z-10 italic text-[#5B21B6]">your Salon?</span>
+          <span className="absolute -bottom-1 left-0 h-2 w-full bg-[#5B21B6]/5" />
+        </span>
+      </h2>
+
+      {/* Description */}
+      <p className="mx-auto mt-4 max-w-lg text-base text-[#1B1714]/65">
+        Start a complimentary trial and discover how Gotix can bring
+        your entire floor onto one intelligent platform.
+      </p>
+
+      {/* Divider with decorative elements */}
+      <div className="my-8 flex items-center justify-center gap-4">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/10" />
+        <span className="text-[8px] text-[#5B21B6]/15">✦ ✦ ✦</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/10" />
+      </div>
+
+      {/* CTA Buttons */}
+      <div className="mt-10 flex flex-wrap justify-center gap-4">
+        <Link
+          href="/login"
+          className="group inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#5B21B6] to-[#7C3AED] px-8 py-3.5 text-sm font-medium text-white shadow-lg shadow-[#5B21B6]/20 transition-all duration-300 hover:shadow-xl hover:shadow-[#5B21B6]/30 hover:scale-105"
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
+        </Link>
+        <Link
+          href="/#pricing"
+          className="group inline-flex items-center gap-2 rounded-full border-2 border-[#E8E4DE] px-8 py-3.5 text-sm font-medium text-[#1B1714] transition-all duration-300 hover:border-[#5B21B6]/30 hover:bg-[#5B21B6]/5 hover:text-[#5B21B6]"
+        >
+          View Pricing
+          <svg className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+          </svg>
+        </Link>
+      </div>
+
+      {/* Trust indicators */}
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+        {[
+          { icon: "✨", text: "Free 14-Day Trial" },
+          { icon: "💳", text: "No Credit Card" },
+          { icon: "🔄", text: "Cancel Anytime" },
+        ].map((item, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <span className="text-sm">{item.icon}</span>
+            <span className="text-xs text-[#1B1714]/40">{item.text}</span>
+            {idx < 2 && <span className="h-3 w-px bg-[#1B1714]/10" />}
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom decorative line */}
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className="h-px w-12 bg-gradient-to-r from-transparent to-[#5B21B6]/10" />
+        <span className="text-[8px] text-[#1B1714]/10">◆</span>
+        <span className="h-px w-12 bg-gradient-to-l from-transparent to-[#5B21B6]/10" />
+      </div>
+    </Reveal>
+  </div>
+</section>
     </div>
   );
 }
