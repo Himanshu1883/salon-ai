@@ -67,8 +67,8 @@ export function DashboardHeader({
       : getRoleLabel(userRole).replace("Workspace owner", "Owner");
 
   return (
-    <header className="relative sticky top-0 z-30 overflow-hidden border-b border-dashboard-border font-[family-name:var(--font-inter)] shadow-[0_8px_30px_-18px_rgba(91,33,182,0.35)]">
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
+    <header className="relative sticky top-0 z-30 border-b border-dashboard-border font-[family-name:var(--font-inter)] shadow-[0_8px_30px_-18px_rgba(91,33,182,0.35)]">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
         <Image
           src="/git.png"
           alt=""

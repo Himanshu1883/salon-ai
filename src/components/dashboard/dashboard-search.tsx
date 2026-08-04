@@ -174,7 +174,8 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
         <Search className="h-4 w-4 shrink-0 text-dashboard-muted" />
         <input
           ref={inputRef}
-          type="search"
+          type="text"
+          role="combobox"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);
@@ -186,11 +187,12 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
           aria-label="Global search"
           aria-expanded={showDropdown}
           aria-controls="dashboard-search-results"
+          aria-autocomplete="list"
           aria-activedescendant={
             activeIndex >= 0 ? `dashboard-search-option-${activeIndex}` : undefined
           }
           autoComplete="off"
-          className="min-w-0 flex-1 bg-transparent text-sm text-dashboard-text outline-none placeholder:text-dashboard-muted"
+          className="min-w-0 flex-1 h-full border-0 bg-transparent p-0 text-sm leading-normal text-dashboard-text outline-none placeholder:text-dashboard-muted"
         />
         {loading ? (
           <Loader2 className="h-4 w-4 shrink-0 animate-spin text-dashboard-muted" />
