@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Menu, Plus, X } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
@@ -34,9 +34,38 @@ function DashboardShellInner({
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [sidebarReady, setSidebarReady] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const { openRecordSale } = useRecordSale();
+
+  useEffect(() => {
+    const stored = localStorage.getItem("dashboard-sidebar-collapsed");
+    if (stored !== null) {
+      setCollapsed(stored === "true");
+    } else if (
+      window.matchMedia("(min-width: 1024px) and (max-width: 1279px)").matches
+    ) {
+      setCollapsed(true);
+    }
+    setSidebarReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarReady) return;
+    localStorage.setItem("dashboard-sidebar-collapsed", String(collapsed));
+  }, [collapsed, sidebarReady]);
+
+  useEffect(() => {
+    if (!sidebarReady) return;
+    const mq = window.matchMedia("(max-width: 1023px)");
+    function onChange(e: MediaQueryListEvent | MediaQueryList) {
+      if (e.matches) setMobileOpen(false);
+    }
+    onChange(mq);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [sidebarReady]);
 
   const handleHeaderData = useCallback(
     (data: { alertCount: number; showUpgrade: boolean }) => {
@@ -64,7 +93,7 @@ function DashboardShellInner({
 
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 shrink-0 transition-transform duration-200 lg:relative lg:h-full lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 shrink-0 transition-[transform,width] duration-200 lg:relative lg:h-full lg:translate-x-0",
           collapsed ? "w-[72px]" : "w-[260px]",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
@@ -132,7 +161,7 @@ function DashboardShellInner({
         />
 
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">
-          <div className="mx-auto max-w-[1440px] p-4 pb-[calc(5rem+env(safe-area-inset-bottom))] sm:p-6 lg:p-8 lg:pb-8">
+          <div className="mx-auto w-full max-w-[1440px] p-[var(--page-gutter)] pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-[var(--page-gutter)]">
             {children}
           </div>
         </main>

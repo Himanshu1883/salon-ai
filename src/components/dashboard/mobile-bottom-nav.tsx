@@ -49,7 +49,7 @@ export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBot
       className="fixed inset-x-0 bottom-0 z-40 border-t border-dashboard-border bg-white/95 backdrop-blur-xl pb-safe lg:hidden"
       aria-label="Primary navigation"
     >
-      <div className="mx-auto flex h-16 max-w-lg items-stretch justify-around px-1">
+      <div className="mx-auto flex h-16 min-h-[var(--touch-target)] max-w-lg items-stretch justify-around px-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = item.match(pathname);
@@ -60,7 +60,7 @@ export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBot
               href={item.href}
               prefetch
               className={cn(
-                "flex min-w-[4.5rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition-colors",
+                "flex min-h-[var(--touch-target)] min-w-[4.5rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition-colors",
                 active
                   ? "text-dashboard-primary"
                   : "text-dashboard-muted hover:text-dashboard-text"
@@ -76,7 +76,7 @@ export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBot
         <button
           type="button"
           onClick={onOpenMenu}
-          className="flex min-w-[4.5rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-dashboard-muted transition-colors hover:text-dashboard-text"
+          className="flex min-h-[var(--touch-target)] min-w-[4.5rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 text-dashboard-muted transition-colors hover:text-dashboard-text"
           aria-label="Open menu"
         >
           <Menu className="h-5 w-5" />

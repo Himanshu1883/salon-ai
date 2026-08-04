@@ -15,6 +15,7 @@ import {
   CreditCard,
   Building2,
   Receipt,
+  MoreHorizontal,
 } from "lucide-react";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { signOut } from "next-auth/react";
@@ -85,7 +86,7 @@ export function DashboardHeader({
       <div className="relative z-10 px-4 py-4 sm:px-6 lg:px-8">
       <div className="grid grid-cols-1 items-center gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(280px,420px)_minmax(0,1fr)]">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight text-dashboard-text sm:text-2xl">
+          <h1 className="text-lg font-bold tracking-tight text-dashboard-text sm:text-xl xl:text-2xl">
             <span className="bg-gradient-to-r from-[#5B21B6] to-[#4F46E5] bg-clip-text text-transparent">
               {getGreeting()}, {firstName}
             </span>{" "}
@@ -124,18 +125,46 @@ export function DashboardHeader({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm"
+                className="h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm xl:hidden"
                 aria-label="Messages"
                 onClick={() => {}}
               >
                 <MessageSquare className="h-4 w-4 text-dashboard-muted" />
               </Button>
 
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm xl:hidden"
+                    aria-label="More actions"
+                  >
+                    <MoreHorizontal className="h-4 w-4 text-dashboard-muted" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-52 rounded-2xl">
+                  <DropdownMenuItem onClick={() => {}}>
+                    <Sun className="h-4 w-4" />
+                    Toggle theme
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {}}>
+                    <GitBranch className="h-4 w-4" />
+                    Switch branch
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => {}}>
+                    <MessageSquare className="h-4 w-4" />
+                    Messages
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Button
                 type="button"
                 variant="outline"
                 size="icon"
-                className="hidden h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm sm:inline-flex"
+                className="hidden h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm xl:inline-flex"
                 aria-label="Toggle theme"
                 onClick={() => {}}
               >
@@ -146,11 +175,22 @@ export function DashboardHeader({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="hidden h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm md:inline-flex"
+                className="hidden h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm xl:inline-flex"
                 aria-label="Switch branch"
                 onClick={() => {}}
               >
                 <GitBranch className="h-4 w-4 text-dashboard-muted" />
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="hidden h-10 w-10 shrink-0 rounded-2xl border-dashboard-border bg-white shadow-sm xl:inline-flex"
+                aria-label="Messages"
+                onClick={() => {}}
+              >
+                <MessageSquare className="h-4 w-4 text-dashboard-muted" />
               </Button>
 
               <div className="inline-flex h-10 overflow-hidden rounded-2xl shadow-sm">
