@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Receipt, X } from "lucide-react";
+import { ArrowLeft, Check, Receipt, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { v3 } from "./tokens";
 
@@ -12,15 +12,26 @@ const STEPS = [
 type ModalHeaderProps = {
   step: 1 | 2;
   onClose?: () => void;
+  onBack?: () => void;
 };
 
-export function ModalHeader({ step, onClose }: ModalHeaderProps) {
+export function ModalHeader({ step, onClose, onBack }: ModalHeaderProps) {
   const current = STEPS.find((s) => s.num === step);
 
   return (
     <header className={v3.header}>
       <div className="flex w-full items-center justify-between gap-2 sm:gap-4">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+          {step === 2 && onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-[#6B7280] transition-colors hover:bg-[#FAFBFF] hover:text-[#111827] md:hidden"
+              aria-label="Go back"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </button>
+          )}
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#7C3AED] shadow-[0_2px_8px_rgba(124,58,237,0.3)] sm:h-9 sm:w-9 sm:rounded-[12px]">
             <Receipt className="h-3.5 w-3.5 text-white sm:h-4 sm:w-4" strokeWidth={2} />
           </div>

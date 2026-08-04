@@ -85,9 +85,9 @@ export function ItemsSection({
         </div>
       </div>
 
-      {/* Tablet: horizontal scroll; Mobile: card stack (handled in ItemRow) */}
-      <div className="rounded-[12px] border border-[#ECECF5] bg-white md:overflow-x-auto lg:overflow-visible">
-        <div className="md:min-w-[680px] lg:min-w-0">
+      {/* Mobile: card stack; Tablet+: horizontal scroll table */}
+      <div className="overflow-hidden rounded-[12px] border border-[#ECECF5] bg-white md:overflow-x-auto lg:overflow-visible">
+        <div className="max-md:min-w-0 md:min-w-[680px] lg:min-w-0">
           {lineItems.map((item, i) => {
             const catalogValue = item.serviceId
               ? `SERVICE:${item.serviceId}`

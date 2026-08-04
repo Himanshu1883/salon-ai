@@ -146,29 +146,116 @@ export function SummaryPanel({
 type MobileSummaryBarProps = Omit<
   SummaryPanelProps,
   "hideProceed" | "compact"
->;
+> & {
+  onBack?: () => void;
+  onCancel?: () => void;
+  onSaveDraft?: () => void;
+  showSaveDraft?: boolean;
+};
 
-export function MobileSummaryBar(props: MobileSummaryBarProps) {
+export function MobileSummaryBar({
+  onBack,
+  onCancel,
+  onSaveDraft,
+  showSaveDraft = false,
+  ...props
+}: MobileSummaryBarProps) {
   const [expanded, setExpanded] = useState(false);
-  const { total, paymentStatus } = props;
+  const {
+    total,
+    paymentStatus,
+    step,
+    loading,
+    onProceed,
+    proceedLabel,
+    disableProceed,
+  } = props;
+
+  const label =
+    proceedLabel ??
+    (step === 1 ? "Proceed to Payment" : "Receive Payment & Complete");
+  const shortLabel = step === 1 ? "Continue" : "Complete";
 
   return (
-    <div className="shrink-0 border-t border-[#ECECF5] bg-white lg:hidden">
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="flex min-h-[48px] w-full items-center justify-between gap-3 px-3 py-2 sm:px-4"
-        aria-expanded={expanded}
-        aria-controls="mobile-invoice-summary"
-      >
-        <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
-          <span className="text-[12px] font-medium text-[#6B7280]">Total</span>
-          <span className="text-lg font-bold text-[#7C3AED]">
-            <AnimatedAmount value={total} />
-          </span>
+    <div className="shrink-0 border-t border-[#ECECF5] bg-white shadow-[0_-8px_24px_rgba(17,24,39,0.06)] lg:hidden">
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            id="mobile-invoice-summary"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden border-b border-[#ECECF5] bg-[#FAFBFF]"
+          >
+            <div className="px-3 py-3 sm:px-4">
+              <SummaryPanel {...props} hideProceed compact />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {step === 2 && (
+        <div className="flex items-center gap-2 border-b border-[#ECECF5]/80 px-3 py-2 sm:px-4">
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              disabled={loading}
+              className={cn(v3.ghostButton, "h-10 px-3 text-[12px]")}
+            >
+              Back
+            </button>
+          )}
+          {showSaveDraft && onSaveDraft && (
+            <button
+              type="button"
+              onClick={onSaveDraft}
+              disabled={loading}
+              className={cn(v3.outlineButton, "h-10 flex-1 px-3 text-[12px]")}
+            >
+              Save Draft
+            </button>
+          )}
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              disabled={loading}
+              className={cn(v3.ghostButton, "ml-auto h-10 px-3 text-[12px]")}
+            >
+              Cancel
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 px-3 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))] sm:px-4">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex min-h-[48px] min-w-0 flex-1 items-center gap-2 rounded-[12px] px-2 text-left transition-colors hover:bg-[#FAFBFF]"
+          aria-expanded={expanded}
+          aria-controls="mobile-invoice-summary"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] font-medium uppercase tracking-wide text-[#6B7280]">
+                Total
+              </span>
+              {expanded ? (
+                <ChevronUp className="h-3.5 w-3.5 text-[#6B7280]" />
+              ) : (
+                <ChevronDown className="h-3.5 w-3.5 text-[#6B7280]" />
+              )}
+            </div>
+            <span className="text-xl font-bold text-[#7C3AED]">
+              <AnimatedAmount value={total} />
+            </span>
+          </div>
           <span
             className={cn(
-              "truncate rounded-full px-2 py-0.5 text-[10px] font-medium",
+              "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium",
               paymentStatus === "Paid"
                 ? "bg-green-50 text-[#22C55E]"
                 : paymentStatus === "Draft"
@@ -178,30 +265,29 @@ export function MobileSummaryBar(props: MobileSummaryBarProps) {
           >
             {paymentStatus}
           </span>
-        </div>
-        {expanded ? (
-          <ChevronUp className="h-4 w-4 shrink-0 text-[#6B7280]" />
-        ) : (
-          <ChevronDown className="h-4 w-4 shrink-0 text-[#6B7280]" />
-        )}
-      </button>
+        </button>
 
-      <AnimatePresence initial={false}>
-        {expanded && (
-          <motion.div
-            id="mobile-invoice-summary"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-[#ECECF5] bg-[#FAFBFF]"
-          >
-            <div className="px-3 py-3 sm:px-4">
-              <SummaryPanel {...props} hideProceed compact />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <motion.button
+          type="button"
+          whileTap={{ scale: 0.98 }}
+          disabled={loading || disableProceed}
+          onClick={onProceed}
+          className={cn(
+            v3.primaryButton,
+            "h-12 min-w-[7.5rem] shrink-0 px-4 text-[14px] sm:min-w-[9rem]"
+          )}
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <>
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="hidden max-w-[9rem] truncate sm:inline">{label}</span>
+              <ArrowRight className="h-4 w-4" />
+            </>
+          )}
+        </motion.button>
+      </div>
     </div>
   );
 }

@@ -12,22 +12,22 @@ export const v3 = {
     secondary: "#6B7280",
   },
   modal: cn(
-    // Mobile: near full-screen
-    "fixed inset-0 z-50 flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none",
+    // Mobile: edge-to-edge full-screen takeover
+    "fixed inset-0 z-50 flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none",
     "border-0 p-0",
     // Tablet+: centered dialog
-    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[min(88dvh,900px)] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
+    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[min(88dvh,900px)] sm:max-h-[min(88dvh,900px)] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
     // Laptop
-    "lg:h-[min(85vh,860px)] lg:max-w-[1200px]",
+    "lg:h-[min(85dvh,860px)] lg:max-h-[min(85dvh,860px)] lg:max-w-[1200px]",
     // Large laptop / small desktop
-    "xl:h-[min(88vh,900px)] xl:max-w-[1400px]",
+    "xl:h-[min(88dvh,900px)] xl:max-h-[min(88dvh,900px)] xl:max-w-[1400px]",
     // Desktop
     "2xl:max-w-[1700px]",
     "bg-white",
     "shadow-[0_20px_60px_-12px_rgba(124,58,237,0.16),0_6px_24px_rgba(17,24,39,0.06)]"
   ),
   header: cn(
-    "sticky top-0 z-20 flex shrink-0 items-center border-b border-[#ECECF5] bg-white/95 backdrop-blur-md",
+    "sticky top-0 z-20 flex shrink-0 items-center border-b border-[#ECECF5] bg-white/95 backdrop-blur-md pt-safe",
     "h-14 px-3 sm:h-16 sm:px-4 lg:h-[68px] lg:px-5"
   ),
   footer: cn(
@@ -41,18 +41,18 @@ export const v3 = {
   sectionDivider: "mb-3 border-b border-[#ECECF5] sm:mb-4",
   label: "mb-1 block text-[11px] font-medium text-[#6B7280]",
   input: cn(
-    "h-10 rounded-[14px] border border-[#ECECF5] bg-white text-[13px] text-[#111827] sm:h-9",
+    "h-12 rounded-[14px] border border-[#ECECF5] bg-white text-base text-[#111827] sm:h-10 sm:text-[13px] md:h-9",
     "transition-all duration-200 placeholder:text-[#6B7280]/50",
     "focus-visible:border-[#7C3AED]/40 focus-visible:shadow-[0_0_0_2px_rgba(124,58,237,0.1)]",
     "focus-visible:outline-none"
   ),
   selectTrigger: cn(
-    "h-10 rounded-[14px] border border-[#ECECF5] bg-white text-[13px] sm:h-9",
+    "h-12 rounded-[14px] border border-[#ECECF5] bg-white text-base sm:h-10 sm:text-[13px] md:h-9",
     "transition-all duration-200",
     "focus:border-[#7C3AED]/40 focus:ring-2 focus:ring-[#7C3AED]/10"
   ),
   textarea: cn(
-    "min-h-[72px] resize-none rounded-[14px] border border-[#ECECF5] bg-white px-3 py-2 text-[13px]",
+    "min-h-[88px] resize-none rounded-[14px] border border-[#ECECF5] bg-white px-3 py-2.5 text-base sm:min-h-[72px] sm:py-2 sm:text-[13px]",
     "transition-all duration-200 placeholder:text-[#6B7280]/50",
     "focus-visible:border-[#7C3AED]/40 focus-visible:shadow-[0_0_0_2px_rgba(124,58,237,0.1)]",
     "focus-visible:outline-none"
@@ -100,7 +100,7 @@ export const v3 = {
     "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
   ),
   itemCard: cn(
-    "space-y-2.5 border-b border-[#ECECF5]/80 p-3 md:hidden",
+    "space-y-3 border-b border-[#ECECF5]/80 p-3.5 md:hidden",
     "transition-colors duration-200"
   ),
   summaryPanel: "sticky top-0 flex flex-col",

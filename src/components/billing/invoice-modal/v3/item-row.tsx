@@ -69,7 +69,7 @@ function DiscountField({
         aria-label="Discount"
         value={item.discount || ""}
         onChange={(e) => onUpdate({ discount: Number(e.target.value) || 0 })}
-        className={cn(v3.input, "h-10 min-w-0 flex-1 px-2 tabular-nums sm:h-9")}
+        className={cn(v3.input, "h-12 min-w-0 flex-1 px-2 tabular-nums sm:h-10 md:h-9")}
       />
     </div>
   );
@@ -87,7 +87,7 @@ function GstSelect({
       value={String(item.taxRate)}
       onValueChange={(v) => onUpdate({ taxRate: Number(v) })}
     >
-      <SelectTrigger className={cn(v3.selectTrigger, "h-10 px-2 sm:h-9")}>
+      <SelectTrigger className={cn(v3.selectTrigger, "h-12 px-2 sm:h-10 md:h-9")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent className="rounded-[12px]">
@@ -128,7 +128,7 @@ export function ItemRow({
         className={cn(v3.itemCard, error && "bg-red-50/30")}
       >
         <div className="flex items-start gap-2">
-          <div className="min-w-0 flex-1 [&_input]:h-10 [&_input]:rounded-[12px] [&_input]:text-[13px] [&_label]:hidden [&_.space-y-1\\.5]:space-y-0 sm:[&_input]:h-9">
+          <div className="min-w-0 flex-1 [&_input]:h-12 [&_input]:rounded-[12px] [&_input]:text-base [&_label]:hidden [&_.space-y-1\\.5]:space-y-0 sm:[&_input]:h-10 sm:[&_input]:text-[13px]">
             <ItemSelector
               value={catalogValue}
               options={catalogOptions}
@@ -161,7 +161,7 @@ export function ItemRow({
               onChange={(e) =>
                 onUpdate({ quantity: Math.max(1, Number(e.target.value) || 1) })
               }
-              className={cn(v3.input, "h-10 px-2 text-center tabular-nums sm:h-9")}
+              className={cn(v3.input, "h-12 px-2 text-center tabular-nums sm:h-10 md:h-9")}
             />
           </div>
           <div>
@@ -178,7 +178,7 @@ export function ItemRow({
                 onChange={(e) =>
                   onUpdate({ unitPrice: Number(e.target.value) || 0 })
                 }
-                className={cn(v3.input, "h-10 pl-5 pr-1 tabular-nums sm:h-9")}
+                className={cn(v3.input, "h-12 pl-5 pr-1 tabular-nums sm:h-10 md:h-9")}
               />
             </div>
           </div>

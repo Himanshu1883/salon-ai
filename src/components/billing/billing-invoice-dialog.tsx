@@ -46,9 +46,11 @@ export function BillingInvoiceDialog({
       <DialogContent
         className={cn(
           v3.modal,
+          "!flex !gap-0 !p-0",
           "[&>button]:hidden",
-          "!max-w-none sm:!translate-x-[-50%] sm:!translate-y-[-50%]"
+          "sm:!translate-x-[-50%] sm:!translate-y-[-50%]"
         )}
+        onOpenAutoFocus={(event) => event.preventDefault()}
       >
         <BillingInvoiceForm
           services={services}

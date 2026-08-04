@@ -619,10 +619,14 @@ export function BillingInvoiceForm({
   return (
     <>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#FAFBFF]">
-        <ModalHeader step={currentStep} onClose={onCancel} />
+        <ModalHeader
+          step={currentStep}
+          onClose={onCancel}
+          onBack={step === 2 ? () => setStep(1) : undefined}
+        />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-4 lg:px-5 lg:py-4 lg:pb-4">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.div
@@ -754,22 +758,28 @@ export function BillingInvoiceForm({
           proceedLabel={
             step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
           }
-        />
-
-        <ModalFooter
-          step={currentStep}
-          loading={loading}
+          onBack={step === 2 ? () => setStep(1) : undefined}
           onCancel={() => onCancel?.()}
-          onContinue={
-            step === 1
-              ? () => void handleCreateInvoice()
-              : () => void handleReceivePayment()
-          }
-          onBack={() => setStep(1)}
           onSaveDraft={step === 2 ? () => void handleSaveDraft() : undefined}
-          disableContinue={step === 2 && selectedPayment === "pay_later"}
           showSaveDraft={step === 2}
         />
+
+        <div className="hidden lg:block">
+          <ModalFooter
+            step={currentStep}
+            loading={loading}
+            onCancel={() => onCancel?.()}
+            onContinue={
+              step === 1
+                ? () => void handleCreateInvoice()
+                : () => void handleReceivePayment()
+            }
+            onBack={() => setStep(1)}
+            onSaveDraft={step === 2 ? () => void handleSaveDraft() : undefined}
+            disableContinue={step === 2 && selectedPayment === "pay_later"}
+            showSaveDraft={step === 2}
+          />
+        </div>
       </div>
 
       {successContext && (

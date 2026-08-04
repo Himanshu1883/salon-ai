@@ -133,7 +133,7 @@ export function PaymentSelector({
       <SectionHeader id="payment-section" className="mb-5">
         Choose payment method
       </SectionHeader>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
         {PAYMENT_OPTIONS.map((option) => {
           const Icon = option.icon;
           const isSelected = selected === option.id;
@@ -141,11 +141,10 @@ export function PaymentSelector({
             <motion.button
               key={option.id}
               type="button"
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(option.id)}
               className={cn(
-                "relative flex flex-col items-center gap-3 rounded-2xl border bg-white p-4 text-center transition-all",
+                "relative flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-2xl border bg-white p-3 text-center transition-all sm:min-h-0 sm:gap-3 sm:p-4",
                 "shadow-sm shadow-violet-950/[0.02]",
                 isSelected
                   ? "border-violet-400 shadow-md shadow-violet-500/10 ring-2 ring-violet-500/20"
@@ -154,7 +153,7 @@ export function PaymentSelector({
             >
               <span
                 className={cn(
-                  "absolute right-3 top-3 flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors",
+                  "absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors sm:right-3 sm:top-3",
                   isSelected
                     ? "border-violet-600 bg-violet-600"
                     : "border-violet-200 bg-white"
@@ -166,13 +165,13 @@ export function PaymentSelector({
               </span>
               <div
                 className={cn(
-                  "flex h-12 w-12 items-center justify-center rounded-2xl",
+                  "flex h-11 w-11 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
                   option.iconClassName
                 )}
               >
-                <Icon className="h-6 w-6" />
+                <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
               </div>
-              <span className="text-sm font-medium text-dashboard-text">
+              <span className="text-[13px] font-medium leading-tight text-dashboard-text sm:text-sm">
                 {option.label}
               </span>
             </motion.button>

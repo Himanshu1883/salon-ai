@@ -165,7 +165,7 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
     <div ref={containerRef} className={cn("relative w-full", className)}>
       <div
         className={cn(
-          "flex h-11 w-full items-center gap-2 rounded-2xl border bg-dashboard-bg px-3 transition-colors sm:gap-3 sm:px-4",
+          "flex h-12 w-full items-center gap-2 rounded-2xl border bg-dashboard-bg px-3 transition-colors sm:h-11 sm:gap-3 sm:px-4",
           open
             ? "border-violet-300 bg-white shadow-sm ring-2 ring-violet-100"
             : "border-dashboard-border hover:border-violet-200 hover:bg-white"
@@ -207,7 +207,7 @@ export function DashboardSearch({ className }: DashboardSearchProps) {
         <div
           id="dashboard-search-results"
           role="listbox"
-          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-2xl border border-dashboard-border bg-white shadow-xl"
+          className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-[min(24rem,60dvh)] overflow-hidden rounded-2xl border border-dashboard-border bg-white shadow-xl"
         >
           {loading && flatResults.length === 0 ? (
             <div className="flex items-center gap-2 px-4 py-3 text-sm text-dashboard-muted">

@@ -102,8 +102,8 @@ export function CustomerSection({
         👤 Customer
       </h3>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-12">
-        <div className="md:col-span-5 [&_label]:hidden [&_input]:h-10 [&_input]:rounded-[14px] [&_input]:text-[13px] sm:[&_input]:h-9">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+        <div className="md:col-span-5 [&_label]:hidden [&_input]:h-12 [&_input]:rounded-[14px] [&_input]:text-base sm:[&_input]:h-10 sm:[&_input]:text-[13px]">
           <CompactField label="Customer" required>
             <CustomerSearch
               value={customer}
@@ -114,7 +114,7 @@ export function CustomerSection({
           </CompactField>
         </div>
 
-        <div className="md:col-span-3 [&_label]:hidden [&_input]:h-10 [&_input]:rounded-[14px] [&_input]:text-[13px] sm:[&_input]:h-9">
+        <div className="md:col-span-3 [&_label]:hidden [&_input]:h-12 [&_input]:rounded-[14px] [&_input]:text-base sm:[&_input]:h-10 sm:[&_input]:text-[13px]">
           <CompactField label="Phone" required>
             <PhoneSearch value={customer} onChange={onChange} />
           </CompactField>
@@ -155,7 +155,7 @@ export function CustomerSection({
             onClick={startNewCustomer}
             className={cn(
               v3.outlineButton,
-              "h-10 w-full whitespace-nowrap px-2 text-[11px] text-[#7C3AED] sm:h-9"
+              "h-12 w-full whitespace-nowrap px-2 text-[11px] text-[#7C3AED] sm:h-10 md:h-9"
             )}
             title="New customer"
           >
@@ -169,7 +169,7 @@ export function CustomerSection({
         <p className="mt-1 text-[11px] text-red-500 md:hidden">{error}</p>
       )}
 
-      <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <CompactField label="Email">
           <div className="relative">
             <Mail className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6B7280]" />

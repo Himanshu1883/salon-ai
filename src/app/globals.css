@@ -239,6 +239,30 @@ body {
   font-family: var(--font-geist-sans), system-ui, sans-serif;
 }
 
+/* Safe-area helpers for notched phones and home indicators */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pl-safe {
+  padding-left: env(safe-area-inset-left, 0px);
+}
+
+.pr-safe {
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Lock page scroll when full-screen mobile overlays are open */
+body[data-scroll-locked="true"] {
+  overflow: hidden;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
 .salon-login-brand-curve {
   border-top-right-radius: 999px;
   border-bottom-right-radius: 999px;
