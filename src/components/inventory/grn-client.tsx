@@ -32,6 +32,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 
 type GRN = Awaited<
   ReturnType<typeof import("@/actions/inventory/grn").getGoodsReceipts>
@@ -174,32 +179,55 @@ export function GrnClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>GRN #</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>PO</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Items</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {receipts.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="text-center text-stone-500">No GRNs yet.</TableCell></TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              receipts.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No GRNs yet.</p>
               ) : (
-                receipts.map((g) => (
-                  <TableRow key={g.id}>
-                    <TableCell className="font-medium">{g.grnNumber}</TableCell>
-                    <TableCell>{format(new Date(g.receivedDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{g.purchaseOrder?.orderNumber ?? "—"}</TableCell>
-                    <TableCell>{g.supplier?.name ?? "—"}</TableCell>
-                    <TableCell>{g.lineItems.length}</TableCell>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {receipts.map((g) => (
+                    <InventoryMobileCard key={g.id}>
+                      <p className="font-semibold text-[#1C103D]">{g.grnNumber}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Date">{format(new Date(g.receivedDate), "MMM d, yyyy")}</InventoryMobileField>
+                        <InventoryMobileField label="Items">{g.lineItems.length}</InventoryMobileField>
+                        <InventoryMobileField label="PO">{g.purchaseOrder?.orderNumber ?? "—"}</InventoryMobileField>
+                        <InventoryMobileField label="Vendor">{g.supplier?.name ?? "—"}</InventoryMobileField>
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>GRN #</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>PO</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Items</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {receipts.length === 0 ? (
+                    <TableRow><TableCell colSpan={5} className="text-center text-stone-500">No GRNs yet.</TableCell></TableRow>
+                  ) : (
+                    receipts.map((g) => (
+                      <TableRow key={g.id}>
+                        <TableCell className="font-medium">{g.grnNumber}</TableCell>
+                        <TableCell>{format(new Date(g.receivedDate), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{g.purchaseOrder?.orderNumber ?? "—"}</TableCell>
+                        <TableCell>{g.supplier?.name ?? "—"}</TableCell>
+                        <TableCell>{g.lineItems.length}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>

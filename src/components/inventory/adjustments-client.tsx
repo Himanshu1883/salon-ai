@@ -34,6 +34,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 import { ADJUSTMENT_REASONS } from "@/lib/inventory/constants";
 
 type Adjustment = Awaited<
@@ -134,34 +139,64 @@ export function AdjustmentsClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Reason</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {adjustments.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-stone-500">No adjustments yet.</TableCell></TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              adjustments.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No adjustments yet.</p>
               ) : (
-                adjustments.map((a) => (
-                  <TableRow key={a.id}>
-                    <TableCell>{format(new Date(a.createdAt), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{a.stockItem.name}</TableCell>
-                    <TableCell className="capitalize">{a.adjustmentType}</TableCell>
-                    <TableCell>{a.quantity}</TableCell>
-                    <TableCell className="capitalize">{a.reason.replace(/_/g, " ")}</TableCell>
-                    <TableCell><Badge variant="secondary" className="rounded-lg capitalize">{a.status}</Badge></TableCell>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {adjustments.map((a) => (
+                    <InventoryMobileCard key={a.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-[#1C103D]">{a.stockItem.name}</p>
+                        <Badge variant="secondary" className="capitalize rounded-lg">{a.status}</Badge>
+                      </div>
+                      <p className="text-xs text-stone-500">{format(new Date(a.createdAt), "MMM d, yyyy")}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Type">
+                          <span className="capitalize">{a.adjustmentType}</span>
+                        </InventoryMobileField>
+                        <InventoryMobileField label="Qty">{a.quantity}</InventoryMobileField>
+                        <InventoryMobileField label="Reason" className="col-span-2">
+                          <span className="capitalize">{a.reason.replace(/_/g, " ")}</span>
+                        </InventoryMobileField>
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Type</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Reason</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {adjustments.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-stone-500">No adjustments yet.</TableCell></TableRow>
+                  ) : (
+                    adjustments.map((a) => (
+                      <TableRow key={a.id}>
+                        <TableCell>{format(new Date(a.createdAt), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{a.stockItem.name}</TableCell>
+                        <TableCell className="capitalize">{a.adjustmentType}</TableCell>
+                        <TableCell>{a.quantity}</TableCell>
+                        <TableCell className="capitalize">{a.reason.replace(/_/g, " ")}</TableCell>
+                        <TableCell><Badge variant="secondary" className="rounded-lg capitalize">{a.status}</Badge></TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>

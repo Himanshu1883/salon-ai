@@ -23,6 +23,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryIconButton,
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 
 type CrudActions = {
   create: (formData: FormData) => Promise<{ error?: string; success?: boolean }>;
@@ -125,45 +131,87 @@ export function SimpleCrudClient<T extends { id: string; name: string }>({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                {detailKey && <TableHead>{detailHeader}</TableHead>}
-                {canWrite && <TableHead className="w-24" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={3} className="text-center text-stone-500">
-                    No items yet.
-                  </TableCell>
-                </TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              items.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No items yet.</p>
               ) : (
-                items.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell className="font-medium">{item.name}</TableCell>
-                    {detailKey && (
-                      <TableCell>{String(item[detailKey] ?? "")}</TableCell>
-                    )}
-                    {canWrite && (
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditItem(item)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600" onClick={() => handleDelete(item.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {items.map((item) => (
+                    <InventoryMobileCard key={item.id}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <p className="font-semibold text-[#1C103D]">{item.name}</p>
+                          {detailKey && (
+                            <InventoryMobileField label={detailHeader}>
+                              {String(item[detailKey] ?? "—")}
+                            </InventoryMobileField>
+                          )}
                         </div>
-                      </TableCell>
-                    )}
+                        {canWrite && (
+                          <div className="flex shrink-0 gap-1">
+                            <InventoryIconButton onClick={() => setEditItem(item)}>
+                              <Pencil className="h-4 w-4" />
+                            </InventoryIconButton>
+                            <InventoryIconButton
+                              className="text-red-600"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </InventoryIconButton>
+                          </div>
+                        )}
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    {detailKey && <TableHead>{detailHeader}</TableHead>}
+                    {canWrite && <TableHead className="w-24" />}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {items.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-center text-stone-500">
+                        No items yet.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    items.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.name}</TableCell>
+                        {detailKey && (
+                          <TableCell>{String(item[detailKey] ?? "")}</TableCell>
+                        )}
+                        {canWrite && (
+                          <TableCell>
+                            <div className="flex gap-1">
+                              <InventoryIconButton onClick={() => setEditItem(item)}>
+                                <Pencil className="h-4 w-4" />
+                              </InventoryIconButton>
+                              <InventoryIconButton
+                                className="text-red-600"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </InventoryIconButton>
+                            </div>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
 

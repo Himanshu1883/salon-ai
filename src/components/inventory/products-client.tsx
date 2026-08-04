@@ -38,6 +38,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import { InventoryFilterBar } from "@/components/inventory/inventory-filter-bar";
+import {
+  InventoryIconButton,
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 import { STOCK_UNITS } from "@/lib/validations";
 import { getStockStatusLabel, type StockStatus } from "@/lib/stock";
 import { format } from "date-fns";
@@ -300,106 +307,174 @@ export function ProductsClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <div className="mb-4 flex flex-wrap gap-3">
-            <div className="relative min-w-[200px] flex-1">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="relative min-w-0 flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
               <Input
                 placeholder="Search name, SKU, barcode..."
-                className="rounded-xl pl-9"
+                className="h-11 rounded-xl pl-9"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px] rounded-xl">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All categories</SelectItem>
-                {categories.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <InventoryFilterBar
+              triggerLabel="Filter products"
+              mobileChildren={
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-11 w-full rounded-xl">
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All categories</SelectItem>
+                    {categories.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              }
+            >
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-9 w-[180px] rounded-xl">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </InventoryFilterBar>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Product</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>On hand</TableHead>
-                  <TableHead>Cost / Retail</TableHead>
-                  <TableHead>Status</TableHead>
-                  {canWrite && <TableHead className="w-24" />}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center text-stone-500">
-                      No products found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filtered.map((p) => (
-                    <TableRow key={p.id}>
-                      <TableCell>
-                        <Link
-                          href={`/inventory/stock/${p.id}`}
-                          className="font-medium text-[#6C3BFF] hover:underline"
-                        >
-                          {p.name}
-                        </Link>
-                        <p className="text-xs text-stone-500">
-                          {[p.sku, p.barcode].filter(Boolean).join(" · ") || "—"}
-                        </p>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="capitalize rounded-lg">
-                          {p.category}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {p.quantityOnHand} {p.unit}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        ₹{p.costPrice} / ₹{p.retailPrice}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusVariant(p.statusStock)} className="rounded-lg">
-                          {getStockStatusLabel(p.statusStock)}
-                        </Badge>
-                      </TableCell>
-                      {canWrite && (
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-lg"
-                              onClick={() => setEditProduct(p)}
-                            >
+          <ResponsiveTableWrapper
+            cards={
+              filtered.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No products found.</p>
+              ) : (
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {filtered.map((p) => (
+                    <InventoryMobileCard key={p.id}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <Link
+                            href={`/inventory/stock/${p.id}`}
+                            className="block font-semibold text-[#6C3BFF] hover:underline"
+                          >
+                            {p.name}
+                          </Link>
+                          <p className="text-xs text-stone-500">
+                            {[p.sku, p.barcode].filter(Boolean).join(" · ") || "—"}
+                          </p>
+                          <div className="grid grid-cols-2 gap-2">
+                            <InventoryMobileField label="On hand">
+                              {p.quantityOnHand} {p.unit}
+                            </InventoryMobileField>
+                            <InventoryMobileField label="Cost / Retail">
+                              ₹{p.costPrice} / ₹{p.retailPrice}
+                            </InventoryMobileField>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            <Badge variant="secondary" className="capitalize rounded-lg">
+                              {p.category}
+                            </Badge>
+                            <Badge variant={statusVariant(p.statusStock)} className="rounded-lg">
+                              {getStockStatusLabel(p.statusStock)}
+                            </Badge>
+                          </div>
+                        </div>
+                        {canWrite && (
+                          <div className="flex shrink-0 gap-1">
+                            <InventoryIconButton onClick={() => setEditProduct(p)}>
                               <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 rounded-lg text-red-600"
+                            </InventoryIconButton>
+                            <InventoryIconButton
+                              className="text-red-600"
                               onClick={() => handleDelete(p.id)}
                             >
                               <Trash2 className="h-4 w-4" />
-                            </Button>
+                            </InventoryIconButton>
                           </div>
-                        </TableCell>
-                      )}
+                        )}
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <div className="overflow-x-auto rounded-xl border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>On hand</TableHead>
+                      <TableHead>Cost / Retail</TableHead>
+                      <TableHead>Status</TableHead>
+                      {canWrite && <TableHead className="w-24" />}
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-stone-500">
+                          No products found.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filtered.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell>
+                            <Link
+                              href={`/inventory/stock/${p.id}`}
+                              className="font-medium text-[#6C3BFF] hover:underline"
+                            >
+                              {p.name}
+                            </Link>
+                            <p className="text-xs text-stone-500">
+                              {[p.sku, p.barcode].filter(Boolean).join(" · ") || "—"}
+                            </p>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="capitalize rounded-lg">
+                              {p.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {p.quantityOnHand} {p.unit}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            ₹{p.costPrice} / ₹{p.retailPrice}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusVariant(p.statusStock)} className="rounded-lg">
+                              {getStockStatusLabel(p.statusStock)}
+                            </Badge>
+                          </TableCell>
+                          {canWrite && (
+                            <TableCell>
+                              <div className="flex gap-1">
+                                <InventoryIconButton onClick={() => setEditProduct(p)}>
+                                  <Pencil className="h-4 w-4" />
+                                </InventoryIconButton>
+                                <InventoryIconButton
+                                  className="text-red-600"
+                                  onClick={() => handleDelete(p.id)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </InventoryIconButton>
+                              </div>
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            }
+          />
         </CardContent>
       </Card>
 

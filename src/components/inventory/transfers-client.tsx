@@ -36,6 +36,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 
 type Transfer = Awaited<
   ReturnType<typeof import("@/actions/inventory/transfers").getTransfers>
@@ -144,40 +149,72 @@ export function TransfersClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Transfer #</TableHead>
-                <TableHead>From → To</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Status</TableHead>
-                {canWrite && <TableHead />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transfers.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="text-center text-stone-500">No transfers yet.</TableCell></TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              transfers.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No transfers yet.</p>
               ) : (
-                transfers.map((t) => (
-                  <TableRow key={t.id}>
-                    <TableCell className="font-medium">{t.transferNumber}</TableCell>
-                    <TableCell>{t.fromBranch.name} → {t.toBranch.name}</TableCell>
-                    <TableCell>{format(new Date(t.transferDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{t.lineItems.length}</TableCell>
-                    <TableCell><Badge variant="secondary" className="capitalize rounded-lg">{t.status.replace(/_/g, " ")}</Badge></TableCell>
-                    {canWrite && t.status === "in_transit" && (
-                      <TableCell>
-                        <Button size="sm" variant="outline" className="rounded-lg" onClick={async () => { await receiveTransfer(t.id); router.refresh(); }}>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {transfers.map((t) => (
+                    <InventoryMobileCard key={t.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-[#1C103D]">{t.transferNumber}</p>
+                        <Badge variant="secondary" className="capitalize rounded-lg">{t.status.replace(/_/g, " ")}</Badge>
+                      </div>
+                      <InventoryMobileField label="Route">
+                        {t.fromBranch.name} → {t.toBranch.name}
+                      </InventoryMobileField>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Date">{format(new Date(t.transferDate), "MMM d, yyyy")}</InventoryMobileField>
+                        <InventoryMobileField label="Items">{t.lineItems.length}</InventoryMobileField>
+                      </div>
+                      {canWrite && t.status === "in_transit" && (
+                        <Button size="sm" variant="outline" className="h-11 min-h-[48px] w-full rounded-lg" onClick={async () => { await receiveTransfer(t.id); router.refresh(); }}>
                           Receive
                         </Button>
-                      </TableCell>
-                    )}
+                      )}
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Transfer #</TableHead>
+                    <TableHead>From → To</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canWrite && <TableHead />}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {transfers.length === 0 ? (
+                    <TableRow><TableCell colSpan={6} className="text-center text-stone-500">No transfers yet.</TableCell></TableRow>
+                  ) : (
+                    transfers.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-medium">{t.transferNumber}</TableCell>
+                        <TableCell>{t.fromBranch.name} → {t.toBranch.name}</TableCell>
+                        <TableCell>{format(new Date(t.transferDate), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{t.lineItems.length}</TableCell>
+                        <TableCell><Badge variant="secondary" className="capitalize rounded-lg">{t.status.replace(/_/g, " ")}</Badge></TableCell>
+                        {canWrite && t.status === "in_transit" && (
+                          <TableCell>
+                            <Button size="sm" variant="outline" className="rounded-lg" onClick={async () => { await receiveTransfer(t.id); router.refresh(); }}>
+                              Receive
+                            </Button>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>

@@ -33,6 +33,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 
 type PO = Awaited<
   ReturnType<typeof import("@/actions/inventory/purchase-orders").getPurchaseOrders>
@@ -201,38 +206,65 @@ export function PurchaseOrdersClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>PO #</TableHead>
-                <TableHead>Vendor</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Items</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orders.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-stone-500">No purchase orders yet.</TableCell>
-                </TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              orders.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No purchase orders yet.</p>
               ) : (
-                orders.map((po) => (
-                  <TableRow key={po.id}>
-                    <TableCell className="font-medium">{po.orderNumber}</TableCell>
-                    <TableCell>{po.supplier?.name ?? "—"}</TableCell>
-                    <TableCell>{format(new Date(po.orderDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{po.lines.length} items</TableCell>
-                    <TableCell>
-                      <Badge variant={(statusColor[po.status] as "secondary") ?? "secondary"} className="capitalize rounded-lg">
-                        {po.status}
-                      </Badge>
-                    </TableCell>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {orders.map((po) => (
+                    <InventoryMobileCard key={po.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-semibold text-[#1C103D]">{po.orderNumber}</p>
+                        <Badge variant={(statusColor[po.status] as "secondary") ?? "secondary"} className="capitalize rounded-lg">
+                          {po.status}
+                        </Badge>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Vendor">{po.supplier?.name ?? "—"}</InventoryMobileField>
+                        <InventoryMobileField label="Date">{format(new Date(po.orderDate), "MMM d, yyyy")}</InventoryMobileField>
+                        <InventoryMobileField label="Items">{po.lines.length} items</InventoryMobileField>
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>PO #</TableHead>
+                    <TableHead>Vendor</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Items</TableHead>
+                    <TableHead>Status</TableHead>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {orders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-stone-500">No purchase orders yet.</TableCell>
+                    </TableRow>
+                  ) : (
+                    orders.map((po) => (
+                      <TableRow key={po.id}>
+                        <TableCell className="font-medium">{po.orderNumber}</TableCell>
+                        <TableCell>{po.supplier?.name ?? "—"}</TableCell>
+                        <TableCell>{format(new Date(po.orderDate), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{po.lines.length} items</TableCell>
+                        <TableCell>
+                          <Badge variant={(statusColor[po.status] as "secondary") ?? "secondary"} className="capitalize rounded-lg">
+                            {po.status}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>

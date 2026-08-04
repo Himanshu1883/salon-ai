@@ -35,6 +35,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2 } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryIconButton,
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 import { STOCK_UNITS } from "@/lib/validations";
 
 type Recipe = Awaited<
@@ -152,51 +158,89 @@ export function ServiceRecipesClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Service</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Qty per service</TableHead>
-                <TableHead>Stock on hand</TableHead>
-                {canWrite && <TableHead className="w-16" />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recipes.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-stone-500">
-                    No service recipes yet. Add recipes to auto-deduct stock on appointment completion.
-                  </TableCell>
-                </TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              recipes.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">
+                  No service recipes yet. Add recipes to auto-deduct stock on appointment completion.
+                </p>
               ) : (
-                recipes.map((r) => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">{r.service.name}</TableCell>
-                    <TableCell>{r.stockItem.name}</TableCell>
-                    <TableCell>{r.quantity} {r.unit}</TableCell>
-                    <TableCell>{r.stockItem.quantityOnHand} {r.stockItem.unit}</TableCell>
-                    {canWrite && (
-                      <TableCell>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          className="text-red-600"
-                          onClick={async () => {
-                            if (!confirm("Delete recipe?")) return;
-                            await deleteServiceRecipe(r.id);
-                            router.refresh();
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    )}
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {recipes.map((r) => (
+                    <InventoryMobileCard key={r.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-[#1C103D]">{r.service.name}</p>
+                          <p className="text-sm text-stone-600">{r.stockItem.name}</p>
+                        </div>
+                        {canWrite && (
+                          <InventoryIconButton
+                            className="text-red-600"
+                            onClick={async () => {
+                              if (!confirm("Delete recipe?")) return;
+                              await deleteServiceRecipe(r.id);
+                              router.refresh();
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </InventoryIconButton>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Qty per service">{r.quantity} {r.unit}</InventoryMobileField>
+                        <InventoryMobileField label="Stock on hand">{r.stockItem.quantityOnHand} {r.stockItem.unit}</InventoryMobileField>
+                      </div>
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Service</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Qty per service</TableHead>
+                    <TableHead>Stock on hand</TableHead>
+                    {canWrite && <TableHead className="w-16" />}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {recipes.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-stone-500">
+                        No service recipes yet. Add recipes to auto-deduct stock on appointment completion.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    recipes.map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell className="font-medium">{r.service.name}</TableCell>
+                        <TableCell>{r.stockItem.name}</TableCell>
+                        <TableCell>{r.quantity} {r.unit}</TableCell>
+                        <TableCell>{r.stockItem.quantityOnHand} {r.stockItem.unit}</TableCell>
+                        {canWrite && (
+                          <TableCell>
+                            <InventoryIconButton
+                              className="text-red-600"
+                              onClick={async () => {
+                                if (!confirm("Delete recipe?")) return;
+                                await deleteServiceRecipe(r.id);
+                                router.refresh();
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </InventoryIconButton>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>

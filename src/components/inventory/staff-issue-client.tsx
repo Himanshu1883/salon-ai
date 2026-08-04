@@ -36,6 +36,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus } from "lucide-react";
+import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
+import {
+  InventoryMobileCard,
+  InventoryMobileField,
+} from "@/components/inventory/inventory-list-helpers";
 
 type Issue = Awaited<
   ReturnType<typeof import("@/actions/inventory/staff-issue").getStaffIssues>
@@ -139,52 +144,95 @@ export function StaffIssueClient({
 
       <Card className="rounded-2xl border-violet-100 shadow-sm">
         <CardContent className="pt-6">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Staff</TableHead>
-                <TableHead>Product</TableHead>
-                <TableHead>Issued</TableHead>
-                <TableHead>Returned</TableHead>
-                <TableHead>Status</TableHead>
-                {canWrite && <TableHead />}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {issues.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-stone-500">No issues yet.</TableCell></TableRow>
+          <ResponsiveTableWrapper
+            cards={
+              issues.length === 0 ? (
+                <p className="py-8 text-center text-stone-500">No issues yet.</p>
               ) : (
-                issues.map((issue) => (
-                  <TableRow key={issue.id}>
-                    <TableCell>{format(new Date(issue.issueDate), "MMM d, yyyy")}</TableCell>
-                    <TableCell>{issue.employee.name}</TableCell>
-                    <TableCell>{issue.stockItem.name}</TableCell>
-                    <TableCell>{issue.quantity}</TableCell>
-                    <TableCell>{issue.quantityReturned}</TableCell>
-                    <TableCell><Badge variant="secondary" className="capitalize rounded-lg">{issue.status}</Badge></TableCell>
-                    {canWrite && issue.status !== "returned" && (
-                      <TableCell>
+                <div className="divide-y divide-[#ECECEC] rounded-xl border">
+                  {issues.map((issue) => (
+                    <InventoryMobileCard key={issue.id}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-[#1C103D]">{issue.stockItem.name}</p>
+                          <p className="text-xs text-stone-500">{issue.employee.name}</p>
+                        </div>
+                        <Badge variant="secondary" className="capitalize rounded-lg">{issue.status}</Badge>
+                      </div>
+                      <p className="text-xs text-stone-500">{format(new Date(issue.issueDate), "MMM d, yyyy")}</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <InventoryMobileField label="Issued">{issue.quantity}</InventoryMobileField>
+                        <InventoryMobileField label="Returned">{issue.quantityReturned}</InventoryMobileField>
+                      </div>
+                      {canWrite && issue.status !== "returned" && (
                         <Dialog open={returnOpen === issue.id} onOpenChange={(v) => setReturnOpen(v ? issue.id : null)}>
                           <DialogTrigger asChild>
-                            <Button size="sm" variant="outline" className="rounded-lg">Return</Button>
+                            <Button size="sm" variant="outline" className="h-11 min-h-[48px] w-full rounded-lg">Return</Button>
                           </DialogTrigger>
                           <DialogContent className="rounded-2xl">
                             <DialogHeader><DialogTitle>Return product</DialogTitle></DialogHeader>
                             <form onSubmit={(e) => handleReturn(e, issue.id)} className="space-y-4">
                               <Input name="quantity" type="number" min={1} max={issue.quantity - issue.quantityReturned} required defaultValue={1} />
                               {error && <p className="text-sm text-red-600">{error}</p>}
-                              <Button type="submit" disabled={loading} className="w-full rounded-xl">Confirm return</Button>
+                              <Button type="submit" disabled={loading} className="h-12 min-h-[48px] w-full rounded-xl">Confirm return</Button>
                             </form>
                           </DialogContent>
                         </Dialog>
-                      </TableCell>
-                    )}
+                      )}
+                    </InventoryMobileCard>
+                  ))}
+                </div>
+              )
+            }
+            table={
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Staff</TableHead>
+                    <TableHead>Product</TableHead>
+                    <TableHead>Issued</TableHead>
+                    <TableHead>Returned</TableHead>
+                    <TableHead>Status</TableHead>
+                    {canWrite && <TableHead />}
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                </TableHeader>
+                <TableBody>
+                  {issues.length === 0 ? (
+                    <TableRow><TableCell colSpan={7} className="text-center text-stone-500">No issues yet.</TableCell></TableRow>
+                  ) : (
+                    issues.map((issue) => (
+                      <TableRow key={issue.id}>
+                        <TableCell>{format(new Date(issue.issueDate), "MMM d, yyyy")}</TableCell>
+                        <TableCell>{issue.employee.name}</TableCell>
+                        <TableCell>{issue.stockItem.name}</TableCell>
+                        <TableCell>{issue.quantity}</TableCell>
+                        <TableCell>{issue.quantityReturned}</TableCell>
+                        <TableCell><Badge variant="secondary" className="capitalize rounded-lg">{issue.status}</Badge></TableCell>
+                        {canWrite && issue.status !== "returned" && (
+                          <TableCell>
+                            <Dialog open={returnOpen === issue.id} onOpenChange={(v) => setReturnOpen(v ? issue.id : null)}>
+                              <DialogTrigger asChild>
+                                <Button size="sm" variant="outline" className="rounded-lg">Return</Button>
+                              </DialogTrigger>
+                              <DialogContent className="rounded-2xl">
+                                <DialogHeader><DialogTitle>Return product</DialogTitle></DialogHeader>
+                                <form onSubmit={(e) => handleReturn(e, issue.id)} className="space-y-4">
+                                  <Input name="quantity" type="number" min={1} max={issue.quantity - issue.quantityReturned} required defaultValue={1} />
+                                  {error && <p className="text-sm text-red-600">{error}</p>}
+                                  <Button type="submit" disabled={loading} className="w-full rounded-xl">Confirm return</Button>
+                                </form>
+                              </DialogContent>
+                            </Dialog>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            }
+          />
         </CardContent>
       </Card>
     </div>
