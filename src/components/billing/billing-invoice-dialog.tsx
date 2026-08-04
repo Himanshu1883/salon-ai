@@ -2,7 +2,7 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { BillingInvoiceForm } from "@/components/billing/billing-invoice-form";
-import { v2 } from "@/components/billing/invoice-modal/v2";
+import { v3 } from "@/components/billing/invoice-modal/v3";
 import { cn } from "@/lib/utils";
 import type {
   BillingEmployee,
@@ -43,7 +43,7 @@ export function BillingInvoiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className={cn(
-          v2.modal,
+          v3.modal,
           "[&>button]:hidden"
         )}
       >

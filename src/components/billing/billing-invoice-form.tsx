@@ -29,7 +29,6 @@ import {
   ModalHeader,
   ModalFooter,
   CustomerSection,
-  InvoiceDetailsSection,
   ItemsSection,
   SummaryPanel,
   NotesSection,
@@ -38,7 +37,7 @@ import {
   useInvoiceDraft,
   loadInvoiceDraft,
   clearInvoiceDraft,
-} from "./invoice-modal/v2";
+} from "./invoice-modal/v3";
 import type {
   BillingEmployee,
   BillingInvoice,
@@ -615,25 +614,21 @@ export function BillingInvoiceForm({
         <ModalHeader step={currentStep} onClose={onCancel} />
 
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          <div className="min-h-0 flex-[0_0_72%] overflow-y-auto px-8 py-6">
+          <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4 lg:flex-[0_0_70%]">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.div
                   key="step-1"
-                  initial={{ opacity: 0, x: -12 }}
+                  initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -12 }}
+                  exit={{ opacity: 0, x: -8 }}
                   transition={{ duration: 0.2 }}
-                  className="space-y-6"
                 >
                   <CustomerSection
                     customer={customer}
                     onChange={setCustomer}
                     error={fieldErrors.customer}
                     autoFocus
-                  />
-
-                  <InvoiceDetailsSection
                     dueDate={dueDate}
                     onDueDateChange={setDueDate}
                     status={status}
@@ -673,9 +668,9 @@ export function BillingInvoiceForm({
               ) : (
                 <motion.div
                   key="step-2"
-                  initial={{ opacity: 0, x: 12 }}
+                  initial={{ opacity: 0, x: 8 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: 12 }}
+                  exit={{ opacity: 0, x: 8 }}
                   transition={{ duration: 0.2 }}
                 >
                   <PaymentStepContent
@@ -699,13 +694,13 @@ export function BillingInvoiceForm({
             </AnimatePresence>
 
             {error && (
-              <p className="mt-4 rounded-[14px] border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+              <p className="mt-3 rounded-[12px] border border-red-100 bg-red-50 px-3 py-2 text-[12px] text-red-600">
                 {error}
               </p>
             )}
           </div>
 
-          <div className="hidden min-h-0 flex-[0_0_28%] shrink-0 border-l border-[#ECECF5] bg-white px-6 py-6 lg:block">
+          <div className="hidden min-h-0 shrink-0 overflow-y-auto border-l border-[#ECECF5] bg-white px-4 py-4 lg:block lg:flex-[0_0_30%]">
             <SummaryPanel
               step={currentStep}
               items={summaryItems}
@@ -727,29 +722,6 @@ export function BillingInvoiceForm({
               }
             />
           </div>
-        </div>
-
-        <div className="shrink-0 border-t border-[#ECECF5] bg-white px-8 py-6 lg:hidden">
-          <SummaryPanel
-            step={currentStep}
-            items={summaryItems}
-            subtotal={displaySubtotal}
-            discount={totalDiscount}
-            tax={displayTax}
-            total={displayTotal}
-            customer={customer}
-            paymentStatus={paymentStatusLabel}
-            loading={loading}
-            onProceed={
-              step === 1
-                ? () => void handleCreateInvoice()
-                : () => void handleReceivePayment()
-            }
-            disableProceed={step === 2 && selectedPayment === "pay_later"}
-            proceedLabel={
-              step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
-            }
-          />
         </div>
 
         <ModalFooter
