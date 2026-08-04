@@ -71,12 +71,10 @@
     radial-gradient(circle at 12% 78%, rgba(79, 70, 229, 0.16), transparent 36%);
 }
 
-.dashboard-shell > * {
+/* Only elevate the main panel — do not override position:fixed on sidebar overlay / bottom nav */
+.dashboard-main-panel {
   position: relative;
   z-index: 1;
-}
-
-.dashboard-main-panel {
   background:
     linear-gradient(
       180deg,

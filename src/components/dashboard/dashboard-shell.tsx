@@ -113,7 +113,7 @@ function DashboardShellInner({
         />
       </div>
 
-      <div className="dashboard-main-panel flex min-h-0 min-w-0 flex-1 flex-col overflow-x-hidden">
+      <div className="dashboard-main-panel flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-x-hidden">
         <div className="sticky top-0 z-30 border-b border-dashboard-border bg-white/90 backdrop-blur-xl pt-safe lg:hidden">
           <div className="flex items-center gap-2 px-3 py-2.5">
             <button
