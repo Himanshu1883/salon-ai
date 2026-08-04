@@ -626,7 +626,7 @@ export function BillingInvoiceForm({
         />
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-4 lg:px-5 lg:py-4 lg:pb-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 sm:px-4 sm:py-4 lg:px-5 lg:py-4">
             <AnimatePresence mode="wait">
               {step === 1 ? (
                 <motion.div
@@ -713,7 +713,7 @@ export function BillingInvoiceForm({
             )}
           </div>
 
-          <aside className="hidden min-h-0 shrink-0 overflow-y-auto border-l border-[#ECECF5] bg-white px-3 py-3 lg:block lg:w-[280px] lg:px-4 xl:w-[320px] xl:px-4">
+          <aside className="hidden min-h-0 w-[320px] shrink-0 flex-col overflow-hidden border-l border-[#ECECF5] bg-white px-4 py-4 lg:flex">
             <SummaryPanel
               step={currentStep}
               items={summaryItems}
@@ -764,10 +764,11 @@ export function BillingInvoiceForm({
           showSaveDraft={step === 2}
         />
 
-        <div className="hidden lg:block">
+        <div className="hidden shrink-0 lg:block">
           <ModalFooter
             step={currentStep}
             loading={loading}
+            hidePrimary
             onCancel={() => onCancel?.()}
             onContinue={
               step === 1

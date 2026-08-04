@@ -15,6 +15,8 @@ type ModalFooterProps = {
   continueLabel?: string;
   disableContinue?: boolean;
   showSaveDraft?: boolean;
+  /** Hide primary CTA when summary panel owns checkout on desktop */
+  hidePrimary?: boolean;
 };
 
 export function ModalFooter({
@@ -27,6 +29,7 @@ export function ModalFooter({
   continueLabel,
   disableContinue = false,
   showSaveDraft = false,
+  hidePrimary = false,
 }: ModalFooterProps) {
   const primaryLabel = continueLabel ?? (step === 1 ? "Continue" : "Complete Payment");
   const primaryShort = step === 1 ? "Continue" : "Complete";
@@ -67,60 +70,62 @@ export function ModalFooter({
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className={cn(v3.ghostButton, "flex-1 sm:hidden")}
-          >
-            Cancel
-          </button>
-          {showSaveDraft && onSaveDraft && (
+        {!hidePrimary && (
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onSaveDraft}
+              onClick={onCancel}
               disabled={loading}
-              className={cn(v3.outlineButton, "flex-1 md:hidden")}
+              className={cn(v3.ghostButton, "flex-1 sm:hidden")}
             >
-              Draft
+              Cancel
             </button>
-          )}
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.98 }}
-            onClick={onContinue}
-            disabled={loading || disableContinue}
-            className={cn(v3.primaryButton, "min-w-0 flex-1 sm:min-w-[120px] sm:flex-none")}
-          >
-            <AnimatePresence mode="wait" initial={false}>
-              {loading ? (
-                <motion.span
-                  key="loading"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <Loader2 className="h-4 w-4 animate-spin sm:h-3.5 sm:w-3.5" />
-                  <span className="hidden sm:inline">
-                    {step === 1 ? "Creating…" : "Processing…"}
-                  </span>
-                </motion.span>
-              ) : (
-                <motion.span
-                  key="idle"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center justify-center gap-1.5"
-                >
-                  <span className="sm:hidden">{primaryShort}</span>
-                  <span className="hidden sm:inline">{primaryLabel}</span>
-                  <ArrowRight className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </motion.button>
-        </div>
+            {showSaveDraft && onSaveDraft && (
+              <button
+                type="button"
+                onClick={onSaveDraft}
+                disabled={loading}
+                className={cn(v3.outlineButton, "flex-1 md:hidden")}
+              >
+                Draft
+              </button>
+            )}
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.98 }}
+              onClick={onContinue}
+              disabled={loading || disableContinue}
+              className={cn(v3.primaryButton, "min-w-0 flex-1 sm:min-w-[120px] sm:flex-none")}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {loading ? (
+                  <motion.span
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center justify-center gap-1.5"
+                  >
+                    <Loader2 className="h-4 w-4 animate-spin sm:h-3.5 sm:w-3.5" />
+                    <span className="hidden sm:inline">
+                      {step === 1 ? "Creating…" : "Processing…"}
+                    </span>
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="idle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center justify-center gap-1.5"
+                  >
+                    <span className="sm:hidden">{primaryShort}</span>
+                    <span className="hidden sm:inline">{primaryLabel}</span>
+                    <ArrowRight className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
+        )}
       </div>
     </footer>
   );

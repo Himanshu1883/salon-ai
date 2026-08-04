@@ -46,7 +46,7 @@ export function BillingInvoiceDialog({
       <DialogContent
         className={cn(
           v3.modal,
-          "!flex !gap-0 !p-0",
+          "!flex !flex-col !gap-0 !overflow-hidden !p-0",
           "[&>button]:hidden",
           "sm:!translate-x-[-50%] sm:!translate-y-[-50%]"
         )}

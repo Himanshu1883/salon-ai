@@ -63,83 +63,84 @@ export function SummaryPanel({
     proceedLabel ??
     (step === 1 ? "Proceed to Payment" : "Receive Payment & Complete");
 
+  const showDesktopProceed = onProceed && !hideProceed && !compact;
+
   return (
-    <aside
-      className={cn(
-        v3.summaryPanel,
-        compact ? "w-full" : "w-full lg:w-[280px] xl:w-[320px]"
-      )}
-    >
-      <h3 className="mb-2 text-[12px] font-semibold text-[#111827] sm:mb-3 sm:text-[13px]">
-        Summary
-      </h3>
+    <div className={cn(v3.summaryPanel, compact && "h-auto")}>
+      <div className={cn(compact ? "" : v3.summaryScroll, "px-0")}>
+        <h3 className="mb-2 text-[12px] font-semibold text-[#111827] sm:mb-3 sm:text-[13px]">
+          Summary
+        </h3>
 
-      <dl className="space-y-1.5 text-[12px] sm:space-y-2">
-        <Row label="Subtotal" value={subtotal} />
-        <Row label="Discount" value={discount} negative />
-        {gstEnabled ? <Row label="GST" value={tax} /> : null}
-      </dl>
+        <dl className="space-y-1.5 text-[12px] sm:space-y-2">
+          <Row label="Subtotal" value={subtotal} />
+          <Row label="Discount" value={discount} negative />
+          {gstEnabled ? <Row label="GST" value={tax} /> : null}
+        </dl>
 
-      <div className="my-2 h-px bg-[#ECECF5] sm:my-3" />
+        <div className="my-2 h-px bg-[#ECECF5] sm:my-3" />
 
-      <div className="mb-2 flex items-baseline justify-between sm:mb-3">
-        <span className="text-[12px] font-semibold text-[#111827]">Total</span>
-        <span className="text-lg font-bold text-[#7C3AED] sm:text-xl">
-          <AnimatedAmount value={total} />
-        </span>
+        <div className="mb-2 flex items-baseline justify-between sm:mb-3">
+          <span className="text-[12px] font-semibold text-[#111827]">Total</span>
+          <span className="text-lg font-bold text-[#7C3AED] sm:text-xl">
+            <AnimatedAmount value={total} />
+          </span>
+        </div>
+
+        {!compact && (
+          <div className="space-y-1.5 rounded-[12px] bg-[#FAFBFF] p-2.5 text-[11px] sm:p-3">
+            <InfoRow
+              icon={<Wallet className="h-3.5 w-3.5 text-[#7C3AED]" />}
+              label="Wallet"
+              value={formatCurrency(0)}
+            />
+            <InfoRow
+              label="Reward Points"
+              value={`${customer?.loyaltyPoints ?? 0} pts`}
+            />
+            <InfoRow
+              label="Outstanding"
+              value={formatCurrency(outstandingBalance)}
+            />
+            <InfoRow
+              label="Payment Status"
+              value={paymentStatus}
+              valueClassName={
+                paymentStatus === "Paid"
+                  ? "text-[#22C55E]"
+                  : paymentStatus === "Draft"
+                    ? "text-[#6B7280]"
+                    : "text-amber-600"
+              }
+            />
+          </div>
+        )}
       </div>
 
-      {!compact && (
-        <div className="mb-3 space-y-1.5 rounded-[12px] bg-[#FAFBFF] p-2.5 text-[11px] sm:p-3">
-          <InfoRow
-            icon={<Wallet className="h-3.5 w-3.5 text-[#7C3AED]" />}
-            label="Wallet"
-            value={formatCurrency(0)}
-          />
-          <InfoRow
-            label="Reward Points"
-            value={`${customer?.loyaltyPoints ?? 0} pts`}
-          />
-          <InfoRow
-            label="Outstanding"
-            value={formatCurrency(outstandingBalance)}
-          />
-          <InfoRow
-            label="Payment Status"
-            value={paymentStatus}
-            valueClassName={
-              paymentStatus === "Paid"
-                ? "text-[#22C55E]"
-                : paymentStatus === "Draft"
-                  ? "text-[#6B7280]"
-                  : "text-amber-600"
-            }
-          />
+      {showDesktopProceed && (
+        <div className={v3.summaryActions}>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.98 }}
+            disabled={loading || disableProceed}
+            onClick={onProceed}
+            className={cn(v3.primaryButton, "w-full")}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Processing…
+              </>
+            ) : (
+              <>
+                {label}
+                <ArrowRight className="h-3.5 w-3.5" />
+              </>
+            )}
+          </motion.button>
         </div>
       )}
-
-      {onProceed && !hideProceed && (
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.98 }}
-          disabled={loading || disableProceed}
-          onClick={onProceed}
-          className={cn(v3.primaryButton, "hidden w-full lg:inline-flex")}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Processing…
-            </>
-          ) : (
-            <>
-              {label}
-              <ArrowRight className="h-3.5 w-3.5" />
-            </>
-          )}
-        </motion.button>
-      )}
-    </aside>
+    </div>
   );
 }
 

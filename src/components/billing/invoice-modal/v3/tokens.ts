@@ -15,23 +15,19 @@ export const v3 = {
     // Mobile: edge-to-edge full-screen takeover
     "fixed inset-0 z-50 flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none",
     "border-0 p-0",
-    // Tablet+: centered dialog
-    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[min(88dvh,900px)] sm:max-h-[min(88dvh,900px)] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
-    // Laptop
-    "lg:h-[min(85dvh,860px)] lg:max-h-[min(85dvh,860px)] lg:max-w-[1200px]",
-    // Large laptop / small desktop
-    "xl:h-[min(88dvh,900px)] xl:max-h-[min(88dvh,900px)] xl:max-w-[1400px]",
-    // Desktop
-    "2xl:max-w-[1700px]",
+    // Tablet+: centered dialog — single flex column, no outer scroll
+    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[88dvh] sm:max-h-[88dvh] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
+    // Laptop / desktop width caps
+    "lg:max-w-[1200px] xl:max-w-[1400px] 2xl:max-w-[1700px]",
     "bg-white",
     "shadow-[0_20px_60px_-12px_rgba(124,58,237,0.16),0_6px_24px_rgba(17,24,39,0.06)]"
   ),
   header: cn(
-    "sticky top-0 z-20 flex shrink-0 items-center border-b border-[#ECECF5] bg-white/95 backdrop-blur-md pt-safe",
+    "z-20 flex shrink-0 items-center border-b border-[#ECECF5] bg-white/95 backdrop-blur-md pt-safe",
     "h-14 px-3 sm:h-16 sm:px-4 lg:h-[68px] lg:px-5"
   ),
   footer: cn(
-    "sticky bottom-0 z-20 shrink-0 border-t border-[#ECECF5] bg-white/95 backdrop-blur-md",
+    "z-20 shrink-0 border-t border-[#ECECF5] bg-white/95 backdrop-blur-md",
     "px-3 py-2.5 sm:px-4 sm:py-3 lg:px-5",
     "pb-[max(0.625rem,env(safe-area-inset-bottom))]"
   ),
@@ -103,7 +99,9 @@ export const v3 = {
     "space-y-3 border-b border-[#ECECF5]/80 p-3.5 md:hidden",
     "transition-colors duration-200"
   ),
-  summaryPanel: "sticky top-0 flex flex-col",
+  summaryPanel: "flex h-full min-h-0 flex-col",
+  summaryScroll: "min-h-0 flex-1 overflow-y-auto overscroll-contain",
+  summaryActions: "shrink-0 border-t border-[#ECECF5] bg-white pt-3",
 } as const;
 
 export const GST_OPTIONS = [
