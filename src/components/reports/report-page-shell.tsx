@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { FilterDrawer } from "@/components/ui/filter-drawer";
 import { exportReportCsv } from "@/actions/reports";
 
 type Props = {
@@ -88,47 +89,99 @@ export function ReportPageShell({
       </div>
 
       {(showDateFilter || exportType || extraFilters) && (
-        <div className="flex flex-wrap items-end gap-4 rounded-lg border border-stone-200 bg-white p-4">
-          {showDateFilter && (
-            <>
-              <div>
-                <Label htmlFor="dateFrom">From</Label>
-                <Input
-                  id="dateFrom"
-                  type="date"
-                  value={from}
-                  onChange={(e) => setFrom(e.target.value)}
-                  className="mt-1 w-40"
-                />
-              </div>
-              <div>
-                <Label htmlFor="dateTo">To</Label>
-                <Input
-                  id="dateTo"
-                  type="date"
-                  value={to}
-                  onChange={(e) => setTo(e.target.value)}
-                  className="mt-1 w-40"
-                />
-              </div>
-              <Button onClick={applyDates} size="sm">
-                Apply
+        <div className="rounded-lg border border-stone-200 bg-white p-4">
+          <div className="hidden flex-wrap items-end gap-4 lg:flex">
+            {showDateFilter && (
+              <>
+                <div>
+                  <Label htmlFor="dateFrom">From</Label>
+                  <Input
+                    id="dateFrom"
+                    type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                    className="mt-1 w-40"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="dateTo">To</Label>
+                  <Input
+                    id="dateTo"
+                    type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    className="mt-1 w-40"
+                  />
+                </div>
+                <Button onClick={applyDates} size="sm" className="h-9">
+                  Apply
+                </Button>
+              </>
+            )}
+            {extraFilters}
+            {exportType && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExport}
+                disabled={exporting}
+                className="ml-auto gap-1"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
               </Button>
-            </>
-          )}
-          {extraFilters}
-          {exportType && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              disabled={exporting}
-              className="ml-auto gap-1"
-            >
-              <Download className="h-4 w-4" />
-              Export CSV
-            </Button>
-          )}
+            )}
+          </div>
+
+          <div className="space-y-3 lg:hidden">
+            {showDateFilter && (
+              <FilterDrawer
+                triggerLabel="Date range"
+                onApply={applyDates}
+                onReset={() => {
+                  setFrom("");
+                  setTo("");
+                  const params = new URLSearchParams(window.location.search);
+                  params.delete("dateFrom");
+                  params.delete("dateTo");
+                  router.push(`${window.location.pathname}?${params.toString()}`);
+                }}
+              >
+                <div className="space-y-2">
+                  <Label htmlFor="dateFrom-mobile">From</Label>
+                  <Input
+                    id="dateFrom-mobile"
+                    type="date"
+                    value={from}
+                    onChange={(e) => setFrom(e.target.value)}
+                    className="h-11 w-full rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="dateTo-mobile">To</Label>
+                  <Input
+                    id="dateTo-mobile"
+                    type="date"
+                    value={to}
+                    onChange={(e) => setTo(e.target.value)}
+                    className="h-11 w-full rounded-xl"
+                  />
+                </div>
+              </FilterDrawer>
+            )}
+            {extraFilters}
+            {exportType && (
+              <Button
+                variant="outline"
+                onClick={handleExport}
+                disabled={exporting}
+                className="h-11 min-h-[48px] w-full gap-1 rounded-xl"
+              >
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            )}
+          </div>
         </div>
       )}
 
