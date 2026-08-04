@@ -16,6 +16,22 @@ export function PreviewSection() {
         <div className="absolute -right-16 bottom-0 h-80 w-80 rounded-full bg-[#A78BFA]/25 blur-3xl" />
       </div>
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
       <div className="relative z-10 mb-8 text-center md:mb-10">
         <div className="mb-4 flex items-center justify-center gap-3">
           <span className="h-px w-8 shrink-0 bg-[#5B21B6]/25" aria-hidden />
