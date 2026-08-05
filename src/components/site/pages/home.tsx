@@ -2,6 +2,7 @@
 
 import { CtaBanner } from "@/components/site/Cta";
 import { Reveal } from "@/components/site/Reveal";
+import { SectionBackdrop } from "@/components/site/SectionBackdrop";
 import { ParallaxBanner } from "@/components/site/Sections";
 import {
   AI_CARDS,
@@ -1407,8 +1408,9 @@ function HomePageView() {
       </section>
 
       {/* B. TRUST BRIDGE - Place it HERE, outside any other section */}
-      <div className="w-full border-y border-border/60 bg-background/50 backdrop-blur-sm py-6">
-        <div className="mx-auto flex w-full max-w-[1500px] items-center overflow-hidden px-5 sm:px-8">
+      <div className="relative w-full overflow-hidden border-y border-border/60 bg-background/50 py-6 backdrop-blur-sm">
+        <SectionBackdrop variant="strip" fadeFrom="none" />
+        <div className="relative z-10 mx-auto flex w-full max-w-[1500px] items-center overflow-hidden px-5 sm:px-8">
           <motion.div
             className="flex shrink-0 items-center gap-12 whitespace-nowrap"
             animate={{ x: ["0%", "-50%"] }}
@@ -1442,15 +1444,10 @@ function HomePageView() {
       </div>
 
       {/* C. MODULES PREVIEW - Redesigned with limited modules */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
+      <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
+        <SectionBackdrop variant="mesh" />
 
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header - Enhanced */}
           <div className="relative">
             <motion.div
@@ -1847,8 +1844,10 @@ function HomePageView() {
       </ParallaxBanner>
 
       {/* E. SALON TYPES - Redesigned */}
-      <section className="w-full bg-gradient-to-b from-background to-card/50 py-24 lg:py-32">
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+      <section className="relative isolate w-full overflow-hidden bg-gradient-to-b from-background to-card/50 py-24 lg:py-32">
+        <SectionBackdrop variant="salon-types" />
+
+        <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header */}
           <div className="relative">
             <motion.div
@@ -2078,15 +2077,10 @@ function HomePageView() {
       </section>
 
       {/* F. FEATURES TEASER - Redesigned */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
+      <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
+        <SectionBackdrop variant="features" />
 
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header - Enhanced */}
           <div className="relative">
             <motion.div
@@ -2335,267 +2329,272 @@ function HomePageView() {
       </section>
 
       {/* G. AI TEASER - Redesigned */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32 gradient-ink text-ink-foreground">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-3xl" />
+{/* G. AI TEASER - Redesigned with Icons */}
+<section className="relative w-full overflow-hidden py-24 lg:py-32 gradient-ink text-ink-foreground">
+  {/* Background decorations */}
+  <div className="absolute inset-0 -z-10">
+    <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+    <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
+    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-3xl" />
 
-          {/* Animated grid pattern */}
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+    {/* Animated grid pattern */}
+    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
+  </div>
+
+  <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+    {/* Section Header - Enhanced */}
+    <div className="relative">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6 }}
+        className="flex flex-col items-center text-center"
+      >
+        <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-4 py-1.5 backdrop-blur-sm">
+          <Sparkles className="h-3.5 w-3.5 text-gold" />
+          <span className="text-xs font-medium text-gold">
+            AI-Powered Intelligence
+          </span>
+          <span className="ml-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold text-gold">
+            Beta
+          </span>
         </div>
 
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
-          {/* Section Header - Enhanced */}
-          <div className="relative">
+        <h2 className="mt-6 max-w-3xl text-4xl font-display leading-[1.05] text-ink-foreground sm:text-5xl lg:text-[3.5rem]">
+          AI That{" "}
+          <span className="relative">
+            <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
+              Understands Your Salon
+            </span>
+            <motion.span
+              className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-gold to-yellow-500"
+              initial={{ width: 0 }}
+              whileInView={{ width: "100%" }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3, duration: 0.8 }}
+            />
+          </span>
+        </h2>
+
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-foreground/70 sm:text-lg">
+          Predictive analytics, smart scheduling, and automated insights
+          that help you grow revenue while delivering exceptional client
+          experiences — all powered by advanced AI.
+        </p>
+
+        {/* AI Stats with icons */}
+        <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
+          {[
+            { label: "Accuracy", value: "94%", icon: Target },
+            { label: "Predictions", value: "12.5K", icon: TrendingUp },
+            { label: "Time Saved", value: "15hrs", icon: Clock },
+            { label: "Uptime", value: "99.9%", icon: Shield },
+          ].map((stat, i) => (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              key={i}
+              initial={{ opacity: 0, y: 10 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="flex flex-col items-center text-center"
+              transition={{ delay: 0.1 * i }}
+              className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 backdrop-blur-sm border border-white/10"
             >
-              <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-4 py-1.5 backdrop-blur-sm">
-                <Sparkles className="h-3.5 w-3.5 text-gold" />
-                <span className="text-xs font-medium text-gold">
-                  AI-Powered Intelligence
-                </span>
-                <span className="ml-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold text-gold">
-                  Beta
-                </span>
-              </div>
-
-              <h2 className="mt-6 max-w-3xl text-4xl font-display leading-[1.05] text-ink-foreground sm:text-5xl lg:text-[3.5rem]">
-                AI That{" "}
-                <span className="relative">
-                  <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
-                    Understands Your Salon
-                  </span>
-                  <motion.span
-                    className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-gold to-yellow-500"
-                    initial={{ width: 0 }}
-                    whileInView={{ width: "100%" }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3, duration: 0.8 }}
-                  />
-                </span>
-              </h2>
-
-              <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-foreground/70 sm:text-lg">
-                Predictive analytics, smart scheduling, and automated insights
-                that help you grow revenue while delivering exceptional client
-                experiences — all powered by advanced AI.
-              </p>
-
-              {/* AI Stats */}
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
-                {[
-                  { label: "Accuracy", value: "94%", icon: Target },
-                  { label: "Predictions", value: "12.5K", icon: TrendingUp },
-                  { label: "Time Saved", value: "15hrs", icon: Clock },
-                  { label: "Uptime", value: "99.9%", icon: Shield },
-                ].map((stat, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.1 * i }}
-                    className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 backdrop-blur-sm border border-white/10"
-                  >
-                    <stat.icon className="h-4 w-4 text-gold" />
-                    <span className="text-sm font-medium text-ink-foreground">
-                      {stat.value}
-                    </span>
-                    <span className="text-xs text-ink-foreground/60">
-                      {stat.label}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
+              <stat.icon className="h-4 w-4 text-gold" />
+              <span className="text-sm font-medium text-ink-foreground">
+                {stat.value}
+              </span>
+              <span className="text-xs text-ink-foreground/60">
+                {stat.label}
+              </span>
             </motion.div>
-          </div>
+          ))}
+        </div>
+      </motion.div>
+    </div>
 
-          {/* AI Cards Grid - Enhanced */}
-          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {AI_CARDS.map((card, index) => (
-              <motion.div
-                key={card.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group relative"
-              >
-                <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-gold/50 hover:shadow-xl hover:shadow-gold/10">
-                  {/* Glow effect on hover */}
-                  <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gold/5 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
-
-                  {/* Card number */}
-                  <div className="absolute right-4 top-4 text-[10px] font-medium text-ink-foreground/20">
-                    {(index + 1).toString().padStart(2, "0")}
-                  </div>
-
-                  <div className="relative">
-                    {/* Icon with gradient */}
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/20 to-yellow-500/20 transition-all duration-300 group-hover:scale-110 group-hover:from-gold/30 group-hover:to-yellow-500/30">
-                      <div className="h-6 w-6 rounded-lg gradient-brand" />
-                    </div>
-
-                    <h3 className="mt-4 font-display text-lg text-ink-foreground transition-colors group-hover:text-gold">
-                      {card.title}
-                    </h3>
-
-                    <p className="mt-2 text-sm leading-relaxed text-ink-foreground/65">
-                      {card.desc}
-                    </p>
-
-                    {/* Learn more indicator */}
-                    <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gold/60 opacity-0 transition-all group-hover:opacity-100">
-                      Learn more
-                      <ArrowRight className="h-3 w-3" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* AI Feature Highlights */}
+    {/* AI Cards Grid - Enhanced with Icons */}
+    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+      {AI_CARDS.map((card, index) => {
+        const cardIcons = [
+          <Target className="h-6 w-6 text-gold" />,
+          <TrendingUp className="h-6 w-6 text-gold" />,
+          <Zap className="h-6 w-6 text-gold" />,
+          <Package className="h-6 w-6 text-gold" />,
+        ];
+        return (
           <motion.div
+            key={card.title}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-16 grid gap-6 md:grid-cols-3"
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className="group relative"
           >
-            {[
-              {
-                icon: <Zap className="h-5 w-5 text-gold" />,
-                title: "Real-Time Insights",
-                description:
-                  "Get instant recommendations for staffing, inventory, and pricing based on live data.",
-              },
-              {
-                icon: <TrendingUp className="h-5 w-5 text-gold" />,
-                title: "Revenue Optimization",
-                description:
-                  "Identify upsell opportunities, pricing gaps, and service performance trends.",
-              },
-              {
-                icon: <Users className="h-5 w-5 text-gold" />,
-                title: "Client Intelligence",
-                description:
-                  "Predict client behavior, preferences, and churn risk with AI-powered analytics.",
-              },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5"
-              >
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/10 to-yellow-500/10 transition-colors group-hover:from-gold/20 group-hover:to-yellow-500/20">
-                  {item.icon}
+            <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-gold/50 hover:shadow-xl hover:shadow-gold/10">
+              {/* Glow effect on hover */}
+              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gold/5 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+
+              {/* Card number */}
+              <div className="absolute right-4 top-4 text-[10px] font-medium text-ink-foreground/20">
+                {(index + 1).toString().padStart(2, "0")}
+              </div>
+
+              <div className="relative">
+                {/* Icon with gradient */}
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/20 to-yellow-500/20 transition-all duration-300 group-hover:scale-110 group-hover:from-gold/30 group-hover:to-yellow-500/30">
+                  {cardIcons[index]}
                 </div>
-                <h4 className="font-display text-lg text-ink-foreground">
-                  {item.title}
-                </h4>
-                <p className="mt-2 text-sm text-ink-foreground/60">
-                  {item.description}
+
+                <h3 className="mt-4 font-display text-lg text-ink-foreground transition-colors group-hover:text-gold">
+                  {card.title}
+                </h3>
+
+                <p className="mt-2 text-sm leading-relaxed text-ink-foreground/65">
+                  {card.desc}
                 </p>
-              </div>
-            ))}
-          </motion.div>
 
-          {/* CTA with normal buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-white/5 to-white/10 p-8 text-center border border-white/10 backdrop-blur-sm"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-gold" />
-                <span className="text-sm font-medium text-gold">
-                  Ready to harness the power of AI?
-                </span>
+                {/* Learn more indicator */}
+                <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gold/60 opacity-0 transition-all group-hover:opacity-100">
+                  Learn more
+                  <ArrowRight className="h-3 w-3" />
+                </div>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link href="/ai" className="btn-base btn-gold">
-                  Explore AI Analytics <ArrowRight className="h-4 w-4" />
-                </Link>
-
-                <Link
-                  href="/demo"
-                  className="btn-base border border-white/20 bg-white/5 text-ink-foreground hover:bg-white/10 hover:border-gold/50"
-                >
-                  Book a Demo
-                </Link>
-              </div>
-              <p className="text-xs text-ink-foreground/50">
-                No credit card required • Free 14-day trial • 24/7 support
-              </p>
             </div>
           </motion.div>
+        );
+      })}
+    </div>
 
-          {/* Trust indicators */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.5 }}
-            className="mt-12 flex flex-wrap items-center justify-center gap-8 text-center"
-          >
-            {[
-              {
-                icon: Shield,
-                label: "Enterprise Security",
-                sub: "ISO 27001 certified",
-              },
-              {
-                icon: Zap,
-                label: "Real-time Processing",
-                sub: "< 100ms response",
-              },
-              {
-                icon: Award,
-                label: "AI Excellence",
-                sub: "2024 Innovation Award",
-              },
-              {
-                icon: Headphones,
-                label: "24/7 Support",
-                sub: "Dedicated AI experts",
-              },
-            ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="rounded-full bg-white/5 p-2 border border-white/10">
-                  <item.icon className="h-4 w-4 text-gold" />
-                </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium text-ink-foreground">
-                    {item.label}
-                  </p>
-                  <p className="text-xs text-ink-foreground/50">{item.sub}</p>
-                </div>
-              </div>
-            ))}
-          </motion.div>
+    {/* AI Feature Highlights with Icons */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.3 }}
+      className="mt-16 grid gap-6 md:grid-cols-3"
+    >
+      {[
+        {
+          icon: <Zap className="h-5 w-5 text-gold" />,
+          title: "Real-Time Insights",
+          description:
+            "Get instant recommendations for staffing, inventory, and pricing based on live data.",
+        },
+        {
+          icon: <TrendingUp className="h-5 w-5 text-gold" />,
+          title: "Revenue Optimization",
+          description:
+            "Identify upsell opportunities, pricing gaps, and service performance trends.",
+        },
+        {
+          icon: <Users className="h-5 w-5 text-gold" />,
+          title: "Client Intelligence",
+          description:
+            "Predict client behavior, preferences, and churn risk with AI-powered analytics.",
+        },
+      ].map((item, i) => (
+        <div
+          key={i}
+          className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5"
+        >
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/10 to-yellow-500/10 transition-colors group-hover:from-gold/20 group-hover:to-yellow-500/20">
+            {item.icon}
+          </div>
+          <h4 className="font-display text-lg text-ink-foreground">
+            {item.title}
+          </h4>
+          <p className="mt-2 text-sm text-ink-foreground/60">
+            {item.description}
+          </p>
         </div>
-      </section>
+      ))}
+    </motion.div>
+
+    {/* CTA with normal buttons */}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+      className="mt-16 rounded-2xl bg-gradient-to-br from-white/5 to-white/10 p-8 text-center border border-white/10 backdrop-blur-sm"
+    >
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-gold" />
+          <span className="text-sm font-medium text-gold">
+            Ready to harness the power of AI?
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-4">
+          <Link href="/ai" className="btn-base btn-gold">
+            Explore AI Analytics <ArrowRight className="h-4 w-4" />
+          </Link>
+
+          <Link
+            href="/demo"
+            className="btn-base border border-white/20 bg-white/5 text-ink-foreground hover:bg-white/10 hover:border-gold/50"
+          >
+            <Calendar className="h-4 w-4" />
+            Book a Demo
+          </Link>
+        </div>
+        <p className="text-xs text-ink-foreground/50">
+          No credit card required • Free 14-day trial • 24/7 support
+        </p>
+      </div>
+    </motion.div>
+
+    {/* Trust indicators with icons */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ delay: 0.5 }}
+      className="mt-12 flex flex-wrap items-center justify-center gap-8 text-center"
+    >
+      {[
+        {
+          icon: Shield,
+          label: "Enterprise Security",
+          sub: "ISO 27001 certified",
+        },
+        {
+          icon: Zap,
+          label: "Real-time Processing",
+          sub: "< 100ms response",
+        },
+        {
+          icon: Award,
+          label: "AI Excellence",
+          sub: "2024 Innovation Award",
+        },
+        {
+          icon: Headphones,
+          label: "24/7 Support",
+          sub: "Dedicated AI experts",
+        },
+      ].map((item, i) => (
+        <div key={i} className="flex items-center gap-3">
+          <div className="rounded-full bg-white/5 p-2 border border-white/10">
+            <item.icon className="h-4 w-4 text-gold" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium text-ink-foreground">
+              {item.label}
+            </p>
+            <p className="text-xs text-ink-foreground/50">{item.sub}</p>
+          </div>
+        </div>
+      ))}
+    </motion.div>
+  </div>
+</section>
 
       {/* H. TESTIMONIALS - Redesigned with Auto-Slide Carousel */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
+      <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
+        <SectionBackdrop variant="testimonials" />
 
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header */}
           <div className="relative">
             <motion.div
@@ -2846,15 +2845,10 @@ function HomePageView() {
       </section>
 
       {/* I. PRICING PREVIEW - Redesigned */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32 bg-card">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
+      <section className="relative isolate w-full overflow-hidden bg-card py-24 lg:py-32">
+        <SectionBackdrop variant="pricing" fadeFrom="card" />
 
-        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header - Enhanced */}
           <div className="relative">
             <motion.div
@@ -3124,15 +3118,10 @@ function HomePageView() {
 
       {/* J. FAQ TEASER */}
       {/* J. FAQ TEASER - Redesigned */}
-      <section className="relative w-full overflow-hidden py-24 lg:py-32">
-        {/* Background decorations */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-          <div className="absolute -bottom-40 -right-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
+      <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
+        <SectionBackdrop variant="faq" />
 
-        <div className="mx-auto w-full max-w-4xl px-5 sm:px-8">
+        <div className="relative z-10 mx-auto w-full max-w-4xl px-5 sm:px-8">
           {/* Section Header - Enhanced */}
           <div className="relative">
             <motion.div

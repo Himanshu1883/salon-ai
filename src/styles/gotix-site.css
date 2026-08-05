@@ -315,7 +315,118 @@
 @media (prefers-reduced-motion: reduce) {
   .gotix-site .ken-burns,
   .gotix-site .drift,
-  .gotix-site .testimonials-track {
+  .gotix-site .testimonials-track,
+  .gotix-site .saas-wave,
+  .gotix-site .saas-ripple,
+  .gotix-site .saas-flow-orb,
+  .gotix-site .saas-flow-band {
     animation: none !important;
+  }
+}
+
+/* ── Flowing wave backdrops (SaaS) ── */
+
+.gotix-site .saas-flow-mesh {
+  background:
+    radial-gradient(
+      ellipse 80% 55% at 20% 30%,
+      color-mix(in oklab, var(--primary) 8%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 65% 50% at 85% 20%,
+      color-mix(in oklab, var(--primary-glow) 6%, transparent),
+      transparent 50%
+    );
+}
+
+.gotix-site .saas-flow-band {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklab, var(--primary) 5%, transparent) 50%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, transparent, black 35%, black 65%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 35%, black 65%, transparent);
+}
+
+.gotix-site .saas-wave-a {
+  animation: gotix-wave-drift-a 32s ease-in-out infinite alternate;
+}
+
+.gotix-site .saas-wave-b {
+  animation: gotix-wave-drift-b 38s ease-in-out infinite alternate;
+}
+
+.gotix-site .saas-wave-stack-flip .saas-wave-a {
+  animation-name: gotix-wave-drift-a-flip;
+}
+
+.gotix-site .saas-ripple-a {
+  animation: gotix-ripple-flow 24s ease-in-out infinite alternate;
+}
+
+.gotix-site .saas-flow-orb-a {
+  animation: gotix-flow-orb-a 20s ease-in-out infinite alternate;
+}
+
+.gotix-site .saas-flow-orb-b {
+  animation: gotix-flow-orb-b 24s ease-in-out infinite alternate;
+}
+
+@keyframes gotix-wave-drift-a {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(-1.5%) translateY(-1%);
+  }
+}
+
+@keyframes gotix-wave-drift-b {
+  0% {
+    transform: translateX(0) translateY(0);
+  }
+  100% {
+    transform: translateX(2%) translateY(0.5%);
+  }
+}
+
+@keyframes gotix-wave-drift-a-flip {
+  0% {
+    transform: scaleY(-1) translateX(0);
+  }
+  100% {
+    transform: scaleY(-1) translateX(1.5%);
+  }
+}
+
+@keyframes gotix-ripple-flow {
+  0% {
+    transform: translateX(0);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(-1%);
+    opacity: 0.9;
+  }
+}
+
+@keyframes gotix-flow-orb-a {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-2%, 3%);
+  }
+}
+
+@keyframes gotix-flow-orb-b {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(3%, -2%);
   }
 }
