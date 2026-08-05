@@ -26,12 +26,12 @@ export function PageHero({
 }) {
   return (
     <section
-      className={`relative w-full overflow-hidden pb-20 pt-32 sm:pt-40 ${
+      className={`relative isolate w-full overflow-hidden pb-20 pt-32 sm:pt-40 ${
         dark ? "gradient-ink text-ink-foreground" : ""
       }`}
     >
       {image && (
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <img
             src={image}
             alt={imageAlt ?? ""}
@@ -41,13 +41,13 @@ export function PageHero({
           <div
             className={`absolute inset-0 ${
               dark
-                ? "bg-linear-to-r from-ink/92 via-ink/80 to-ink/40"
-                : "bg-linear-to-r from-background via-background/88 to-background/35"
+                ? "bg-gradient-to-r from-ink/92 via-ink/80 to-ink/40"
+                : "bg-gradient-to-r from-background/90 via-background/55 to-background/15"
             }`}
           />
         </div>
       )}
-      <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
         <Reveal>
           <p className={`eyebrow ${dark ? "!text-gold" : ""}`}>{eyebrow}</p>
           <h1
@@ -99,10 +99,10 @@ export function ParallaxBanner({
   const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
 
   return (
-    <section ref={ref} className="relative w-full overflow-hidden py-24 sm:py-32">
-      {/* Background Image with Parallax */}
+    <section ref={ref} className="relative isolate w-full overflow-hidden py-24 sm:py-32">
+      {/* Background Image with Parallax — must stay z-0, not -z-10, or parent bg hides it */}
       <motion.div
-        className="absolute inset-0 -z-10 h-[120%] -top-[10%]"
+        className="absolute inset-0 z-0 h-[120%] -top-[10%]"
         style={reduce ? {} : { y }}
       >
         <img
@@ -113,24 +113,17 @@ export function ParallaxBanner({
           loading="lazy"
           className="h-full w-full object-cover"
         />
-        {/* Gradient overlay - Enhanced */}
+        {/* Gradient overlay — keep text readable, leave photo visible on the open side */}
         <div
           className={`absolute inset-0 ${
             align === "left"
-              ? "bg-gradient-to-r from-background/85 via-background/45 to-transparent"
-              : "bg-gradient-to-l from-background/85 via-background/45 to-transparent"
+              ? "bg-gradient-to-r from-background/90 via-background/55 to-background/10"
+              : "bg-gradient-to-l from-background/90 via-background/55 to-background/10"
           }`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
       </motion.div>
 
-      {/* Decorative elements */}
-      <div className="absolute inset-0 -z-5">
-        <div className="absolute top-0 left-0 w-64 h-64 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-purple-500/5 blur-3xl" />
-      </div>
-
-      <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
         <div className={`max-w-xl ${align === "right" ? "ml-auto text-right" : ""}`}>
           <Reveal>
             {/* Badge */}

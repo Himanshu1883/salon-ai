@@ -74,9 +74,9 @@ function HomePageView() {
   return (
     <>
       {/* A. HERO - Enhanced with Dot Navigation */}
-      <section className="relative min-h-screen w-full overflow-hidden pt-24 lg:pt-28">
+      <section className="relative isolate min-h-screen w-full overflow-hidden pt-24 lg:pt-28">
         {/* Background with gradient overlay */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <img
             src={heroImg}
             alt="Premium modern salon interior with elegant styling stations and ambient lighting"
@@ -92,7 +92,7 @@ function HomePageView() {
         </div>
 
         {/* Slides Container with Dot Navigation */}
-        <div className="relative overflow-hidden">
+        <div className="relative z-10 overflow-hidden">
           <motion.div
             className="flex"
             animate={{ x: `-${currentSlide * 100}%` }}
