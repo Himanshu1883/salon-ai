@@ -134,41 +134,65 @@ export const FEATURES = [
     title: "Reception That Impresses",
     desc: "Give every client a five-star welcome from the moment they walk in.",
     points: ["Digital check-in kiosk", "VIP client recognition", "Real-time queue display"],
+    image:
+      "https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Modern salon reception and waiting lounge",
   },
   {
     title: "POS Built for Salons",
     desc: "Checkout flows designed for the speed and complexity of salon billing.",
     points: ["Split payments & tips", "Membership auto-apply", "Receipt via WhatsApp"],
+    image:
+      "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Customer paying at a point-of-sale checkout",
   },
   {
     title: "Inventory You Can Trust",
     desc: "Never run out of colour, products, or retail items mid-appointment.",
     points: ["Multi-branch stock sync", "Auto reorder alerts", "Usage tracking per service"],
+    image:
+      "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Beauty and cosmetic products arranged on shelves",
   },
   {
     title: "Stylist-First Workflow",
     desc: "Tools that keep stylists focused on clients, not paperwork.",
     points: ["Service history at chair-side", "Commission tracking", "Performance leaderboard"],
+    image:
+      "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Hair stylist working with a client in a salon chair",
   },
   {
     title: "Beauty Treatment Tracking",
     desc: "Document every treatment with photos, notes, and product usage.",
     points: ["Before/after gallery", "Allergy & skin type notes", "Treatment plan templates"],
+    image:
+      "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Client receiving a facial beauty treatment",
   },
   {
     title: "Spa & Wellness Management",
     desc: "Room scheduling, therapist rotation, and package redemption in one flow.",
     points: ["Room availability grid", "Package session tracking", "Therapist preferences"],
+    image:
+      "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Relaxing spa massage and wellness treatment room",
   },
   {
     title: "Full Spa Experience",
     desc: "Manage the complete spa journey from booking to post-visit follow-up.",
     points: ["Multi-service itineraries", "Gift voucher redemption", "Loyalty point accrual"],
+    image:
+      "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Luxury spa amenities and wellness atmosphere",
   },
   {
     title: "Client Consultation Hub",
     desc: "Turn every consultation into a personalized service recommendation.",
     points: ["AI style suggestions", "Digital consent forms", "Instant quote generation"],
+    image:
+      "https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1400&q=80",
+    imageAlt: "Stylist consulting with a client about a hair style",
   },
 ];
 

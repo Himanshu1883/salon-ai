@@ -209,11 +209,13 @@ export function ImageSlot({
       className={`relative overflow-hidden rounded-2xl ${ratio} ${className} ${!src ? "slot-placeholder" : ""}`}
     >
       {src && <img src={src} alt={alt} loading="lazy" className="h-full w-full object-cover" />}
-      <div className="absolute inset-0 flex items-end p-4">
-        <span className="rounded-full bg-card/70 px-3 py-1 text-[10px] font-medium tracking-wide text-muted-foreground backdrop-blur">
-          {name}
-        </span>
-      </div>
+      {!src && (
+        <div className="absolute inset-0 flex items-end p-4">
+          <span className="rounded-full bg-card/70 px-3 py-1 text-[10px] font-medium tracking-wide text-muted-foreground backdrop-blur">
+            {name}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

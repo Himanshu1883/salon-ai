@@ -44,20 +44,6 @@ const bannerAppointments = "/gotix/banner-appointments.jpg";
 const bannerGrowth = "/gotix/banner-growth.jpg";
 const bannerModern = "/gotix/banner-modern.jpg";
 const heroImg = "/gotix/hero-salon.jpg";
-const billingImg = "/gotix/biling.png";
-const customersImg = "/gotix/customers.png";
-const inventoryImg = "/gotix/inventory.png";
-
-const FEATURE_TEASERS = FEATURES.slice(0, 3).map((f, i) => ({
-  ...f,
-  image: [customersImg, billingImg, inventoryImg][i],
-  alt: [
-    "Reception desk welcoming salon clients",
-    "Salon POS billing and checkout experience",
-    "Salon inventory and product stock shelves",
-  ][i],
-}));
-
 const TITLE = "Gotix — AI-Powered Salon CRM & ERP Software";
 const DESC =
   "Appointments, POS billing, inventory, CRM and AI analytics in one intelligent platform built for salons, spas and beauty chains.";
@@ -2184,29 +2170,17 @@ function HomePageView() {
                     index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
                   }`}
                 >
-                  {/* Image/Visual Panel */}
+                  {/* Image/Visual Panel — Unsplash photo matched to feature */}
                   <div className="relative min-h-[280px] overflow-hidden lg:min-h-[340px]">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/10 to-pink-500/10 transition-all duration-700 group-hover:scale-105">
-                      <div className="flex h-full items-center justify-center">
-                        <div className="text-center">
-                          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-purple-500/20 text-4xl">
-                            {index === 0 && "💇"}
-                            {index === 1 && "💳"}
-                            {index === 2 && "📦"}
-                            {index === 3 && "✂️"}
-                            {index === 4 && "📸"}
-                            {index === 5 && "🧖"}
-                          </div>
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Feature #{index + 1}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    {/* Decorative gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+                    <div
+                      role="img"
+                      aria-label={feature.imageAlt}
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out group-hover:scale-105"
+                      style={{ backgroundImage: `url(${feature.image})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/45 via-ink/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-transparent" />
 
-                    {/* Badge */}
                     <div className="absolute left-4 top-4 rounded-full border border-white/20 bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md">
                       0{index + 1}
                     </div>

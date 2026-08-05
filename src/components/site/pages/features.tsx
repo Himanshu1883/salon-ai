@@ -37,8 +37,9 @@ function FeaturesPage() {
                   }`}
                 >
                   <ImageSlot
-                    name={`feature-${i + 1}.jpg`}
-                    alt={`${f.title} feature photo`}
+                    name={`feature-${i + 1}`}
+                    alt={f.imageAlt}
+                    src={f.image}
                     ratio="aspect-[5/4]"
                   />
                   <div>
