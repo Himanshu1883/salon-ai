@@ -72,12 +72,12 @@ export function Navbar() {
           : "bg-background/5 backdrop-blur-md"
       }`}
     >
-      <div className="w-full px-4 sm:px-5">
+      <div className="w-full px-8 sm:px-8">
         <nav className="relative flex h-16 w-full items-center justify-between lg:h-20">
           <Brand />
 
           {/* Desktop Navigation — centered between brand and CTAs */}
-          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 max-lg:hidden xl:gap-1">
+          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 max-lg:hidden xl:gap-4">
             {LINKS.map((l) => (
               <Link
                 key={l.href}
