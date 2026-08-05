@@ -20,7 +20,7 @@ const LINKS = [
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 group">
+    <Link href="/" className="relative z-10 flex items-center gap-2.5 group">
       <div className="relative">
         <img
           src={logo}
@@ -56,6 +56,14 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    const onResize = () => {
+      if (window.innerWidth >= 1024) setOpen(false);
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   return (
     <header
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
@@ -64,18 +72,17 @@ export function Navbar() {
           : "bg-background/5 backdrop-blur-md"
       }`}
     >
-      {/* Full-width container with inner padding */}
-      <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
-        <nav className="flex h-16 w-full items-center justify-between lg:h-20">
+      <div className="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-8">
+        <nav className="relative flex h-16 w-full items-center justify-between lg:h-20">
           <Brand />
 
-          {/* Desktop Navigation - Centered */}
-          <div className="hidden items-center gap-1 lg:flex">
+          {/* Desktop Navigation — centered between brand and CTAs */}
+          <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 max-lg:hidden xl:gap-1">
             {LINKS.map((l) => (
               <Link
                 key={l.href}
                 href={l.href}
-                className="nav-link rounded-full px-3 py-1.5 text-sm transition-all hover:bg-primary/5"
+                className="nav-link whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] transition-all hover:bg-primary/5 xl:px-3 xl:text-sm"
               >
                 {l.label}
               </Link>
@@ -83,14 +90,17 @@ export function Navbar() {
           </div>
 
           {/* Desktop Actions */}
-          <div className="hidden items-center gap-3 lg:flex">
+          <div className="relative z-10 flex items-center gap-2 max-lg:hidden xl:gap-3">
             <Link
               href="/login"
-              className="rounded-full px-4 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground"
+              className="rounded-full px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:text-foreground xl:px-4"
             >
               Log in
             </Link>
-            <Link href="/signup" className="group btn-base btn-primary relative overflow-hidden">
+            <Link
+              href="/signup"
+              className="group btn-base btn-primary relative overflow-hidden !px-4 !py-2.5 text-sm"
+            >
               <span className="relative z-10 flex items-center gap-2">
                 Start Free Trial
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
@@ -99,20 +109,19 @@ export function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile / tablet menu button — only below lg (1024px) */}
           <button
             type="button"
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className="btn-base btn-outline !px-3 !py-2 lg:hidden"
+            className="relative z-10 hidden items-center justify-center rounded-xl border border-border/60 bg-card/80 px-3 py-2 text-foreground shadow-sm backdrop-blur-sm transition hover:border-primary/40 hover:bg-primary/5 max-lg:inline-flex"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </nav>
       </div>
 
-      {/* Mobile Menu */}
       <AnimatePresence>
         {open && (
           <motion.div
@@ -138,10 +147,8 @@ export function Navbar() {
                 ))}
               </ul>
 
-              {/* Divider */}
               <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-              {/* Mobile Actions */}
               <div className="flex flex-col gap-3">
                 <Link
                   href="/login"
@@ -159,7 +166,6 @@ export function Navbar() {
                 </Link>
               </div>
 
-              {/* Trust Badge - Mobile */}
               <div className="mt-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Shield className="h-3 w-3 text-primary" />
@@ -176,16 +182,14 @@ export function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Progress bar indicator on scroll */}
       {scrolled && (
         <motion.div
           initial={{ scaleX: 0 }}
           animate={{ scaleX: 1 }}
-          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-purple-600"
+          className="absolute bottom-0 left-0 h-0.5 origin-left bg-gradient-to-r from-primary to-purple-600"
           style={{
             width: "100%",
-            transformOrigin: "left",
-            scaleX: Math.min(window.scrollY / 1000, 1),
+            scaleX: Math.min(typeof window !== "undefined" ? window.scrollY / 1000 : 0, 1),
           }}
         />
       )}
