@@ -2,7 +2,7 @@
 
 import { CtaBanner } from "@/components/site/Cta";
 import { Reveal } from "@/components/site/Reveal";
-import { ImageSlot, ParallaxBanner, SectionHead } from "@/components/site/Sections";
+import { ParallaxBanner, SectionHead } from "@/components/site/Sections";
 import {
   AI_CARDS,
   ALL_MODULES,
@@ -44,6 +44,19 @@ const bannerAppointments = "/gotix/banner-appointments.jpg";
 const bannerGrowth = "/gotix/banner-growth.jpg";
 const bannerModern = "/gotix/banner-modern.jpg";
 const heroImg = "/gotix/hero-salon.jpg";
+const billingImg = "/gotix/biling.png";
+const customersImg = "/gotix/customers.png";
+const inventoryImg = "/gotix/inventory.png";
+
+const FEATURE_TEASERS = FEATURES.slice(0, 3).map((f, i) => ({
+  ...f,
+  image: [customersImg, billingImg, inventoryImg][i],
+  alt: [
+    "Reception desk welcoming salon clients",
+    "Salon POS billing and checkout experience",
+    "Salon inventory and product stock shelves",
+  ][i],
+}));
 
 const TITLE = "Gotix — AI-Powered Salon CRM & ERP Software";
 const DESC =
@@ -1848,46 +1861,87 @@ function HomePageView() {
       </section>
 
       {/* F. FEATURES TEASER */}
-      <section className="w-full py-24">
-        <div className="mx-auto w-full max-w-[1500px] space-y-20 px-5 sm:px-8">
+      <section className="w-full py-24 lg:py-32">
+        <div className="mx-auto w-full max-w-[1500px] space-y-10 px-5 sm:px-8 lg:space-y-14">
           <SectionHead
             eyebrow="Features"
             title="Everything Your Team Needs to Deliver a Five-Star Experience"
+            subtitle="Built around real salon floors — reception, billing, and inventory that stay in sync."
           />
-          {FEATURES.slice(0, 3).map((f, i) => (
-            <Reveal key={f.title}>
-              <div
-                className={`grid items-center gap-10 lg:grid-cols-2 ${
-                  i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                }`}
-              >
-                <ImageSlot
-                  name={`feature-${i + 1}.jpg`}
-                  alt={`${f.title} — salon software feature illustration`}
-                  ratio="aspect-[5/4]"
-                />
-                <div>
-                  <h3 className="text-2xl sm:text-3xl">{f.title}</h3>
-                  <p className="mt-4 text-muted-foreground">{f.desc}</p>
-                  <ul className="mt-6 space-y-2 text-sm">
-                    {f.points.map((p) => (
-                      <li key={p} className="flex items-center gap-3">
-                        <span className="h-1.5 w-1.5 rounded-full bg-gold" />
-                        {p}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </Reveal>
-          ))}
+
+          {FEATURE_TEASERS.map((f, i) => {
+            const imageRight = i % 2 === 1;
+            return (
+              <Reveal key={f.title}>
+                <article
+                  className={`relative isolate grid min-h-[420px] overflow-hidden rounded-[2rem] border border-border/60 bg-card lg:grid-cols-2 ${
+                    imageRight ? "" : ""
+                  }`}
+                >
+                  {/* Background image panel */}
+                  <div
+                    className={`relative min-h-[260px] lg:min-h-full ${
+                      imageRight ? "lg:order-2" : ""
+                    }`}
+                  >
+                    <div
+                      role="img"
+                      aria-label={f.alt}
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 ease-out hover:scale-105"
+                      style={{ backgroundImage: `url(${f.image})` }}
+                    />
+                    <div
+                      className={`absolute inset-0 ${
+                        imageRight
+                          ? "bg-gradient-to-l from-transparent via-transparent to-card/40 lg:to-transparent"
+                          : "bg-gradient-to-r from-transparent via-transparent to-card/40 lg:to-transparent"
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/25 via-transparent to-transparent lg:hidden" />
+                    <span className="absolute left-5 top-5 rounded-full border border-white/20 bg-ink/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-foreground backdrop-blur-md">
+                      0{i + 1}
+                    </span>
+                  </div>
+
+                  {/* Typography panel */}
+                  <div
+                    className={`relative flex flex-col justify-center px-6 py-10 sm:px-10 lg:px-12 lg:py-14 ${
+                      imageRight ? "lg:order-1" : ""
+                    }`}
+                  >
+                    <p className="eyebrow">Feature</p>
+                    <h3 className="mt-3 font-display text-2xl leading-tight sm:text-3xl lg:text-[2.1rem]">
+                      {f.title}
+                    </h3>
+                    <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
+                      {f.desc}
+                    </p>
+                    <ul className="mt-7 space-y-3">
+                      {f.points.map((p) => (
+                        <li key={p} className="flex items-center gap-3 text-sm">
+                          <CheckCircle2 className="h-4 w-4 shrink-0 text-secondary" />
+                          <span>{p}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    <Link
+                      href="/features"
+                      className="mt-8 inline-flex w-fit items-center gap-2 text-sm font-medium text-primary transition-all hover:gap-3"
+                    >
+                      Explore feature <ArrowRight className="h-4 w-4" />
+                    </Link>
+                  </div>
+                </article>
+              </Reveal>
+            );
+          })}
+
           <Reveal>
-            <Link
-              href="/features"
-              className="inline-flex items-center gap-2 font-medium text-primary transition-all hover:gap-3"
-            >
-              See All Features <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="flex justify-center pt-2">
+              <Link href="/features" className="btn-base btn-primary">
+                See All Features <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </Reveal>
         </div>
       </section>
