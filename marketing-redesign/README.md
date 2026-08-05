@@ -1,8 +1,8 @@
-# Gotix marketing frontend redesign
+# Gotix marketing frontend redesign (source archive)
 
 Standalone Vite + TanStack Start React redesign of the Salon AI / Gotix marketing site.
 
-This folder is added alongside the existing Next.js app so **backend, Prisma, and NextAuth stay untouched**. It is not wired into the Next.js build yet — run it separately for review.
+**Ported into the Next.js App Router** on branch `frontend-redesign` (`src/components/site`, `src/app/(marketing)`, etc.). This folder is kept as the original Vite source for reference. Backend, Prisma, and NextAuth were not modified by the port.
 
 ## Stack
 

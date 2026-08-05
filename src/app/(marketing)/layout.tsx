@@ -1,17 +1,14 @@
-import { auth } from "@/lib/auth";
-import { Navbar } from "@/components/landing-v2/navbar";
-import { Footer } from "@/components/landing-v2/footer/footer";
+import { Footer } from "@/components/site/Footer";
+import { Navbar } from "@/components/site/Navbar";
 
-export default async function MarketingLayout({
+export default function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-
   return (
-    <div className="landing-v2 min-h-screen antialiased">
-      <Navbar isAuthenticated={!!session} />
+    <div className="gotix-site antialiased">
+      <Navbar />
       <main>{children}</main>
       <Footer />
     </div>

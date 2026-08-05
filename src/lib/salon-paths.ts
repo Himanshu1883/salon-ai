@@ -18,6 +18,20 @@ export const RESERVED_SALON_SLUGS = new Set([
   "terms",
   "privacy",
   "favicon.ico",
+  // Gotix marketing redesign routes
+  "modules",
+  "platform",
+  "solutions",
+  "features",
+  "ai",
+  "testimonials",
+  "faq",
+  "demo",
+  "security",
+  "documentation",
+  "download",
+  "integrations",
+  "gotix",
 ]);
 
 const SALON_ROUTE_MATCHERS = [

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { PricingPageContent } from "@/components/landing-v2/marketing/pricing/pricing-page";
+import PricingPage from "@/components/site/pages/pricing";
 
 export const metadata: Metadata = {
-  title: "Pricing | Go Tix",
-  description:
-    "Flexible Go Tix plans for every salon size — Starter, Professional, Business, and Enterprise. 14-day free trial.",
+  title: "Pricing — Gotix Plans From ₹1,999/mo",
+  description: "Starter, Professional, Business and Enterprise plans for salons and chains. 14-day free trial, no setup fee, free data migration.",
 };
 
-export default function PricingPage() {
-  return <PricingPageContent />;
+export default function Page() {
+  return <PricingPage />;
 }

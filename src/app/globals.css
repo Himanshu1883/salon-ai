@@ -1,8 +1,34 @@
 @import "tailwindcss";
+@import "../styles/gotix-site.css";
 
 :root {
   --background: #faf9f7;
   --foreground: #1c1917;
+
+  /* Gotix marketing tokens (also scoped under .gotix-site) */
+  --primary: oklch(0.44 0.208 296);
+  --primary-foreground: oklch(0.985 0.005 85);
+  --primary-dark: oklch(0.375 0.19 296);
+  --primary-glow: oklch(0.62 0.2 298);
+  --secondary: oklch(0.462 0.072 168);
+  --secondary-foreground: oklch(0.985 0.005 85);
+  --muted: oklch(0.932 0.014 85);
+  --muted-foreground: oklch(0.475 0.02 60);
+  --accent: oklch(0.92 0.03 300);
+  --accent-foreground: oklch(0.3 0.12 296);
+  --card: oklch(0.988 0.007 85);
+  --card-foreground: oklch(0.212 0.012 55);
+  --popover: oklch(0.988 0.007 85);
+  --popover-foreground: oklch(0.212 0.012 55);
+  --gold: oklch(0.735 0.089 80);
+  --ink: oklch(0.212 0.012 55);
+  --ink-foreground: oklch(0.955 0.012 85);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0.005 85);
+  --border: oklch(0.895 0.018 84);
+  --input: oklch(0.895 0.018 84);
+  --ring: oklch(0.44 0.208 296);
+  --radius: 0.75rem;
 
   /* Dashboard design system */
   --dashboard-bg: #ede9fe;
@@ -33,6 +59,28 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-glow: var(--primary-glow);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --color-dashboard-bg: var(--dashboard-bg);
   --color-dashboard-card: var(--dashboard-card);
   --color-dashboard-primary: var(--dashboard-primary);
@@ -47,9 +95,15 @@
   --radius-dashboard: var(--dashboard-radius);
   --radius-dashboard-button: var(--dashboard-button-radius);
   --shadow-dashboard-card: var(--dashboard-card-shadow);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-playfair);
+  --font-display: var(--font-fraunces), var(--font-playfair), ui-serif, Georgia, serif;
 }
 
 .dashboard-shell {

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import { AboutPageContent } from "@/components/landing-v2/marketing/about/about-page";
+import AboutPage from "@/components/site/pages/about";
 
 export const metadata: Metadata = {
-  title: "About Us | Go Tix",
-  description:
-    "Learn about Go Tix — the luxury AI-powered salon ERP trusted by 1,000+ salons across India.",
+  title: "About Gotix — Built by People Who Understand Salons",
+  description: "Our mission: give every salon, spa and beauty chain the operational intelligence of an enterprise brand.",
 };
 
-export default function AboutPage() {
-  return <AboutPageContent />;
+export default function Page() {
+  return <AboutPage />;
 }
