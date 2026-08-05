@@ -72,7 +72,7 @@ export function Navbar() {
           : "bg-background/5 backdrop-blur-md"
       }`}
     >
-      <div className="mx-auto w-full max-w-[1500px] px-4 sm:px-6 lg:px-8">
+      <div className="w-full px-4 sm:px-5">
         <nav className="relative flex h-16 w-full items-center justify-between lg:h-20">
           <Brand />
 
