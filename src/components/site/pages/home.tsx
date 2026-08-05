@@ -84,8 +84,8 @@ function HomePageView() {
             height={1088}
             className="h-full w-full object-cover ken-burns"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/80 to-background/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/55 via-background/25 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
           <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
           <div className="absolute -right-20 bottom-20 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
           <div className="absolute top-1/2 left-1/2 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />

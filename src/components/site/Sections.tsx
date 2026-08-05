@@ -117,11 +117,11 @@ export function ParallaxBanner({
         <div
           className={`absolute inset-0 ${
             align === "left"
-              ? "bg-gradient-to-r from-background via-background/90 to-transparent"
-              : "bg-gradient-to-l from-background via-background/90 to-transparent"
+              ? "bg-gradient-to-r from-background/85 via-background/45 to-transparent"
+              : "bg-gradient-to-l from-background/85 via-background/45 to-transparent"
           }`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
       </motion.div>
 
       {/* Decorative elements */}
