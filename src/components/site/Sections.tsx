@@ -42,7 +42,7 @@ export function PageHero({
             className={`absolute inset-0 ${
               dark
                 ? "bg-gradient-to-r from-ink/92 via-ink/80 to-ink/40"
-                : "bg-gradient-to-r from-background/90 via-background/55 to-background/15"
+                : "bg-gradient-to-r from-background via-background/88 to-background/35"
             }`}
           />
         </div>
@@ -113,14 +113,15 @@ export function ParallaxBanner({
           loading="lazy"
           className="h-full w-full object-cover"
         />
-        {/* Gradient overlay — keep text readable, leave photo visible on the open side */}
+        {/* Original style: solid on typography side, clear photo on the open side */}
         <div
           className={`absolute inset-0 ${
             align === "left"
-              ? "bg-gradient-to-r from-background/90 via-background/55 to-background/10"
-              : "bg-gradient-to-l from-background/90 via-background/55 to-background/10"
+              ? "bg-gradient-to-r from-background via-background/90 to-transparent"
+              : "bg-gradient-to-l from-background via-background/90 to-transparent"
           }`}
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
       </motion.div>
 
       <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
