@@ -235,6 +235,19 @@
   width: 100%;
 }
 
+.gotix-site .nav-link[aria-current="page"] {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.gotix-site .nav-link[aria-current="page"]::after {
+  width: 0;
+}
+
+.gotix-site .nav-link[aria-current="page"]:hover::after {
+  width: 0;
+}
+
 .gotix-site .footer-link {
   display: inline-flex;
   align-items: center;
@@ -319,7 +332,8 @@
   .gotix-site .saas-wave,
   .gotix-site .saas-ripple,
   .gotix-site .saas-flow-orb,
-  .gotix-site .saas-flow-band {
+  .gotix-site .saas-flow-band,
+  .gotix-site .animate-\[gradient-shift_6s_ease_infinite\] {
     animation: none !important;
   }
 }
@@ -429,4 +443,91 @@
   100% {
     transform: translate(3%, -2%);
   }
+}
+
+@keyframes gotix-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.gotix-site .animate-\[gradient-shift_6s_ease_infinite\] {
+  animation: gotix-gradient-shift 6s ease infinite;
+}
+
+/* ── Site shell: rounded section / hero / footer blocks ── */
+
+.gotix-site {
+  --site-shell-radius: 1.75rem;
+  --site-footer-gap: 2rem;
+}
+
+@media (min-width: 640px) {
+  .gotix-site {
+    --site-shell-radius: 2rem;
+    --site-footer-gap: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .gotix-site {
+    --site-shell-radius: 2.5rem;
+    --site-footer-gap: 3rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .gotix-site {
+    --site-shell-radius: 1.25rem;
+    --site-footer-gap: 1.5rem;
+  }
+}
+
+.gotix-site main.site-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  width: 100%;
+}
+
+/* Full-bleed sections — edge to edge, connected, rounded top + bottom */
+.gotix-site main.site-shell > section {
+  width: 100%;
+  margin: 0;
+  border-radius: var(--site-shell-radius);
+  overflow: clip;
+}
+
+/* Clear gap before footer — prevents rounded corners from touching */
+.gotix-site main.site-shell > section:last-child,
+.gotix-site main.site-shell > section.site-cta-shell {
+  margin-bottom: var(--site-footer-gap);
+}
+
+/* Home hero: full-bleed, rounded bottom edges only */
+.gotix-site main.site-shell > section.site-hero-shell,
+.gotix-site .site-hero-shell {
+  width: 100%;
+  margin: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: var(--site-shell-radius);
+  border-bottom-right-radius: var(--site-shell-radius);
+  overflow: clip;
+}
+
+/* Footer: full-bleed, rounded top edges only */
+.gotix-site footer.site-footer-shell {
+  width: 100%;
+  margin: 0;
+  border-top-left-radius: var(--site-shell-radius);
+  border-top-right-radius: var(--site-shell-radius);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  overflow: clip;
 }

@@ -9,7 +9,7 @@ export default function MarketingLayout({
   return (
     <div className="gotix-site antialiased">
       <Navbar />
-      <main>{children}</main>
+      <main className="site-shell">{children}</main>
       <Footer />
     </div>
   );

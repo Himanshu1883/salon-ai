@@ -79,7 +79,7 @@ const SOCIALS = [
 
 export function Footer() {
   return (
-    <footer className="relative w-full overflow-hidden bg-gradient-to-b from-[#f0edf5] via-[#f5f2f9] to-[#faf8fc]">
+    <footer className="site-footer-shell relative w-full overflow-hidden bg-gradient-to-b from-[#f0edf5] via-[#f5f2f9] to-[#faf8fc]">
       {/* Large Gotix Watermark Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
         <span className="text-[15rem] font-display font-bold text-[#d5cce6]/20 tracking-[-0.05em] leading-none lg:text-[25rem] xl:text-[30rem]">

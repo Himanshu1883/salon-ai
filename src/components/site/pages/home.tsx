@@ -1,6 +1,7 @@
 "use client";
 
 import { CtaBanner } from "@/components/site/Cta";
+import { HomeHero } from "@/components/site/HomeHero";
 import { Reveal } from "@/components/site/Reveal";
 import { SectionBackdrop } from "@/components/site/SectionBackdrop";
 import { ParallaxBanner } from "@/components/site/Sections";
@@ -17,12 +18,9 @@ import { motion } from "framer-motion";
 import {
   ArrowRight,
   Award,
-  Bell,
   Calendar,
   CheckCircle2,
   ChevronDown,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   Cloud,
   CreditCard, // Add this
@@ -39,1376 +37,101 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 
 const bannerAppointments = "/gotix/banner-appointments.jpg";
 const bannerGrowth = "/gotix/banner-growth.jpg";
 const bannerModern = "/gotix/banner-modern.jpg";
-const heroImg = "/gotix/hero-salon.jpg";
-const TITLE = "Gotix — AI-Powered Salon CRM & ERP Software";
-const DESC =
-  "Appointments, POS billing, inventory, CRM and AI analytics in one intelligent platform built for salons, spas and beauty chains.";
 
-const PILLS = [
-  "Appointments",
-  "POS Billing",
-  "Inventory",
-  "CRM",
-  "Marketing",
-  "Membership",
-  "WhatsApp",
-  "Reports",
-  "Analytics",
-  "Multi-Branch",
-];
+function unsplash(id: string, w = 800) {
+  return `https://images.unsplash.com/${id}?w=${w}&q=85&auto=format&fit=crop`;
+}
 
-const FLOATING = [
-  { label: "Revenue", value: "₹2.4L", note: "+12% this month" },
-  { label: "Inventory", value: "124", note: "Items in stock" },
-  { label: "Clients", value: "1,284", note: "+18% MoM" },
-];
+const MODULES_SECTION_BG = unsplash("photo-1560066984-138dadb4c035", 1920);
+
+const FEATURED_MODULE_CARDS = [
+  {
+    title: "AI-Powered Scheduling",
+    description:
+      "Optimize appointments with machine learning that predicts peak times and reduces no-shows",
+    icon: Sparkles,
+    badge: "New",
+    gradient: "from-violet-500 to-purple-600",
+    image: unsplash("photo-1633681926022-84c23e8cb2d6", 1200),
+    imageAlt: "Salon reception desk managing appointment bookings",
+  },
+  {
+    title: "Smart Inventory",
+    description:
+      "Automated stock management with predictive reordering and supplier integration",
+    icon: Package,
+    badge: "Popular",
+    gradient: "from-emerald-500 to-teal-600",
+    image: unsplash("photo-1596462502278-27bfdc403348", 1200),
+    imageAlt: "Beauty products and salon inventory on display shelves",
+  },
+  {
+    title: "Client Intelligence",
+    description:
+      "Deep client insights with purchase patterns, preferences, and automated engagement",
+    icon: TrendingUp,
+    badge: "AI-Powered",
+    gradient: "from-blue-500 to-indigo-600",
+    image: unsplash("photo-1522337660859-02fbefca4702", 1200),
+    imageAlt: "Stylist consulting with a salon client about preferences",
+  },
+] as const;
+
+const MODULE_CARD_IMAGES: Record<string, { src: string; alt: string }> = {
+  Dashboard: {
+    src: unsplash("photo-1551288049-bebda4e38f71"),
+    alt: "Analytics dashboard showing salon performance metrics",
+  },
+  Appointments: {
+    src: unsplash("photo-1633681926022-84c23e8cb2d6"),
+    alt: "Salon reception desk for booking appointments",
+  },
+  "Walk In": {
+    src: unsplash("photo-1600948836101-f9ffda59d250"),
+    alt: "Client walking in for a same-day salon visit",
+  },
+  Queue: {
+    src: unsplash("photo-1633681138600-295fcd688876"),
+    alt: "Salon styling chairs and client waiting area",
+  },
+  "Multi Branch": {
+    src: unsplash("photo-1560066984-138dadb4c035"),
+    alt: "Multi-chair salon interior across branch locations",
+  },
+  Billing: {
+    src: unsplash("photo-1556742049-0cfed4f6a45d"),
+    alt: "Salon billing and card payment at checkout",
+  },
+  POS: {
+    src: unsplash("photo-1633681926019-03bd9325ec20"),
+    alt: "Salon counter with touch-friendly point-of-sale checkout",
+  },
+  Customers: {
+    src: unsplash("photo-1522337660859-02fbefca4702"),
+    alt: "Stylist speaking with a loyal salon customer",
+  },
+};
+
+function getModuleCardImage(title: string) {
+  return (
+    MODULE_CARD_IMAGES[title] ?? {
+      src: unsplash("photo-1560066984-138dadb4c035"),
+      alt: "Professional salon workspace",
+    }
+  );
+}
 
 function HomePageView() {
-  const [currentSlide, setCurrentSlide] = useState(0);
   return (
     <>
-      {/* A. HERO - Enhanced with Dot Navigation */}
-      <section className="relative isolate min-h-screen w-full overflow-hidden pt-24 lg:pt-28">
-        {/* Background with gradient overlay */}
-        <div className="absolute inset-0 z-0">
-          <img
-            src={heroImg}
-            alt="Premium modern salon interior with elegant styling stations and ambient lighting"
-            width={1920}
-            height={1088}
-            className="h-full w-full object-cover ken-burns"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/80 to-background/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
-          <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute -right-20 bottom-20 h-80 w-80 rounded-full bg-purple-500/10 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 h-64 w-64 rounded-full bg-blue-500/5 blur-3xl" />
-        </div>
-
-        {/* Slides Container with Dot Navigation */}
-        <div className="relative z-10 overflow-hidden">
-          <motion.div
-            className="flex"
-            animate={{ x: `-${currentSlide * 100}%` }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {/* Slide 1 - Main Hero */}
-            <div className="min-w-full">
-              <div className="relative mx-auto grid w-full max-w-[1500px] items-center gap-12 px-5 py-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-                {/* Left Column - Content */}
-                <div className="space-y-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-medium text-primary">
-                      AI-Powered Salon Management
-                    </span>
-                    <span className="ml-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                      v3.0
-                    </span>
-                  </motion.div>
-
-                  <motion.h1
-                    className="max-w-3xl text-4xl leading-[1.05] sm:text-5xl lg:text-[4.1rem]"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.08 }}
-                  >
-                    Transform your salon into a{" "}
-                    <span className="relative">
-                      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        smart business
-                      </span>
-                      <motion.span
-                        className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-primary to-purple-600"
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                      />
-                    </span>
-                  </motion.h1>
-
-                  <motion.p
-                    className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.16 }}
-                  >
-                    The all-in-one AI platform that automates appointments,
-                    optimizes inventory, boosts revenue, and delivers
-                    exceptional client experiences — all from a single
-                    dashboard.
-                  </motion.p>
-
-                  <motion.div
-                    className="flex flex-wrap gap-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                  >
-                    {[
-                      {
-                        icon: <TrendingUp className="h-4 w-4" />,
-                        label: "Revenue Growth",
-                        value: "+156%",
-                        sub: "YoY growth",
-                      },
-                      {
-                        icon: <Users className="h-4 w-4" />,
-                        label: "Active Users",
-                        value: "12.5K",
-                        sub: "Salons worldwide",
-                      },
-                      {
-                        icon: <CheckCircle2 className="h-4 w-4" />,
-                        label: "Efficiency",
-                        value: "94%",
-                        sub: "Booking accuracy",
-                      },
-                    ].map((stat, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                          {stat.icon}
-                        </div>
-                        <div>
-                          <p className="font-display text-lg font-bold">
-                            {stat.value}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {stat.label}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/70">
-                            {stat.sub}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.24 }}
-                  >
-                    {[
-                      "AI-powered scheduling",
-                      "Real-time analytics",
-                      "Smart inventory mgmt",
-                      "Client CRM",
-                      "Automated billing",
-                      "Staff performance",
-                      "Marketing automation",
-                      "Multi-location sync",
-                    ].map((feature) => (
-                      <span
-                        key={feature}
-                        className="group flex items-center gap-1.5 rounded-full border border-border/50 bg-card/30 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/10 hover:text-primary"
-                      >
-                        <CheckCircle2 className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        {feature}
-                      </span>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-3 pt-2"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.32 }}
-                  >
-                    <Link
-                      href="/signup"
-                      className="group btn-base btn-primary relative overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        Start Free Trial
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
-                      <span className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 transition-opacity group-hover:opacity-100" />
-                    </Link>
-                    <Link
-                      href="/demo"
-                      className="btn-base btn-outline border-2 bg-background/50 backdrop-blur-sm hover:border-primary"
-                    >
-                      <Calendar className="h-4 w-4" />
-                      Book a Demo
-                    </Link>
-                    <Link
-                      href="/features"
-                      className="btn-base btn-ghost text-muted-foreground hover:text-primary"
-                    >
-                      Explore Features →
-                    </Link>
-                  </motion.div>
-
-                  <motion.div
-                    className="flex items-center gap-6 pt-4"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                  >
-                    <div className="flex -space-x-1.5">
-                      {[1, 2, 3, 4].map((i) => (
-                        <div
-                          key={i}
-                          className="h-8 w-8 rounded-full border-2 border-background bg-gradient-to-br from-primary/30 to-purple-600/30"
-                        />
-                      ))}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                          <Star
-                            key={i}
-                            className="h-3 w-3 fill-yellow-500 text-yellow-500"
-                          />
-                        ))}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Trusted by{" "}
-                        <span className="font-semibold text-foreground">
-                          1,200+
-                        </span>{" "}
-                        salons worldwide
-                      </p>
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Right Column - Dashboard Preview */}
-                <div className="relative hidden lg:block">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.7, delay: 0.1 }}
-                    className="glass-card overflow-hidden p-4 shadow-2xl"
-                  >
-                    <div className="rounded-xl border border-border/50 bg-card/95 p-5 backdrop-blur-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Today's Overview
-                          </p>
-                          <p className="font-display text-2xl font-bold">
-                            Command Center
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                          <span className="text-xs text-muted-foreground">
-                            Live
-                          </span>
-                          <Bell className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </div>
-
-                      <div className="mt-5 grid grid-cols-4 gap-2">
-                        {[
-                          {
-                            label: "Revenue",
-                            value: "₹48,320",
-                            change: "+8%",
-                            icon: (
-                              <TrendingUp className="h-3 w-3 text-green-500" />
-                            ),
-                          },
-                          {
-                            label: "Appointments",
-                            value: "47",
-                            change: "+12%",
-                            icon: (
-                              <Calendar className="h-3 w-3 text-blue-500" />
-                            ),
-                          },
-                          {
-                            label: "Walk-ins",
-                            value: "12",
-                            change: "+5%",
-                            icon: <Users className="h-3 w-3 text-purple-500" />,
-                          },
-                          {
-                            label: "Conversion",
-                            value: "86%",
-                            change: "+3%",
-                            icon: (
-                              <Target className="h-3 w-3 text-orange-500" />
-                            ),
-                          },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="rounded-lg bg-muted/50 p-2.5 text-center transition-colors hover:bg-muted"
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              {stat.icon}
-                              <p className="font-display text-sm font-bold">
-                                {stat.value}
-                              </p>
-                            </div>
-                            <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                              {stat.label}
-                            </p>
-                            <p className="text-[10px] text-green-500">
-                              {stat.change}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-4 h-20 rounded-lg bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm" />
-
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Next Appointments</span>
-                          <span className="text-primary">View all →</span>
-                        </div>
-                        {[
-                          {
-                            name: "Aditi Rao",
-                            service: "Airbrush Makeup",
-                            time: "10:30 AM",
-                            status: "confirmed",
-                          },
-                          {
-                            name: "Neha S",
-                            service: "Hair Colour + Treatment",
-                            time: "1:15 PM",
-                            status: "waiting",
-                          },
-                          {
-                            name: "Priya M",
-                            service: "Bridal Package",
-                            time: "3:00 PM",
-                            status: "pending",
-                          },
-                          {
-                            name: "Sneha K",
-                            service: "Nail Art Premium",
-                            time: "5:30 PM",
-                            status: "confirmed",
-                          },
-                        ].map((apt, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs transition-colors hover:bg-muted/50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                {apt.name.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="font-medium">{apt.name}</p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  {apt.service}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[10px] text-muted-foreground">
-                                {apt.time}
-                              </p>
-                              <span
-                                className={`text-[9px] font-medium ${
-                                  apt.status === "confirmed"
-                                    ? "text-green-500"
-                                    : apt.status === "waiting"
-                                      ? "text-yellow-500"
-                                      : "text-blue-500"
-                                }`}
-                              >
-                                {apt.status.charAt(0).toUpperCase() +
-                                  apt.status.slice(1)}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        {[
-                          {
-                            icon: <Calendar className="h-3.5 w-3.5" />,
-                            label: "New Booking",
-                          },
-                          {
-                            icon: <Users className="h-3.5 w-3.5" />,
-                            label: "Add Client",
-                          },
-                          {
-                            icon: <MessageSquare className="h-3.5 w-3.5" />,
-                            label: "Message",
-                          },
-                        ].map((action) => (
-                          <button
-                            key={action.label}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-card/50 px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                          >
-                            {action.icon}
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {[
-                    {
-                      label: "AI Insights",
-                      value: "92%",
-                      note: "Revenue accuracy↑",
-                      icon: <TrendingUp className="h-3 w-3 text-primary" />,
-                      color: "from-blue-500/20 to-purple-500/20",
-                    },
-                    {
-                      label: "Client Satisfaction",
-                      value: "4.9★",
-                      note: "Based on 2,847 reviews",
-                      icon: <Star className="h-3 w-3 text-yellow-500" />,
-                      color: "from-yellow-500/20 to-orange-500/20",
-                    },
-                    {
-                      label: "Today's Bookings",
-                      value: "47",
-                      note: "+12% vs yesterday",
-                      icon: <Calendar className="h-3 w-3 text-green-500" />,
-                      color: "from-green-500/20 to-teal-500/20",
-                    },
-                    {
-                      label: "Active Staff",
-                      value: "8",
-                      note: "2 on break",
-                      icon: <Users className="h-3 w-3 text-blue-500" />,
-                      color: "from-blue-500/20 to-cyan-500/20",
-                    },
-                  ].map((f, i) => (
-                    <motion.div
-                      key={f.label}
-                      className={`glass-card absolute px-4 py-3 shadow-lg backdrop-blur-md ${i % 2 === 0 ? "drift-left" : "drift-right"}`}
-                      style={{
-                        top: `${10 + i * 22}%`,
-                        left: i % 2 === 0 ? "-12%" : "auto",
-                        right: i % 2 === 0 ? "auto" : "-8%",
-                        animationDelay: `${i * 0.6}s`,
-                      }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                    >
-                      <div
-                        className={`rounded-lg bg-gradient-to-r ${f.color} p-2`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {f.icon}
-                          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                            {f.label}
-                          </p>
-                        </div>
-                        <p className="font-display text-xl font-bold">
-                          {f.value}
-                        </p>
-                        <p className="text-[10px] text-primary">{f.note}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  <motion.div
-                    className="absolute -bottom-4 left-1/2 -translate-x-1/2 glass-card px-6 py-2.5 backdrop-blur-md"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium">
-                          Enterprise Grade
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Zap className="h-4 w-4 text-yellow-500" />
-                        <span className="text-xs font-medium">
-                          99.9% Uptime
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-purple-500" />
-                        <span className="text-xs font-medium">
-                          #1 Salon Software
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
-            {/* Slide 2 - Analytics Focus */}
-            <div className="min-w-full">
-              <div className="relative mx-auto grid w-full max-w-[1500px] items-center gap-12 px-5 py-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-                <div className="space-y-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-medium text-primary">
-                      AI-Powered Analytics
-                    </span>
-                    <span className="ml-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                      v3.0
-                    </span>
-                  </motion.div>
-
-                  <motion.h1
-                    className="max-w-3xl text-4xl leading-[1.05] sm:text-5xl lg:text-[4.1rem]"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.08 }}
-                  >
-                    Unlock{" "}
-                    <span className="relative">
-                      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        Data-Driven Growth
-                      </span>
-                      <motion.span
-                        className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-primary to-purple-600"
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                      />
-                    </span>
-                  </motion.h1>
-
-                  <motion.p
-                    className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.16 }}
-                  >
-                    Make smarter decisions with real-time analytics, client
-                    insights, and AI-powered forecasting that helps you stay
-                    ahead of the competition.
-                  </motion.p>
-
-                  <motion.div
-                    className="flex flex-wrap gap-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                  >
-                    {[
-                      {
-                        icon: <TrendingUp className="h-4 w-4" />,
-                        label: "Revenue Impact",
-                        value: "+32%",
-                        sub: "Average growth",
-                      },
-                      {
-                        icon: <Users className="h-4 w-4" />,
-                        label: "Client Retention",
-                        value: "94%",
-                        sub: "Year over year",
-                      },
-                      {
-                        icon: <CheckCircle2 className="h-4 w-4" />,
-                        label: "Forecast Accuracy",
-                        value: "97%",
-                        sub: "AI-powered",
-                      },
-                    ].map((stat, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                          {stat.icon}
-                        </div>
-                        <div>
-                          <p className="font-display text-lg font-bold">
-                            {stat.value}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {stat.label}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/70">
-                            {stat.sub}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.24 }}
-                  >
-                    {[
-                      "Predictive analytics",
-                      "Client segmentation",
-                      "Revenue forecasting",
-                      "Staff optimization",
-                      "Service performance",
-                      "Peak hour insights",
-                    ].map((feature) => (
-                      <span
-                        key={feature}
-                        className="group flex items-center gap-1.5 rounded-full border border-border/50 bg-card/30 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/10 hover:text-primary"
-                      >
-                        <CheckCircle2 className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        {feature}
-                      </span>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-3 pt-2"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.32 }}
-                  >
-                    <Link
-                      href="/signup"
-                      className="group btn-base btn-primary relative overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        Start Free Trial{" "}
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
-                      <span className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 transition-opacity group-hover:opacity-100" />
-                    </Link>
-                    <Link
-                      href="/demo"
-                      className="btn-base btn-outline border-2 bg-background/50 backdrop-blur-sm hover:border-primary"
-                    >
-                      <Calendar className="h-4 w-4" /> Book a Demo
-                    </Link>
-                  </motion.div>
-                </div>
-
-                {/* Right Column - Analytics Dashboard */}
-                <div className="relative hidden lg:block">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.7, delay: 0.1 }}
-                    className="glass-card overflow-hidden p-4 shadow-2xl"
-                  >
-                    <div className="rounded-xl border border-border/50 bg-card/95 p-5 backdrop-blur-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Analytics Dashboard
-                          </p>
-                          <p className="font-display text-2xl font-bold">
-                            Growth Insights
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                          <span className="text-xs text-muted-foreground">
-                            Live
-                          </span>
-                          <Bell className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </div>
-                      <div className="mt-5 grid grid-cols-4 gap-2">
-                        {[
-                          {
-                            label: "Revenue",
-                            value: "₹2.4L",
-                            change: "+12%",
-                            icon: (
-                              <TrendingUp className="h-3 w-3 text-green-500" />
-                            ),
-                          },
-                          {
-                            label: "Growth",
-                            value: "32%",
-                            change: "+8%",
-                            icon: (
-                              <TrendingUp className="h-3 w-3 text-blue-500" />
-                            ),
-                          },
-                          {
-                            label: "Retention",
-                            value: "94%",
-                            change: "+5%",
-                            icon: <Users className="h-3 w-3 text-purple-500" />,
-                          },
-                          {
-                            label: "Forecast",
-                            value: "97%",
-                            change: "+3%",
-                            icon: (
-                              <Target className="h-3 w-3 text-orange-500" />
-                            ),
-                          },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="rounded-lg bg-muted/50 p-2.5 text-center transition-colors hover:bg-muted"
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              {stat.icon}
-                              <p className="font-display text-sm font-bold">
-                                {stat.value}
-                              </p>
-                            </div>
-                            <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                              {stat.label}
-                            </p>
-                            <p className="text-[10px] text-green-500">
-                              {stat.change}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 h-20 rounded-lg bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm" />
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Top Services</span>
-                          <span className="text-primary">View all →</span>
-                        </div>
-                        {[
-                          {
-                            name: "Hair Colour",
-                            revenue: "₹12,450",
-                            growth: "+15%",
-                          },
-                          {
-                            name: "Airbrush Makeup",
-                            revenue: "₹8,320",
-                            growth: "+22%",
-                          },
-                          {
-                            name: "Bridal Package",
-                            revenue: "₹15,800",
-                            growth: "+18%",
-                          },
-                          {
-                            name: "Nail Art",
-                            revenue: "₹4,200",
-                            growth: "+9%",
-                          },
-                        ].map((service, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs transition-colors hover:bg-muted/50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                                {service.name.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="font-medium">{service.name}</p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  {service.revenue}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-green-500">
-                                {service.growth}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex gap-2">
-                        {[
-                          {
-                            icon: <TrendingUp className="h-3.5 w-3.5" />,
-                            label: "Analytics",
-                          },
-                          {
-                            icon: <Users className="h-3.5 w-3.5" />,
-                            label: "Reports",
-                          },
-                          {
-                            icon: <MessageSquare className="h-3.5 w-3.5" />,
-                            label: "Insights",
-                          },
-                        ].map((action) => (
-                          <button
-                            key={action.label}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-card/50 px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                          >
-                            {action.icon}
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {[
-                    {
-                      label: "Revenue Impact",
-                      value: "+32%",
-                      note: "Average growth",
-                      icon: <TrendingUp className="h-3 w-3 text-primary" />,
-                      color: "from-blue-500/20 to-purple-500/20",
-                    },
-                    {
-                      label: "Client Retention",
-                      value: "94%",
-                      note: "Year over year",
-                      icon: <Users className="h-3 w-3 text-yellow-500" />,
-                      color: "from-yellow-500/20 to-orange-500/20",
-                    },
-                    {
-                      label: "Forecast Acc",
-                      value: "97%",
-                      note: "AI-powered",
-                      icon: <Target className="h-3 w-3 text-green-500" />,
-                      color: "from-green-500/20 to-teal-500/20",
-                    },
-                    {
-                      label: "Service Growth",
-                      value: "22%",
-                      note: "Top performer",
-                      icon: <TrendingUp className="h-3 w-3 text-blue-500" />,
-                      color: "from-blue-500/20 to-cyan-500/20",
-                    },
-                  ].map((f, i) => (
-                    <motion.div
-                      key={f.label}
-                      className={`glass-card absolute px-4 py-3 shadow-lg backdrop-blur-md ${i % 2 === 0 ? "drift-left" : "drift-right"}`}
-                      style={{
-                        top: `${10 + i * 22}%`,
-                        left: i % 2 === 0 ? "-12%" : "auto",
-                        right: i % 2 === 0 ? "auto" : "-8%",
-                        animationDelay: `${i * 0.6}s`,
-                      }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                    >
-                      <div
-                        className={`rounded-lg bg-gradient-to-r ${f.color} p-2`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {f.icon}
-                          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                            {f.label}
-                          </p>
-                        </div>
-                        <p className="font-display text-xl font-bold">
-                          {f.value}
-                        </p>
-                        <p className="text-[10px] text-primary">{f.note}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  <motion.div
-                    className="absolute -bottom-4 left-1/2 -translate-x-1/2 glass-card px-6 py-2.5 backdrop-blur-md"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium">
-                          Enterprise Grade
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Zap className="h-4 w-4 text-yellow-500" />
-                        <span className="text-xs font-medium">
-                          99.9% Uptime
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-purple-500" />
-                        <span className="text-xs font-medium">
-                          #1 Salon Software
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-
-            {/* Slide 3 - Client Experience Focus */}
-            <div className="min-w-full">
-              <div className="relative mx-auto grid w-full max-w-[1500px] items-center gap-12 px-5 py-8 sm:px-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-                <div className="space-y-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm"
-                  >
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-xs font-medium text-primary">
-                      Client Experience
-                    </span>
-                    <span className="ml-1 rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                      v3.0
-                    </span>
-                  </motion.div>
-
-                  <motion.h1
-                    className="max-w-3xl text-4xl leading-[1.05] sm:text-5xl lg:text-[4.1rem]"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.08 }}
-                  >
-                    Deliver{" "}
-                    <span className="relative">
-                      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
-                        Exceptional Experiences
-                      </span>
-                      <motion.span
-                        className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-primary to-purple-600"
-                        initial={{ width: 0 }}
-                        animate={{ width: "100%" }}
-                        transition={{ delay: 0.5, duration: 0.8 }}
-                      />
-                    </span>
-                  </motion.h1>
-
-                  <motion.p
-                    className="max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.16 }}
-                  >
-                    Personalize every client interaction with 360° profiles,
-                    preferences tracking, and automated engagement that builds
-                    lasting loyalty.
-                  </motion.p>
-
-                  <motion.div
-                    className="flex flex-wrap gap-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: 0.2 }}
-                  >
-                    {[
-                      {
-                        icon: <Users className="h-4 w-4" />,
-                        label: "Client Lifetime",
-                        value: "4.2x",
-                        sub: "Higher retention",
-                      },
-                      {
-                        icon: <CheckCircle2 className="h-4 w-4" />,
-                        label: "Satisfaction",
-                        value: "98%",
-                        sub: "Positive reviews",
-                      },
-                      {
-                        icon: <TrendingUp className="h-4 w-4" />,
-                        label: "Referrals",
-                        value: "64%",
-                        sub: "Word of mouth",
-                      },
-                    ].map((stat, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="rounded-lg bg-primary/10 p-2 text-primary">
-                          {stat.icon}
-                        </div>
-                        <div>
-                          <p className="font-display text-lg font-bold">
-                            {stat.value}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {stat.label}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground/70">
-                            {stat.sub}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-2"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.24 }}
-                  >
-                    {[
-                      "Client 360° profiles",
-                      "Preference tracking",
-                      "Automated engagement",
-                      "Loyalty programs",
-                      "Birthday rewards",
-                      "Feedback management",
-                    ].map((feature) => (
-                      <span
-                        key={feature}
-                        className="group flex items-center gap-1.5 rounded-full border border-border/50 bg-card/30 px-3.5 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/10 hover:text-primary"
-                      >
-                        <CheckCircle2 className="h-3 w-3 opacity-0 transition-opacity group-hover:opacity-100" />
-                        {feature}
-                      </span>
-                    ))}
-                  </motion.div>
-
-                  <motion.div
-                    className="flex flex-wrap gap-3 pt-2"
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.32 }}
-                  >
-                    <Link
-                      href="/signup"
-                      className="group btn-base btn-primary relative overflow-hidden"
-                    >
-                      <span className="relative z-10 flex items-center gap-2">
-                        Start Free Trial{" "}
-                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                      </span>
-                      <span className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 transition-opacity group-hover:opacity-100" />
-                    </Link>
-                    <Link
-                      href="/demo"
-                      className="btn-base btn-outline border-2 bg-background/50 backdrop-blur-sm hover:border-primary"
-                    >
-                      <Calendar className="h-4 w-4" /> Book a Demo
-                    </Link>
-                  </motion.div>
-                </div>
-
-                {/* Right Column - Client Dashboard */}
-                <div className="relative hidden lg:block">
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.7, delay: 0.1 }}
-                    className="glass-card overflow-hidden p-4 shadow-2xl"
-                  >
-                    <div className="rounded-xl border border-border/50 bg-card/95 p-5 backdrop-blur-sm">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground">
-                            Client Dashboard
-                          </p>
-                          <p className="font-display text-2xl font-bold">
-                            Client 360°
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-2 w-2 animate-pulse rounded-full bg-green-500" />
-                          <span className="text-xs text-muted-foreground">
-                            Live
-                          </span>
-                          <Bell className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                      </div>
-                      <div className="mt-5 grid grid-cols-4 gap-2">
-                        {[
-                          {
-                            label: "Total Clients",
-                            value: "1,284",
-                            change: "+12%",
-                            icon: <Users className="h-3 w-3 text-green-500" />,
-                          },
-                          {
-                            label: "New Today",
-                            value: "12",
-                            change: "+8%",
-                            icon: <Users className="h-3 w-3 text-blue-500" />,
-                          },
-                          {
-                            label: "Satisfaction",
-                            value: "98%",
-                            change: "+5%",
-                            icon: <Star className="h-3 w-3 text-yellow-500" />,
-                          },
-                          {
-                            label: "Referrals",
-                            value: "64%",
-                            change: "+3%",
-                            icon: (
-                              <TrendingUp className="h-3 w-3 text-purple-500" />
-                            ),
-                          },
-                        ].map((stat) => (
-                          <div
-                            key={stat.label}
-                            className="rounded-lg bg-muted/50 p-2.5 text-center transition-colors hover:bg-muted"
-                          >
-                            <div className="flex items-center justify-center gap-1">
-                              {stat.icon}
-                              <p className="font-display text-sm font-bold">
-                                {stat.value}
-                              </p>
-                            </div>
-                            <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                              {stat.label}
-                            </p>
-                            <p className="text-[10px] text-green-500">
-                              {stat.change}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 h-20 rounded-lg bg-gradient-to-r from-primary/20 via-purple-500/20 to-pink-500/20 backdrop-blur-sm" />
-                      <div className="mt-4 space-y-2">
-                        <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>Recent Clients</span>
-                          <span className="text-primary">View all →</span>
-                        </div>
-                        {[
-                          {
-                            name: "Aditi Rao",
-                            visits: "12 visits",
-                            last: "2 days ago",
-                            status: "VIP",
-                          },
-                          {
-                            name: "Neha S",
-                            visits: "8 visits",
-                            last: "5 days ago",
-                            status: "Regular",
-                          },
-                          {
-                            name: "Priya M",
-                            visits: "15 visits",
-                            last: "1 day ago",
-                            status: "VIP",
-                          },
-                          {
-                            name: "Sneha K",
-                            visits: "6 visits",
-                            last: "3 days ago",
-                            status: "New",
-                          },
-                        ].map((client, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-xs transition-colors hover:bg-muted/50"
-                          >
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary font-medium">
-                                {client.name.charAt(0)}
-                              </div>
-                              <div>
-                                <p className="font-medium">{client.name}</p>
-                                <p className="text-[10px] text-muted-foreground">
-                                  {client.visits}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-[10px] text-muted-foreground">
-                                {client.last}
-                              </p>
-                              <span
-                                className={`text-[9px] font-medium ${client.status === "VIP" ? "text-purple-500" : client.status === "Regular" ? "text-blue-500" : "text-green-500"}`}
-                              >
-                                ● {client.status}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 flex gap-2">
-                        {[
-                          {
-                            icon: <Users className="h-3.5 w-3.5" />,
-                            label: "Add Client",
-                          },
-                          {
-                            icon: <MessageSquare className="h-3.5 w-3.5" />,
-                            label: "Message",
-                          },
-                          {
-                            icon: <Star className="h-3.5 w-3.5" />,
-                            label: "Rewards",
-                          },
-                        ].map((action) => (
-                          <button
-                            key={action.label}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-card/50 px-2 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors hover:border-primary hover:bg-primary/5 hover:text-primary"
-                          >
-                            {action.icon}
-                            {action.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-
-                  {[
-                    {
-                      label: "Client Lifetime",
-                      value: "4.2x",
-                      note: "Higher retention",
-                      icon: <Users className="h-3 w-3 text-primary" />,
-                      color: "from-blue-500/20 to-purple-500/20",
-                    },
-                    {
-                      label: "Satisfaction",
-                      value: "98%",
-                      note: "Positive reviews",
-                      icon: <Star className="h-3 w-3 text-yellow-500" />,
-                      color: "from-yellow-500/20 to-orange-500/20",
-                    },
-                    {
-                      label: "Referrals",
-                      value: "64%",
-                      note: "Word of mouth",
-                      icon: <TrendingUp className="h-3 w-3 text-green-500" />,
-                      color: "from-green-500/20 to-teal-500/20",
-                    },
-                    {
-                      label: "VIP Clients",
-                      value: "128",
-                      note: "Top spenders",
-                      icon: <Award className="h-3 w-3 text-purple-500" />,
-                      color: "from-purple-500/20 to-pink-500/20",
-                    },
-                  ].map((f, i) => (
-                    <motion.div
-                      key={f.label}
-                      className={`glass-card absolute px-4 py-3 shadow-lg backdrop-blur-md ${i % 2 === 0 ? "drift-left" : "drift-right"}`}
-                      style={{
-                        top: `${10 + i * 22}%`,
-                        left: i % 2 === 0 ? "-12%" : "auto",
-                        right: i % 2 === 0 ? "auto" : "-8%",
-                        animationDelay: `${i * 0.6}s`,
-                      }}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 + i * 0.1 }}
-                    >
-                      <div
-                        className={`rounded-lg bg-gradient-to-r ${f.color} p-2`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {f.icon}
-                          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
-                            {f.label}
-                          </p>
-                        </div>
-                        <p className="font-display text-xl font-bold">
-                          {f.value}
-                        </p>
-                        <p className="text-[10px] text-primary">{f.note}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-
-                  <motion.div
-                    className="absolute -bottom-4 left-1/2 -translate-x-1/2 glass-card px-6 py-2.5 backdrop-blur-md"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.8 }}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <Shield className="h-4 w-4 text-primary" />
-                        <span className="text-xs font-medium">
-                          Enterprise Grade
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Zap className="h-4 w-4 text-yellow-500" />
-                        <span className="text-xs font-medium">
-                          99.9% Uptime
-                        </span>
-                      </div>
-                      <div className="h-4 w-px bg-border" />
-                      <div className="flex items-center gap-1">
-                        <Award className="h-4 w-4 text-purple-500" />
-                        <span className="text-xs font-medium">
-                          #1 Salon Software
-                        </span>
-                      </div>
-                    </div>
-                  </motion.div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Slide Navigation Arrows - Enhanced Visibility */}
-          <div className="absolute left-4 right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-between pointer-events-none lg:left-8 lg:right-8">
-            <button
-              onClick={() =>
-                setCurrentSlide((prev) => (prev === 0 ? 2 : prev - 1))
-              }
-              className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md text-primary shadow-lg transition-all hover:bg-white hover:scale-110 hover:shadow-xl focus:outline-none"
-              aria-label="Previous slide"
-            >
-              <ChevronLeft className="h-6 w-6" strokeWidth={2.5} />
-            </button>
-            <button
-              onClick={() =>
-                setCurrentSlide((prev) => (prev === 2 ? 0 : prev + 1))
-              }
-              className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full bg-white/90 backdrop-blur-md text-primary shadow-lg transition-all hover:bg-white hover:scale-110 hover:shadow-xl focus:outline-none"
-              aria-label="Next slide"
-            >
-              <ChevronRight className="h-6 w-6" strokeWidth={2.5} />
-            </button>
-          </div>
-
-          {/* Slide Navigation Dots */}
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-3">
-            {[0, 1, 2].map((index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className="cursor-pointer transition-all focus:outline-none"
-                aria-label={`Go to slide ${index + 1}`}
-              >
-                <motion.div
-                  className="h-2 rounded-full bg-white/30"
-                  animate={{
-                    width: currentSlide === index ? 32 : 8,
-                    backgroundColor:
-                      currentSlide === index
-                        ? "rgba(255,255,255,0.9)"
-                        : "rgba(255,255,255,0.3)",
-                  }}
-                  transition={{ duration: 0.3 }}
-                />
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden lg:flex flex-col items-center gap-1"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.5 }}
-          transition={{ delay: 1 }}
-        >
-          <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-            Scroll to explore
-          </span>
-          <ChevronDown className="h-4 w-4 text-muted-foreground animate-bounce" />
-        </motion.div>
-      </section>
+      <HomeHero />
 
       {/* B. TRUST BRIDGE - Place it HERE, outside any other section */}
-      <div className="relative w-full overflow-hidden border-y border-border/60 bg-background/50 py-6 backdrop-blur-sm">
+      {/* <div className="relative w-full overflow-hidden border-y border-border/60 bg-background/50 py-6 backdrop-blur-sm">
         <SectionBackdrop variant="strip" fadeFrom="none" />
         <div className="relative z-10 mx-auto flex w-full max-w-[1500px] items-center overflow-hidden px-5 sm:px-8">
           <motion.div
@@ -1441,11 +164,11 @@ function HomePageView() {
             )}
           </motion.div>
         </div>
-      </div>
+      </div> */}
 
       {/* C. MODULES PREVIEW - Redesigned with limited modules */}
-      <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
-        <SectionBackdrop variant="mesh" />
+      <section className="relative isolate w-full overflow-hidden py-24 lg:py-24">
+        <SectionBackdrop variant="mesh" image={MODULES_SECTION_BG} />
 
         <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           {/* Section Header - Enhanced */}
@@ -1524,65 +247,49 @@ function HomePageView() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mt-12 grid gap-6 md:grid-cols-3"
           >
-            {[
-              {
-                title: "AI-Powered Scheduling",
-                description:
-                  "Optimize appointments with machine learning that predicts peak times and reduces no-shows",
-                icon: Sparkles,
-                badge: "New",
-                gradient: "from-violet-500 to-purple-600",
-              },
-              {
-                title: "Smart Inventory",
-                description:
-                  "Automated stock management with predictive reordering and supplier integration",
-                icon: Package,
-                badge: "Popular",
-                gradient: "from-emerald-500 to-teal-600",
-              },
-              {
-                title: "Client Intelligence",
-                description:
-                  "Deep client insights with purchase patterns, preferences, and automated engagement",
-                icon: TrendingUp,
-                badge: "AI-Powered",
-                gradient: "from-blue-500 to-indigo-600",
-              },
-            ].map((module, i) => (
+            {FEATURED_MODULE_CARDS.map((module, i) => (
               <div
                 key={i}
-                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card to-card/50 p-6 transition-all hover:shadow-xl hover:shadow-primary/5 hover:border-primary/20"
+                className="group relative min-h-[320px] overflow-hidden rounded-2xl border border-border/50 transition-all hover:border-primary/20 hover:shadow-xl hover:shadow-primary/10"
               >
-                {/* Glow effect */}
+                <img
+                  src={module.image}
+                  alt={module.imageAlt}
+                  width={1200}
+                  height={800}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/95 from-0% via-background/55 via-30% to-transparent to-55%" />
                 <div
-                  className={`absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gradient-to-br ${module.gradient} opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-20`}
+                  className={`absolute -right-16 -top-16 h-48 w-48 rounded-full bg-gradient-to-br ${module.gradient} opacity-20 blur-3xl transition-opacity duration-500 group-hover:opacity-35`}
                 />
 
-                <div className="relative">
+                <div className="relative flex h-full flex-col p-6">
                   <div className="flex items-start justify-between">
                     <div
-                      className={`rounded-xl bg-gradient-to-br ${module.gradient} p-3`}
+                      className={`rounded-xl bg-gradient-to-br ${module.gradient} p-3 shadow-lg`}
                     >
                       <module.icon className="h-6 w-6 text-white" />
                     </div>
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary">
+                    <span className="rounded-full border border-primary/15 bg-background/70 px-2.5 py-1 text-[10px] font-medium text-primary backdrop-blur-sm">
                       {module.badge}
                     </span>
                   </div>
-                  <h3 className="mt-4 font-display text-lg font-medium">
-                    {module.title}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {module.description}
-                  </p>
-                  <Link
-                    href="/modules"
-                    className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary transition-all hover:gap-2"
-                  >
-                    Learn more
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
+                  <div className="mt-auto">
+                    <h3 className="font-display text-lg font-medium">{module.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      {module.description}
+                    </p>
+                    <Link
+                      href="/modules"
+                      className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary transition-all hover:gap-2"
+                    >
+                      Learn more
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1606,41 +313,61 @@ function HomePageView() {
 
             <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {/* Show only first 8 modules as preview */}
-              {ALL_MODULES.slice(0, 8).map((module, index) => (
+              {ALL_MODULES.slice(0, 8).map((module, index) => {
+                const cardImage = getModuleCardImage(module.title);
+                return (
                 <motion.div
                   key={module.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.04 }}
-                  className="group relative"
+                  className="relative"
                 >
-                  <div className="surface-card lift h-full cursor-pointer p-5 transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
-                    <div className="flex items-start justify-between">
-                      <div className="rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 p-2.5">
-                        <div className="h-5 w-5 rounded bg-gradient-to-br from-primary to-purple-500" />
+                  <div className="surface-card lift group/card relative h-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                    <div className="relative h-32 overflow-hidden bg-card sm:h-36">
+                      <div className="absolute inset-0 transition-transform duration-500 will-change-transform group-hover/card:scale-[1.03]">
+                        <img
+                          src={cardImage.src}
+                          alt={cardImage.alt}
+                          width={800}
+                          height={500}
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className="block h-full w-full object-cover"
+                        />
                       </div>
-                      <span className="text-[10px] font-medium text-primary/60">
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/60 from-10% via-card/10 via-24% to-transparent to-36%" />
+                      <span className="absolute right-3 top-3 rounded-full border border-border/50 bg-background/75 px-2 py-0.5 text-[10px] font-medium text-primary/80 backdrop-blur-sm">
                         {module.group}
                       </span>
                     </div>
-                    <p className="mt-3 font-display text-base font-medium">
-                      {module.title}
-                    </p>
-                    <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                      {module.group}
-                    </p>
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80 line-clamp-2">
-                      {module.desc}
-                    </p>
+                    <div className="relative p-5">
+                      <div className="rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 p-2.5 w-fit">
+                        <div className="h-5 w-5 rounded bg-gradient-to-br from-primary to-purple-500" />
+                      </div>
+                      <p className="mt-3 font-display text-base font-medium">
+                        {module.title}
+                      </p>
+                      <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {module.group}
+                      </p>
+                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80 line-clamp-2">
+                        {module.desc}
+                      </p>
 
-                    {/* Hover indicator */}
-                    <div className="absolute bottom-4 right-4 opacity-0 transition-opacity group-hover:opacity-100">
-                      <ArrowRight className="h-4 w-4 text-primary" />
+                      <div className="absolute bottom-4 right-4 opacity-0 transition-opacity group-hover/card:opacity-100">
+                        <ArrowRight className="h-4 w-4 text-primary" />
+                      </div>
                     </div>
+                    <span
+                      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[3px] origin-left scale-x-0 rounded-b-2xl bg-primary transition-transform duration-300 group-hover/card:scale-x-100"
+                      aria-hidden
+                    />
                   </div>
                 </motion.div>
-              ))}
+              );
+              })}
             </div>
 
             {/* View All Modules CTA */}
@@ -2947,10 +1674,7 @@ function HomePageView() {
                   {/* Price */}
                   <div className="mt-6">
                     <p className="font-display text-5xl font-bold">
-                      ₹
-                      {(plan.name === "Starter" ? 599 : 1499).toLocaleString(
-                        "en-IN",
-                      )}
+                      ₹{plan.monthly?.toLocaleString("en-IN")}
                       <span className="ml-1 text-base font-normal text-muted-foreground">
                         /mo
                       </span>

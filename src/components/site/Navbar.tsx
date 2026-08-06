@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Menu, Shield, X, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -17,6 +18,10 @@ const LINKS = [
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ] as const;
+
+function isNavLinkActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Brand({ light = false }: { light?: boolean }) {
   return (
@@ -46,6 +51,7 @@ export function Brand({ light = false }: { light?: boolean }) {
 }
 
 export function Navbar() {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -78,15 +84,23 @@ export function Navbar() {
 
           {/* Desktop Navigation — centered between brand and CTAs */}
           <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-0.5 max-lg:hidden xl:gap-4">
-            {LINKS.map((l) => (
+            {LINKS.map((l) => {
+              const active = isNavLinkActive(pathname, l.href);
+              return (
               <Link
                 key={l.href}
                 href={l.href}
-                className="nav-link whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] transition-all hover:bg-primary/5 xl:px-3 xl:text-sm"
+                aria-current={active ? "page" : undefined}
+                className={`nav-link whitespace-nowrap rounded-full px-2.5 py-1.5 text-[13px] transition-all xl:px-3 xl:text-sm ${
+                  active
+                    ? "bg-primary/10 font-semibold text-primary"
+                    : "hover:bg-primary/5"
+                }`}
               >
                 {l.label}
               </Link>
-            ))}
+              );
+            })}
           </div>
 
           {/* Desktop Actions */}
@@ -133,18 +147,30 @@ export function Navbar() {
           >
             <div className="px-4 pb-6 pt-4 sm:px-6">
               <ul className="flex flex-col gap-0.5">
-                {LINKS.map((l) => (
+                {LINKS.map((l) => {
+                  const active = isNavLinkActive(pathname, l.href);
+                  return (
                   <li key={l.href}>
                     <Link
                       href={l.href}
+                      aria-current={active ? "page" : undefined}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all hover:bg-primary/5 hover:text-primary"
+                      className={`flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                        active
+                          ? "bg-primary/10 font-semibold text-primary"
+                          : "hover:bg-primary/5 hover:text-primary"
+                      }`}
                     >
-                      <span className="h-1 w-1 rounded-full bg-primary/20" />
+                      <span
+                        className={`h-1 w-1 rounded-full ${
+                          active ? "bg-primary" : "bg-primary/20"
+                        }`}
+                      />
                       {l.label}
                     </Link>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <div className="my-4 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
