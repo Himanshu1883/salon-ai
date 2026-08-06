@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { CtaBanner } from "@/components/site/Cta";
 import { HomeHero } from "@/components/site/HomeHero";
@@ -278,7 +278,9 @@ function HomePageView() {
                     </span>
                   </div>
                   <div className="mt-auto">
-                    <h3 className="font-display text-lg font-medium">{module.title}</h3>
+                    <h3 className="font-display text-lg font-medium">
+                      {module.title}
+                    </h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                       {module.description}
                     </p>
@@ -316,57 +318,57 @@ function HomePageView() {
               {ALL_MODULES.slice(0, 8).map((module, index) => {
                 const cardImage = getModuleCardImage(module.title);
                 return (
-                <motion.div
-                  key={module.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.04 }}
-                  className="relative"
-                >
-                  <div className="surface-card lift group/card relative h-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                    <div className="relative h-32 overflow-hidden bg-card sm:h-36">
-                      <div className="absolute inset-0 transition-transform duration-500 will-change-transform group-hover/card:scale-[1.03]">
-                        <img
-                          src={cardImage.src}
-                          alt={cardImage.alt}
-                          width={800}
-                          height={500}
-                          loading="lazy"
-                          referrerPolicy="no-referrer"
-                          className="block h-full w-full object-cover"
-                        />
+                  <motion.div
+                    key={module.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: index * 0.04 }}
+                    className="relative"
+                  >
+                    <div className="surface-card lift group/card relative h-full cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                      <div className="relative h-32 overflow-hidden bg-card sm:h-36">
+                        <div className="absolute inset-0 transition-transform duration-500 will-change-transform group-hover/card:scale-[1.03]">
+                          <img
+                            src={cardImage.src}
+                            alt={cardImage.alt}
+                            width={800}
+                            height={500}
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            className="block h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/60 from-10% via-card/10 via-24% to-transparent to-36%" />
+                        <span className="absolute right-3 top-3 rounded-full border border-border/50 bg-background/75 px-2 py-0.5 text-[10px] font-medium text-primary/80 backdrop-blur-sm">
+                          {module.group}
+                        </span>
                       </div>
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/60 from-10% via-card/10 via-24% to-transparent to-36%" />
-                      <span className="absolute right-3 top-3 rounded-full border border-border/50 bg-background/75 px-2 py-0.5 text-[10px] font-medium text-primary/80 backdrop-blur-sm">
-                        {module.group}
-                      </span>
-                    </div>
-                    <div className="relative p-5">
-                      <div className="rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 p-2.5 w-fit">
-                        <div className="h-5 w-5 rounded bg-gradient-to-br from-primary to-purple-500" />
-                      </div>
-                      <p className="mt-3 font-display text-base font-medium">
-                        {module.title}
-                      </p>
-                      <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                        {module.group}
-                      </p>
-                      <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80 line-clamp-2">
-                        {module.desc}
-                      </p>
+                      <div className="relative p-5">
+                        <div className="rounded-xl bg-gradient-to-br from-primary/20 to-purple-500/20 p-2.5 w-fit">
+                          <div className="h-5 w-5 rounded bg-gradient-to-br from-primary to-purple-500" />
+                        </div>
+                        <p className="mt-3 font-display text-base font-medium">
+                          {module.title}
+                        </p>
+                        <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
+                          {module.group}
+                        </p>
+                        <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80 line-clamp-2">
+                          {module.desc}
+                        </p>
 
-                      <div className="absolute bottom-4 right-4 opacity-0 transition-opacity group-hover/card:opacity-100">
-                        <ArrowRight className="h-4 w-4 text-primary" />
+                        <div className="absolute bottom-4 right-4 opacity-0 transition-opacity group-hover/card:opacity-100">
+                          <ArrowRight className="h-4 w-4 text-primary" />
+                        </div>
                       </div>
+                      <span
+                        className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[3px] origin-left scale-x-0 rounded-b-2xl bg-primary transition-transform duration-300 group-hover/card:scale-x-100"
+                        aria-hidden
+                      />
                     </div>
-                    <span
-                      className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[3px] origin-left scale-x-0 rounded-b-2xl bg-primary transition-transform duration-300 group-hover/card:scale-x-100"
-                      aria-hidden
-                    />
-                  </div>
-                </motion.div>
-              );
+                  </motion.div>
+                );
               })}
             </div>
 
@@ -382,63 +384,64 @@ function HomePageView() {
             </Reveal>
           </div>
 
-{/* CTA Section */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.4 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image - Unsplash */}
-  <div className="absolute inset-0 -z-10">
-  <img
-  src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80"
-  alt="Modern office workspace"
-  className="h-full w-full object-cover"
-/>
-    <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
-    {/* Subtle pattern overlay */}
-    <div 
-      className="absolute inset-0 opacity-20"
-      style={{
-        backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 1px, transparent 1px)",
-        backgroundSize: "24px 24px",
-      }}
-    />
-  </div>
+          {/* CTA Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image - Unsplash */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80"
+                alt="Modern office workspace"
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
+              {/* Subtle pattern overlay */}
+              <div
+                className="absolute inset-0 opacity-20"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 1px, transparent 1px)",
+                  backgroundSize: "24px 24px",
+                }}
+              />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-primary">
-          Ready to transform your salon?
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link
-          href="/signup"
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-        >
-          Start Free Trial
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/demo"
-          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-        >
-          <Calendar className="h-4 w-4" />
-          Book a Demo
-        </Link>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        No credit card required • Free 14-day trial • 24/7 support
-      </p>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Ready to transform your salon?
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/signup"
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                  >
+                    Start Free Trial
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/demo"
+                    className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Book a Demo
+                  </Link>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  No credit card required • Free 14-day trial • 24/7 support
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -640,7 +643,7 @@ function HomePageView() {
               {/* Quick stats */}
               <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
                 {[
-                  { label: "Business Types", value: "10+", icon: Layers },
+                  { label: "Business Types", value: "9+", icon: Layers },
                   { label: "Industries", value: "8", icon: Target },
                   { label: "Happy Salons", value: "1,200+", icon: Users },
                   { label: "Success Rate", value: "97%", icon: TrendingUp },
@@ -686,7 +689,6 @@ function HomePageView() {
                       {type.name.includes("Barber") && "✂️"}
                       {type.name.includes("Nail") && "💅"}
                       {type.name.includes("Makeup") && "🎨"}
-                      {type.name.includes("Academy") && "📚"}
                       {type.name.includes("Bridal") && "👰"}
                       {type.name.includes("Tattoo") && "🎯"}
                     </div>
@@ -787,58 +789,58 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.4 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image */}
-  <div className="absolute inset-0 -z-10">
-  <img
-  src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1920&q=80"
-  alt="Warm salon interior"
-  className="h-full w-full object-cover brightness-95 saturate-90"
-/>
-    {/* Light theme overlays - keeping it bright but readable */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
-    {/* Subtle white overlay for light theme */}
-    <div className="absolute inset-0 bg-white/10" />
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-  </div>
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1920&q=80"
+                alt="Warm salon interior"
+                className="h-full w-full object-cover brightness-95 saturate-90"
+              />
+              {/* Light theme overlays - keeping it bright but readable */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+              {/* Subtle white overlay for light theme */}
+              <div className="absolute inset-0 bg-white/10" />
+              {/* Decorative gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-primary">
-          Not sure which solution fits your business?
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link
-          href="/solutions"
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-        >
-          Explore All Solutions
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/contact"
-          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-        >
-          <MessageSquare className="h-4 w-4" />
-          Talk to an Expert
-        </Link>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Free consultation • Personalized demo • 14-day trial
-      </p>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Not sure which solution fits your business?
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/solutions"
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                  >
+                    Explore All Solutions
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    Talk to an Expert
+                  </Link>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Free consultation • Personalized demo • 14-day trial
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1057,322 +1059,322 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.6 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image - Relevant to "Experience the Difference" */}
-  <div className="absolute inset-0 -z-10">
-  <img
-  src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1920&q=80"
-  alt="Modern salon transformation"
-  className="h-full w-full object-cover brightness-[0.85] saturate-95"
-/>
-    {/* Overlays for text readability */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
-    {/* Subtle white overlay for light theme */}
-    <div className="absolute inset-0 bg-white/10" />
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-  </div>
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image - Relevant to "Experience the Difference" */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1920&q=80"
+                alt="Modern salon transformation"
+                className="h-full w-full object-cover brightness-[0.85] saturate-95"
+              />
+              {/* Overlays for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+              {/* Subtle white overlay for light theme */}
+              <div className="absolute inset-0 bg-white/10" />
+              {/* Decorative gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-primary">
-          Ready to experience the difference?
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link
-          href="/signup"
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-        >
-          Start Free Trial
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/demo"
-          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-        >
-          <Calendar className="h-4 w-4" />
-          Book a Demo
-        </Link>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        No credit card required • Free 14-day trial • 24/7 support
-      </p>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Ready to experience the difference?
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/signup"
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                  >
+                    Start Free Trial
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/demo"
+                    className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Book a Demo
+                  </Link>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  No credit card required • Free 14-day trial • 24/7 support
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
       {/* G. AI TEASER - Redesigned */}
-{/* G. AI TEASER - Redesigned with Icons */}
-<section className="relative w-full overflow-hidden py-24 lg:py-32 gradient-ink text-ink-foreground">
-  {/* Background decorations */}
-  <div className="absolute inset-0 -z-10">
-    <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
-    <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-3xl" />
+      {/* G. AI TEASER - Redesigned with Icons */}
+      <section className="relative w-full overflow-hidden py-24 lg:py-32 gradient-ink text-ink-foreground">
+        {/* Background decorations */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/20 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-blue-500/10 blur-3xl" />
 
-    {/* Animated grid pattern */}
-    <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
-  </div>
-
-  <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
-    {/* Section Header - Enhanced */}
-    <div className="relative">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.6 }}
-        className="flex flex-col items-center text-center"
-      >
-        <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-4 py-1.5 backdrop-blur-sm">
-          <Sparkles className="h-3.5 w-3.5 text-gold" />
-          <span className="text-xs font-medium text-gold">
-            AI-Powered Intelligence
-          </span>
-          <span className="ml-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold text-gold">
-            Beta
-          </span>
+          {/* Animated grid pattern */}
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:60px_60px]" />
         </div>
 
-        <h2 className="mt-6 max-w-3xl text-4xl font-display leading-[1.05] text-ink-foreground sm:text-5xl lg:text-[3.5rem]">
-          AI That{" "}
-          <span className="relative">
-            <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
-              Understands Your Salon
-            </span>
-            <motion.span
-              className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-gold to-yellow-500"
-              initial={{ width: 0 }}
-              whileInView={{ width: "100%" }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.8 }}
-            />
-          </span>
-        </h2>
-
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-foreground/70 sm:text-lg">
-          Predictive analytics, smart scheduling, and automated insights
-          that help you grow revenue while delivering exceptional client
-          experiences — all powered by advanced AI.
-        </p>
-
-        {/* AI Stats with icons */}
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
-          {[
-            { label: "Accuracy", value: "94%", icon: Target },
-            { label: "Predictions", value: "12.5K", icon: TrendingUp },
-            { label: "Time Saved", value: "15hrs", icon: Clock },
-            { label: "Uptime", value: "99.9%", icon: Shield },
-          ].map((stat, i) => (
+        <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+          {/* Section Header - Enhanced */}
+          <div className="relative">
             <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: 0.1 * i }}
-              className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 backdrop-blur-sm border border-white/10"
+              transition={{ duration: 0.6 }}
+              className="flex flex-col items-center text-center"
             >
-              <stat.icon className="h-4 w-4 text-gold" />
-              <span className="text-sm font-medium text-ink-foreground">
-                {stat.value}
-              </span>
-              <span className="text-xs text-ink-foreground/60">
-                {stat.label}
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-white/5 px-4 py-1.5 backdrop-blur-sm">
+                <Sparkles className="h-3.5 w-3.5 text-gold" />
+                <span className="text-xs font-medium text-gold">
+                  AI-Powered Intelligence
+                </span>
+                <span className="ml-1 rounded-full bg-gold/20 px-2 py-0.5 text-[10px] font-semibold text-gold">
+                  Beta
+                </span>
+              </div>
 
-    {/* AI Cards Grid - Enhanced with Icons */}
-    <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-      {AI_CARDS.map((card, index) => {
-        const cardIcons = [
-          <Target className="h-6 w-6 text-gold" />,
-          <TrendingUp className="h-6 w-6 text-gold" />,
-          <Zap className="h-6 w-6 text-gold" />,
-          <Package className="h-6 w-6 text-gold" />,
-        ];
-        return (
+              <h2 className="mt-6 max-w-3xl text-4xl font-display leading-[1.05] text-ink-foreground sm:text-5xl lg:text-[3.5rem]">
+                AI That{" "}
+                <span className="relative">
+                  <span className="bg-gradient-to-r from-gold to-yellow-500 bg-clip-text text-transparent">
+                    Understands Your Salon
+                  </span>
+                  <motion.span
+                    className="absolute -bottom-2 left-0 h-0.5 w-full bg-gradient-to-r from-gold to-yellow-500"
+                    initial={{ width: 0 }}
+                    whileInView={{ width: "100%" }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3, duration: 0.8 }}
+                  />
+                </span>
+              </h2>
+
+              <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-foreground/70 sm:text-lg">
+                Predictive analytics, smart scheduling, and automated insights
+                that help you grow revenue while delivering exceptional client
+                experiences — all powered by advanced AI.
+              </p>
+
+              {/* AI Stats with icons */}
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
+                {[
+                  { label: "Accuracy", value: "94%", icon: Target },
+                  { label: "Predictions", value: "12.5K", icon: TrendingUp },
+                  { label: "Time Saved", value: "15hrs", icon: Clock },
+                  { label: "Uptime", value: "99.9%", icon: Shield },
+                ].map((stat, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.1 * i }}
+                    className="flex items-center gap-2 rounded-full bg-white/5 px-4 py-2 backdrop-blur-sm border border-white/10"
+                  >
+                    <stat.icon className="h-4 w-4 text-gold" />
+                    <span className="text-sm font-medium text-ink-foreground">
+                      {stat.value}
+                    </span>
+                    <span className="text-xs text-ink-foreground/60">
+                      {stat.label}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
+          {/* AI Cards Grid - Enhanced with Icons */}
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {AI_CARDS.map((card, index) => {
+              const cardIcons = [
+                <Target className="h-6 w-6 text-gold" />,
+                <TrendingUp className="h-6 w-6 text-gold" />,
+                <Zap className="h-6 w-6 text-gold" />,
+                <Package className="h-6 w-6 text-gold" />,
+              ];
+              return (
+                <motion.div
+                  key={card.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className="group relative"
+                >
+                  <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-gold/50 hover:shadow-xl hover:shadow-gold/10">
+                    {/* Glow effect on hover */}
+                    <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gold/5 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
+
+                    {/* Card number */}
+                    <div className="absolute right-4 top-4 text-[10px] font-medium text-ink-foreground/20">
+                      {(index + 1).toString().padStart(2, "0")}
+                    </div>
+
+                    <div className="relative">
+                      {/* Icon with gradient */}
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/20 to-yellow-500/20 transition-all duration-300 group-hover:scale-110 group-hover:from-gold/30 group-hover:to-yellow-500/30">
+                        {cardIcons[index]}
+                      </div>
+
+                      <h3 className="mt-4 font-display text-lg text-ink-foreground transition-colors group-hover:text-gold">
+                        {card.title}
+                      </h3>
+
+                      <p className="mt-2 text-sm leading-relaxed text-ink-foreground/65">
+                        {card.desc}
+                      </p>
+
+                      {/* Learn more indicator */}
+                      <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gold/60 opacity-0 transition-all group-hover:opacity-100">
+                        Learn more
+                        <ArrowRight className="h-3 w-3" />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* AI Feature Highlights with Icons */}
           <motion.div
-            key={card.title}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="group relative"
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mt-16 grid gap-6 md:grid-cols-3"
           >
-            <div className="relative h-full overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm transition-all duration-300 hover:-translate-y-2 hover:border-gold/50 hover:shadow-xl hover:shadow-gold/10">
-              {/* Glow effect on hover */}
-              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-gold/5 opacity-0 blur-2xl transition-opacity duration-500 group-hover:opacity-100" />
-
-              {/* Card number */}
-              <div className="absolute right-4 top-4 text-[10px] font-medium text-ink-foreground/20">
-                {(index + 1).toString().padStart(2, "0")}
-              </div>
-
-              <div className="relative">
-                {/* Icon with gradient */}
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/20 to-yellow-500/20 transition-all duration-300 group-hover:scale-110 group-hover:from-gold/30 group-hover:to-yellow-500/30">
-                  {cardIcons[index]}
+            {[
+              {
+                icon: <Zap className="h-5 w-5 text-gold" />,
+                title: "Real-Time Insights",
+                description:
+                  "Get instant recommendations for staffing, inventory, and pricing based on live data.",
+              },
+              {
+                icon: <TrendingUp className="h-5 w-5 text-gold" />,
+                title: "Revenue Optimization",
+                description:
+                  "Identify upsell opportunities, pricing gaps, and service performance trends.",
+              },
+              {
+                icon: <Users className="h-5 w-5 text-gold" />,
+                title: "Client Intelligence",
+                description:
+                  "Predict client behavior, preferences, and churn risk with AI-powered analytics.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5"
+              >
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/10 to-yellow-500/10 transition-colors group-hover:from-gold/20 group-hover:to-yellow-500/20">
+                  {item.icon}
                 </div>
-
-                <h3 className="mt-4 font-display text-lg text-ink-foreground transition-colors group-hover:text-gold">
-                  {card.title}
-                </h3>
-
-                <p className="mt-2 text-sm leading-relaxed text-ink-foreground/65">
-                  {card.desc}
+                <h4 className="font-display text-lg text-ink-foreground">
+                  {item.title}
+                </h4>
+                <p className="mt-2 text-sm text-ink-foreground/60">
+                  {item.description}
                 </p>
-
-                {/* Learn more indicator */}
-                <div className="mt-4 flex items-center gap-1 text-xs font-medium text-gold/60 opacity-0 transition-all group-hover:opacity-100">
-                  Learn more
-                  <ArrowRight className="h-3 w-3" />
-                </div>
               </div>
+            ))}
+          </motion.div>
+
+          {/* CTA with normal buttons */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="mt-16 rounded-2xl bg-gradient-to-br from-white/5 to-white/10 p-8 text-center border border-white/10 backdrop-blur-sm"
+          >
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-gold" />
+                <span className="text-sm font-medium text-gold">
+                  Ready to harness the power of AI?
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                <Link href="/ai" className="btn-base btn-gold">
+                  Explore AI Analytics <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                <Link
+                  href="/demo"
+                  className="btn-base border border-white/20 bg-white/5 text-ink-foreground hover:bg-white/10 hover:border-gold/50"
+                >
+                  <Calendar className="h-4 w-4" />
+                  Book a Demo
+                </Link>
+              </div>
+              <p className="text-xs text-ink-foreground/50">
+                No credit card required • Free 14-day trial • 24/7 support
+              </p>
             </div>
           </motion.div>
-        );
-      })}
-    </div>
 
-    {/* AI Feature Highlights with Icons */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.3 }}
-      className="mt-16 grid gap-6 md:grid-cols-3"
-    >
-      {[
-        {
-          icon: <Zap className="h-5 w-5 text-gold" />,
-          title: "Real-Time Insights",
-          description:
-            "Get instant recommendations for staffing, inventory, and pricing based on live data.",
-        },
-        {
-          icon: <TrendingUp className="h-5 w-5 text-gold" />,
-          title: "Revenue Optimization",
-          description:
-            "Identify upsell opportunities, pricing gaps, and service performance trends.",
-        },
-        {
-          icon: <Users className="h-5 w-5 text-gold" />,
-          title: "Client Intelligence",
-          description:
-            "Predict client behavior, preferences, and churn risk with AI-powered analytics.",
-        },
-      ].map((item, i) => (
-        <div
-          key={i}
-          className="group rounded-2xl border border-white/10 bg-white/5 p-6 text-center backdrop-blur-sm transition-all hover:border-gold/30 hover:shadow-lg hover:shadow-gold/5"
-        >
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-gold/10 to-yellow-500/10 transition-colors group-hover:from-gold/20 group-hover:to-yellow-500/20">
-            {item.icon}
-          </div>
-          <h4 className="font-display text-lg text-ink-foreground">
-            {item.title}
-          </h4>
-          <p className="mt-2 text-sm text-ink-foreground/60">
-            {item.description}
-          </p>
-        </div>
-      ))}
-    </motion.div>
-
-    {/* CTA with normal buttons */}
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, delay: 0.4 }}
-      className="mt-16 rounded-2xl bg-gradient-to-br from-white/5 to-white/10 p-8 text-center border border-white/10 backdrop-blur-sm"
-    >
-      <div className="flex flex-col items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-gold" />
-          <span className="text-sm font-medium text-gold">
-            Ready to harness the power of AI?
-          </span>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link href="/ai" className="btn-base btn-gold">
-            Explore AI Analytics <ArrowRight className="h-4 w-4" />
-          </Link>
-
-          <Link
-            href="/demo"
-            className="btn-base border border-white/20 bg-white/5 text-ink-foreground hover:bg-white/10 hover:border-gold/50"
+          {/* Trust indicators with icons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.5 }}
+            className="mt-12 flex flex-wrap items-center justify-center gap-8 text-center"
           >
-            <Calendar className="h-4 w-4" />
-            Book a Demo
-          </Link>
+            {[
+              {
+                icon: Shield,
+                label: "Enterprise Security",
+                sub: "ISO 27001 certified",
+              },
+              {
+                icon: Zap,
+                label: "Real-time Processing",
+                sub: "< 100ms response",
+              },
+              {
+                icon: Award,
+                label: "AI Excellence",
+                sub: "2024 Innovation Award",
+              },
+              {
+                icon: Headphones,
+                label: "24/7 Support",
+                sub: "Dedicated AI experts",
+              },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className="rounded-full bg-white/5 p-2 border border-white/10">
+                  <item.icon className="h-4 w-4 text-gold" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-ink-foreground">
+                    {item.label}
+                  </p>
+                  <p className="text-xs text-ink-foreground/50">{item.sub}</p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         </div>
-        <p className="text-xs text-ink-foreground/50">
-          No credit card required • Free 14-day trial • 24/7 support
-        </p>
-      </div>
-    </motion.div>
-
-    {/* Trust indicators with icons */}
-    <motion.div
-      initial={{ opacity: 0 }}
-      whileInView={{ opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ delay: 0.5 }}
-      className="mt-12 flex flex-wrap items-center justify-center gap-8 text-center"
-    >
-      {[
-        {
-          icon: Shield,
-          label: "Enterprise Security",
-          sub: "ISO 27001 certified",
-        },
-        {
-          icon: Zap,
-          label: "Real-time Processing",
-          sub: "< 100ms response",
-        },
-        {
-          icon: Award,
-          label: "AI Excellence",
-          sub: "2024 Innovation Award",
-        },
-        {
-          icon: Headphones,
-          label: "24/7 Support",
-          sub: "Dedicated AI experts",
-        },
-      ].map((item, i) => (
-        <div key={i} className="flex items-center gap-3">
-          <div className="rounded-full bg-white/5 p-2 border border-white/10">
-            <item.icon className="h-4 w-4 text-gold" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-medium text-ink-foreground">
-              {item.label}
-            </p>
-            <p className="text-xs text-ink-foreground/50">{item.sub}</p>
-          </div>
-        </div>
-      ))}
-    </motion.div>
-  </div>
-</section>
+      </section>
 
       {/* H. TESTIMONIALS - Redesigned with Auto-Slide Carousel */}
       <section className="relative isolate w-full overflow-hidden py-24 lg:py-32">
@@ -1558,57 +1560,57 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.4 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image - Community/Happy Salons */}
-  <div className="absolute inset-0 -z-10">
-  <img
-  src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=1920&q=80"
-  alt="Happy salon team and community"
-  className="h-full w-full object-cover brightness-[0.85] saturate-95"
-/>
-    {/* Overlays for text readability */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
-    <div className="absolute inset-0 bg-white/10" />
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-  </div>
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image - Community/Happy Salons */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=1920&q=80"
+                alt="Happy salon team and community"
+                className="h-full w-full object-cover brightness-[0.85] saturate-95"
+              />
+              {/* Overlays for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-white/10" />
+              {/* Decorative gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-primary">
-          Join 1,200+ happy salons
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link
-          href="/signup"
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-        >
-          Start Free Trial
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/testimonials"
-          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-        >
-          <Users className="h-4 w-4" />
-          Read More Stories
-        </Link>
-      </div>
-      <p className="text-xs text-muted-foreground">
-        Join the community of successful salon owners
-      </p>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Join 1,200+ happy salons
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/signup"
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                  >
+                    Start Free Trial
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/testimonials"
+                    className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                  >
+                    <Users className="h-4 w-4" />
+                    Read More Stories
+                  </Link>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Join the community of successful salon owners
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -1868,48 +1870,48 @@ function HomePageView() {
 
           {/* FAQ Teaser */}
           <motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.4 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image - Pricing/Finance Related */}
-  <div className="absolute inset-0 -z-10">
-    <img
-      src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1920&q=80"
-      alt="Financial planning and pricing consultation"
-      className="h-full w-full object-cover brightness-[0.85] saturate-90"
-    />
-    {/* Overlays for text readability */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
-    <div className="absolute inset-0 bg-white/10" />
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-  </div>
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image - Pricing/Finance Related */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1920&q=80"
+                alt="Financial planning and pricing consultation"
+                className="h-full w-full object-cover brightness-[0.85] saturate-90"
+              />
+              {/* Overlays for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-white/10" />
+              {/* Decorative gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-2">
-        <CreditCard className="h-5 w-5 text-primary" />
-        <p className="text-sm font-medium text-primary">
-          Have questions about pricing?
-        </p>
-      </div>
-      <Link
-        href="/faq"
-        className="inline-flex items-center gap-2 font-medium text-primary transition-all hover:gap-3"
-      >
-        Visit our FAQ page
-        <ArrowRight className="h-4 w-4" />
-      </Link>
-      <p className="text-xs text-muted-foreground">
-        Or contact our sales team for custom enterprise pricing
-      </p>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5 text-primary" />
+                  <p className="text-sm font-medium text-primary">
+                    Have questions about pricing?
+                  </p>
+                </div>
+                <Link
+                  href="/faq"
+                  className="inline-flex items-center gap-2 font-medium text-primary transition-all hover:gap-3"
+                >
+                  Visit our FAQ page
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <p className="text-xs text-muted-foreground">
+                  Or contact our sales team for custom enterprise pricing
+                </p>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -2061,60 +2063,60 @@ function HomePageView() {
             </Link>
           </Reveal>
 
-{/* Still have questions? */}
-<motion.div
-  initial={{ opacity: 0, y: 20 }}
-  whileInView={{ opacity: 1, y: 0 }}
-  viewport={{ once: true }}
-  transition={{ duration: 0.6, delay: 0.3 }}
-  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
->
-  {/* Background Image - Customer Support/Help Desk Related */}
-  <div className="absolute inset-0 -z-10">
-  <img
-  src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80"
-  alt="Help desk support"
-  className="h-full w-full object-cover brightness-[0.85] saturate-90"
-/>
-    {/* Overlays for text readability */}
-    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
-    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
-    <div className="absolute inset-0 bg-white/10" />
-    {/* Decorative gradient */}
-    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
-  </div>
+          {/* Still have questions? */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+          >
+            {/* Background Image - Customer Support/Help Desk Related */}
+            <div className="absolute inset-0 -z-10">
+              <img
+                src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80"
+                alt="Help desk support"
+                className="h-full w-full object-cover brightness-[0.85] saturate-90"
+              />
+              {/* Overlays for text readability */}
+              <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-white/10" />
+              {/* Decorative gradient */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+            </div>
 
-  <div className="relative z-10 p-8 text-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex items-center gap-2">
-        <MessageSquare className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-primary">
-          Still have questions?
-        </span>
-      </div>
-      <p className="max-w-md text-sm text-muted-foreground">
-        Our team is here to help. Get in touch and we'll get back to you
-        within 2 hours.
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-4">
-        <Link
-          href="/contact"
-          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-        >
-          Contact Support
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
-        <Link
-          href="/demo"
-          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-        >
-          <Calendar className="h-4 w-4" />
-          Book a Demo
-        </Link>
-      </div>
-    </div>
-  </div>
-</motion.div>
+            <div className="relative z-10 p-8 text-center">
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Still have questions?
+                  </span>
+                </div>
+                <p className="max-w-md text-sm text-muted-foreground">
+                  Our team is here to help. Get in touch and we'll get back to
+                  you within 2 hours.
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-4">
+                  <Link
+                    href="/contact"
+                    className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                  >
+                    Contact Support
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <Link
+                    href="/demo"
+                    className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Book a Demo
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
           {/* Quick links / Topics */}
           <motion.div

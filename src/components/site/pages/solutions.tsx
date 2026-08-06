@@ -3,33 +3,26 @@
 import { CtaBanner } from "@/components/site/Cta";
 import { Reveal } from "@/components/site/Reveal";
 import { SALON_TYPES } from "@/lib/site-data";
-import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
-  Calendar,
-  Palette,
-  Smartphone,
-  Sparkles,
-  Users,
-  Shield,
-  Zap,
-  Award,
-  CheckCircle2,
-  TrendingUp,
-  Star,
   Building2,
-  Layers,
-  Clock,
-  Headphones,
-  Scissors,
-  SprayCan,
+  Calendar,
+  CheckCircle2,
+  Gem,
   Hand,
   Paintbrush,
-  BookOpen,
-  Gem,
+  Palette,
+  Scissors,
+  Shield,
+  Smartphone,
+  Sparkles,
+  SprayCan,
+  Star,
+  Zap,
 } from "lucide-react";
+import Link from "next/link";
 
 const bannerGrowth = "/gotix/banner-growth.jpg";
 
@@ -46,7 +39,6 @@ const TYPE_PHOTOS: Record<string, string> = {
   "barber shop": unsplash("photo-1600948836101-f9ffda59d250"),
   "nail studio": unsplash("photo-1706629503571-c165023a7792"),
   "makeup studio": unsplash("photo-1515377905703-c4788e51af15"),
-  academy: unsplash("photo-1524178232363-1fb2b075b655"),
   "bridal studio": unsplash("photo-1512496015851-a90fb38ba796"),
   "tattoo studio": unsplash("photo-1558618666-fcd25c85cd64"),
 };
@@ -81,12 +73,11 @@ const HERO_STATS = [
 const TYPE_ICONS: Record<string, any> = {
   "Hair Salon": Scissors,
   "Beauty Salon": SprayCan,
-  "Spa": Hand,
+  Spa: Hand,
   "Skin Clinic": Sparkles,
   "Barber Shop": Scissors,
   "Nail Studio": Paintbrush,
   "Makeup Studio": Palette,
-  "Academy": BookOpen,
   "Bridal Studio": Gem,
   "Tattoo Studio": Sparkles,
 };
@@ -166,8 +157,9 @@ function SolutionsPage() {
               </h1>
 
               <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground sm:text-[15px]">
-                Hair, spa, skin, nails, bridal, tattoo and more — Gotix ships with workflows,
-                booking rules and billing presets tuned to how your floor actually runs.
+                Hair, spa, skin, nails, bridal, tattoo and more — Gotix ships
+                with workflows, booking rules and billing presets tuned to how
+                your floor actually runs.
               </p>
 
               <ul className="mt-4 space-y-2">
@@ -176,7 +168,10 @@ function SolutionsPage() {
                   "Preset service menus you can customize in minutes",
                   "Multi-branch ready from day one",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-foreground/80">
+                  <li
+                    key={item}
+                    className="flex items-start gap-2 text-sm text-foreground/80"
+                  >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                     {item}
                   </li>
@@ -184,11 +179,17 @@ function SolutionsPage() {
               </ul>
 
               <div className="mt-5 flex flex-wrap gap-2">
-                <Link href="/demo" className="group btn-base btn-primary !px-4 !py-2 text-sm">
+                <Link
+                  href="/demo"
+                  className="group btn-base btn-primary !px-4 !py-2 text-sm"
+                >
                   Find my fit
                   <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </Link>
-                <Link href="#types" className="btn-base btn-outline !px-4 !py-2 text-sm">
+                <Link
+                  href="#types"
+                  className="btn-base btn-outline !px-4 !py-2 text-sm"
+                >
                   Browse all types
                 </Link>
               </div>
@@ -196,13 +197,19 @@ function SolutionsPage() {
               <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
+                    <Star
+                      key={i}
+                      className="h-3 w-3 fill-amber-400 text-amber-400"
+                    />
                   ))}
-                  <span className="ml-1 font-medium text-foreground">1,200+ salons</span>
+                  <span className="ml-1 font-medium text-foreground">
+                    1,200+ salons
+                  </span>
                 </div>
                 <span className="hidden h-3 w-px bg-border sm:block" />
                 <span className="inline-flex items-center gap-1">
-                  <Shield className="h-3.5 w-3.5 text-primary" /> Enterprise grade
+                  <Shield className="h-3.5 w-3.5 text-primary" /> Enterprise
+                  grade
                 </span>
                 <span className="hidden h-3 w-px bg-border sm:block" />
                 <span className="inline-flex items-center gap-1">
@@ -265,7 +272,9 @@ function SolutionsPage() {
                   key={stat.label}
                   className="rounded-xl border border-border/60 bg-card/70 px-3 py-2 text-center backdrop-blur-sm"
                 >
-                  <p className="font-display text-lg sm:text-xl">{stat.value}</p>
+                  <p className="font-display text-lg sm:text-xl">
+                    {stat.value}
+                  </p>
                   <p className="text-[9px] uppercase tracking-[0.12em] text-muted-foreground">
                     {stat.label}
                   </p>
@@ -340,7 +349,9 @@ function SolutionsPage() {
             <Reveal>
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm">
                 <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-medium text-primary">Adaptable</span>
+                <span className="text-xs font-medium text-primary">
+                  Adaptable
+                </span>
               </div>
               <h2 className="mt-3 text-3xl sm:text-4xl">
                 It adapts to you — not the other way round.
@@ -370,101 +381,106 @@ function SolutionsPage() {
 
       {/* ============ DETAILED, ALTERNATING SECTIONS PER TYPE ============ */}
       {SALON_TYPES.map((t, i) => {
-          const IconComponent = TYPE_ICONS[t.name] || Building2;
-          return (
-            <section
-              key={t.name}
-              id={`type-${typeSlug(t.name)}`}
-              className={`relative w-full scroll-mt-24 overflow-hidden py-20 ${
-                i % 2 === 1 ? "bg-card" : "bg-background"
-              }`}
-            >
-              {/* Background decoration */}
-              <div className="absolute inset-0 -z-10">
-                <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
-                <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
-              </div>
+        const IconComponent = TYPE_ICONS[t.name] || Building2;
+        return (
+          <section
+            key={t.name}
+            id={`type-${typeSlug(t.name)}`}
+            className={`relative w-full scroll-mt-24 overflow-hidden py-20 ${
+              i % 2 === 1 ? "bg-card" : "bg-background"
+            }`}
+          >
+            {/* Background decoration */}
+            <div className="absolute inset-0 -z-10">
+              <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-primary/5 blur-3xl" />
+              <div className="absolute -bottom-40 -left-40 h-96 w-96 rounded-full bg-purple-500/5 blur-3xl" />
+            </div>
 
-              <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
-                <Reveal>
-                  <div
-                    className={`grid items-center gap-12 lg:grid-cols-2 ${
-                      i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                    }`}
-                  >
-                    <div className="relative overflow-hidden rounded-3xl border border-border">
-                      <div className="relative aspect-[5/4] w-full">
-                        {TYPE_PHOTOS[t.name.toLowerCase()] ? (
-                          <img
-                            src={TYPE_PHOTOS[t.name.toLowerCase()]}
-                            alt={`${t.name} interior photo`}
-                            loading="lazy"
-                            referrerPolicy="no-referrer"
-                            className="h-full w-full object-cover transition duration-700 hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-purple-500/10">
-                            <IconComponent className="h-20 w-20 text-primary/30" />
-                          </div>
-                        )}
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-card/60 via-transparent to-transparent" />
-                        
-                        {/* Badge */}
-                        <div className="absolute left-4 top-4 rounded-full bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-md">
-                          {i + 1 < 10 ? `0${i + 1}` : i + 1} / {SALON_TYPES.length}
+            <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
+              <Reveal>
+                <div
+                  className={`grid items-center gap-12 lg:grid-cols-2 ${
+                    i % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
+                  }`}
+                >
+                  <div className="relative overflow-hidden rounded-3xl border border-border">
+                    <div className="relative aspect-[5/4] w-full">
+                      {TYPE_PHOTOS[t.name.toLowerCase()] ? (
+                        <img
+                          src={TYPE_PHOTOS[t.name.toLowerCase()]}
+                          alt={`${t.name} interior photo`}
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          className="h-full w-full object-cover transition duration-700 hover:scale-105"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/10 to-purple-500/10">
+                          <IconComponent className="h-20 w-20 text-primary/30" />
                         </div>
-                      </div>
-                    </div>
+                      )}
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card/60 via-transparent to-transparent" />
 
-                    <div>
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
-                          <IconComponent className="h-5 w-5" />
-                        </div>
-                        <p className="eyebrow">Solution</p>
-                      </div>
-                      <h2 className="mt-3 text-3xl sm:text-4xl">{t.name}</h2>
-                      <div className="mt-2 h-1 w-16 rounded-full bg-gradient-to-r from-primary to-purple-600" />
-                      <p className="mt-4 max-w-lg text-muted-foreground">
-                        {t.desc}
-                      </p>
-                      
-                      {/* Feature chips */}
-                      <div className="mt-6 flex flex-wrap gap-2">
-                        {["Custom Workflow", "Industry-Specific", "Scalable", "Automated"].map(
-                          (feature) => (
-                            <span
-                              key={feature}
-                              className="rounded-full border border-border/50 bg-background/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm"
-                            >
-                              {feature}
-                            </span>
-                          )
-                        )}
-                      </div>
-
-                      <div className="mt-8 flex flex-wrap gap-3">
-                        <Link
-                          href="/features"
-                          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                        >
-                          Learn more <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Link>
-                        <Link
-                          href="/demo"
-                          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-2.5 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                        >
-                          See a {t.name.toLowerCase()} demo
-                        </Link>
+                      {/* Badge */}
+                      <div className="absolute left-4 top-4 rounded-full bg-black/40 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-md">
+                        {i + 1 < 10 ? `0${i + 1}` : i + 1} /{" "}
+                        {SALON_TYPES.length}
                       </div>
                     </div>
                   </div>
-                </Reveal>
-              </div>
-            </section>
-          );
-        })}
+
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-xl bg-primary/10 p-2.5 text-primary">
+                        <IconComponent className="h-5 w-5" />
+                      </div>
+                      <p className="eyebrow">Solution</p>
+                    </div>
+                    <h2 className="mt-3 text-3xl sm:text-4xl">{t.name}</h2>
+                    <div className="mt-2 h-1 w-16 rounded-full bg-gradient-to-r from-primary to-purple-600" />
+                    <p className="mt-4 max-w-lg text-muted-foreground">
+                      {t.desc}
+                    </p>
+
+                    {/* Feature chips */}
+                    <div className="mt-6 flex flex-wrap gap-2">
+                      {[
+                        "Custom Workflow",
+                        "Industry-Specific",
+                        "Scalable",
+                        "Automated",
+                      ].map((feature) => (
+                        <span
+                          key={feature}
+                          className="rounded-full border border-border/50 bg-background/50 px-3 py-1 text-xs text-muted-foreground backdrop-blur-sm"
+                        >
+                          {feature}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="mt-8 flex flex-wrap gap-3">
+                      <Link
+                        href="/features"
+                        className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+                      >
+                        Learn more{" "}
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                      </Link>
+                      <Link
+                        href="/demo"
+                        className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-2.5 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+                      >
+                        See a {t.name.toLowerCase()} demo
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+          </section>
+        );
+      })}
 
       <CtaBanner title="Find the right fit for your business." />
     </>

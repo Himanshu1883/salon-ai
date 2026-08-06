@@ -116,10 +116,6 @@ export const SALON_TYPES = [
     desc: "Look libraries, on-location bookings and artist kit inventory.",
   },
   {
-    name: "Academy",
-    desc: "Batches, student attendance, fee plans and certification tracking.",
-  },
-  {
     name: "Bridal Studio",
     desc: "Multi-day wedding itineraries, trials, advances and zero double-bookings.",
   },

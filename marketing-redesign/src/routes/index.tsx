@@ -1677,7 +1677,7 @@ function Home() {
               {/* Quick stats */}
               <div className="mt-6 flex flex-wrap items-center justify-center gap-6">
                 {[
-                  { label: "Business Types", value: "10+", icon: Layers },
+                  { label: "Business Types", value: "9+", icon: Layers },
                   { label: "Industries", value: "8", icon: Target },
                   { label: "Happy Salons", value: "1,200+", icon: Users },
                   { label: "Success Rate", value: "97%", icon: TrendingUp },
@@ -1721,7 +1721,6 @@ function Home() {
                       {type.name.includes("Barber") && "✂️"}
                       {type.name.includes("Nail") && "💅"}
                       {type.name.includes("Makeup") && "🎨"}
-                      {type.name.includes("Academy") && "📚"}
                       {type.name.includes("Bridal") && "👰"}
                       {type.name.includes("Tattoo") && "🎯"}
                     </div>

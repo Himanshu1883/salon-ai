@@ -32,7 +32,7 @@ function SolutionsPage() {
             Built For Every Kind of <em className="italic text-primary">Beauty Business.</em>
           </>
         }
-        subtitle="Ten business types, one platform — configured for the way your floor actually runs."
+        subtitle="Nine business types, one platform — configured for the way your floor actually runs."
         image={bannerGrowth}
         imageAlt="Busy premium salon floor with stylists and clients"
       />
