@@ -223,7 +223,7 @@ export function CtaBanner({
             className="flex flex-col items-center lg:items-end lg:sticky lg:top-24"
           >
             <DemoCalendar />
-
+{/* 
             <div className="mt-2.5 flex max-w-[19rem] flex-wrap items-center justify-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground sm:text-xs">
               <span className="inline-flex items-center gap-1">
                 <Shield className="h-3 w-3 text-emerald-600" />
@@ -236,7 +236,7 @@ export function CtaBanner({
                 ))}
                 <span className="ml-0.5">4.9</span>
               </span>
-            </div>
+            </div> */}
           </motion.div>
         </div>
       </div>
