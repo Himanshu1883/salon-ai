@@ -382,42 +382,63 @@ function HomePageView() {
             </Reveal>
           </div>
 
-          {/* CTA Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Ready to transform your salon?
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/signup"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                >
-                  Start Free Trial
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/demo"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a Demo
-                </Link>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                No credit card required • Free 14-day trial • 24/7 support
-              </p>
-            </div>
-          </motion.div>
+{/* CTA Section */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.4 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image - Unsplash */}
+  <div className="absolute inset-0 -z-10">
+  <img
+  src="https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1920&q=80"
+  alt="Modern office workspace"
+  className="h-full w-full object-cover"
+/>
+    <div className="absolute inset-0 bg-gradient-to-br from-background/95 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-transparent" />
+    {/* Subtle pattern overlay */}
+    <div 
+      className="absolute inset-0 opacity-20"
+      style={{
+        backgroundImage: "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 1px, transparent 1px)",
+        backgroundSize: "24px 24px",
+      }}
+    />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Ready to transform your salon?
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/signup"
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/demo"
+          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+        >
+          <Calendar className="h-4 w-4" />
+          Book a Demo
+        </Link>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        No credit card required • Free 14-day trial • 24/7 support
+      </p>
+    </div>
+  </div>
+</motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -766,40 +787,58 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Not sure which solution fits your business?
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/solutions"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                >
-                  Explore All Solutions
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                >
-                  <MessageSquare className="h-4 w-4" />
-                  Talk to an Expert
-                </Link>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Free consultation • Personalized demo • 14-day trial
-              </p>
-            </div>
-          </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.4 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image */}
+  <div className="absolute inset-0 -z-10">
+  <img
+  src="https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1920&q=80"
+  alt="Warm salon interior"
+  className="h-full w-full object-cover brightness-95 saturate-90"
+/>
+    {/* Light theme overlays - keeping it bright but readable */}
+    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+    {/* Subtle white overlay for light theme */}
+    <div className="absolute inset-0 bg-white/10" />
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Not sure which solution fits your business?
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/solutions"
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+        >
+          Explore All Solutions
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/contact"
+          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+        >
+          <MessageSquare className="h-4 w-4" />
+          Talk to an Expert
+        </Link>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Free consultation • Personalized demo • 14-day trial
+      </p>
+    </div>
+  </div>
+</motion.div>
         </div>
       </section>
 
@@ -1018,40 +1057,58 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Ready to experience the difference?
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/signup"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                >
-                  Start Free Trial
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/demo"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a Demo
-                </Link>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                No credit card required • Free 14-day trial • 24/7 support
-              </p>
-            </div>
-          </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.6 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image - Relevant to "Experience the Difference" */}
+  <div className="absolute inset-0 -z-10">
+  <img
+  src="https://images.unsplash.com/photo-1522337660859-02fbefca4702?auto=format&fit=crop&w=1920&q=80"
+  alt="Modern salon transformation"
+  className="h-full w-full object-cover brightness-[0.85] saturate-95"
+/>
+    {/* Overlays for text readability */}
+    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+    {/* Subtle white overlay for light theme */}
+    <div className="absolute inset-0 bg-white/10" />
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Ready to experience the difference?
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/signup"
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/demo"
+          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+        >
+          <Calendar className="h-4 w-4" />
+          Book a Demo
+        </Link>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        No credit card required • Free 14-day trial • 24/7 support
+      </p>
+    </div>
+  </div>
+</motion.div>
         </div>
       </section>
 
@@ -1501,39 +1558,57 @@ function HomePageView() {
 
           {/* CTA Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Join 1,200+ happy salons
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/signup"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                >
-                  Start Free Trial
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/testimonials"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                >
-                  Read More Stories
-                </Link>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Join the community of successful salon owners
-              </p>
-            </div>
-          </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.4 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image - Community/Happy Salons */}
+  <div className="absolute inset-0 -z-10">
+  <img
+  src="https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=1920&q=80"
+  alt="Happy salon team and community"
+  className="h-full w-full object-cover brightness-[0.85] saturate-95"
+/>
+    {/* Overlays for text readability */}
+    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+    <div className="absolute inset-0 bg-white/10" />
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Join 1,200+ happy salons
+        </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/signup"
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+        >
+          Start Free Trial
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/testimonials"
+          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+        >
+          <Users className="h-4 w-4" />
+          Read More Stories
+        </Link>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Join the community of successful salon owners
+      </p>
+    </div>
+  </div>
+</motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -1619,7 +1694,7 @@ function HomePageView() {
           </div>
 
           {/* Pricing Cards Grid - Only 2 plans */}
-          <div className="mt-12 grid gap-6 md:grid-cols-2 max-w-3xl mx-auto">
+          <div className="mt-12 grid max-w-3xl gap-6 mx-auto md:grid-cols-2">
             {PLANS.filter(
               (plan) => plan.name === "Starter" || plan.name === "Professional",
             ).map((plan, index) => (
@@ -1632,38 +1707,42 @@ function HomePageView() {
                 className="group relative"
               >
                 <div
-                  className={`relative h-full overflow-hidden rounded-2xl border p-8 transition-all duration-300 hover:-translate-y-2 ${
+                  className={`home-pricing-card relative h-full overflow-hidden rounded-2xl border p-8 ${
                     plan.popular
-                      ? "border-primary bg-gradient-to-b from-primary/5 to-transparent shadow-xl shadow-primary/10"
-                      : "border-border/50 bg-card/50 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
+                      ? "home-pricing-card-pro bg-gradient-to-b from-primary/5 to-transparent"
+                      : "home-pricing-card-starter border-border/50 bg-card/50"
                   }`}
                 >
                   {/* Popular badge */}
                   {plan.popular && (
-                    <div className="absolute right-4 top-4">
-                      <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-medium text-primary-foreground">
+                    <div className="absolute right-4 top-4 z-10">
+                      <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-medium text-primary-foreground shadow-sm shadow-primary/20">
                         Most Popular
                       </span>
                     </div>
                   )}
 
                   {/* Plan name */}
-                  <div className="flex items-center gap-3">
+                  <div className="relative z-10 flex items-center gap-3">
                     <div
-                      className={`rounded-lg p-2.5 ${plan.popular ? "bg-primary/10" : "bg-muted/50"}`}
+                      className={`rounded-lg p-2.5 transition-colors duration-500 ${
+                        plan.popular
+                          ? "bg-primary/10 group-hover:bg-primary/15"
+                          : "bg-muted/50 group-hover:bg-primary/10"
+                      }`}
                     >
                       {plan.name === "Starter" && (
-                        <Zap className="h-5 w-5 text-primary" />
+                        <Zap className="h-5 w-5 text-primary transition-colors duration-500 group-hover:text-primary" />
                       )}
                       {plan.name === "Professional" && (
-                        <TrendingUp className="h-5 w-5 text-primary" />
+                        <TrendingUp className="h-5 w-5 text-primary transition-colors duration-500" />
                       )}
                     </div>
                     <div>
-                      <p className="font-display text-xl font-medium">
+                      <p className="font-display text-xl font-medium transition-colors duration-500 group-hover:text-foreground">
                         {plan.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-muted-foreground transition-colors duration-500 group-hover:text-muted-foreground/80">
                         {plan.name === "Starter"
                           ? "For growing salons"
                           : "For established businesses"}
@@ -1672,7 +1751,7 @@ function HomePageView() {
                   </div>
 
                   {/* Price */}
-                  <div className="mt-6">
+                  <div className="relative z-10 mt-6">
                     <p className="font-display text-5xl font-bold">
                       ₹{plan.monthly?.toLocaleString("en-IN")}
                       <span className="ml-1 text-base font-normal text-muted-foreground">
@@ -1685,16 +1764,20 @@ function HomePageView() {
                   </div>
 
                   {/* Description */}
-                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  <p className="relative z-10 mt-4 text-sm leading-relaxed text-muted-foreground transition-colors duration-500 group-hover:text-muted-foreground/90">
                     {plan.desc}
                   </p>
 
                   {/* Features list */}
-                  <div className="mt-6 space-y-2.5">
-                    {plan.includes.slice(0, 5).map((feature) => (
-                      <div key={feature} className="flex items-start gap-2">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
-                        <span className="text-sm text-muted-foreground">
+                  <div className="relative z-10 mt-6 space-y-2.5">
+                    {plan.includes.slice(0, 5).map((feature, featureIndex) => (
+                      <div
+                        key={feature}
+                        className="flex items-start gap-2 transition-colors duration-500"
+                        style={{ transitionDelay: `${featureIndex * 40}ms` }}
+                      >
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary transition-colors duration-500 group-hover:text-primary" />
+                        <span className="text-sm text-muted-foreground transition-colors duration-500 group-hover:text-foreground/75">
                           {feature}
                         </span>
                       </div>
@@ -1702,7 +1785,7 @@ function HomePageView() {
                     {plan.includes.length > 5 && (
                       <div className="flex items-start gap-2">
                         <span className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                        <span className="text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground transition-colors duration-500 group-hover:text-foreground/70">
                           +{plan.includes.length - 5} more features
                         </span>
                       </div>
@@ -1710,17 +1793,17 @@ function HomePageView() {
                   </div>
 
                   {/* CTA Button */}
-                  <div className="mt-8">
+                  <div className="relative z-10 mt-8">
                     <Link
                       href={plan.to}
-                      className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-all ${
+                      className={`inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-[background-color,border-color,box-shadow,color] duration-500 ${
                         plan.popular
-                          ? "bg-primary text-primary-foreground hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                          : "border border-border/50 bg-background/50 text-foreground hover:border-primary hover:bg-primary/5"
+                          ? "bg-primary text-primary-foreground group-hover:bg-primary-dark group-hover:shadow-lg group-hover:shadow-primary/25"
+                          : "border border-border/50 bg-background/50 text-foreground group-hover:border-primary/40 group-hover:bg-primary/5 group-hover:shadow-[0_0_20px_-10px] group-hover:shadow-primary/15"
                       }`}
                     >
                       {plan.cta}
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-0.5" />
                     </Link>
                   </div>
                 </div>
@@ -1785,28 +1868,48 @@ function HomePageView() {
 
           {/* FAQ Teaser */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-3">
-              <p className="text-sm font-medium text-muted-foreground">
-                Have questions about pricing?
-              </p>
-              <Link
-                href="/faq"
-                className="inline-flex items-center gap-2 font-medium text-primary transition-all hover:gap-3"
-              >
-                Visit our FAQ page
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-              <p className="text-xs text-muted-foreground">
-                Or contact our sales team for custom enterprise pricing
-              </p>
-            </div>
-          </motion.div>
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.4 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image - Pricing/Finance Related */}
+  <div className="absolute inset-0 -z-10">
+    <img
+      src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1920&q=80"
+      alt="Financial planning and pricing consultation"
+      className="h-full w-full object-cover brightness-[0.85] saturate-90"
+    />
+    {/* Overlays for text readability */}
+    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+    <div className="absolute inset-0 bg-white/10" />
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="flex items-center gap-2">
+        <CreditCard className="h-5 w-5 text-primary" />
+        <p className="text-sm font-medium text-primary">
+          Have questions about pricing?
+        </p>
+      </div>
+      <Link
+        href="/faq"
+        className="inline-flex items-center gap-2 font-medium text-primary transition-all hover:gap-3"
+      >
+        Visit our FAQ page
+        <ArrowRight className="h-4 w-4" />
+      </Link>
+      <p className="text-xs text-muted-foreground">
+        Or contact our sales team for custom enterprise pricing
+      </p>
+    </div>
+  </div>
+</motion.div>
 
           {/* Trust indicators */}
           <motion.div
@@ -1958,43 +2061,60 @@ function HomePageView() {
             </Link>
           </Reveal>
 
-          {/* Still have questions? */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-16 rounded-2xl bg-gradient-to-br from-primary/5 via-purple-500/5 to-pink-500/5 p-8 text-center border border-primary/10"
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Still have questions?
-                </span>
-              </div>
-              <p className="max-w-md text-sm text-muted-foreground">
-                Our team is here to help. Get in touch and we'll get back to you
-                within 2 hours.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <Link
-                  href="/contact"
-                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
-                >
-                  Contact Support
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-                <Link
-                  href="/demo"
-                  className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/50 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a Demo
-                </Link>
-              </div>
-            </div>
-          </motion.div>
+{/* Still have questions? */}
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: 0.3 }}
+  className="relative mt-16 overflow-hidden rounded-2xl border border-primary/10"
+>
+  {/* Background Image - Customer Support/Help Desk Related */}
+  <div className="absolute inset-0 -z-10">
+  <img
+  src="https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1920&q=80"
+  alt="Help desk support"
+  className="h-full w-full object-cover brightness-[0.85] saturate-90"
+/>
+    {/* Overlays for text readability */}
+    <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/85 to-background/70" />
+    <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+    <div className="absolute inset-0 bg-white/10" />
+    {/* Decorative gradient */}
+    <div className="absolute inset-0 bg-gradient-to-tr from-primary/5 via-purple-500/5 to-transparent" />
+  </div>
+
+  <div className="relative z-10 p-8 text-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="flex items-center gap-2">
+        <MessageSquare className="h-5 w-5 text-primary" />
+        <span className="text-sm font-medium text-primary">
+          Still have questions?
+        </span>
+      </div>
+      <p className="max-w-md text-sm text-muted-foreground">
+        Our team is here to help. Get in touch and we'll get back to you
+        within 2 hours.
+      </p>
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <Link
+          href="/contact"
+          className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-primary-foreground transition-all hover:bg-primary-dark hover:shadow-lg hover:shadow-primary/25"
+        >
+          Contact Support
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+        <Link
+          href="/demo"
+          className="inline-flex items-center gap-2 rounded-full border border-border/50 bg-background/80 px-6 py-3 font-medium backdrop-blur-sm transition-all hover:border-primary hover:bg-primary/5"
+        >
+          <Calendar className="h-4 w-4" />
+          Book a Demo
+        </Link>
+      </div>
+    </div>
+  </div>
+</motion.div>
 
           {/* Quick links / Topics */}
           <motion.div

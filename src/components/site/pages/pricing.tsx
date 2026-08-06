@@ -3,7 +3,7 @@
 import { Accordion, CtaBanner } from "@/components/site/Cta";
 import { Reveal } from "@/components/site/Reveal";
 import { SectionBackdrop } from "@/components/site/SectionBackdrop";
-import { FAQS, PLANS } from "@/lib/site-data";
+import { PLANS } from "@/lib/site-data";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -19,6 +19,10 @@ import {
   TrendingUp,
   Users,
   Zap,
+  Award,
+  Clock,
+  Calendar,
+  Star,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
@@ -67,6 +71,41 @@ const GUARANTEES = [
     icon: Headphones,
     title: "Human support",
     description: "Real people who know salons — not ticket bots.",
+  },
+];
+
+const PRICING_FAQS = [
+  {
+    q: "What's included in the 14-day free trial?",
+    a: "You get full access to all modules including appointments, POS, inventory, CRM, AI analytics, marketing tools, and WhatsApp integration. No credit card required, and you can cancel anytime during the trial period.",
+  },
+  {
+    q: "Can I switch plans later?",
+    a: "Yes, you can upgrade or downgrade anytime from your billing settings. Changes are prorated automatically, and you'll only pay the difference for the remaining billing period.",
+  },
+  {
+    q: "Is there a setup fee or contract lock-in?",
+    a: "No setup fee whatsoever. All plans are month-to-month with no long-term contracts. You can cancel anytime with just one click — no questions asked.",
+  },
+  {
+    q: "What payment methods do you accept?",
+    a: "We accept all major credit/debit cards, UPI, net banking, and bank transfers. Annual plans can be paid via invoice for enterprise clients.",
+  },
+  {
+    q: "Do you offer discounts for non-profits or educational institutions?",
+    a: "Yes! We offer special pricing for non-profit organizations, academies, and educational institutions. Contact our sales team for custom quotes.",
+  },
+  {
+    q: "What happens after my free trial ends?",
+    a: "You'll receive a notification 3 days before your trial ends. Your data will be saved, and you can choose to subscribe to a plan or export your data at any time.",
+  },
+  {
+    q: "Can I add more staff members or locations later?",
+    a: "Absolutely. Starter plan supports up to 3 staff and 1 location. Professional supports up to 15 staff with multi-location add-ons available. Contact sales for custom packages.",
+  },
+  {
+    q: "Is data migration included?",
+    a: "Self-serve migration tools are included in both plans. Professional plan includes free assisted migration where our team helps you move data from Fresha, Booksy, Zoho, or Excel.",
   },
 ];
 
@@ -149,49 +188,58 @@ function PricingPage() {
         </div>
       </section>
 
-      {/* Plan cards */}
+      {/* Plan cards - Same style as home page */}
       <section className="relative w-full py-16 lg:py-20">
         <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
             {plans.map((plan, index) => (
               <motion.div
                 key={plan.name}
-                initial={{ opacity: 0, y: 24 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.08 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="group relative"
               >
                 <div
                   className={cn(
-                    "relative flex h-full flex-col overflow-hidden rounded-2xl border p-8 transition-all duration-300 hover:-translate-y-1",
+                    "home-pricing-card relative h-full overflow-hidden rounded-2xl border p-8 transition-all duration-300",
                     plan.popular
-                      ? "border-primary bg-gradient-to-b from-primary/8 via-card to-card shadow-xl shadow-primary/10"
-                      : "border-border/60 bg-card/60 hover:border-primary/25 hover:shadow-lg hover:shadow-primary/5",
+                      ? "home-pricing-card-pro bg-gradient-to-b from-primary/5 to-transparent border-primary"
+                      : "home-pricing-card-starter border-border/50 bg-card/50",
                   )}
                 >
+                  {/* Popular badge */}
                   {plan.popular && (
-                    <span className="absolute right-4 top-4 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-primary-foreground">
-                      Most popular
-                    </span>
+                    <div className="absolute right-4 top-4 z-10">
+                      <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-medium text-primary-foreground shadow-sm shadow-primary/20">
+                        Most Popular
+                      </span>
+                    </div>
                   )}
 
-                  <div className="flex items-center gap-3">
+                  {/* Plan name */}
+                  <div className="relative z-10 flex items-center gap-3">
                     <div
                       className={cn(
-                        "rounded-xl p-2.5",
-                        plan.popular ? "bg-primary/10" : "bg-muted/60",
+                        "rounded-lg p-2.5 transition-colors duration-500",
+                        plan.popular
+                          ? "bg-primary/10 group-hover:bg-primary/15"
+                          : "bg-muted/50 group-hover:bg-primary/10",
                       )}
                     >
-                      {plan.name === "Starter" ? (
-                        <Zap className="h-5 w-5 text-primary" />
-                      ) : (
-                        <TrendingUp className="h-5 w-5 text-primary" />
+                      {plan.name === "Starter" && (
+                        <Zap className="h-5 w-5 text-primary transition-colors duration-500 group-hover:text-primary" />
+                      )}
+                      {plan.name === "Professional" && (
+                        <TrendingUp className="h-5 w-5 text-primary transition-colors duration-500" />
                       )}
                     </div>
                     <div>
-                      <h2 className="font-display text-xl font-semibold">{plan.name}</h2>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="font-display text-xl font-medium transition-colors duration-500 group-hover:text-foreground">
+                        {plan.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground transition-colors duration-500 group-hover:text-muted-foreground/80">
                         {plan.name === "Starter"
                           ? "For growing salons"
                           : "For established businesses"}
@@ -199,37 +247,63 @@ function PricingPage() {
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    <p className="font-display text-5xl font-bold tracking-tight">
+                  {/* Price */}
+                  <div className="relative z-10 mt-6">
+                    <p className="font-display text-5xl font-bold">
                       ₹{plan.price?.toLocaleString("en-IN")}
-                      <span className="ml-1 text-base font-normal text-muted-foreground">/mo</span>
+                      <span className="ml-1 text-base font-normal text-muted-foreground">
+                        /mo
+                      </span>
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground">{plan.billed}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {plan.billed}
+                    </p>
                   </div>
 
-                  <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{plan.desc}</p>
+                  {/* Description */}
+                  <p className="relative z-10 mt-4 text-sm leading-relaxed text-muted-foreground transition-colors duration-500 group-hover:text-muted-foreground/90">
+                    {plan.desc}
+                  </p>
 
-                  <ul className="mt-6 flex-1 space-y-3">
-                    {plan.includes.map((feature) => (
-                      <li key={feature} className="flex items-start gap-2.5 text-sm">
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
+                  {/* Features list */}
+                  <div className="relative z-10 mt-6 space-y-2.5">
+                    {plan.includes.slice(0, 5).map((feature, featureIndex) => (
+                      <div
+                        key={feature}
+                        className="flex items-start gap-2 transition-colors duration-500"
+                        style={{ transitionDelay: `${featureIndex * 40}ms` }}
+                      >
+                        <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary transition-colors duration-500 group-hover:text-primary" />
+                        <span className="text-sm text-muted-foreground transition-colors duration-500 group-hover:text-foreground/75">
+                          {feature}
+                        </span>
+                      </div>
                     ))}
-                  </ul>
-
-                  <Link
-                    href={plan.to}
-                    className={cn(
-                      "mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all",
-                      plan.popular
-                        ? "bg-primary text-primary-foreground hover:bg-primary/90 hover:shadow-lg hover:shadow-primary/25"
-                        : "border border-border bg-background text-foreground hover:border-primary hover:bg-primary/5",
+                    {plan.includes.length > 5 && (
+                      <div className="flex items-start gap-2">
+                        <span className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                        <span className="text-sm text-muted-foreground transition-colors duration-500 group-hover:text-foreground/70">
+                          +{plan.includes.length - 5} more features
+                        </span>
+                      </div>
                     )}
-                  >
-                    {plan.cta}
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </div>
+
+                  {/* CTA Button */}
+                  <div className="relative z-10 mt-8">
+                    <Link
+                      href={plan.to}
+                      className={cn(
+                        "inline-flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-[background-color,border-color,box-shadow,color] duration-500",
+                        plan.popular
+                          ? "bg-primary text-primary-foreground group-hover:bg-primary-dark group-hover:shadow-lg group-hover:shadow-primary/25"
+                          : "border border-border/50 bg-background/50 text-foreground group-hover:border-primary/40 group-hover:bg-primary/5 group-hover:shadow-[0_0_20px_-10px] group-hover:shadow-primary/15",
+                      )}
+                    >
+                      {plan.cta}
+                      <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-0.5" />
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -354,16 +428,27 @@ function PricingPage() {
         </div>
       </section>
 
-      {/* FAQ */}
+      {/* FAQ - Pricing related */}
       <section className="w-full border-t border-border/60 pb-24 pt-16">
         <div className="mx-auto w-full max-w-[1500px] px-5 sm:px-8">
           <Reveal className="mx-auto max-w-3xl">
-            <h2 className="text-center font-display text-2xl sm:text-3xl">Pricing questions</h2>
-            <p className="mt-2 text-center text-sm text-muted-foreground">
-              Everything you need to know before you start your free trial.
-            </p>
-            <div className="mt-8">
-              <Accordion items={FAQS} />
+            <div className="text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span className="text-xs font-medium text-primary">FAQs</span>
+              </div>
+              <h2 className="mt-6 font-display text-3xl sm:text-4xl">
+                Pricing{" "}
+                <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+                  Questions
+                </span>
+              </h2>
+              <p className="mt-3 text-muted-foreground">
+                Everything you need to know before you start your free trial.
+              </p>
+            </div>
+            <div className="mt-10">
+              <Accordion items={PRICING_FAQS} />
             </div>
           </Reveal>
         </div>
