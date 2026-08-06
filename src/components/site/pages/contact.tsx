@@ -180,19 +180,17 @@ function ContactPage() {
               <form className="mt-8" onSubmit={handleSubmit}>
                 <div className="grid gap-5 sm:grid-cols-2">
                   {FIELDS.map((f) => (
-                    <label key={f.name} className={`block text-sm ${f.name === "message" ? "sm:col-span-2" : ""}`}>
+                    <label key={f.name} className="block text-sm">
                       <span className="font-medium text-foreground">{f.label}</span>
-                      {f.name !== "message" ? (
-                        <input
-                          required
-                          name={f.name}
-                          type={f.type}
-                          value={formData[f.name as keyof typeof formData] as string}
-                          onChange={handleChange}
-                          placeholder={f.placeholder}
-                          className="mt-2 w-full rounded-xl border border-border/60 bg-background/50 px-4 py-3 text-sm outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
-                        />
-                      ) : null}
+                      <input
+                        required
+                        name={f.name}
+                        type={f.type}
+                        value={formData[f.name]}
+                        onChange={handleChange}
+                        placeholder={f.placeholder}
+                        className="mt-2 w-full rounded-xl border border-border/60 bg-background/50 px-4 py-3 text-sm outline-hidden transition-all focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      />
                     </label>
                   ))}
                   <label className="block text-sm sm:col-span-2">
