@@ -524,6 +524,46 @@
   animation-duration: 2.8s;
 }
 
+@keyframes home-hero-orb-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(6%, 8%);
+  }
+}
+
+@keyframes home-hero-orb-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  50% {
+    transform: translate(-8%, -5%);
+  }
+}
+
+.gotix-site .home-hero-orb-a {
+  animation: home-hero-orb-drift-a 14s ease-in-out infinite;
+}
+
+.gotix-site .home-hero-orb-b {
+  animation: home-hero-orb-drift-b 18s ease-in-out infinite;
+}
+
+.gotix-site .home-hero-kenburns {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gotix-site .home-hero-orb-a,
+  .gotix-site .home-hero-orb-b,
+  .gotix-site .home-hero-kenburns {
+    animation: none !important;
+  }
+}
+
 .gotix-site .animate-\[gradient-shift_6s_ease_infinite\] {
   animation: gotix-gradient-shift 6s ease infinite;
 }

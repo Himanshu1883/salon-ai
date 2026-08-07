@@ -7,50 +7,130 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { AnimatePresence, motion, useInView, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight,
   Calendar,
   Check,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  MessageCircle,
   Play,
-  Receipt,
   Sparkles,
-  Star,
-  TrendingUp,
-  UserPlus,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
-const heroImg = "/gotix/hero-salon.jpg";
+function unsplash(id: string, w = 1920) {
+  return `https://images.unsplash.com/${id}?w=${w}&q=85&auto=format&fit=crop`;
+}
 
-const PILLS = [
-  "Appointments",
-  "POS Billing",
-  "Inventory",
-  "CRM",
-  "Marketing",
-  "Membership",
-  "WhatsApp",
-  "Reports",
-  "Analytics",
-  "Multi-Branch",
-];
+const SLIDE_MS = 6000;
 
-// Kinetic word-cycle — the single signature move that replaces the dashboard
-// mockup. Each word reframes who the platform is "the operating system" for.
-const AUDIENCE_WORDS = ["modern salons.", "busy spas.", "growing chains.", "boutique studios."];
-
-const METRICS = [
-  { value: "12.8K+", label: "Salons onboarded" },
-  { value: "99.9%", label: "Platform uptime" },
-  { value: "+156%", label: "Avg. revenue lift" },
-];
+const HERO_SLIDES = [
+  {
+    key: "os",
+    eyebrow: "Salon operating system",
+    shortLabel: "Salon",
+    title: "The OS that runs your entire salon.",
+    accent: "entire salon.",
+    copy: "Appointments, billing, inventory, CRM and AI — one platform built for modern beauty businesses.",
+    cta: "Start free trial",
+    ctaHref: "/signup" as const,
+    secondary: "Book a demo",
+    secondaryHref: "/demo" as const,
+    image: unsplash("photo-1560066984-138dadb4c035", 2400),
+    thumb: unsplash("photo-1560066984-138dadb4c035", 480),
+    imageAlt: "Modern salon interior representing a full salon operating system",
+    object: "object-center",
+    stat: "12.8K+ salons",
+  },
+  {
+    key: "appointments",
+    eyebrow: "Smart scheduling",
+    shortLabel: "Smart",
+    title: "Fill every chair without the chaos.",
+    accent: "without the chaos.",
+    copy: "Drag-and-drop calendar, waitlists, and WhatsApp reminders that keep your floor moving all day.",
+    cta: "See appointments",
+    ctaHref: "/platform" as const,
+    secondary: "Book a demo",
+    secondaryHref: "/demo" as const,
+    image: "/gotix/hero/schedule.png",
+    thumb: "/gotix/hero/schedule.png",
+    imageAlt: "Tablet calendar schedule for salon appointments",
+    object: "object-center",
+    stat: "Zero double-books",
+  },
+  {
+    key: "billing",
+    eyebrow: "POS & billing",
+    shortLabel: "POS",
+    title: "Checkout that feels instant.",
+    accent: "instant.",
+    copy: "Split bills, apply memberships, accept UPI or card, and share GST-ready invoices in seconds.",
+    cta: "Start free trial",
+    ctaHref: "/signup" as const,
+    secondary: "Watch tour",
+    secondaryHref: "#product-tour" as const,
+    image: "/gotix/hero/pos-billing.png",
+    thumb: "/gotix/hero/pos-billing.png",
+    imageAlt: "Tablet POS checkout and billing at a counter",
+    object: "object-center",
+    stat: "Under 30s checkout",
+  },
+  {
+    key: "crm",
+    eyebrow: "Client CRM",
+    shortLabel: "Client",
+    title: "Every client story in one place.",
+    accent: "one place.",
+    copy: "Visit history, preferences, loyalty and follow-ups — so every conversation starts with context.",
+    cta: "Explore CRM",
+    ctaHref: "/features" as const,
+    secondary: "Book a demo",
+    secondaryHref: "/demo" as const,
+    image: "/gotix/hero/client-crm.png",
+    thumb: "/gotix/hero/client-crm.png",
+    imageAlt: "Client analytics dashboard for CRM insights",
+    object: "object-center",
+    stat: "+28% retention",
+  },
+  {
+    key: "inventory",
+    eyebrow: "Inventory intelligence",
+    shortLabel: "Inventory",
+    title: "Stock that never blindsides you.",
+    accent: "blindsides you.",
+    copy: "Low-stock alerts, purchase orders, and consumption tracking tied to every service you sell.",
+    cta: "Start free trial",
+    ctaHref: "/signup" as const,
+    secondary: "See platform",
+    secondaryHref: "/platform" as const,
+    image: "/gotix/hero/inventory.png",
+    thumb: "/gotix/hero/inventory.png",
+    imageAlt: "Inventory and production system on a laptop",
+    object: "object-center",
+    stat: "Real-time stock",
+  },
+  {
+    key: "ai",
+    eyebrow: "AI analytics",
+    shortLabel: "AI",
+    title: "See growth before it happens.",
+    accent: "before it happens.",
+    copy: "Demand forecasts, pricing gaps, and staff utilization insights so you plan the week with confidence.",
+    cta: "Discover AI",
+    ctaHref: "/ai" as const,
+    secondary: "Book a demo",
+    secondaryHref: "/demo" as const,
+    image: unsplash("photo-1551288049-bebda4e38f71", 2400),
+    thumb: unsplash("photo-1551288049-bebda4e38f71", 480),
+    imageAlt: "Analytics dashboard charts for AI-driven salon insights",
+    object: "object-center",
+    stat: "AI-driven insights",
+  },
+] as const;
 
 const TOUR_STEPS = [
   {
@@ -106,436 +186,6 @@ const TOUR_STEPS = [
     ],
   },
 ] as const;
-
-// Live-pulse feed for the new section — real product moments, not chrome.
-const PULSE_EVENTS = [
-  { icon: Calendar, text: "New booking confirmed — Priya S., Bridal Package" },
-  { icon: Receipt, text: "Payment received — ₹2,400 via UPI" },
-  { icon: MessageCircle, text: "WhatsApp reminder sent to 12 clients" },
-  { icon: Star, text: "5★ review received — \u201cBest salon in the city\u201d" },
-  { icon: UserPlus, text: "Walk-in checked in — queue position 2" },
-  { icon: Sparkles, text: "AI flagged Saturday 2–6 PM as peak — staff alerted" },
-];
-
-const PULSE_STATS = [
-  { value: 50000, suffix: "+", label: "Appointments handled monthly" },
-  { value: 12800, suffix: "+", label: "Salons running on Gotix" },
-  { value: 4.9, suffix: "★", label: "Average client rating", decimals: 1 },
-  { value: 99.9, suffix: "%", label: "Platform uptime", decimals: 1 },
-];
-
-const fadeUp = (delay: number, reduced: boolean) =>
-  reduced
-    ? {}
-    : {
-        initial: { opacity: 0, y: 18 },
-        animate: { opacity: 1, y: 0 },
-        transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
-      };
-
-/* ---------------- background ---------------- */
-
-function HeroBackground() {
-  return (
-    <div className="pointer-events-none absolute inset-0 z-0" aria-hidden>
-      <img
-        src={heroImg}
-        alt=""
-        width={1920}
-        height={1088}
-        className="h-full w-full object-cover object-[center_30%] ken-burns"
-      />
-      <div className="absolute inset-0 bg-gradient-to-br from-background/92 via-background/72 to-background/25" />
-      <div className="absolute inset-0 bg-gradient-to-r from-background/88 via-background/45 to-transparent" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-      <div className="absolute inset-0 saas-flow-mesh opacity-70" />
-      <div
-        className="absolute inset-0 opacity-25 mix-blend-soft-light"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--foreground) 8%, transparent) 1px, transparent 1px)",
-          backgroundSize: "72px 72px",
-          maskImage:
-            "radial-gradient(ellipse 90% 75% at 50% 20%, black, transparent 78%)",
-        }}
-      />
-      <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-primary/12 blur-[100px] saas-flow-orb-a" />
-      <div className="absolute -right-16 top-1/4 h-96 w-96 rounded-full bg-purple-500/10 blur-[120px] saas-flow-orb-b" />
-      <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-background to-transparent" />
-    </div>
-  );
-}
-
-/* ---------------- kinetic headline ---------------- */
-
-function KineticHeadline({ reduced }: { reduced: boolean }) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (reduced) return;
-    const timer = window.setInterval(() => {
-      setIndex((i) => (i + 1) % AUDIENCE_WORDS.length);
-    }, 2400);
-    return () => window.clearInterval(timer);
-  }, [reduced]);
-
-  return (
-    <h1 className="font-display text-[2.35rem] leading-[1.04] tracking-tight sm:text-5xl lg:text-[3.65rem] xl:text-[4rem]">
-      The operating system for{" "}
-      <span className="relative mt-2 block h-[1.15em] overflow-hidden text-primary lg:inline-block lg:align-bottom">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={AUDIENCE_WORDS[index]}
-            initial={reduced ? false : { y: "100%", opacity: 0 }}
-            animate={{ y: "0%", opacity: 1 }}
-            exit={reduced ? undefined : { y: "-100%", opacity: 0 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="block"
-          >
-            {AUDIENCE_WORDS[index]}
-          </motion.span>
-        </AnimatePresence>
-      </span>
-    </h1>
-  );
-}
-
-/* ---------------- editorial visual (replaces dashboard mockup) ---------------- */
-
-function HeroStatBadge({
-  label,
-  value,
-  hint,
-  icon: Icon,
-  tone,
-  className,
-  style,
-  reduced,
-  delay,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: string;
-  icon: typeof Star;
-  tone: "sage" | "sand" | "violet";
-  className?: string;
-  style?: CSSProperties;
-  reduced: boolean;
-  delay: number;
-}) {
-  const tones = {
-    sage: "border-emerald-500/20 bg-[color-mix(in_oklab,var(--color-card)_90%,#dceee3)] shadow-[0_16px_48px_-20px_rgba(16,185,129,0.35)]",
-    sand: "border-amber-500/20 bg-[color-mix(in_oklab,var(--color-card)_90%,#f3ebe0)] shadow-[0_16px_48px_-20px_rgba(217,119,6,0.28)]",
-    violet:
-      "border-primary/20 bg-[color-mix(in_oklab,var(--color-card)_88%,#ece7f8)] shadow-[0_16px_48px_-20px_rgba(124,58,237,0.28)]",
-  } as const;
-
-  return (
-    <motion.div
-      style={style}
-      className={cn(
-        "absolute z-20 min-w-[9.5rem] rounded-2xl border px-4 py-3 backdrop-blur-xl",
-        tones[tone],
-        className,
-      )}
-      initial={reduced ? false : { opacity: 0, y: 18, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <div className="flex items-center gap-2">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-background/70 text-primary shadow-sm">
-          <Icon className="h-3.5 w-3.5" />
-        </span>
-        <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-          {label}
-        </p>
-      </div>
-      <p className="mt-2 font-display text-[1.65rem] font-bold leading-none tracking-tight text-foreground">
-        {value}
-      </p>
-      {hint ? <p className="mt-1.5 text-[10px] font-medium text-emerald-700/80">{hint}</p> : null}
-    </motion.div>
-  );
-}
-
-function HeroMoment({
-  reduced,
-  onWatchTour,
-}: {
-  reduced: boolean;
-  onWatchTour?: () => void;
-}) {
-  return (
-    <motion.div
-      {...fadeUp(0.28, reduced)}
-      className="relative mx-auto w-full max-w-md lg:max-w-none"
-    >
-      <div
-        className="pointer-events-none absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-primary/15 via-purple-500/10 to-amber-400/10 blur-3xl"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute -inset-1 rounded-[2.35rem] border border-primary/10"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-0 translate-x-3 translate-y-3 rounded-[2rem] border border-border/40 bg-muted/30"
-        aria-hidden
-      />
-
-      <div className="group relative overflow-hidden rounded-[2rem] border border-white/25 bg-card/20 shadow-[0_28px_90px_-32px_rgba(15,23,42,0.45)] ring-1 ring-black/5 backdrop-blur-[2px]">
-        <div className="relative aspect-[4/5] overflow-hidden sm:aspect-[5/6]">
-          <img
-            src={heroImg}
-            alt="A stylist at work in a modern salon"
-            className="h-full w-full object-cover object-[center_32%] ken-burns scale-[1.03]"
-          />
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/88 via-black/25 to-black/10" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-transparent to-amber-500/10 mix-blend-soft-light" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_55%_at_20%_0%,rgba(255,255,255,0.16),transparent_55%)]" />
-
-          <div className="absolute inset-x-0 top-0 z-10 flex items-start justify-between p-4 sm:p-5">
-            <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/30 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/80 backdrop-blur-md">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-              </span>
-              Live floor
-            </span>
-            {onWatchTour ? (
-              <button
-                type="button"
-                onClick={onWatchTour}
-                className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white backdrop-blur-md transition hover:bg-white/20"
-              >
-                <Play className="h-3.5 w-3.5 fill-white/80" />
-                Watch tour
-              </button>
-            ) : null}
-          </div>
-
-          <div className="absolute inset-x-0 bottom-0 z-10 p-4 sm:p-6">
-            <div className="rounded-[1.35rem] border border-white/12 bg-black/35 p-4 backdrop-blur-xl sm:p-5">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/55">
-                Right now
-              </p>
-              <p className="mt-2 font-display text-xl leading-[1.15] text-white sm:text-[1.65rem]">
-                <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-                  47 bookings
-                </span>{" "}
-                confirmed automatically today.
-              </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium text-emerald-100">
-                  <TrendingUp className="h-3 w-3" />
-                  +18% vs last week
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-medium text-white/75">
-                  <Calendar className="h-3 w-3" />
-                  8 open slots left
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-      </div>
-
-      <HeroStatBadge
-        reduced={reduced}
-        delay={0.55}
-        tone="sage"
-        label="Client NPS"
-        icon={Star}
-        value={
-          <>
-            4.9<span className="text-amber-500">★</span>
-          </>
-        }
-        className="-left-3 top-10 drift sm:-left-5 lg:-left-7"
-      />
-
-      <HeroStatBadge
-        reduced={reduced}
-        delay={0.68}
-        tone="sand"
-        label="Today"
-        icon={Receipt}
-        value="₹48,320"
-        hint="+12% vs yesterday"
-        className="-right-3 bottom-24 drift sm:-right-5 lg:-right-6"
-        style={{ animationDelay: "0.8s" }}
-      />
-
-      <HeroStatBadge
-        reduced={reduced}
-        delay={0.8}
-        tone="violet"
-        label="Queue"
-        icon={UserPlus}
-        value="3 walk-ins"
-        hint="Avg. wait · 4 min"
-        className="bottom-2 left-4 hidden sm:block lg:left-6"
-      />
-    </motion.div>
-  );
-}
-
-function HeroMarquee() {
-  const items = [...PILLS, ...PILLS];
-  return (
-    <div className="relative mt-10 overflow-hidden py-2">
-      <div
-        className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-background to-transparent"
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-background to-transparent"
-        aria-hidden
-      />
-      <motion.div
-        className="flex w-max gap-3"
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 32, repeat: Infinity, ease: "linear" }}
-      >
-        {items.map((pill, i) => (
-          <span
-            key={`${pill}-${i}`}
-            className="shrink-0 rounded-full border border-border/60 bg-card/50 px-4 py-1.5 text-xs font-medium text-muted-foreground backdrop-blur-sm"
-          >
-            {pill}
-          </span>
-        ))}
-      </motion.div>
-    </div>
-  );
-}
-
-/* ---------------- NEW SECTION: live pulse ---------------- */
-
-function useCountUp(target: number, active: boolean, decimals = 0) {
-  const [value, setValue] = useState(0);
-
-  useEffect(() => {
-    if (!active) return;
-    let frame: number;
-    const duration = 1400;
-    const start = performance.now();
-
-    const tick = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(target * eased);
-      if (progress < 1) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
-  }, [active, target]);
-
-  return decimals > 0 ? value.toFixed(decimals) : Math.round(value).toLocaleString();
-}
-
-function PulseStat({
-  stat,
-  active,
-}: {
-  stat: (typeof PULSE_STATS)[number];
-  active: boolean;
-}) {
-  const display = useCountUp(stat.value, active, stat.decimals ?? 0);
-  return (
-    <div className="text-center">
-      <p className="font-display text-3xl text-ink-foreground sm:text-4xl">
-        {display}
-        {stat.suffix}
-      </p>
-      <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-ink-foreground/55">
-        {stat.label}
-      </p>
-    </div>
-  );
-}
-
-export function LivePulseSection() {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-100px" });
-  const feed = [...PULSE_EVENTS, ...PULSE_EVENTS];
-
-  return (
-    <section ref={ref} className="relative w-full overflow-hidden bg-ink py-20 text-ink-foreground">
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.06]"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-        }}
-        aria-hidden
-      />
-      <div className="absolute -left-20 top-0 h-72 w-72 rounded-full bg-primary/20 blur-[110px]" aria-hidden />
-      <div className="absolute -right-16 bottom-0 h-72 w-72 rounded-full bg-purple-500/15 blur-[110px]" aria-hidden />
-
-      <div className="relative mx-auto w-full max-w-[1500px] px-5 sm:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={inView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.5 }}
-          className="mx-auto max-w-xl text-center"
-        >
-          <span className="eyebrow inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/50" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-            </span>
-            Happening right now
-          </span>
-          <h2 className="mt-4 text-3xl sm:text-4xl">The floor, live.</h2>
-          <p className="mt-3 text-ink-foreground/60">
-            Every booking, payment, and message — flowing through Gotix in real time.
-          </p>
-        </motion.div>
-
-        {/* scrolling live-event ticker */}
-        <div className="relative mt-10 overflow-hidden rounded-2xl border border-white/10 bg-white/5 py-4 backdrop-blur">
-          <div
-            className="pointer-events-none absolute inset-y-0 left-0 z-10 w-16 bg-gradient-to-r from-ink to-transparent"
-            aria-hidden
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 right-0 z-10 w-16 bg-gradient-to-l from-ink to-transparent"
-            aria-hidden
-          />
-          <motion.div
-            className="flex w-max gap-3 px-4"
-            animate={{ x: ["0%", "-50%"] }}
-            transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
-          >
-            {feed.map((event, i) => (
-              <span
-                key={`${event.text}-${i}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-white/10 bg-ink/40 px-4 py-2 text-xs text-ink-foreground/75"
-              >
-                <event.icon className="h-3.5 w-3.5 text-primary" />
-                {event.text}
-              </span>
-            ))}
-          </motion.div>
-        </div>
-
-        {/* animated counters */}
-        <div className="mt-14 grid grid-cols-2 gap-8 border-t border-white/10 pt-10 sm:grid-cols-4">
-          {PULSE_STATS.map((stat) => (
-            <PulseStat key={stat.label} stat={stat} active={inView} />
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ---------------- product tour modal ---------------- */
 
 function ProductTourModal({
   open,
@@ -734,16 +384,44 @@ function ProductTourModal({
   );
 }
 
-/* ---------------- hero ---------------- */
+function SlideTitle({ title, accent }: { title: string; accent: string }) {
+  const parts = title.split(accent);
+  if (parts.length < 2) return <>{title}</>;
+  return (
+    <>
+      {parts[0]}
+      <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">
+        {accent}
+      </span>
+      {parts[1]}
+    </>
+  );
+}
 
 export function HomeHero() {
   const prefersReducedMotion = useReducedMotion();
   const reduced = !!prefersReducedMotion;
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [progressKey, setProgressKey] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
-  const openTour = useCallback(() => {
-    setTourOpen(true);
-  }, []);
+  const slide = HERO_SLIDES[index]!;
+  const total = HERO_SLIDES.length;
+
+  const goTo = useCallback(
+    (next: number) => {
+      setIndex(((next % total) + total) % total);
+      setProgressKey((k) => k + 1);
+    },
+    [total],
+  );
+
+  const goNext = useCallback(() => goTo(index + 1), [goTo, index]);
+  const goPrev = useCallback(() => goTo(index - 1), [goTo, index]);
+
+  const openTour = useCallback(() => setTourOpen(true), []);
 
   useEffect(() => {
     if (window.location.hash !== "#product-tour") return;
@@ -751,142 +429,263 @@ export function HomeHero() {
     window.history.replaceState(null, "", window.location.pathname);
   }, [openTour]);
 
+  useEffect(() => {
+    if (reduced || paused || tourOpen) return;
+    const timer = window.setTimeout(() => goNext(), SLIDE_MS);
+    return () => window.clearTimeout(timer);
+  }, [goNext, paused, reduced, tourOpen, progressKey]);
+
   return (
     <>
       <ProductTourModal open={tourOpen} onOpenChange={setTourOpen} reduced={reduced} />
 
-      <section className="site-hero-shell relative isolate min-h-[100svh] w-full overflow-hidden pt-24 lg:pt-28">
-      <HeroBackground />
-
-      <div className="relative z-10 mx-auto w-full max-w-[1500px] px-5 pb-16 sm:px-8 lg:pb-20">
-        <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.85fr)] lg:gap-14 xl:gap-20">
-          <div className="relative mx-auto max-w-2xl text-center lg:mx-0 lg:max-w-none lg:text-left">
-            <div
-              className="pointer-events-none absolute -inset-6 -top-8 rounded-[3rem] bg-background/45 blur-3xl lg:-inset-10 lg:bg-background/35"
-              aria-hidden
-            />
-            <div className="relative">
-              <motion.div
-                {...fadeUp(0, reduced)}
-                className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 backdrop-blur-sm"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
-                </span>
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span className="text-xs font-medium text-primary">AI-Powered Salon OS</span>
-                <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  v3.0
-                </span>
-              </motion.div>
-
-              <motion.div {...fadeUp(0.06, reduced)}>
-                <KineticHeadline reduced={reduced} />
-              </motion.div>
-
-              <motion.p
-                {...fadeUp(0.16, reduced)}
-                className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0"
-              >
-                Appointments, POS billing, inventory, CRM and AI analytics in one intelligent
-                platform — built for salons, spas and beauty chains that refuse to run on
-                spreadsheets.
-              </motion.p>
-
-              <motion.div
-                {...fadeUp(0.22, reduced)}
-                className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-              >
-                <Link href="/signup" className="group btn-base btn-primary relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2">
-                    Start free trial
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                  <span className="absolute inset-0 bg-gradient-to-r from-primary to-purple-600 opacity-0 transition-opacity group-hover:opacity-100" />
-                </Link>
-                <Link
-                  href="/demo"
-                  className="btn-base btn-outline border-2 bg-background/60 backdrop-blur-sm"
-                >
-                  <Calendar className="h-4 w-4" />
-                  Book a demo
-                </Link>
-                <button
-                  type="button"
-                  onClick={openTour}
-                  aria-expanded={tourOpen}
-                  className="btn-base btn-ghost text-muted-foreground hover:text-primary"
-                >
-                  <Play className="h-4 w-4" />
-                  Watch tour
-                </button>
-              </motion.div>
-
-              <motion.div
-                {...fadeUp(0.28, reduced)}
-                className="mt-8 flex flex-wrap items-center justify-center gap-6 border-y border-border/50 py-5 lg:justify-start"
-              >
-                {METRICS.map((metric, i) => (
-                  <div key={metric.label} className="flex items-center gap-6">
-                    <div className="text-left">
-                      <p className="font-display text-xl font-bold sm:text-2xl">{metric.value}</p>
-                      <p className="text-xs text-muted-foreground">{metric.label}</p>
-                    </div>
-                    {i < METRICS.length - 1 && (
-                      <span className="hidden h-10 w-px bg-border/70 sm:block" aria-hidden />
-                    )}
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div
-                {...fadeUp(0.34, reduced)}
-                className="mt-6 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
-              >
-                <div className="flex -space-x-2">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className="h-8 w-8 rounded-full border-2 border-background bg-gradient-to-br from-primary/35 to-purple-600/35"
-                    />
-                  ))}
-                </div>
-                <div className="text-left">
-                  <div className="flex items-center gap-0.5">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Trusted by{" "}
-                    <span className="font-semibold text-foreground">1,200+ salons</span> worldwide
-                  </p>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-
-          <div className={cn(tourOpen && "rounded-[2rem] ring-2 ring-primary/30 ring-offset-4 ring-offset-background transition-shadow")}>
-            <HeroMoment reduced={reduced} onWatchTour={openTour} />
-          </div>
+      <section
+        className="site-hero-shell relative isolate min-h-[100svh] w-full overflow-hidden bg-background"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0]?.clientX ?? null;
+        }}
+        onTouchEnd={(e) => {
+          const start = touchStartX.current;
+          const end = e.changedTouches[0]?.clientX;
+          touchStartX.current = null;
+          if (start == null || end == null) return;
+          const delta = end - start;
+          if (Math.abs(delta) < 48) return;
+          if (delta < 0) goNext();
+          else goPrev();
+        }}
+        aria-roledescription="carousel"
+        aria-label="Gotix product highlights"
+      >
+        {/* Full-bleed Unsplash banners */}
+        <div className="absolute inset-0">
+          <AnimatePresence mode="sync" initial={false}>
+            <motion.div
+              key={slide.key}
+              className="absolute inset-0"
+              initial={reduced ? false : { opacity: 0, scale: 1.04 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduced ? undefined : { opacity: 0 }}
+              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+            >
+              <motion.img
+                src={slide.image}
+                alt=""
+                aria-hidden
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover",
+                  slide.object,
+                  !reduced && "home-hero-kenburns",
+                )}
+                initial={reduced ? false : { scale: 1.12 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: SLIDE_MS / 1000, ease: "linear" }}
+              />
+              {/* Light theme veil — image stays dominant across the frame */}
+              <div className="absolute inset-0 bg-gradient-to-r from-white/92 via-white/55 to-white/10" />
+              <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/40" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_85%_45%,color-mix(in_oklab,var(--primary)_18%,transparent),transparent_55%)]" />
+            </motion.div>
+          </AnimatePresence>
         </div>
 
-        <HeroMarquee />
-      </div>
+        {/* Ambient glow */}
+        <div className="pointer-events-none absolute inset-0" aria-hidden>
+          <div className="absolute -left-20 top-16 h-80 w-80 rounded-full bg-primary/15 blur-[120px] home-hero-orb-a" />
+          <div className="absolute -right-10 bottom-20 h-96 w-96 rounded-full bg-fuchsia-400/15 blur-[130px] home-hero-orb-b" />
+        </div>
 
-      <motion.div
-        className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-1 lg:flex"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.45 }}
-        transition={{ delay: 1 }}
-      >
-        <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
-          Scroll to explore
-        </span>
-        <ChevronDown className="h-4 w-4 animate-bounce text-muted-foreground" />
-      </motion.div>
+        {/* Giant slide index watermark */}
+        <div className="pointer-events-none absolute inset-0 z-[1] overflow-hidden" aria-hidden>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={slide.key}
+              initial={reduced ? false : { opacity: 0, x: 40 }}
+              animate={{ opacity: 0.08, x: 0 }}
+              exit={reduced ? undefined : { opacity: 0, x: -30 }}
+              transition={{ duration: 0.6 }}
+              className="absolute -right-4 bottom-[18%] font-display text-[min(42vw,22rem)] leading-none tracking-tighter text-foreground sm:-right-8 lg:right-[4%]"
+            >
+              {String(index + 1).padStart(2, "0")}
+            </motion.p>
+          </AnimatePresence>
+        </div>
+
+        {/* Overlay content — fills the banner, no empty side column */}
+        <div className="relative z-10 mx-auto flex min-h-[100svh] w-full max-w-[1500px] flex-col justify-end px-5 pb-36 pt-28 sm:px-8 lg:justify-center lg:pb-32 lg:pt-28">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={slide.key}
+              initial={reduced ? false : { opacity: 0, y: 36 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduced ? undefined : { opacity: 0, y: -22 }}
+              transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-4xl"
+            >
+              <p className="font-display text-4xl tracking-tight text-foreground sm:text-5xl lg:text-6xl">
+                Gotix
+              </p>
+
+              <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-primary/25 bg-white/70 px-4 py-1.5 shadow-sm backdrop-blur-md">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/50" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+                </span>
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-primary">
+                  {slide.eyebrow}
+                </span>
+              </div>
+
+              <h1 className="mt-6 max-w-[18ch] font-display text-[2.6rem] leading-[1.02] tracking-tight text-foreground sm:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]">
+                <SlideTitle title={slide.title} accent={slide.accent} />
+              </h1>
+
+              <p className="mt-6 max-w-2xl text-base leading-relaxed text-foreground/70 sm:text-xl">
+                {slide.copy}
+              </p>
+
+              <div className="mt-9 flex flex-wrap items-center gap-3">
+                <Link
+                  href={slide.ctaHref}
+                  className="group inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_40px_-12px_rgba(124,58,237,0.55)] transition hover:bg-primary-dark sm:text-base"
+                >
+                  {slide.cta}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+
+                {slide.secondaryHref === "#product-tour" ? (
+                  <button
+                    type="button"
+                    onClick={openTour}
+                    className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-white/80 px-6 py-3.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-md transition hover:border-primary/35 hover:bg-white sm:text-base"
+                  >
+                    <Play className="h-4 w-4 fill-foreground/70" />
+                    {slide.secondary}
+                  </button>
+                ) : (
+                  <Link
+                    href={slide.secondaryHref}
+                    className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-white/80 px-6 py-3.5 text-sm font-semibold text-foreground shadow-sm backdrop-blur-md transition hover:border-primary/35 hover:bg-white sm:text-base"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    {slide.secondary}
+                  </Link>
+                )}
+              </div>
+
+              <div className="mt-10 grid max-w-3xl grid-cols-2 gap-3 sm:grid-cols-3">
+                {[
+                  { label: "Highlight", value: slide.stat },
+                  { label: "Trial", value: "14 days free" },
+                  { label: "Setup", value: "No credit card" },
+                ].map((item) => (
+                  <div
+                    key={item.label}
+                    className="rounded-2xl border border-white/70 bg-white/65 px-4 py-3 shadow-sm backdrop-blur-md"
+                  >
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      {item.label}
+                    </p>
+                    <p className="mt-1 font-display text-lg text-foreground sm:text-xl">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Full-width control dock */}
+        <div className="absolute inset-x-0 bottom-0 z-20 border-t border-white/50 bg-white/55 backdrop-blur-xl">
+          <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-3 px-5 py-4 sm:px-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+              <div className="flex gap-2.5 overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {HERO_SLIDES.map((item, i) => {
+                  const active = i === index;
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => goTo(i)}
+                      aria-label={`Show ${item.eyebrow}`}
+                      aria-current={active ? "true" : undefined}
+                      className={cn(
+                        "relative h-14 w-[4.85rem] shrink-0 rounded-2xl p-[2px] transition duration-300 sm:h-16 sm:w-24",
+                        active
+                          ? "bg-gradient-to-br from-primary via-primary to-purple-500 shadow-[0_10px_28px_-10px_rgba(124,58,237,0.55)]"
+                          : "bg-border/50 hover:bg-border",
+                      )}
+                    >
+                      <span className="relative block h-full w-full overflow-hidden rounded-[14px] bg-muted">
+                        <img
+                          src={item.thumb}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                          className={cn(
+                            "h-full w-full object-cover transition duration-300",
+                            active ? "opacity-100" : "opacity-80 group-hover:opacity-100",
+                          )}
+                        />
+                        <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-1.5 pb-1.5 pt-4 text-center text-[9px] font-semibold uppercase tracking-wide text-white">
+                          {item.shortLabel}
+                        </span>
+                        {active ? (
+                          <span className="pointer-events-none absolute inset-0 rounded-[14px] ring-1 ring-inset ring-white/35" />
+                        ) : null}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="h-[3px] w-full overflow-hidden rounded-full bg-border/60">
+                <motion.div
+                  key={progressKey}
+                  className="h-full origin-left rounded-full bg-gradient-to-r from-primary via-primary-glow to-purple-400"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: paused || reduced || tourOpen ? undefined : 1 }}
+                  transition={
+                    reduced || paused || tourOpen
+                      ? { duration: 0 }
+                      : { duration: SLIDE_MS / 1000, ease: "linear" }
+                  }
+                  style={paused || reduced || tourOpen ? { scaleX: 0.12 } : undefined}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 lg:justify-end">
+              <p className="text-xs font-medium text-muted-foreground sm:text-sm">
+                <span className="font-display text-base text-foreground">{String(index + 1).padStart(2, "0")}</span>
+                <span className="mx-1.5 text-border">/</span>
+                {String(total).padStart(2, "0")} · {slide.eyebrow}
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={goPrev}
+                  aria-label="Previous slide"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white text-foreground shadow-sm transition hover:border-primary/35 hover:bg-primary/5"
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={goNext}
+                  aria-label="Next slide"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-white text-foreground shadow-sm transition hover:border-primary/35 hover:bg-primary/5"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );
 }
+
