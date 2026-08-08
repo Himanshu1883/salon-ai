@@ -8,7 +8,6 @@ import { ParallaxBanner } from "@/components/site/Sections";
 import {
   AI_CARDS,
   ALL_MODULES,
-  FAQS,
   FEATURES,
   PLANS,
   SALON_TYPES,
@@ -47,6 +46,46 @@ function unsplash(id: string, w = 800) {
 }
 
 const MODULES_SECTION_BG = unsplash("photo-1560066984-138dadb4c035", 1920);
+
+/** Topic-matched Unsplash photos for each salon type card */
+const SALON_TYPE_PHOTOS: Record<string, { src: string; alt: string }> = {
+  "Hair Salon": {
+    src: unsplash("photo-1562322140-8baeececf3df", 800),
+    alt: "Hair salon styling station and mirrors",
+  },
+  "Beauty Salon": {
+    src: unsplash("photo-1560066984-138dadb4c035", 800),
+    alt: "Modern beauty salon interior",
+  },
+  Spa: {
+    src: unsplash("photo-1544161515-4ab6ce6db874", 800),
+    alt: "Spa wellness treatment room",
+  },
+  "Skin Clinic": {
+    src: unsplash("photo-1570172619644-dfd03ed5d881", 800),
+    alt: "Skincare treatment and clinic products",
+  },
+  "Barber Shop": {
+    src: unsplash("photo-1600948836101-f9ffda59d250", 800),
+    alt: "Barber shop chairs and grooming station",
+  },
+  "Nail Studio": {
+    src: unsplash("photo-1706629503571-c165023a7792", 800),
+    alt: "Nail studio manicure workspace",
+  },
+  "Makeup Studio": {
+    src: unsplash("photo-1515377905703-c4788e51af15", 800),
+    alt: "Makeup studio brushes and beauty tools",
+  },
+  "Bridal Studio": {
+    src: unsplash("photo-1512496015851-a90fb38ba796", 800),
+    alt: "Bridal beauty and wedding styling",
+  },
+  "Tattoo Studio": {
+    src: unsplash("photo-1558618666-fcd25c85cd64", 800),
+    alt: "Tattoo studio workstation",
+  },
+};
 
 const FEATURED_MODULE_CARDS = [
   {
@@ -669,51 +708,56 @@ function HomePageView() {
 
           {/* Salon Types Grid */}
           <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {SALON_TYPES.map((type, index) => (
-              <motion.div
-                key={type.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.05 }}
-                className="group"
-              >
-                <Link href="/solutions" className="block h-full">
-                  <div className="surface-card lift h-full overflow-hidden p-5 text-center transition-all duration-300 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5">
-                    {/* Icon/Emoji placeholder - you can replace with actual icons */}
-                    <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-primary/10 to-purple-500/10 text-2xl transition-all duration-300 group-hover:scale-110 group-hover:from-primary/20 group-hover:to-purple-500/20">
-                      {type.name.includes("Hair") && "💇"}
-                      {type.name.includes("Beauty") && "💄"}
-                      {type.name.includes("Spa") && "🧖"}
-                      {type.name.includes("Skin") && "✨"}
-                      {type.name.includes("Barber") && "✂️"}
-                      {type.name.includes("Nail") && "💅"}
-                      {type.name.includes("Makeup") && "🎨"}
-                      {type.name.includes("Bridal") && "👰"}
-                      {type.name.includes("Tattoo") && "🎯"}
+            {SALON_TYPES.map((type, index) => {
+              const photo = SALON_TYPE_PHOTOS[type.name];
+              return (
+                <motion.div
+                  key={type.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  className="group"
+                >
+                  <Link href="/solutions" className="block h-full">
+                    <div className="surface-card lift relative h-full overflow-hidden transition-all duration-300 hover:border-primary/25 hover:shadow-lg hover:shadow-primary/10">
+                      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+                        {photo ? (
+                          <img
+                            src={photo.src}
+                            alt={photo.alt}
+                            loading="lazy"
+                            decoding="async"
+                            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.06]"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 to-purple-500/10">
+                            <Users className="h-8 w-8 text-primary/50" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
+                        <span className="absolute bottom-2.5 left-3 right-3 font-display text-sm font-medium text-white drop-shadow-sm sm:text-base">
+                          {type.name}
+                        </span>
+                      </div>
+
+                      <div className="p-4">
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                          Solution
+                        </p>
+                        <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground line-clamp-3">
+                          {type.desc}
+                        </p>
+                        <div className="mt-3 flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 transition-all group-hover:opacity-100">
+                          Learn more
+                          <ArrowRight className="h-3 w-3" />
+                        </div>
+                      </div>
                     </div>
-
-                    <h3 className="font-display text-base font-medium transition-colors group-hover:text-primary">
-                      {type.name}
-                    </h3>
-
-                    <p className="mt-1 text-[10px] uppercase tracking-widest text-muted-foreground">
-                      Solution
-                    </p>
-
-                    <p className="mt-2 text-xs leading-relaxed text-muted-foreground/80 line-clamp-3">
-                      {type.desc}
-                    </p>
-
-                    {/* Learn more indicator */}
-                    <div className="mt-3 flex items-center justify-center gap-1 text-[10px] font-medium text-primary opacity-0 transition-all group-hover:opacity-100">
-                      Learn more
-                      <ArrowRight className="h-3 w-3" />
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
-            ))}
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* Featured Solution Spotlight */}
@@ -2016,21 +2060,54 @@ function HomePageView() {
             </motion.div>
           </div>
 
-          {/* FAQ Accordion - Enhanced */}
+          {/* FAQ Accordion - short answers + direct setup actions */}
           <div className="mt-12 space-y-3">
-            {FAQS.slice(0, 4).map((faq, index) => (
+            {[
+              {
+                q: "How quickly can I set up Gotix?",
+                a: "Most salons go live the same day. Create your account and start setup now.",
+                actions: [
+                  { label: "Sign up free", href: "/signup", primary: true },
+                  { label: "Log in", href: "/login", primary: false },
+                ],
+              },
+              {
+                q: "Do you offer a free trial?",
+                a: "Yes — 14 days, full access, no credit card required.",
+                actions: [
+                  { label: "Start free trial", href: "/signup", primary: true },
+                  { label: "Log in", href: "/login", primary: false },
+                ],
+              },
+              {
+                q: "Can I migrate from my current software?",
+                a: "Yes. Free migration from Fresha, Booksy, Zoho, or Excel — we handle it for you.",
+                actions: [
+                  { label: "Sign up to migrate", href: "/signup", primary: true },
+                  { label: "Book a demo", href: "/demo", primary: false },
+                ],
+              },
+              {
+                q: "Is there a setup fee?",
+                a: "No. Setup, onboarding, and staff training are included.",
+                actions: [
+                  { label: "Create account", href: "/signup", primary: true },
+                  { label: "Log in", href: "/login", primary: false },
+                ],
+              },
+            ].map((faq, index) => (
               <motion.div
-                key={index}
+                key={faq.q}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="group rounded-2xl border border-border/50 bg-card/30 p-6 backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
+                className="group rounded-2xl border border-border/50 bg-card/30 p-5 backdrop-blur-sm transition-all hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 sm:p-6"
               >
-                <details className="group/details">
+                <details className="group/details" open={index === 0}>
                   <summary className="flex cursor-pointer items-center justify-between gap-4 list-none">
                     <div className="flex items-start gap-3">
-                      <div className="mt-1 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                      <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
                         {index + 1}
                       </div>
                       <h3 className="font-display text-base font-medium transition-colors group-hover/details:text-primary">
@@ -2042,10 +2119,26 @@ function HomePageView() {
                     </div>
                   </summary>
                   <div className="mt-4 pl-9">
-                    <div className="rounded-lg bg-muted/30 p-4">
-                      <p className="text-sm leading-relaxed text-muted-foreground">
+                    <div className="rounded-xl border border-border/40 bg-background/70 p-4">
+                      <p className="text-sm font-medium leading-relaxed text-foreground">
                         {faq.a}
                       </p>
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {faq.actions.map((action) => (
+                          <Link
+                            key={action.href + action.label}
+                            href={action.href}
+                            className={
+                              action.primary
+                                ? "inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary-dark sm:text-sm"
+                                : "inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition hover:border-primary/30 hover:bg-primary/5 sm:text-sm"
+                            }
+                          >
+                            {action.label}
+                            {action.primary ? <ArrowRight className="h-3.5 w-3.5" /> : null}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </details>
