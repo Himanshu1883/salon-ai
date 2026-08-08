@@ -2,6 +2,7 @@
 
 import { CtaBanner } from "@/components/site/Cta";
 import { HomeHero } from "@/components/site/HomeHero";
+import { PlatformFlow } from "@/components/site/PlatformFlow";
 import { Reveal } from "@/components/site/Reveal";
 import { SectionBackdrop } from "@/components/site/SectionBackdrop";
 import { ParallaxBanner } from "@/components/site/Sections";
@@ -204,6 +205,9 @@ function HomePageView() {
           </motion.div>
         </div>
       </div> */}
+
+      {/* G2. PLATFORM FLOW — animated architecture map */}
+      <PlatformFlow />
 
       {/* C. MODULES PREVIEW - Redesigned with limited modules */}
       <section className="relative isolate w-full overflow-hidden py-24 lg:py-24">
