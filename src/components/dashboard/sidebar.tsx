@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Crown,
   ChevronDown,
   CreditCard,
   Building2,
@@ -16,7 +15,6 @@ import {
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import { signOutCallbackUrl } from "@/lib/salon-paths";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -130,39 +128,6 @@ function NavLinkItem({
   );
 }
 
-function PremiumPlanCard({
-  showUpgrade,
-  collapsed,
-}: {
-  showUpgrade?: boolean;
-  collapsed?: boolean;
-}) {
-  if (!showUpgrade || collapsed) return null;
-
-  return (
-    <div className="mx-3 mb-3 rounded-[20px] border border-violet-400/25 bg-violet-900/60 p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-violet-800/80 text-amber-400">
-          <Crown className="h-4 w-4 fill-amber-400/20" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-white">Upgrade Plan</p>
-          <p className="mt-1 text-xs leading-relaxed text-violet-200/75">
-            Unlock advanced features and grow your salon.
-          </p>
-        </div>
-      </div>
-      <Button
-        asChild
-        size="sm"
-        className="mt-3 h-9 w-full rounded-2xl bg-white text-xs font-semibold text-violet-900 hover:bg-violet-50"
-      >
-        <Link href="/settings/subscription">Upgrade Now</Link>
-      </Button>
-    </div>
-  );
-}
-
 function UserProfileFooter({
   userName,
   userRole,
@@ -267,7 +232,6 @@ export function Sidebar({
   userRole = "owner",
   showSettings = false,
   accessBlocked = false,
-  showUpgrade = false,
   collapsed = false,
   plan = "ENTERPRISE",
   onNavigate,
@@ -279,7 +243,6 @@ export function Sidebar({
   userRole?: string;
   showSettings?: boolean;
   accessBlocked?: boolean;
-  showUpgrade?: boolean;
   collapsed?: boolean;
   plan?: SalonPlan;
   onNavigate?: () => void;
@@ -364,10 +327,6 @@ export function Sidebar({
           />
         )}
       </nav>
-
-      {!accessBlocked && (
-        <PremiumPlanCard showUpgrade={showUpgrade} collapsed={collapsed} />
-      )}
 
       <UserProfileFooter
         userName={userName}

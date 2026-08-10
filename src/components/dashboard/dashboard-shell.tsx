@@ -36,7 +36,6 @@ function DashboardShellInner({
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarReady, setSidebarReady] = useState(false);
   const [alertCount, setAlertCount] = useState(0);
-  const [showUpgrade, setShowUpgrade] = useState(false);
   const { openRecordSale } = useRecordSale();
 
   useEffect(() => {
@@ -70,7 +69,6 @@ function DashboardShellInner({
   const handleHeaderData = useCallback(
     (data: { alertCount: number; showUpgrade: boolean }) => {
       setAlertCount(data.alertCount);
-      setShowUpgrade(data.showUpgrade);
     },
     []
   );
@@ -105,7 +103,6 @@ function DashboardShellInner({
           userRole={userRole}
           showSettings={showSettings}
           accessBlocked={accessBlocked}
-          showUpgrade={showUpgrade || plan === "BASIC"}
           collapsed={collapsed}
           plan={plan}
           onNavigate={() => setMobileOpen(false)}
