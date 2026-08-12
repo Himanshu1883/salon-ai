@@ -107,6 +107,11 @@ model Salon {
   membershipUsageLogs   MembershipUsageLog[]
   membershipSettings    MembershipSettings?
   whatsappSettings      WhatsAppSettings?
+  hairConsultations     HairConsultation[]
+  hairstyleCategories   HairstyleCategory[]
+  hairstyles            Hairstyle[]
+  hairColors            HairColor[]
+  hairConsultationSettings HairConsultationSettings?
 }
 
 enum SupportMessageSender {
@@ -309,6 +314,7 @@ model Employee {
   staffProductIssues StaffProductIssue[]
   stockLedgerEntries StockLedgerEntry[]
   assignedProjects Project[]
+  hairConsultations HairConsultation[]
 
   @@index([salonId])
   @@index([salonId, status])
@@ -445,6 +451,8 @@ model Service {
   appointments  Appointment[]
   invoiceLineItems InvoiceLineItem[]
   serviceRecipes ServiceRecipe[]
+  hairConsultations HairConsultation[]
+  hairstyles        Hairstyle[]
 
   @@index([salonId, categoryId, sortOrder])
 }
@@ -500,6 +508,7 @@ model Customer {
   walletAccounts        WalletAccount[]
   familyMembershipMembers FamilyMembershipMember[]
   membershipUsageLogs MembershipUsageLog[]
+  hairConsultations   HairConsultation[]
 
   @@index([salonId, phone])
 }
@@ -869,6 +878,7 @@ model Branch {
 
   transfersFrom BranchTransfer[] @relation("TransferFrom")
   transfersTo   BranchTransfer[] @relation("TransferTo")
+  hairConsultations HairConsultation[]
 
   @@unique([salonId, name])
   @@index([salonId])
@@ -1285,4 +1295,204 @@ model WhatsAppSettings {
   autoOpenAfterPayment   Boolean  @default(false)
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
+}
+
+// ─── AI Hair Consultation Module ───────────────────────────────────────────
+
+enum HairConsultationStatus {
+  DRAFT
+  PHOTO_CAPTURED
+  ANALYZED
+  STYLES_TRIED
+  STYLE_SELECTED
+  COMPLETED
+  CANCELLED
+}
+
+enum HairConsultationPhotoType {
+  ORIGINAL
+  PREVIEW
+  ACTUAL_RESULT
+  THUMBNAIL
+}
+
+enum FaceShape {
+  OVAL
+  ROUND
+  SQUARE
+  OBLONG
+  HEART
+  DIAMOND
+}
+
+enum HairGenderCategory {
+  MEN
+  WOMEN
+  UNISEX
+}
+
+model HairConsultationSettings {
+  id          String   @id @default(cuid())
+  salonId     String   @unique
+  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  disclaimer  String   @db.Text @default("AI preview is an approximate visual simulation. Final results may vary depending on hair length, texture, density, condition and styling.")
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model HairstyleCategory {
+  id             String             @id @default(cuid())
+  salonId        String?
+  salon          Salon?             @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name           String
+  genderCategory HairGenderCategory @default(UNISEX)
+  sortOrder      Int                @default(0)
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  hairstyles Hairstyle[]
+
+  @@index([salonId, sortOrder])
+}
+
+model Hairstyle {
+  id                   String             @id @default(cuid())
+  salonId              String?
+  salon                Salon?             @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  categoryId           String?
+  category             HairstyleCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  serviceId            String?
+  service              Service?           @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  name                 String
+  description          String?            @db.Text
+  thumbnailPath        String?
+  previewImagePath     String?
+  aiPromptInstructions String?            @db.Text
+  hairLength           String?
+  hairType             String?
+  suitableFaceShapes   FaceShape[]
+  genderCategory       HairGenderCategory @default(UNISEX)
+  recommendedAgeGroup  String?
+  difficulty           String?
+  serviceDuration      Int?
+  price                Float?
+  isRecommended        Boolean            @default(false)
+  isTrending           Boolean            @default(false)
+  isActive             Boolean            @default(true)
+  sortOrder            Int                @default(0)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  selections HairConsultationSelection[]
+  consultations HairConsultation[] @relation("SelectedHairstyle")
+
+  @@index([salonId, isActive, sortOrder])
+  @@index([categoryId])
+}
+
+model HairColor {
+  id        String   @id @default(cuid())
+  salonId   String?
+  salon     Salon?   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name      String
+  hexColor  String
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  selections HairConsultationSelection[]
+  consultations HairConsultation[] @relation("SelectedHairColor")
+
+  @@index([salonId, isActive])
+}
+
+model HairConsultation {
+  id                    String                 @id @default(cuid())
+  salonId               String
+  salon                 Salon                  @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  branchId              String?
+  branch                Branch?                @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  customerId            String
+  customer              Customer               @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  serviceId             String?
+  service               Service?               @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  employeeId            String?
+  employee              Employee?              @relation(fields: [employeeId], references: [id], onDelete: SetNull)
+  selectedHairstyleId   String?
+  selectedHairstyle     Hairstyle?             @relation("SelectedHairstyle", fields: [selectedHairstyleId], references: [id], onDelete: SetNull)
+  selectedHairColorId   String?
+  selectedHairColor     HairColor?             @relation("SelectedHairColor", fields: [selectedHairColorId], references: [id], onDelete: SetNull)
+  status                HairConsultationStatus @default(DRAFT)
+  detectedFaceShape     FaceShape?
+  faceShapeOverride     FaceShape?
+  faceShapeConfidence   Float?
+  faceAnalysisJson      Json?
+  aiRecommendationsJson Json?
+  notes                 String?                @db.Text
+  servicePrice          Float?
+  serviceDuration       Int?
+  customerApproved      Boolean                @default(false)
+  customerApprovedAt    DateTime?
+  satisfactionRating    Int?
+  wouldChooseAgain      Boolean?
+  completedAt           DateTime?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  photos     HairConsultationPhoto[]
+  selections HairConsultationSelection[]
+  feedback   HairConsultationFeedback?
+
+  @@index([salonId, customerId, createdAt])
+  @@index([salonId, employeeId])
+  @@index([salonId, status])
+}
+
+model HairConsultationPhoto {
+  id              String                    @id @default(cuid())
+  consultationId  String
+  consultation    HairConsultation          @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  type            HairConsultationPhotoType
+  storagePath     String
+  thumbnailPath   String?
+  mimeType        String                    @default("image/jpeg")
+  width           Int?
+  height          Int?
+  metadata        Json?
+  createdAt       DateTime                  @default(now())
+
+  previewSelections HairConsultationSelection[]
+
+  @@index([consultationId, type])
+}
+
+model HairConsultationSelection {
+  id              String           @id @default(cuid())
+  consultationId  String
+  consultation    HairConsultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  hairstyleId     String
+  hairstyle       Hairstyle        @relation(fields: [hairstyleId], references: [id], onDelete: Restrict)
+  hairColorId     String?
+  hairColor       HairColor?       @relation(fields: [hairColorId], references: [id], onDelete: SetNull)
+  previewPhotoId  String?
+  previewPhoto    HairConsultationPhoto? @relation(fields: [previewPhotoId], references: [id], onDelete: SetNull)
+  matchScore      Float?
+  isCustomerChoice Boolean         @default(false)
+  sortOrder       Int              @default(0)
+  createdAt       DateTime         @default(now())
+
+  @@index([consultationId])
+}
+
+model HairConsultationFeedback {
+  id              String           @id @default(cuid())
+  consultationId  String           @unique
+  consultation    HairConsultation @relation(fields: [consultationId], references: [id], onDelete: Cascade)
+  rating          Int
+  wouldChooseAgain Boolean
+  comment         String?          @db.Text
+  createdAt       DateTime         @default(now())
 }

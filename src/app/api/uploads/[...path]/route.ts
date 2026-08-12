@@ -7,7 +7,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".pdf": "application/pdf",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
-  ".png": "image/png",
+  ".webp": "image/webp",
 };
 
 export async function GET(
@@ -24,7 +24,7 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const allowedPrefixes = ["bills", "documents"];
+  const allowedPrefixes = ["bills", "documents", "consultations", "hairstyles"];
   if (!allowedPrefixes.includes(segments[0])) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

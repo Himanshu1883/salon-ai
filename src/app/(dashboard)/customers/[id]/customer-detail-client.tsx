@@ -47,6 +47,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { format } from "date-fns";
 import { usePlan } from "@/components/plans/plan-provider";
 import { CustomerMembershipTab } from "@/components/memberships/customer-membership-tab";
+import { CustomerHairConsultationTab } from "@/components/hair-consultation/customer-hair-tab";
 import type { PlanRecommendation } from "@/lib/memberships/recommendations";
 
 type CustomerStats = {
@@ -550,6 +551,17 @@ export function CustomerDetailClient({
               </Button>
               <Button
                 asChild
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-[#7C3AED]/30 bg-[#F5F3FF] text-[#7C3AED] shadow-sm hover:bg-[#EDE9FE]"
+              >
+                <Link href={`/hair-consultation/new?customerId=${customer.id}`}>
+                  <Sparkles className="h-4 w-4" />
+                  AI Hair
+                </Link>
+              </Button>
+              <Button
+                asChild
                 size="sm"
                 className="rounded-xl bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20 hover:opacity-90"
               >
@@ -696,6 +708,13 @@ export function CustomerDetailClient({
                 Membership
               </TabsTrigger>
               <TabsTrigger
+                value="hair"
+                className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
+              >
+                <Sparkles className="mr-1.5 h-4 w-4" />
+                Hair AI
+              </TabsTrigger>
+              <TabsTrigger
                 value="profile"
                 className="min-h-[48px] shrink-0 rounded-lg px-4 py-2.5 text-sm data-[state=active]:bg-white data-[state=active]:text-dashboard-primary data-[state=active]:shadow-sm"
               >
@@ -723,6 +742,10 @@ export function CustomerDetailClient({
               />
             </TabsContent>
           )}
+
+          <TabsContent value="hair" className="mt-0 px-4 py-5 sm:px-6 sm:py-6">
+            <CustomerHairConsultationTab customerId={customer.id} />
+          </TabsContent>
 
           <TabsContent value="profile" className="mt-0 px-4 py-5 sm:px-6 sm:py-6">
             <div className="grid gap-6 lg:grid-cols-2">

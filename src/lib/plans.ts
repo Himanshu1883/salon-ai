@@ -17,6 +17,7 @@ import {
   Wallet,
   LineChart,
   Receipt,
+  Sparkles,
 } from "lucide-react";
 
 export type SalonPlan = "BASIC" | "ENTERPRISE";
@@ -36,6 +37,7 @@ export type PlanModule =
   | "marketing"
   | "expense"
   | "analytics"
+  | "consultation"
   | "settings"
   | "projects";
 
@@ -86,6 +88,7 @@ export const PLAN_FEATURES: Record<SalonPlan, string[]> = {
     "Everything in Basic",
     "Walk-in check-in & live queue",
     "Memberships & packages",
+    "AI Hair Consultation & virtual try-on",
     "Marketing & notifications",
     "Expense tracking",
     "Advanced analytics",
@@ -114,6 +117,7 @@ const ENTERPRISE_MODULES: PlanModule[] = [
   "marketing",
   "expense",
   "analytics",
+  "consultation",
   "settings",
 ];
 
@@ -134,6 +138,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/reports", label: "Expenses", icon: Wallet, module: "expense" },
   { href: "/reports", label: "Reports", icon: BarChart3, module: "reports" },
   { href: "/reports/dashboards", label: "Analytics", icon: LineChart, module: "analytics" },
+  { href: "/hair-consultation", label: "AI Hair", icon: Sparkles, module: "consultation" },
   { href: "/settings/billing", label: "Settings", icon: Settings, module: "settings" },
 ];
 
@@ -198,6 +203,7 @@ export function getModuleForPath(pathname: string): PlanModule | null {
   if (matchPath(path, "/reports")) return "reports";
   if (matchPath(path, "/inventory") || matchPath(path, "/stock")) return "inventory";
   if (matchPath(path, "/sales")) return "sales";
+  if (matchPath(path, "/hair-consultation")) return "consultation";
   if (matchPath(path, "/settings")) return "settings";
   if (matchPath(path, "/schedule")) return "appointments";
   if (matchPath(path, "/seats")) return "staff";
@@ -238,6 +244,7 @@ export function getRestrictedModuleLabel(module: PlanModule): string {
     marketing: "Marketing",
     expense: "Expenses",
     analytics: "Analytics",
+    consultation: "AI Hair Consultation",
     settings: "Settings",
     projects: "Projects",
   };
