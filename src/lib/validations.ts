@@ -104,7 +104,10 @@ export const loginSchema = z.object({
     .string()
     .email("Invalid email")
     .transform((value) => value.toLowerCase().trim()),
-  password: z.string().min(1, "Password is required"),
+  password: z
+    .string()
+    .min(1, "Password is required")
+    .transform((value) => value.trim()),
 });
 
 export const forgotPasswordSchema = z.object({

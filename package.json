@@ -10,6 +10,8 @@
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "npx tsx prisma/seed.ts",
+    "db:check": "npx tsx scripts/check-db.ts",
+    "db:ensure-admin": "npx tsx scripts/ensure-admin.ts",
     "db:seed-basic-customers": "npx tsx scripts/seed-basic-plan-customers.ts",
     "db:seed-makeup-studio": "npx tsx scripts/seed-makeup-studio-services.ts",
     "db:seed-inventory": "npx tsx scripts/seed-inventory-demo.ts",

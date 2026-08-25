@@ -1,16 +1,5 @@
 import type { PrismaClient } from "@/generated/prisma/client";
-import { createPrismaClient } from "@/lib/create-prisma-client";
-
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
-
-function getPrismaClient(): PrismaClient {
-  if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = createPrismaClient();
-  }
-  return globalForPrisma.prisma;
-}
+import { getPrismaClient } from "@/lib/create-prisma-client";
 
 export const prisma = new Proxy({} as PrismaClient, {
   get(_target, prop) {

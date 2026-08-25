@@ -1,31 +1,23 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool, type PoolConfig } from "pg";
+import {
+  requiresRailwaySsl,
+  resolveDatabaseUrl,
+} from "@/lib/database-url";
 
 const globalForPrisma = globalThis as unknown as {
   pgPool: Pool | undefined;
   prisma: PrismaClient | undefined;
+  pgPoolConnectionString: string | undefined;
 };
-
-function isPostgresUrl(url: string | undefined): url is string {
-  return (
-    !!url &&
-    (url.startsWith("postgres://") || url.startsWith("postgresql://"))
-  );
-}
 
 /** Prefer pooled runtime URLs; never use direct/migration-only env vars for the app. */
 function getRuntimeDatabaseUrl(): string {
-  const candidates = [
-    process.env.POSTGRES_PRISMA_URL,
-    process.env.POSTGRES_URL,
-    process.env.DATABASE_URL,
-  ].filter(isPostgresUrl);
-
-  const url = candidates[0];
+  const url = resolveDatabaseUrl(false);
   if (!url) {
     throw new Error(
-      "DATABASE_URL is required. Set it to a PostgreSQL connection string (Vercel Postgres, Neon, Prisma Postgres, or local Postgres)."
+      "DATABASE_URL is required. Set it to a PostgreSQL connection string (Vercel Postgres, Neon, Prisma Postgres, Railway, or local Postgres)."
     );
   }
 
@@ -55,8 +47,15 @@ function toPooledDatabaseUrl(url: string): string {
 /** Append serverless-safe Postgres session options when missing. */
 function withStatementTimeout(url: string): string {
   if (url.includes("statement_timeout")) return url;
-  // Prisma Postgres pooled endpoints reject libpq `options` query params.
-  if (url.includes("db.prisma.io") || url.includes(".neon.tech")) return url;
+  // Managed Postgres proxies reject libpq `options` query params.
+  if (
+    url.includes("db.prisma.io") ||
+    url.includes(".neon.tech") ||
+    url.includes(".proxy.rlwy.net") ||
+    url.includes(".railway.internal")
+  ) {
+    return url;
+  }
 
   try {
     const parsed = new URL(url);
@@ -97,40 +96,60 @@ function normalizeConnectionUrl(url: string): string {
 
 function getPoolConfig(): PoolConfig {
   const isServerless = Boolean(process.env.VERCEL);
-  // Cross-region DB (e.g. ap-southeast-1 Prisma Postgres vs Vercel iad1) needs
-  // longer connect timeouts and warm keep-alive to avoid cold-start failures.
-  return {
-    connectionString: getRuntimeDatabaseUrl(),
+  const connectionString = getRuntimeDatabaseUrl();
+  const config: PoolConfig = {
+    connectionString,
     max: isServerless ? 1 : 10,
     idleTimeoutMillis: isServerless ? 10_000 : 30_000,
     connectionTimeoutMillis: isServerless ? 25_000 : 15_000,
     keepAlive: true,
     allowExitOnIdle: isServerless,
   };
+
+  if (requiresRailwaySsl(connectionString)) {
+    config.ssl = { rejectUnauthorized: false };
+  }
+
+  return config;
 }
 
 function getPgPool(): Pool {
+  const connectionString = getRuntimeDatabaseUrl();
+
+  if (
+    globalForPrisma.pgPool &&
+    globalForPrisma.pgPoolConnectionString !== connectionString
+  ) {
+    void globalForPrisma.pgPool.end();
+    globalForPrisma.pgPool = undefined;
+    globalForPrisma.prisma = undefined;
+  }
+
   if (!globalForPrisma.pgPool) {
     globalForPrisma.pgPool = new Pool(getPoolConfig());
+    globalForPrisma.pgPoolConnectionString = connectionString;
   }
+
   return globalForPrisma.pgPool;
 }
 
+export function getPrismaClient(): PrismaClient {
+  getPgPool();
+
+  if (!globalForPrisma.prisma) {
+    const pool = globalForPrisma.pgPool!;
+    const adapter = new PrismaPg(pool);
+    globalForPrisma.prisma = new PrismaClient({ adapter });
+  }
+
+  return globalForPrisma.prisma;
+}
+
 export function createPrismaClient() {
-  const pool = getPgPool();
-  const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter });
+  return getPrismaClient();
 }
 
 /** Direct/non-pooled URL for Prisma CLI migrations only. */
 export function getMigrationDatabaseUrl(): string | undefined {
-  const candidates = [
-    process.env.DIRECT_DATABASE_URL,
-    process.env.POSTGRES_URL_NON_POOLING,
-    process.env.DATABASE_URL,
-    process.env.POSTGRES_URL,
-    process.env.POSTGRES_PRISMA_URL,
-  ].filter(isPostgresUrl);
-
-  return candidates[0];
+  return resolveDatabaseUrl(true);
 }

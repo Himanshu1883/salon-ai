@@ -52,7 +52,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
 
         const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        if (!parsed.success) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[auth] invalid login payload", parsed.error.flatten());
+          }
+          return null;
+        }
 
         const salonSlug =
           typeof credentials?.salonSlug === "string" &&
@@ -70,15 +75,36 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           });
         } catch (error) {
           console.error("[auth] database unavailable during login:", error);
-          throw new CredentialsSignin("DatabaseUnavailable");
+          const authError = new CredentialsSignin();
+          authError.code = "database_unavailable";
+          throw authError;
         }
 
-        if (!user) return null;
+        if (!user) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[auth] no user found for", parsed.data.email);
+          }
+          return null;
+        }
 
         const valid = await bcrypt.compare(parsed.data.password, user.password);
-        if (!valid) return null;
+        if (!valid) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              "[auth] invalid password for",
+              parsed.data.email,
+              `(length ${parsed.data.password.length})`
+            );
+          }
+          return null;
+        }
 
-        if (!user.isActive) return null;
+        if (!user.isActive) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[auth] inactive user", parsed.data.email);
+          }
+          return null;
+        }
 
         const platformRole: PlatformRole | null =
           user.platformRole ?? (user.isSuperAdmin ? "SUPER_ADMIN" : null);

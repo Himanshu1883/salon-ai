@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { getSession, signIn, signOut } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -22,6 +22,7 @@ import {
   defaultAdminHome,
   resolvePlatformRole,
 } from "@/lib/platform-permissions";
+import { getSignInErrorMessage } from "@/lib/sign-in-errors";
 
 const PLATFORM_FEATURES = [
   {
@@ -47,9 +48,10 @@ const PLATFORM_FEATURES = [
 ] as const;
 
 export default function AdminLoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/admin";
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -59,32 +61,43 @@ export default function AdminLoginForm() {
     setLoading(true);
     setError("");
 
-    const formData = new FormData(e.currentTarget);
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedEmail || !normalizedPassword) {
+      setLoading(false);
+      setError("Email and password are required");
+      return;
+    }
+
     const result = await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email: normalizedEmail,
+      password: normalizedPassword,
+      callbackUrl,
       redirect: false,
     });
 
-    setLoading(false);
-
-    if (result?.error) {
+    if (!result) {
+      setLoading(false);
       setError(
-        result.error === "Configuration" || result.error === "DatabaseUnavailable"
-          ? "Sign-in is temporarily unavailable. The server database is reconnecting — please try again in a minute."
-          : "Invalid email or password"
+        "Sign-in is temporarily unavailable. Check that AUTH_SECRET is set in .env and restart the dev server."
       );
       return;
     }
 
-    const sessionRes = await fetch("/api/auth/session");
-    const session = await sessionRes.json();
+    if (!result.ok || result.error) {
+      setLoading(false);
+      setError(getSignInErrorMessage(result));
+      return;
+    }
 
+    const session = await getSession();
     const platformRole = resolvePlatformRole(session?.user ?? {});
 
     if (!platformRole) {
+      setLoading(false);
       setError("This account is not authorized for platform admin access");
-      await fetch("/api/auth/signout", { method: "POST" });
+      await signOut({ redirect: false });
       return;
     }
 
@@ -94,8 +107,9 @@ export default function AdminLoginForm() {
         ? defaultAdminHome(platformRole)
         : callbackUrl;
 
-    router.push(destination);
-    router.refresh();
+    // Hard navigation: router.push often fails to carry the session cookie after
+    // credentials sign-in, which sends users back to /admin/login in a loop.
+    window.location.assign(destination);
   }
 
   return (
@@ -204,7 +218,11 @@ export default function AdminLoginForm() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form
+              onSubmit={handleSubmit}
+              className="space-y-5"
+              autoComplete="off"
+            >
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-sm font-medium text-stone-700">
                   Email address
@@ -216,8 +234,10 @@ export default function AdminLoginForm() {
                     name="email"
                     type="email"
                     required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
                     placeholder="admin@salon.ai"
-                    autoComplete="username"
+                    autoComplete="off"
                     className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-4 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-dashboard-primary focus:bg-white focus:ring-2 focus:ring-dashboard-primary/20"
                   />
                 </div>
@@ -234,8 +254,10 @@ export default function AdminLoginForm() {
                     name="password"
                     type={showPassword ? "text" : "password"}
                     required
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
                     placeholder="Enter your password"
-                    autoComplete="current-password"
+                    autoComplete="new-password"
                     className="h-12 w-full rounded-xl border border-stone-200 bg-stone-50/50 pl-10 pr-11 text-sm text-stone-900 outline-none transition placeholder:text-stone-400 focus:border-dashboard-primary focus:bg-white focus:ring-2 focus:ring-dashboard-primary/20"
                   />
                   <button
@@ -252,6 +274,16 @@ export default function AdminLoginForm() {
                   </button>
                 </div>
               </div>
+
+              {process.env.NODE_ENV === "development" && (
+                <p className="rounded-lg border border-violet-100 bg-violet-50 px-3 py-2 text-xs text-violet-800">
+                  Local dev credentials:{" "}
+                  <span className="font-mono">admin@salon.ai</span> /{" "}
+                  <span className="font-mono">admin1234</span> — run{" "}
+                  <span className="font-mono">npm run db:ensure-admin</span> if
+                  login fails after seeding.
+                </p>
+              )}
 
               {error && (
                 <p className="rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-600">

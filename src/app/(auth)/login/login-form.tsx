@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -30,6 +30,7 @@ import {
   getSalonLogoUrl,
 } from "@/lib/salon-logo";
 import { cn } from "@/lib/utils";
+import { getSignInErrorMessage } from "@/lib/sign-in-errors";
 
 type SalonBranding = {
   name: string;
@@ -238,7 +239,6 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
 }
 
 export default function LoginForm({ salon }: LoginFormProps) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const defaultCallback = salonDashboardPath(salon.slug);
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
@@ -261,43 +261,53 @@ export default function LoginForm({ salon }: LoginFormProps) {
     setError("");
 
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
+    const emailValue = (formData.get("email") as string).trim().toLowerCase();
+    const passwordValue = (formData.get("password") as string).trim();
+
+    if (!emailValue || !passwordValue) {
+      setLoading(false);
+      setError("Email and password are required");
+      return;
+    }
 
     if (rememberMe && typeof window !== "undefined") {
-      localStorage.setItem(`salon-login-email-${salon.slug}`, email);
+      localStorage.setItem(`salon-login-email-${salon.slug}`, emailValue);
     } else if (typeof window !== "undefined") {
       localStorage.removeItem(`salon-login-email-${salon.slug}`);
     }
 
     const result = await signIn("credentials", {
-      email,
-      password: formData.get("password") as string,
+      email: emailValue,
+      password: passwordValue,
       salonSlug: salon.slug,
       redirect: false,
     });
 
     setLoading(false);
 
-    if (result?.error) {
+    if (!result) {
       setError(
-        result.error === "Configuration" || result.error === "DatabaseUnavailable"
-          ? "Sign-in is temporarily unavailable. The server database is reconnecting — please try again in a minute."
-          : "Invalid email or password for this salon"
+        "Sign-in is temporarily unavailable. Check that AUTH_SECRET is set in .env and restart the dev server."
       );
       return;
     }
 
-    const sessionRes = await fetch("/api/auth/session");
-    const session = await sessionRes.json();
-
-    if (session?.user?.isSuperAdmin) {
-      router.push("/admin");
-      router.refresh();
+    if (!result.ok || result.error) {
+      setError(
+        getSignInErrorMessage(result, "Invalid email or password for this salon")
+      );
       return;
     }
 
-    router.push(callbackUrl);
-    router.refresh();
+    const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
+    const session = await sessionRes.json();
+
+    if (session?.user?.isSuperAdmin) {
+      window.location.assign("/admin");
+      return;
+    }
+
+    window.location.assign(callbackUrl);
   }
 
   return (
