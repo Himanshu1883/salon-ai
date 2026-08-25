@@ -146,10 +146,10 @@ export async function updatePackage(id: string, formData: FormData) {
   });
   const duration = computePackageDuration(includedServices);
 
-  await prisma.$transaction([
-    prisma.employeeService.deleteMany({ where: { serviceId: id } }),
-    prisma.servicePackageItem.deleteMany({ where: { packageId: id } }),
-    prisma.service.update({
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.employeeService.deleteMany({ where: { serviceId: id } });
+    await tx.servicePackageItem.deleteMany({ where: { packageId: id } });
+    return tx.service.update({
       where: { id },
       data: {
         name: parsed.data.name,
@@ -176,11 +176,12 @@ export async function updatePackage(id: string, formData: FormData) {
             }
           : undefined,
       },
-    }),
-  ]);
+      include: catalogInclude,
+    });
+  });
 
   revalidateServices(salonId);
-  return { success: true };
+  return { success: true, service: serializeCatalogItem(updated) };
 }
 
 export async function previewPackagePricing(input: {

@@ -36,6 +36,26 @@ export const catalogInclude = {
   },
 } as const;
 
+/** Lighter include for service CRUD — skips empty package/add-on parent relations. */
+export const catalogServiceInclude = {
+  category: true,
+  employees: { include: { employee: true } },
+  parentAddOnLinks: {
+    include: {
+      addOnService: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          duration: true,
+          status: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" as const },
+  },
+} as const;
+
 export function serializeCatalogItem(service: {
   id: string;
   name: string;

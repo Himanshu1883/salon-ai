@@ -11,6 +11,7 @@ import {
 } from "@/lib/validations";
 import {
   catalogInclude,
+  catalogServiceInclude,
   serializeCatalogItem,
 } from "@/lib/catalog/service-serializer";
 
@@ -143,28 +144,32 @@ export async function createService(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const category = await prisma.serviceCategory.findFirst({
-    where: { id: parsed.data.categoryId, salonId },
-  });
+  const addOnIds = parsed.data.addOnServiceIds ?? [];
+
+  const [category, maxOrder, addOnCount] = await Promise.all([
+    prisma.serviceCategory.findFirst({
+      where: { id: parsed.data.categoryId, salonId },
+      select: { id: true },
+    }),
+    prisma.service.aggregate({
+      where: { salonId, categoryId: parsed.data.categoryId },
+      _max: { sortOrder: true },
+    }),
+    addOnIds.length > 0
+      ? prisma.service.count({
+          where: {
+            id: { in: addOnIds },
+            salonId,
+            catalogType: "ADD_ON",
+          },
+        })
+      : Promise.resolve(addOnIds.length),
+  ]);
+
   if (!category) return { error: "Category not found" };
-
-  if (parsed.data.addOnServiceIds?.length) {
-    const addOnCount = await prisma.service.count({
-      where: {
-        id: { in: parsed.data.addOnServiceIds },
-        salonId,
-        catalogType: "ADD_ON",
-      },
-    });
-    if (addOnCount !== parsed.data.addOnServiceIds.length) {
-      return { error: "One or more add-ons were not found" };
-    }
+  if (addOnCount !== addOnIds.length) {
+    return { error: "One or more add-ons were not found" };
   }
-
-  const maxOrder = await prisma.service.aggregate({
-    where: { salonId, categoryId: parsed.data.categoryId },
-    _max: { sortOrder: true },
-  });
 
   const service = await prisma.service.create({
     data: {
@@ -180,9 +185,9 @@ export async function createService(formData: FormData) {
       status: parsed.data.status,
       onlineBooking: parsed.data.onlineBooking,
       inStoreBooking: parsed.data.inStoreBooking,
-      parentAddOnLinks: parsed.data.addOnServiceIds?.length
+      parentAddOnLinks: addOnIds.length
         ? {
-            create: parsed.data.addOnServiceIds.map((addOnServiceId, index) => ({
+            create: addOnIds.map((addOnServiceId, index) => ({
               addOnServiceId,
               sortOrder: index,
             })),
@@ -194,7 +199,7 @@ export async function createService(formData: FormData) {
           }
         : undefined,
     },
-    include: catalogInclude,
+    include: catalogServiceInclude,
   });
 
   revalidateServices(salonId);
@@ -209,33 +214,38 @@ export async function updateService(id: string, formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const service = await prisma.service.findFirst({
-    where: { id, salonId, catalogType: "SERVICE" },
-  });
-  if (!service) return { error: "Service not found" };
+  const addOnIds = parsed.data.addOnServiceIds ?? [];
 
-  const category = await prisma.serviceCategory.findFirst({
-    where: { id: parsed.data.categoryId, salonId },
-  });
+  const [existing, category, addOnCount] = await Promise.all([
+    prisma.service.findFirst({
+      where: { id, salonId, catalogType: "SERVICE" },
+      select: { id: true },
+    }),
+    prisma.serviceCategory.findFirst({
+      where: { id: parsed.data.categoryId, salonId },
+      select: { id: true },
+    }),
+    addOnIds.length > 0
+      ? prisma.service.count({
+          where: {
+            id: { in: addOnIds },
+            salonId,
+            catalogType: "ADD_ON",
+          },
+        })
+      : Promise.resolve(addOnIds.length),
+  ]);
+
+  if (!existing) return { error: "Service not found" };
   if (!category) return { error: "Category not found" };
-
-  if (parsed.data.addOnServiceIds?.length) {
-    const addOnCount = await prisma.service.count({
-      where: {
-        id: { in: parsed.data.addOnServiceIds },
-        salonId,
-        catalogType: "ADD_ON",
-      },
-    });
-    if (addOnCount !== parsed.data.addOnServiceIds.length) {
-      return { error: "One or more add-ons were not found" };
-    }
+  if (addOnCount !== addOnIds.length) {
+    return { error: "One or more add-ons were not found" };
   }
 
-  await prisma.$transaction([
-    prisma.employeeService.deleteMany({ where: { serviceId: id } }),
-    prisma.serviceAddOnLink.deleteMany({ where: { parentServiceId: id } }),
-    prisma.service.update({
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.employeeService.deleteMany({ where: { serviceId: id } });
+    await tx.serviceAddOnLink.deleteMany({ where: { parentServiceId: id } });
+    return tx.service.update({
       where: { id },
       data: {
         name: parsed.data.name,
@@ -247,9 +257,9 @@ export async function updateService(id: string, formData: FormData) {
         status: parsed.data.status,
         onlineBooking: parsed.data.onlineBooking,
         inStoreBooking: parsed.data.inStoreBooking,
-        parentAddOnLinks: parsed.data.addOnServiceIds?.length
+        parentAddOnLinks: addOnIds.length
           ? {
-              create: parsed.data.addOnServiceIds.map((addOnServiceId, index) => ({
+              create: addOnIds.map((addOnServiceId, index) => ({
                 addOnServiceId,
                 sortOrder: index,
               })),
@@ -261,11 +271,12 @@ export async function updateService(id: string, formData: FormData) {
             }
           : undefined,
       },
-    }),
-  ]);
+      include: catalogServiceInclude,
+    });
+  });
 
   revalidateServices(salonId);
-  return { success: true };
+  return { success: true, service: serializeCatalogItem(updated) };
 }
 
 export async function deleteService(id: string) {

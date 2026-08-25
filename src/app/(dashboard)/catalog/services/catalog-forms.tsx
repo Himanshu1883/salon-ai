@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { createService, updateService } from "@/actions/services";
-import { createPackage, updatePackage, previewPackagePricing } from "@/actions/service-packages";
+import { createPackage, updatePackage } from "@/actions/service-packages";
 import { createAddOn, updateAddOn } from "@/actions/service-addons";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +25,11 @@ import {
   STATUS_LABELS,
   type PackagePricingStrategy,
 } from "@/lib/catalog/constants";
+import {
+  computePackageDuration,
+  computePackageItemsTotal,
+  resolvePackagePrice,
+} from "@/lib/catalog/package-pricing";
 import { formatCurrency, formatDuration, cn } from "@/lib/utils";
 import type { CatalogServiceItem } from "./catalog-types";
 import { catalogFormFooterClassName } from "./catalog-dialog";
@@ -40,6 +45,8 @@ export function ServiceForm({
   employees,
   addOnOptions,
   defaultCategoryId,
+  onSubmitStart,
+  onError,
   onSuccess,
 }: {
   service?: CatalogServiceItem;
@@ -47,6 +54,8 @@ export function ServiceForm({
   employees: Employee[];
   addOnOptions: CatalogServiceItem[];
   defaultCategoryId?: string;
+  onSubmitStart?: () => void;
+  onError?: (message: string) => void;
   onSuccess: (service?: CatalogServiceItem) => void;
 }) {
   const [loading, setLoading] = useState(false);
@@ -79,15 +88,20 @@ export function ServiceForm({
     selectedEmployees.forEach((id) => formData.append("employeeIds", id));
     selectedAddOns.forEach((id) => formData.append("addOnServiceIds", id));
 
+    if (!service) onSubmitStart?.();
+    const closeEarly = !service;
+
     const result = service
       ? await updateService(service.id, formData)
       : await createService(formData);
 
-    setLoading(false);
     if (result.error) {
+      setLoading(false);
       setError(result.error);
+      if (closeEarly) onError?.(result.error);
       return;
     }
+    setLoading(false);
     if ("service" in result && result.service) {
       onSuccess(result.service as CatalogServiceItem);
     } else {
@@ -265,8 +279,6 @@ export function PackageForm({
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>(
     pkg?.employees.map((e) => e.employee.id) ?? []
   );
-  const [preview, setPreview] = useState<{ itemsTotal: number; packagePrice: number; savings: number; duration: number } | null>(null);
-
   const packageCategories = categories.filter(
     (c) => !c.categoryGroup || c.categoryGroup === "PACKAGES" || c.categoryGroup === "SERVICES"
   );
@@ -276,19 +288,21 @@ export function PackageForm({
     [bookableServices, includedIds]
   );
 
-  useEffect(() => {
-    if (includedIds.length === 0) {
-      setPreview(null);
-      return;
-    }
-    previewPackagePricing({
-      includedServiceIds: includedIds,
+  const preview = useMemo(() => {
+    if (selectedServices.length === 0) return null;
+    const itemsTotal = computePackageItemsTotal(selectedServices);
+    const pricing = resolvePackagePrice({
+      itemsTotal,
       pricingStrategy,
       customPrice: customPrice ? Number(customPrice) : undefined,
       discountPercent: discountPercent ? Number(discountPercent) : undefined,
       discountAmount: discountAmount ? Number(discountAmount) : undefined,
-    }).then(setPreview).catch(() => setPreview(null));
-  }, [includedIds, pricingStrategy, customPrice, discountPercent, discountAmount]);
+    });
+    return {
+      ...pricing,
+      duration: computePackageDuration(selectedServices),
+    };
+  }, [selectedServices, pricingStrategy, customPrice, discountPercent, discountAmount]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

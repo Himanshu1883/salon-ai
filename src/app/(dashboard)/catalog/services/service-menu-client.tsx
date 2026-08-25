@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   deleteService,
@@ -460,12 +459,22 @@ function ServicesTable({
                     </p>
                   )}
                   {service.catalogType === "PACKAGE" && service.packageItems.length > 0 && (
-                    <p className="mt-0.5 text-xs text-dashboard-muted">
-                      {service.packageItems.length} services
-                      {service.savings != null && service.savings > 0
-                        ? ` · Save ${formatCurrency(service.savings)}`
-                        : ""}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                      {service.packageItems.map((item) => (
+                        <Badge
+                          key={item.id}
+                          variant="secondary"
+                          className="rounded-full border border-violet-200/80 bg-violet-50/80 px-2 py-0 text-[11px] font-medium text-violet-700"
+                        >
+                          {item.includedService.name}
+                        </Badge>
+                      ))}
+                      {service.savings != null && service.savings > 0 && (
+                        <span className="text-[11px] font-medium text-emerald-600">
+                          Save {formatCurrency(service.savings)}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               </TableCell>
@@ -596,7 +605,6 @@ export function ServiceMenuClient({
   uncategorized: CatalogServiceItem[];
   employees: Employee[];
 }) {
-  const router = useRouter();
   const [search, setSearch] = useState("");
   const [catalogTab, setCatalogTab] = useState<CatalogTab>("ALL");
   const [filterAudience, setFilterAudience] = useState<string | null>(null);
@@ -1055,10 +1063,7 @@ export function ServiceMenuClient({
                     onSuccess={(service) => {
                       setAddPackageOpen(false);
                       setEditItem(null);
-                      if (service) {
-                        upsertLocalService(service);
-                        router.refresh();
-                      }
+                      if (service) upsertLocalService(service);
                     }}
                   />
                 </CatalogDialogContent>
@@ -1082,10 +1087,7 @@ export function ServiceMenuClient({
                     onSuccess={(service) => {
                       setAddAddOnOpen(false);
                       setEditItem(null);
-                      if (service) {
-                        upsertLocalService(service);
-                        router.refresh();
-                      }
+                      if (service) upsertLocalService(service);
                     }}
                   />
                 </CatalogDialogContent>
@@ -1114,13 +1116,18 @@ export function ServiceMenuClient({
                     employees={employees}
                     addOnOptions={addOnOptions}
                     defaultCategoryId={selectedCategoryId ?? undefined}
+                    onSubmitStart={() => {
+                      setAddOpen(false);
+                      setEditItem(null);
+                    }}
+                    onError={(message) => {
+                      alert(message);
+                      setAddOpen(true);
+                    }}
                     onSuccess={(service) => {
                       setAddOpen(false);
                       setEditItem(null);
-                      if (service) {
-                        upsertLocalService(service);
-                        router.refresh();
-                      }
+                      if (service) upsertLocalService(service);
                     }}
                   />
                 </CatalogDialogContent>
