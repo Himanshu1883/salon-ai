@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { getUserPermissionDetailsAction } from "@/actions/permissions";
 import { getResolvedPermissions } from "@/lib/permissions/resolve";
+import { findLoginUserForEmployee } from "@/lib/employee-login-link";
 import { EmployeePermissionsEditor } from "@/components/permissions/employee-permissions-editor";
+import { prisma } from "@/lib/prisma";
 
 export default async function MemberPermissionsPage({
   params,
@@ -25,15 +26,7 @@ export default async function MemberPermissionsPage({
     notFound();
   }
 
-  const loginUser = employee.email
-    ? await prisma.user.findFirst({
-        where: {
-          salonId,
-          email: employee.email.toLowerCase(),
-        },
-        select: { id: true, name: true, email: true },
-      })
-    : null;
+  const loginUser = await findLoginUserForEmployee(salonId, employee);
 
   if (!loginUser) {
     return (
@@ -46,13 +39,14 @@ export default async function MemberPermissionsPage({
           Back to member
         </Link>
         <div className="rounded-2xl border border-amber-100 bg-amber-50 p-6 text-sm text-amber-900">
-          {employee.name} does not have a linked login account yet. Add an email
-          on the team member profile that matches their login email, or manage
-          access from{" "}
-          <Link href="/team/access" className="font-semibold underline">
+          {employee.name} does not have a login account yet. Create one from{" "}
+          <Link
+            href={`/team/access?employee=${employee.id}`}
+            className="font-semibold underline"
+          >
             Team Access
-          </Link>
-          .
+          </Link>{" "}
+          and select this team member.
         </div>
       </div>
     );

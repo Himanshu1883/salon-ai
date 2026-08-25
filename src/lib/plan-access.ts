@@ -1,5 +1,6 @@
-import { prisma } from "@/lib/prisma";
 import { unstable_cache } from "next/cache";
+import { prisma } from "@/lib/prisma";
+import { cachedRead } from "@/lib/memory-cache";
 import {
   canAccessPath,
   getModuleForPath,
@@ -23,7 +24,9 @@ const getCachedSalonPlan = unstable_cache(
 );
 
 export async function getSalonPlan(salonId: string): Promise<SalonPlan> {
-  return getCachedSalonPlan(salonId);
+  return cachedRead(`salon-plan:${salonId}`, 45, () =>
+    getCachedSalonPlan(salonId)
+  );
 }
 
 export function checkPlan(plan: SalonPlan, pathname: string) {

@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   createTeamMember,
   updateTeamMember,
   deactivateTeamMember,
+  reactivateTeamMember,
+  deleteTeamMember,
 } from "@/actions/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +55,7 @@ import { MemberAvatar } from "@/components/team/member-avatar";
 import { getRoleLabel } from "@/lib/team";
 import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
+import type { EmployeeLoginInfo } from "@/lib/employee-login-link";
 
 type TeamMember = {
   id: string;
@@ -84,6 +88,13 @@ function MemberForm({
     member?.services.map((s) => s.service.id) ?? []
   );
 
+  useEffect(() => {
+    setRole(member?.role ?? "stylist");
+    setStatus(member?.status ?? "active");
+    setSelectedServices(member?.services.map((s) => s.service.id) ?? []);
+    setError("");
+  }, [member]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -101,6 +112,12 @@ function MemberForm({
       setError(result.error);
       return;
     }
+
+    if ("member" in result && result.member) {
+      onSuccess(result.member);
+      return;
+    }
+
     const form = e.currentTarget;
     onSuccess({
       id: member?.id ?? ("id" in result ? String(result.id) : ""),
@@ -220,10 +237,21 @@ function MemberForm({
 export function TeamMembersClient({
   members: initialMembers,
   services,
+  canCreate,
+  canUpdate,
+  canDelete,
+  canManageAccess,
+  loginByEmployeeId,
 }: {
   members: TeamMember[];
   services: Service[];
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+  canManageAccess: boolean;
+  loginByEmployeeId: Record<string, EmployeeLoginInfo>;
 }) {
+  const router = useRouter();
   const [members, setMembers] = useState(initialMembers);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
@@ -269,17 +297,94 @@ export function TeamMembersClient({
       }
       return [member, ...prev];
     });
+    router.refresh();
   }
 
   async function handleDeactivate(id: string) {
-    if (!confirm("Deactivate this team member?")) return;
+    if (!confirm("Deactivate this team member? They will lose active status.")) return;
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, status: "inactive" } : m))
     );
     const result = await deactivateTeamMember(id);
     if (result.error) {
       setMembers(initialMembers);
+      alert(result.error);
+      return;
     }
+    router.refresh();
+  }
+
+  async function handleReactivate(id: string) {
+    setMembers((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status: "active" } : m))
+    );
+    const result = await reactivateTeamMember(id);
+    if (result.error) {
+      setMembers(initialMembers);
+      alert(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleDelete(id: string) {
+    if (
+      !confirm(
+        "Permanently delete this team member? This cannot be undone. Historical appointments and records will remain but will no longer link to this profile."
+      )
+    ) {
+      return;
+    }
+    setMembers((prev) => prev.filter((m) => m.id !== id));
+    const result = await deleteTeamMember(id);
+    if (result.error) {
+      setMembers(initialMembers);
+      alert(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  function memberActions(member: TeamMember) {
+    return (
+      <>
+        {canUpdate && (
+          <DropdownMenuItem
+            onClick={() => {
+              setEditing(member);
+              setOpen(true);
+            }}
+          >
+            Edit
+          </DropdownMenuItem>
+        )}
+        {canUpdate && member.status === "inactive" && (
+          <DropdownMenuItem onClick={() => handleReactivate(member.id)}>
+            Reactivate
+          </DropdownMenuItem>
+        )}
+        {canDelete && member.status !== "inactive" && (
+          <DropdownMenuItem onClick={() => handleDeactivate(member.id)}>
+            Deactivate
+          </DropdownMenuItem>
+        )}
+        {canDelete && (
+          <DropdownMenuItem
+            className="text-red-600 focus:text-red-600"
+            onClick={() => handleDelete(member.id)}
+          >
+            Delete permanently
+          </DropdownMenuItem>
+        )}
+        {(canUpdate || canDelete) && <DropdownMenuSeparator />}
+        <DropdownMenuItem asChild>
+          <Link href={`/team/shifts?employee=${member.id}`}>View shifts</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href={`/team/members/${member.id}`}>View profile</Link>
+        </DropdownMenuItem>
+      </>
+    );
   }
 
   function toggleAll() {
@@ -329,12 +434,14 @@ export function TeamMembersClient({
               if (!v) setEditing(null);
             }}
           >
-            <DialogTrigger asChild>
-              <Button size="sm" onClick={() => setEditing(null)}>
-                <Plus className="h-4 w-4" />
-                Add
-              </Button>
-            </DialogTrigger>
+            {canCreate && (
+              <DialogTrigger asChild>
+                <Button size="sm" onClick={() => setEditing(null)}>
+                  <Plus className="h-4 w-4" />
+                  Add
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>
@@ -342,6 +449,7 @@ export function TeamMembersClient({
                 </DialogTitle>
               </DialogHeader>
               <MemberForm
+                key={editing?.id ?? "new"}
                 member={editing ?? undefined}
                 services={services}
                 onSuccess={handleSuccess}
@@ -482,6 +590,32 @@ export function TeamMembersClient({
                       <p className="text-sm text-stone-700">
                         {member.status === "inactive" ? "No access" : getRoleLabel(member.role)}
                       </p>
+                      <div className="text-sm">
+                        {loginByEmployeeId[member.id] ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="success" className="text-xs">
+                              Login active
+                            </Badge>
+                            {canManageAccess && (
+                              <Link
+                                href={`/team/access/${loginByEmployeeId[member.id].userId}`}
+                                className="text-xs text-dashboard-primary hover:underline"
+                              >
+                                Permissions
+                              </Link>
+                            )}
+                          </div>
+                        ) : canManageAccess && member.status !== "inactive" ? (
+                          <Link
+                            href={`/team/access?employee=${member.id}`}
+                            className="text-xs font-medium text-dashboard-primary hover:underline"
+                          >
+                            Create login
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-stone-400">No login</span>
+                        )}
+                      </div>
                       <div className="flex justify-end border-t border-stone-100 pt-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -490,12 +624,7 @@ export function TeamMembersClient({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setEditing(member); setOpen(true); }}>Edit</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeactivate(member.id)}>Deactivate</DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href={`/team/shifts?employee=${member.id}`}>View shifts</Link>
-                            </DropdownMenuItem>
+                            {memberActions(member)}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -523,13 +652,14 @@ export function TeamMembersClient({
                   <TableHead>Name</TableHead>
                   <TableHead>Contact</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Access</TableHead>
                   <TableHead className="w-12" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMembers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-stone-500">
+                    <TableCell colSpan={6} className="py-12 text-center text-stone-500">
                       No team members found
                     </TableCell>
                   </TableRow>
@@ -579,6 +709,32 @@ export function TeamMembersClient({
                         </span>
                       </TableCell>
                       <TableCell>
+                        {loginByEmployeeId[member.id] ? (
+                          <div className="space-y-1">
+                            <Badge variant="success" className="text-xs">
+                              Login active
+                            </Badge>
+                            {canManageAccess && (
+                              <Link
+                                href={`/team/access/${loginByEmployeeId[member.id].userId}`}
+                                className="block text-xs text-dashboard-primary hover:underline"
+                              >
+                                Permissions
+                              </Link>
+                            )}
+                          </div>
+                        ) : canManageAccess && member.status !== "inactive" ? (
+                          <Link
+                            href={`/team/access?employee=${member.id}`}
+                            className="text-xs font-medium text-dashboard-primary hover:underline"
+                          >
+                            Create login
+                          </Link>
+                        ) : (
+                          <span className="text-xs text-stone-400">No login</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -586,25 +742,7 @@ export function TeamMembersClient({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setEditing(member);
-                                setOpen(true);
-                              }}
-                            >
-                              Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDeactivate(member.id)}
-                            >
-                              Deactivate
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem asChild>
-                              <Link href={`/team/shifts?employee=${member.id}`}>
-                                View shifts
-                              </Link>
-                            </DropdownMenuItem>
+                            {memberActions(member)}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

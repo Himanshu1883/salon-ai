@@ -2,8 +2,7 @@ import { notFound } from "next/navigation";
 import { getTeamMember } from "@/actions/team";
 import { getServices } from "@/actions/services";
 import { getEmployeeFaceStatus } from "@/actions/attendance";
-import { canAccessSettings } from "@/actions/salon";
-import { auth } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions/require";
 import { parseOtherDocuments } from "@/lib/employee";
 import { MemberDetailClient } from "./member-detail-client";
 
@@ -13,13 +12,14 @@ export default async function MemberDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-  const [member, services, faceStatus, canEdit] = await Promise.all([
-    getTeamMember(id),
-    getServices(),
-    getEmployeeFaceStatus(id),
-    session?.user?.id ? canAccessSettings(session.user.id) : false,
-  ]);
+  const [member, services, faceStatus, canUpdate, canDelete] =
+    await Promise.all([
+      getTeamMember(id),
+      getServices(),
+      getEmployeeFaceStatus(id),
+      hasPermission("team.update"),
+      hasPermission("team.delete"),
+    ]);
 
   if (!member) notFound();
 
@@ -31,7 +31,8 @@ export default async function MemberDetailPage({
       }}
       services={services.map((s) => ({ id: s.id, name: s.name }))}
       faceStatus={faceStatus}
-      canEdit={canEdit}
+      canUpdate={canUpdate}
+      canDelete={canDelete}
     />
   );
 }

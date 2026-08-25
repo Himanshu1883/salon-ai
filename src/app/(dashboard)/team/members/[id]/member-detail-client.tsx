@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { updateTeamMember } from "@/actions/team";
+import { updateTeamMember, deactivateTeamMember, deleteTeamMember } from "@/actions/team";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -58,15 +58,18 @@ export function MemberDetailClient({
   member,
   services,
   faceStatus,
-  canEdit,
+  canUpdate,
+  canDelete,
 }: {
   member: Member;
   services: Service[];
   faceStatus: { enrolled: boolean; enrolledAt: string | null };
-  canEdit: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [role, setRole] = useState(member.role);
   const [status, setStatus] = useState(member.status);
@@ -89,6 +92,35 @@ export function MemberDetailClient({
       setError(result.error);
       return;
     }
+    router.refresh();
+  }
+
+  async function handleDeactivate() {
+    if (!confirm("Deactivate this team member?")) return;
+    const result = await deactivateTeamMember(member.id);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (
+      !confirm(
+        "Permanently delete this team member? This cannot be undone."
+      )
+    ) {
+      return;
+    }
+    setDeleting(true);
+    const result = await deleteTeamMember(member.id);
+    setDeleting(false);
+    if (result.error) {
+      alert(result.error);
+      return;
+    }
+    router.push("/team/members");
     router.refresh();
   }
 
@@ -127,6 +159,20 @@ export function MemberDetailClient({
             View shifts
           </Link>
         </Button>
+        {canDelete && member.status !== "inactive" && (
+          <Button variant="outline" onClick={handleDeactivate}>
+            Deactivate
+          </Button>
+        )}
+        {canDelete && (
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            {deleting ? "Deleting..." : "Delete"}
+          </Button>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-3 rounded-lg border border-stone-200 bg-white p-4">
@@ -165,12 +211,12 @@ export function MemberDetailClient({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
-            <Input id="name" name="name" required defaultValue={member.name} disabled={!canEdit} />
+            <Input id="name" name="name" required defaultValue={member.name} disabled={!canUpdate} />
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <input type="hidden" name="role" value={role} />
-            <Select value={role} onValueChange={setRole} disabled={!canEdit}>
+            <Select value={role} onValueChange={setRole} disabled={!canUpdate}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -188,7 +234,7 @@ export function MemberDetailClient({
               id="phone"
               name="phone"
               defaultValue={member.phone ?? ""}
-              disabled={!canEdit}
+              disabled={!canUpdate}
             />
           </div>
           <div className="space-y-2">
@@ -198,7 +244,7 @@ export function MemberDetailClient({
               name="email"
               type="email"
               defaultValue={member.email ?? ""}
-              disabled={!canEdit}
+              disabled={!canUpdate}
             />
           </div>
           <div className="space-y-2 sm:col-span-2">
@@ -207,13 +253,13 @@ export function MemberDetailClient({
               id="specialties"
               name="specialties"
               defaultValue={member.specialties ?? ""}
-              disabled={!canEdit}
+              disabled={!canUpdate}
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="status">Status</Label>
             <input type="hidden" name="status" value={status} />
-            <Select value={status} onValueChange={setStatus} disabled={!canEdit}>
+            <Select value={status} onValueChange={setStatus} disabled={!canUpdate}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -234,7 +280,7 @@ export function MemberDetailClient({
                 <button
                   key={service.id}
                   type="button"
-                  disabled={!canEdit}
+                  disabled={!canUpdate}
                   onClick={() =>
                     setSelectedServices((prev) =>
                       prev.includes(service.id)
@@ -256,20 +302,20 @@ export function MemberDetailClient({
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
-        {canEdit ? (
+        {canUpdate ? (
           <Button type="submit" disabled={loading}>
             {loading ? "Saving..." : "Save changes"}
           </Button>
         ) : (
           <p className="text-xs text-stone-400">
-            Only owners and managers can edit team details.
+            You do not have permission to edit team details.
           </p>
         )}
       </form>
 
       <MemberAddressSection
         memberId={member.id}
-        canEdit={canEdit}
+        canEdit={canUpdate}
         fields={{
           addressLine1: member.addressLine1,
           addressLine2: member.addressLine2,
@@ -284,7 +330,7 @@ export function MemberDetailClient({
 
       <MemberDocumentsSection
         memberId={member.id}
-        canEdit={canEdit}
+        canEdit={canUpdate}
         fields={{
           aadharDocumentUrl: member.aadharDocumentUrl,
           panDocumentUrl: member.panDocumentUrl,

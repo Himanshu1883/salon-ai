@@ -259,6 +259,8 @@ model User {
   salon         Salon?        @relation(fields: [salonId], references: [id], onDelete: Cascade)
   salonRoleId   String?
   salonRole     SalonRole?    @relation(fields: [salonRoleId], references: [id], onDelete: SetNull)
+  employeeId    String?       @unique
+  employee      Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   passwordResetTokens PasswordResetToken[]
   permissionOverrides UserPermissionOverride[]
   createdAt     DateTime      @default(now())
@@ -378,6 +380,7 @@ model Employee {
   stockLedgerEntries StockLedgerEntry[]
   assignedProjects Project[]
   hairConsultations HairConsultation[]
+  loginUser        User?
 
   @@index([salonId])
   @@index([salonId, status])

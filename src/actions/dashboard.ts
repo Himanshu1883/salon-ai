@@ -3,7 +3,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession, getAuthSession } from "@/lib/auth";
 import { cachedBySalon, salonCacheTag } from "@/lib/salon-cache";
-import { unstable_cache } from "next/cache";
 import {
   startOfDay,
   endOfDay,
@@ -453,8 +452,12 @@ export async function getLayoutHeaderData() {
 }
 
 function getCachedLayoutHeaderData(salonId: string) {
-  return unstable_cache(
-    async () => {
+  return getLayoutHeaderDataCached(salonId);
+}
+
+const getLayoutHeaderDataCached = cachedBySalon(
+  "layout-alerts",
+  async (salonId: string) => {
       const now = new Date();
 
       const [lowStockCount, billingStats, pendingSms, subscription, overduePlatformInvoice] =
@@ -484,13 +487,8 @@ function getCachedLayoutHeaderData(salonId: string) {
         showUpgrade:
           subscription?.status === "trial" || subscription?.status === "past_due",
       };
-    },
-    ["layout-header-data", salonId],
-    {
-      revalidate: 30,
-      tags: [salonCacheTag(salonId, "layout-alerts")],
-    }
-  )();
-}
+  },
+  { revalidate: 30 }
+);
 
 export { salonCacheTag };

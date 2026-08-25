@@ -1,4 +1,5 @@
 import { revalidateTag, unstable_cache } from "next/cache";
+import { cachedRead, invalidateMemoryCachePrefix } from "@/lib/memory-cache";
 
 export type SalonCacheScope =
   | "dashboard-kpis"
@@ -10,7 +11,8 @@ export type SalonCacheScope =
   | "customers"
   | "billing"
   | "check-in"
-  | "layout-alerts";
+  | "layout-alerts"
+  | "layout-context";
 
 export function salonCacheTag(salonId: string, scope: SalonCacheScope): string {
   return `${scope}:${salonId}`;
@@ -24,6 +26,10 @@ export function revalidateSalonCache(
   for (const scope of scopes) {
     revalidateTag(salonCacheTag(salonId, scope), "max");
   }
+  invalidateMemoryCachePrefix(`salon-cache:`);
+  invalidateMemoryCachePrefix(`salon-layout:${salonId}`);
+  invalidateMemoryCachePrefix(`salon-plan:${salonId}`);
+  invalidateMemoryCachePrefix(`salon-blocked:${salonId}`);
 }
 
 type CacheOpts = {
@@ -42,8 +48,10 @@ export function cachedBySalon<T>(
   const cacheKey = opts.key ?? "default";
 
   return (salonId: string) =>
-    unstable_cache(() => fetcher(salonId), [scope, cacheKey, salonId], {
-      revalidate,
-      tags: [salonCacheTag(salonId, scope)],
-    })();
+    cachedRead(`salon-cache:${scope}:${cacheKey}:${salonId}`, revalidate, () =>
+      unstable_cache(() => fetcher(salonId), [scope, cacheKey, salonId], {
+        revalidate,
+        tags: [salonCacheTag(salonId, scope)],
+      })()
+    );
 }

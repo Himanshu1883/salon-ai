@@ -69,8 +69,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         try {
           user = await prisma.user.findUnique({
             where: { email: parsed.data.email },
-            include: {
-              salon: { select: { id: true, name: true, plan: true, slug: true } },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              password: true,
+              role: true,
+              isActive: true,
+              isSuperAdmin: true,
+              platformRole: true,
+              salonId: true,
+              salon: {
+                select: { id: true, name: true, plan: true, slug: true },
+              },
             },
           });
         } catch (error) {
@@ -153,7 +164,10 @@ export const getAuthSession = cache(auth);
 const fetchSessionUser = cache(async (userId: string) =>
   prisma.user.findUnique({
     where: { id: userId },
-    include: {
+    select: {
+      id: true,
+      role: true,
+      salonId: true,
       salon: { select: { id: true, name: true, plan: true, slug: true } },
     },
   })

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
 import { revalidatePath, unstable_cache } from "next/cache";
+import { cachedRead } from "@/lib/memory-cache";
 import {
   getSubscriptionBillingForPlan,
   INVOICE_DUE_DAYS,
@@ -125,7 +126,9 @@ const getCachedSalonAccessBlocked = unstable_cache(
 
 /** Cached read-only check for layout/navigation (no write sync). */
 export async function getSalonAccessBlocked(salonId: string): Promise<boolean> {
-  return getCachedSalonAccessBlocked(salonId);
+  return cachedRead(`salon-blocked:${salonId}`, 45, () =>
+    getCachedSalonAccessBlocked(salonId)
+  );
 }
 
 export async function isSalonAccessBlocked(salonId: string): Promise<boolean> {

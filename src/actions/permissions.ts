@@ -23,6 +23,7 @@ import {
   assignUserSalonRoleFromLegacy,
   ensureSalonSystemRoles,
 } from "@/lib/permissions/seed";
+import { getEmployeesAvailableForLogin, findEmployeeLinkedToUser, isMissingEmployeeIdColumn } from "@/lib/employee-login-link";
 import { z } from "zod";
 
 const updateRoleSchema = z.object({
@@ -43,6 +44,7 @@ const updateOverridesSchema = z.object({
 });
 
 const createSalonLoginUserSchema = z.object({
+  employeeId: z.string().min(1, "Select a team member"),
   name: z.string().trim().min(1, "Name is required").max(120),
   email: z.string().trim().email("Invalid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
@@ -131,19 +133,56 @@ export async function getSalonUsersForPermissionsAction() {
   await requirePermission("permissions.manage");
   const salonId = session.user.salonId!;
 
-  const users = await prisma.user.findMany({
-    where: { salonId, isActive: true },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      salonRole: { select: { key: true, name: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  try {
+    const users = await prisma.user.findMany({
+      where: { salonId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        employeeId: true,
+        salonRole: { select: { key: true, name: true } },
+        employee: { select: { id: true, name: true, role: true } },
+      },
+      orderBy: { name: "asc" },
+    });
 
-  return users;
+    return users;
+  } catch (error) {
+    if (!isMissingEmployeeIdColumn(error)) throw error;
+
+    const users = await prisma.user.findMany({
+      where: { salonId, isActive: true },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        salonRole: { select: { key: true, name: true } },
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return Promise.all(
+      users.map(async (user) => ({
+        ...user,
+        employeeId: null as string | null,
+        employee: await findEmployeeLinkedToUser(salonId, {
+          ...user,
+          employeeId: null,
+        }),
+      }))
+    );
+  }
+}
+
+export async function getEmployeesForLoginAssignmentAction() {
+  const session = await requireSession();
+  await requirePermission("permissions.manage");
+  const salonId = session.user.salonId!;
+
+  return getEmployeesAvailableForLogin(salonId);
 }
 
 export async function getUserPermissionDetailsAction(userId: string) {
@@ -380,8 +419,43 @@ export async function createSalonLoginUserAction(data: unknown) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const { name, email, password, roleKey, overrides = [] } = parsed.data;
+  const { employeeId, name, email, password, roleKey, overrides = [] } =
+    parsed.data;
   const normalizedEmail = email.toLowerCase();
+
+  const employee = await prisma.employee.findFirst({
+    where: { id: employeeId, salonId },
+    select: { id: true, name: true, email: true, status: true },
+  });
+
+  if (!employee) {
+    return { error: "Team member not found" };
+  }
+
+  if (employee.status === "inactive") {
+    return { error: "Cannot create login for an inactive team member" };
+  }
+
+  let existingLink: { id: string } | null = null;
+  try {
+    existingLink = await prisma.user.findFirst({
+      where: { salonId, employeeId: employee.id, isActive: true },
+      select: { id: true },
+    });
+  } catch (error) {
+    if (!isMissingEmployeeIdColumn(error)) throw error;
+  }
+
+  if (!existingLink) {
+    existingLink = await prisma.user.findFirst({
+      where: { salonId, email: normalizedEmail, isActive: true },
+      select: { id: true },
+    });
+  }
+
+  if (existingLink) {
+    return { error: "This team member already has a login account" };
+  }
 
   const actor = await prisma.user.findFirst({
     where: { id: session.user.id, salonId },
@@ -422,19 +496,50 @@ export async function createSalonLoginUserAction(data: unknown) {
   try {
     await ensureSalonSystemRoles(prisma, salonId);
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email: normalizedEmail,
-        password: hashed,
-        role: legacyRole,
-        salonId,
-        isActive: true,
-        isSuperAdmin: false,
-        platformRole: null,
-      },
-      select: { id: true },
-    });
+    let user: { id: string };
+    try {
+      user = await prisma.user.create({
+        data: {
+          name,
+          email: normalizedEmail,
+          password: hashed,
+          role: legacyRole,
+          salonId,
+          employeeId: employee.id,
+          isActive: true,
+          isSuperAdmin: false,
+          platformRole: null,
+        },
+        select: { id: true },
+      });
+    } catch (error) {
+      if (!isMissingEmployeeIdColumn(error)) throw error;
+      user = await prisma.user.create({
+        data: {
+          name,
+          email: normalizedEmail,
+          password: hashed,
+          role: legacyRole,
+          salonId,
+          isActive: true,
+          isSuperAdmin: false,
+          platformRole: null,
+        },
+        select: { id: true },
+      });
+    }
+
+    if (!employee.email) {
+      await prisma.employee.update({
+        where: { id: employee.id },
+        data: { email: normalizedEmail },
+      });
+    } else if (employee.email.toLowerCase() !== normalizedEmail) {
+      await prisma.employee.update({
+        where: { id: employee.id },
+        data: { email: normalizedEmail },
+      });
+    }
 
     await assignUserSalonRoleFromLegacy(
       prisma,
@@ -449,10 +554,13 @@ export async function createSalonLoginUserAction(data: unknown) {
 
     revalidatePath("/team");
     revalidatePath("/team/access");
+    revalidatePath("/team/members");
+    revalidatePath(`/team/members/${employee.id}`);
 
     return {
       success: true as const,
       userId: user.id,
+      employeeId: employee.id,
       email: normalizedEmail,
     };
   } catch (error) {

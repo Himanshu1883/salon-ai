@@ -187,18 +187,6 @@ function resolveFromContext(
 
 export const getResolvedPermissions = cache(
   async (userId: string, salonId: string): Promise<ResolvedPermissions> => {
-    try {
-      const roleHint = await prisma.user.findFirst({
-        where: { id: userId, salonId },
-        select: { role: true },
-      });
-      if (roleHint?.role === "owner") {
-        return resolveOwnerPermissions(userId, salonId);
-      }
-    } catch {
-      // Fall through to legacy resolution.
-    }
-
     const user = await loadUserPermissionContext(userId, salonId);
     if (!user) {
       return {

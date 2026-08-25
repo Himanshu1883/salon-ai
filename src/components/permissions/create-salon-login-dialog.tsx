@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { Copy, Loader2, Plus } from "lucide-react";
 import { createSalonLoginUserAction } from "@/actions/permissions";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   getPermissionsByModule,
   getModuleLabel,
   type PermissionKey,
@@ -23,6 +31,8 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   type SystemRoleKey,
 } from "@/lib/permissions/defaults";
+import { getRoleLabel } from "@/lib/team";
+import type { StaffForLoginRow } from "@/components/permissions/team-access-client";
 
 const CREATE_ROLE_OPTIONS = [
   { key: "MANAGER" as const, label: "Manager" },
@@ -62,15 +72,20 @@ type SuccessPayload = {
 
 export function CreateSalonLoginDialog({
   salonSlug,
+  employees,
   open,
   onOpenChange,
+  preselectedEmployeeId,
   onCreated,
 }: {
   salonSlug: string;
+  employees: StaffForLoginRow[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  preselectedEmployeeId?: string | null;
   onCreated?: () => void;
 }) {
+  const [employeeId, setEmployeeId] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -83,6 +98,11 @@ export function CreateSalonLoginDialog({
   const [success, setSuccess] = useState<SuccessPayload | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const selectedEmployee = useMemo(
+    () => employees.find((e) => e.id === employeeId),
+    [employees, employeeId]
+  );
+
   const flatState = useMemo(() => {
     const map = new Map<string, boolean>();
     for (const group of modules) {
@@ -93,13 +113,31 @@ export function CreateSalonLoginDialog({
     return map;
   }, [modules]);
 
+  function applyEmployee(employee: StaffForLoginRow | undefined) {
+    if (!employee) return;
+    setName(employee.name);
+    setEmail(employee.email ?? "");
+  }
+
   useEffect(() => {
     if (open && !success) {
       setModules(buildModulesForRole(roleKey));
     }
   }, [roleKey, open, success]);
 
+  useEffect(() => {
+    if (!open || success) return;
+    if (preselectedEmployeeId && employees.some((e) => e.id === preselectedEmployeeId)) {
+      setEmployeeId(preselectedEmployeeId);
+      applyEmployee(employees.find((e) => e.id === preselectedEmployeeId));
+    } else if (employees.length === 1) {
+      setEmployeeId(employees[0].id);
+      applyEmployee(employees[0]);
+    }
+  }, [open, preselectedEmployeeId, employees, success]);
+
   function resetForm() {
+    setEmployeeId("");
     setName("");
     setEmail("");
     setPassword("");
@@ -113,6 +151,11 @@ export function CreateSalonLoginDialog({
   function handleOpenChange(next: boolean) {
     if (!next) resetForm();
     onOpenChange(next);
+  }
+
+  function handleEmployeeChange(id: string) {
+    setEmployeeId(id);
+    applyEmployee(employees.find((e) => e.id === id));
   }
 
   function setPermission(key: string, granted: boolean) {
@@ -130,6 +173,11 @@ export function CreateSalonLoginDialog({
     event.preventDefault();
     setError("");
 
+    if (!employeeId) {
+      setError("Select a team member");
+      return;
+    }
+
     startTransition(async () => {
       const overrides = Array.from(flatState.entries()).map(
         ([permissionKey, granted]) => ({
@@ -139,6 +187,7 @@ export function CreateSalonLoginDialog({
       );
 
       const result = await createSalonLoginUserAction({
+        employeeId,
         name,
         email,
         password,
@@ -207,17 +256,63 @@ export function CreateSalonLoginDialog({
               </Button>
             </div>
           </>
+        ) : employees.length === 0 ? (
+          <>
+            <DialogHeader>
+              <DialogTitle>Create employee login</DialogTitle>
+              <DialogDescription>
+                Add team members first, then assign them a login here.
+              </DialogDescription>
+            </DialogHeader>
+            <p className="text-sm text-stone-600">
+              No staff without login found. Go to{" "}
+              <Link href="/team/members" className="font-medium text-dashboard-primary underline">
+                Team → Members
+              </Link>{" "}
+              to add staff, then return to create their access.
+            </p>
+            <Button type="button" onClick={() => handleOpenChange(false)}>
+              Close
+            </Button>
+          </>
         ) : (
           <>
             <DialogHeader>
               <DialogTitle>Create employee login</DialogTitle>
               <DialogDescription>
-                Add email and password for a team member. They will only access
-                what you assign below.
+                Select a team member, set their password, then choose what they
+                can view and update in the app.
               </DialogDescription>
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-stone-700">
+                  Team member
+                </label>
+                <Select
+                  value={employeeId}
+                  onValueChange={handleEmployeeChange}
+                  disabled={pending}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select staff member" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {employees.map((employee) => (
+                      <SelectItem key={employee.id} value={employee.id}>
+                        {employee.name} — {getRoleLabel(employee.role)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedEmployee && !selectedEmployee.email && (
+                  <p className="text-xs text-amber-700">
+                    This member has no email yet. Enter one below for their login.
+                  </p>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-stone-700">Name</label>
                 <Input
@@ -341,7 +436,7 @@ export function CreateSalonLoginDialog({
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={pending}>
+                <Button type="submit" disabled={pending || !employeeId}>
                   {pending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />

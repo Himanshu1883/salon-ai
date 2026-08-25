@@ -1,11 +1,29 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
+import { requirePermission } from "@/lib/permissions/require";
 import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { employeeSchema, employeeProfileSchema } from "@/lib/validations";
 import { saveEmployeeDocument } from "@/lib/employee-upload";
 import { parseOtherDocuments } from "@/lib/employee";
+
+const teamMemberSelect = {
+  id: true,
+  name: true,
+  phone: true,
+  email: true,
+  role: true,
+  specialties: true,
+  avatarUrl: true,
+  status: true,
+  services: {
+    select: {
+      service: { select: { id: true, name: true } },
+    },
+  },
+} as const;
 
 function revalidateTeam(salonId: string) {
   revalidateSalonCache(
@@ -15,26 +33,16 @@ function revalidateTeam(salonId: string) {
     "dashboard-kpis",
     "queue"
   );
+  revalidatePath("/team/members");
+  revalidatePath("/team/shifts");
+  revalidatePath("/employees");
+  revalidatePath("/dashboard");
 }
 
 async function fetchTeamMembers(salonId: string) {
   return prisma.employee.findMany({
     where: { salonId },
-    select: {
-      id: true,
-      name: true,
-      phone: true,
-      email: true,
-      role: true,
-      specialties: true,
-      avatarUrl: true,
-      status: true,
-      services: {
-        select: {
-          service: { select: { id: true, name: true } },
-        },
-      },
-    },
+    select: teamMemberSelect,
     orderBy: { name: "asc" },
   });
 }
@@ -45,6 +53,7 @@ const getCachedTeamMembers = cachedBySalon("team", fetchTeamMembers, {
 });
 
 export async function getTeamMembers(search?: string) {
+  await requirePermission("team.view");
   const session = await requireSession();
   if (search) {
     return prisma.employee.findMany({
@@ -57,21 +66,7 @@ export async function getTeamMembers(search?: string) {
           { role: { contains: search, mode: "insensitive" } },
         ],
       },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        email: true,
-        role: true,
-        specialties: true,
-        avatarUrl: true,
-        status: true,
-        services: {
-          select: {
-            service: { select: { id: true, name: true } },
-          },
-        },
-      },
+      select: teamMemberSelect,
       orderBy: { name: "asc" },
     });
   }
@@ -79,6 +74,7 @@ export async function getTeamMembers(search?: string) {
 }
 
 export async function getTeamMember(id: string) {
+  await requirePermission("team.view");
   const session = await requireSession();
   return prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
@@ -89,7 +85,7 @@ export async function getTeamMember(id: string) {
 }
 
 export async function createTeamMember(formData: FormData) {
-  const session = await requireSession();
+  const session = await requirePermission("team.create");
   const serviceIds = formData.getAll("serviceIds") as string[];
 
   const raw = {
@@ -124,14 +120,15 @@ export async function createTeamMember(formData: FormData) {
           }
         : undefined,
     },
+    select: teamMemberSelect,
   });
 
   revalidateTeam(session.user.salonId);
-  return { success: true, id: member.id, member };
+  return { success: true as const, id: member.id, member };
 }
 
 export async function updateTeamMember(id: string, formData: FormData) {
-  const session = await requireSession();
+  const session = await requirePermission("team.update");
   const serviceIds = formData.getAll("serviceIds") as string[];
 
   const raw = {
@@ -149,10 +146,10 @@ export async function updateTeamMember(id: string, formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const member = await prisma.employee.findFirst({
+  const existing = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
   });
-  if (!member) return { error: "Team member not found" };
+  if (!existing) return { error: "Team member not found" };
 
   await prisma.$transaction([
     prisma.employeeService.deleteMany({ where: { employeeId: id } }),
@@ -176,8 +173,14 @@ export async function updateTeamMember(id: string, formData: FormData) {
     }),
   ]);
 
+  const member = await prisma.employee.findFirst({
+    where: { id, salonId: session.user.salonId },
+    select: teamMemberSelect,
+  });
+
   revalidateTeam(session.user.salonId);
-  return { success: true };
+  revalidatePath(`/team/members/${id}`);
+  return { success: true as const, member };
 }
 
 export async function updateTeamMemberProfile(id: string, formData: FormData) {
@@ -328,7 +331,7 @@ export async function removeEmployeeDocument(
 }
 
 export async function deactivateTeamMember(id: string) {
-  const session = await requireSession();
+  const session = await requirePermission("team.delete");
   const member = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
   });
@@ -340,5 +343,36 @@ export async function deactivateTeamMember(id: string) {
   });
 
   revalidateTeam(session.user.salonId);
-  return { success: true };
+  revalidatePath(`/team/members/${id}`);
+  return { success: true as const };
+}
+
+export async function reactivateTeamMember(id: string) {
+  const session = await requirePermission("team.update");
+  const member = await prisma.employee.findFirst({
+    where: { id, salonId: session.user.salonId },
+  });
+  if (!member) return { error: "Team member not found" };
+
+  await prisma.employee.update({
+    where: { id },
+    data: { status: "active" },
+  });
+
+  revalidateTeam(session.user.salonId);
+  revalidatePath(`/team/members/${id}`);
+  return { success: true as const };
+}
+
+export async function deleteTeamMember(id: string) {
+  const session = await requirePermission("team.delete");
+  const member = await prisma.employee.findFirst({
+    where: { id, salonId: session.user.salonId },
+  });
+  if (!member) return { error: "Team member not found" };
+
+  await prisma.employee.delete({ where: { id } });
+
+  revalidateTeam(session.user.salonId);
+  return { success: true as const };
 }
