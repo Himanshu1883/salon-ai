@@ -294,6 +294,18 @@ export async function onboardingSignupAction(data: unknown) {
     console.error("[signup] trial subscription setup failed:", error);
   }
 
+  const owner = await prisma.user.findFirst({
+    where: { salonId: salon.id, role: "owner" },
+    select: { id: true },
+  });
+
+  if (owner) {
+    const { assignUserSalonRoleFromLegacy, ensureSalonSystemRoles } =
+      await import("@/lib/permissions/seed");
+    await ensureSalonSystemRoles(prisma, salon.id);
+    await assignUserSalonRoleFromLegacy(prisma, owner.id, salon.id, "owner");
+  }
+
   return {
     success: true,
     salonId: salon.id,

@@ -11,6 +11,7 @@ import {
   Sparkles,
   LogOut,
   HeadphonesIcon,
+  Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -29,6 +30,8 @@ import {
   type NavItem,
   type SalonPlan,
 } from "@/lib/plans";
+import { canViewModule } from "@/lib/permissions/nav";
+import type { PermissionKey } from "@/lib/permissions/catalog";
 
 type NavLink = NavItem;
 
@@ -234,6 +237,8 @@ export function Sidebar({
   accessBlocked = false,
   collapsed = false,
   plan = "ENTERPRISE",
+  permissionKeys = [],
+  isOwner = false,
   onNavigate,
   onToggleCollapse,
 }: {
@@ -245,18 +250,29 @@ export function Sidebar({
   accessBlocked?: boolean;
   collapsed?: boolean;
   plan?: SalonPlan;
+  permissionKeys?: PermissionKey[];
+  isOwner?: boolean;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const salonInitial = salonName.charAt(0).toUpperCase() || "S";
+  const permissionSet = new Set(permissionKeys);
 
+  const planNavItems = getSidebarItems(plan);
   const visibleNavItems: NavLink[] = accessBlocked
     ? [
         { href: "/invoice-due", label: "Invoice due", icon: CreditCard, module: "billing" },
         { href: "/support", label: "Customer Support", icon: HeadphonesIcon, module: "settings" },
       ]
-    : getSidebarItems(plan);
+    : planNavItems.filter((item) =>
+        canViewModule(permissionSet, item.module, isOwner)
+      );
+
+  const canManageRoles =
+    isOwner ||
+    permissionSet.has("roles.view") ||
+    permissionSet.has("permissions.manage");
 
   return (
     <aside
@@ -313,7 +329,34 @@ export function Sidebar({
             onNavigate={onNavigate}
           />
         ))}
-        {!accessBlocked && (
+        {canManageRoles && !accessBlocked && (
+          <>
+            <NavLinkItem
+              item={{
+                href: "/team/access",
+                label: "Team Access",
+                icon: Shield,
+                module: "staff",
+              }}
+              pathname={pathname}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+            />
+            <NavLinkItem
+              item={{
+                href: "/team/roles",
+                label: "Roles & Permissions",
+                icon: Shield,
+                module: "staff",
+              }}
+              pathname={pathname}
+              collapsed={collapsed}
+              onNavigate={onNavigate}
+            />
+          </>
+        )}
+        {!accessBlocked &&
+          (isOwner || permissionSet.has("support.view")) && (
           <NavLinkItem
             item={{
               href: "/support",

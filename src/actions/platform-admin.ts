@@ -18,6 +18,7 @@ import {
   generateTemporaryPasswordServer,
   logPlatformAdminAction,
 } from "@/lib/platform-admin-access";
+import { ownerUserSelect } from "@/lib/user-select";
 
 export type SalonStatusFilter =
   | "all"
@@ -124,6 +125,7 @@ export async function getAllSalons(options?: {
         users: {
           where: { role: "owner" },
           take: 1,
+          select: ownerUserSelect,
         },
         _count: {
           select: { employees: true, seats: true },
@@ -169,7 +171,7 @@ export async function getSalonDetail(salonId: string) {
     include: {
       subscription: true,
       platformInvoices: { orderBy: { dueDate: "desc" } },
-      users: { where: { role: "owner" }, take: 1 },
+      users: { where: { role: "owner" }, take: 1, select: ownerUserSelect },
       _count: {
         select: {
           employees: true,

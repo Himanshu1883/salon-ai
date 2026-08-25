@@ -19,6 +19,8 @@ type DashboardShellProps = {
   showSettings?: boolean;
   accessBlocked?: boolean;
   plan?: import("@/lib/plans").SalonPlan;
+  permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
+  isOwner?: boolean;
   children: React.ReactNode;
 };
 
@@ -30,6 +32,8 @@ function DashboardShellInner({
   showSettings = false,
   accessBlocked = false,
   plan = "ENTERPRISE",
+  permissionKeys = [],
+  isOwner = false,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -105,6 +109,8 @@ function DashboardShellInner({
           accessBlocked={accessBlocked}
           collapsed={collapsed}
           plan={plan}
+          permissionKeys={permissionKeys}
+          isOwner={isOwner}
           onNavigate={() => setMobileOpen(false)}
           onToggleCollapse={() => setCollapsed((c) => !c)}
         />

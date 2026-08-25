@@ -112,6 +112,7 @@ model Salon {
   hairstyles            Hairstyle[]
   hairColors            HairColor[]
   hairConsultationSettings HairConsultationSettings?
+  salonRoles           SalonRole[]
 }
 
 enum SupportMessageSender {
@@ -256,9 +257,71 @@ model User {
   isActive      Boolean       @default(true)
   salonId       String?
   salon         Salon?        @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  salonRoleId   String?
+  salonRole     SalonRole?    @relation(fields: [salonRoleId], references: [id], onDelete: SetNull)
   passwordResetTokens PasswordResetToken[]
+  permissionOverrides UserPermissionOverride[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
+
+  @@index([salonId])
+  @@index([salonRoleId])
+}
+
+/// Global permission catalog (same keys for every salon).
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  name        String
+  description String?
+  module      String
+  action      String
+  createdAt   DateTime @default(now())
+
+  rolePermissions SalonRolePermission[]
+  userOverrides   UserPermissionOverride[]
+}
+
+/// Tenant-scoped role (system or custom).
+model SalonRole {
+  id             String   @id @default(cuid())
+  salonId        String
+  salon          Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  key            String
+  name           String
+  description    String?
+  hierarchyLevel Int
+  isSystemRole   Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  permissions SalonRolePermission[]
+  users       User[]
+
+  @@unique([salonId, key])
+  @@index([salonId])
+}
+
+model SalonRolePermission {
+  roleId       String
+  permissionId String
+  role         SalonRole  @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@index([permissionId])
+}
+
+/// Per-user grant/deny override (deny wins over role defaults).
+model UserPermissionOverride {
+  userId       String
+  permissionId String
+  granted      Boolean
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([userId, permissionId])
+  @@index([permissionId])
 }
 
 model PasswordResetToken {

@@ -20,6 +20,7 @@
     "postinstall": "prisma generate",
     "db:reset-demo-passwords": "npx tsx scripts/reset-demo-passwords.ts",
     "db:backfill-slugs": "npx tsx scripts/backfill-salon-slugs.ts",
+    "db:backfill-roles": "npx tsx scripts/backfill-roles.ts",
     "db:sync-subscription-plans": "npx tsx scripts/sync-subscription-plans.ts"
   },
   "prisma": {

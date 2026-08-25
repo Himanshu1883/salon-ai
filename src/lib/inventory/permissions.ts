@@ -1,15 +1,30 @@
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import {
+  getResolvedPermissions,
+  hasResolvedPermission,
+} from "@/lib/permissions/resolve";
 
 export async function getInventoryAccess() {
   const session = await requireSession();
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-  const role = user?.role ?? "staff";
-  const canWrite = role === "owner" || role === "manager" || role === "admin";
-  return { session, role, canWrite, canRead: true };
+  const resolved = await getResolvedPermissions(
+    session.user.id,
+    session.user.salonId!
+  );
+
+  const canRead =
+    resolved.isOwner || hasResolvedPermission(resolved, "inventory.view");
+  const canWrite =
+    resolved.isOwner ||
+    hasResolvedPermission(resolved, "inventory.create") ||
+    hasResolvedPermission(resolved, "inventory.update") ||
+    hasResolvedPermission(resolved, "inventory.adjust");
+
+  return {
+    session,
+    role: session.user.role ?? "staff",
+    canWrite,
+    canRead,
+  };
 }
 
 export async function requireInventoryWrite() {

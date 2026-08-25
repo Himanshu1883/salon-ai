@@ -15,6 +15,7 @@ import {
   type SalonPlan,
 } from "../src/lib/plans";
 import { calculatePlatformInvoiceGst } from "../src/lib/platform-billing";
+import { backfillAllSalonRoles } from "../src/lib/permissions/seed";
 
 function getSubscriptionAmountForPlan(plan: SalonPlan) {
   return getPlanMonthlyAmount(plan);
@@ -1058,6 +1059,8 @@ async function main() {
     salon.id,
     employees.map((e) => e.id)
   );
+  await backfillAllSalonRoles(prisma);
+  console.log("RBAC roles and permissions backfilled for all salons.");
 }
 
 main()
