@@ -56,6 +56,7 @@ export async function createServiceCategory(formData: FormData) {
     const raw = {
       name: formData.get("name") as string,
       sortOrder: (formData.get("sortOrder") as string) || undefined,
+      categoryGroup: (formData.get("categoryGroup") as string) || "SERVICES",
     };
 
     const parsed = serviceCategorySchema.safeParse(raw);
@@ -74,8 +75,9 @@ export async function createServiceCategory(formData: FormData) {
         salonId: session.user.salonId,
         name: parsed.data.name,
         sortOrder,
+        categoryGroup: parsed.data.categoryGroup,
       },
-      select: { id: true, name: true, sortOrder: true },
+      select: { id: true, name: true, sortOrder: true, categoryGroup: true },
     });
 
     revalidateCatalog(session.user.salonId);
@@ -91,6 +93,7 @@ export async function updateServiceCategory(id: string, formData: FormData) {
     const raw = {
       name: formData.get("name") as string,
       sortOrder: (formData.get("sortOrder") as string) || undefined,
+      categoryGroup: (formData.get("categoryGroup") as string) || undefined,
     };
 
     const parsed = serviceCategorySchema.safeParse(raw);
@@ -110,8 +113,11 @@ export async function updateServiceCategory(id: string, formData: FormData) {
         ...(parsed.data.sortOrder !== undefined
           ? { sortOrder: parsed.data.sortOrder }
           : {}),
+        ...(parsed.data.categoryGroup !== undefined
+          ? { categoryGroup: parsed.data.categoryGroup }
+          : {}),
       },
-      select: { id: true, name: true, sortOrder: true },
+      select: { id: true, name: true, sortOrder: true, categoryGroup: true },
     });
 
     revalidateCatalog(session.user.salonId);

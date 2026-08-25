@@ -484,43 +484,117 @@ model Seat {
   @@unique([salonId, number])
 }
 
+enum ServiceCatalogType {
+  SERVICE
+  PACKAGE
+  ADD_ON
+}
+
+enum ServiceAudience {
+  MEN
+  WOMEN
+  UNISEX
+  KIDS
+}
+
+enum ServiceStatus {
+  ACTIVE
+  INACTIVE
+  ARCHIVED
+}
+
+enum PackagePricingStrategy {
+  STANDARD_TOTAL
+  CUSTOM_PRICE
+  PERCENTAGE_DISCOUNT
+  FIXED_DISCOUNT
+}
+
+enum ServiceCategoryGroup {
+  SERVICES
+  PACKAGES
+  ADDONS
+}
+
 model ServiceCategory {
-  id        String   @id @default(cuid())
-  salonId   String
-  salon     Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  name      String
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String               @id @default(cuid())
+  salonId       String
+  salon         Salon                @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name          String
+  sortOrder     Int                  @default(0)
+  categoryGroup ServiceCategoryGroup @default(SERVICES)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
 
   services Service[]
 
-  @@index([salonId, sortOrder])
+  @@index([salonId, categoryGroup, sortOrder])
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  salonId     String
-  salon       Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  name        String
-  description String?
-  duration    Int
-  price       Float
-  categoryId  String?
-  category    ServiceCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  sortOrder   Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String                  @id @default(cuid())
+  salonId         String
+  salon           Salon                   @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  duration        Int
+  price           Float
+  categoryId      String?
+  category        ServiceCategory?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  sortOrder       Int                     @default(0)
+  catalogType     ServiceCatalogType      @default(SERVICE)
+  audience        ServiceAudience         @default(UNISEX)
+  status          ServiceStatus           @default(ACTIVE)
+  onlineBooking   Boolean                 @default(true)
+  inStoreBooking  Boolean                 @default(true)
+  pricingStrategy PackagePricingStrategy?
+  discountPercent Float?
+  discountAmount  Float?
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
 
-  employees     EmployeeService[]
-  queueServices QueueService[]
-  appointments  Appointment[]
-  invoiceLineItems InvoiceLineItem[]
-  serviceRecipes ServiceRecipe[]
-  hairConsultations HairConsultation[]
-  hairstyles        Hairstyle[]
+  employees            EmployeeService[]
+  queueServices        QueueService[]
+  appointments         Appointment[]
+  invoiceLineItems     InvoiceLineItem[]
+  serviceRecipes       ServiceRecipe[]
+  hairConsultations    HairConsultation[]
+  hairstyles           Hairstyle[]
+  packageItems         ServicePackageItem[] @relation("PackageItems")
+  includedInPackages   ServicePackageItem[] @relation("IncludedServices")
+  parentAddOnLinks     ServiceAddOnLink[]   @relation("ParentService")
+  addOnParentLinks     ServiceAddOnLink[]   @relation("AddOnService")
 
   @@index([salonId, categoryId, sortOrder])
+  @@index([salonId, catalogType, status])
+  @@index([salonId, audience])
+}
+
+model ServicePackageItem {
+  id                String  @id @default(cuid())
+  packageId         String
+  package           Service @relation("PackageItems", fields: [packageId], references: [id], onDelete: Cascade)
+  includedServiceId String
+  includedService   Service @relation("IncludedServices", fields: [includedServiceId], references: [id], onDelete: Restrict)
+  sortOrder         Int     @default(0)
+  quantity          Int     @default(1)
+
+  @@unique([packageId, includedServiceId])
+  @@index([packageId])
+  @@index([includedServiceId])
+}
+
+model ServiceAddOnLink {
+  id              String  @id @default(cuid())
+  parentServiceId String
+  parentService   Service @relation("ParentService", fields: [parentServiceId], references: [id], onDelete: Cascade)
+  addOnServiceId  String
+  addOnService    Service @relation("AddOnService", fields: [addOnServiceId], references: [id], onDelete: Cascade)
+  sortOrder       Int     @default(0)
+
+  @@unique([parentServiceId, addOnServiceId])
+  @@index([parentServiceId])
+  @@index([addOnServiceId])
 }
 
 model Supplier {

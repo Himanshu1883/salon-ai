@@ -192,6 +192,10 @@ export const employeeProfileSchema = z.object({
 export const serviceCategorySchema = z.object({
   name: z.string().min(2, "Category name is required"),
   sortOrder: z.coerce.number().min(0).optional(),
+  categoryGroup: z
+    .enum(["SERVICES", "PACKAGES", "ADDONS"])
+    .optional()
+    .default("SERVICES"),
 });
 
 export const bulkCreateCategoriesSchema = z.object({
@@ -221,6 +225,53 @@ export const serviceSchema = z.object({
   price: z.coerce.number().min(0, "Price must be positive"),
   categoryId: z.string().min(1, "Category is required"),
   employeeIds: z.array(z.string()).optional(),
+  audience: z.enum(["MEN", "WOMEN", "UNISEX", "KIDS"]).optional().default("UNISEX"),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional().default("ACTIVE"),
+  onlineBooking: z.coerce.boolean().optional().default(true),
+  inStoreBooking: z.coerce.boolean().optional().default(true),
+  addOnServiceIds: z.array(z.string()).optional(),
+});
+
+export const packageSchema = z.object({
+  name: z.string().min(2, "Package name is required"),
+  description: z.string().optional(),
+  categoryId: z.string().min(1, "Category is required"),
+  audience: z.enum(["MEN", "WOMEN", "UNISEX", "KIDS"]).optional().default("UNISEX"),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional().default("ACTIVE"),
+  onlineBooking: z.coerce.boolean().optional().default(true),
+  inStoreBooking: z.coerce.boolean().optional().default(true),
+  includedServiceIds: z
+    .array(z.string())
+    .min(1, "Select at least one service for the package"),
+  pricingStrategy: z.enum([
+    "STANDARD_TOTAL",
+    "CUSTOM_PRICE",
+    "PERCENTAGE_DISCOUNT",
+    "FIXED_DISCOUNT",
+  ]),
+  customPrice: z.coerce.number().min(0).optional(),
+  discountPercent: z.coerce.number().min(0).max(100).optional(),
+  discountAmount: z.coerce.number().min(0).optional(),
+  employeeIds: z.array(z.string()).optional(),
+});
+
+export const addOnSchema = z.object({
+  name: z.string().min(2, "Add-on name is required"),
+  description: z.string().optional(),
+  duration: z.coerce.number().min(5, "Minimum 5 minutes"),
+  price: z.coerce.number().min(0, "Price must be positive"),
+  categoryId: z.string().min(1, "Category is required"),
+  audience: z.enum(["MEN", "WOMEN", "UNISEX", "KIDS"]).optional().default("UNISEX"),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional().default("ACTIVE"),
+  onlineBooking: z.coerce.boolean().optional().default(true),
+  inStoreBooking: z.coerce.boolean().optional().default(true),
+  parentServiceIds: z.array(z.string()).optional(),
+  employeeIds: z.array(z.string()).optional(),
+});
+
+export const bulkUpdateCatalogStatusSchema = z.object({
+  ids: z.array(z.string()).min(1),
+  status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]),
 });
 
 export const supplierSchema = z.object({

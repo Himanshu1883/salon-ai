@@ -68,6 +68,8 @@ const RECEPTIONIST_PERMISSIONS: PermissionKey[] = [
   "sales.view",
   "sales.create",
   "services.view",
+  "packages.view",
+  "addons.view",
   "memberships.view",
   "support.view",
   "attendance.view",
@@ -79,6 +81,8 @@ const EMPLOYEE_PERMISSIONS: PermissionKey[] = [
   "queue.view",
   "customers.view",
   "services.view",
+  "packages.view",
+  "addons.view",
   "attendance.view",
 ];
 

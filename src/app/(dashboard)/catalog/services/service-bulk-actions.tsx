@@ -31,6 +31,11 @@ import {
 } from "@/components/ui/select";
 import { invoiceModalStyles } from "@/components/billing/invoice-modal/styles";
 import { cn } from "@/lib/utils";
+import type { CatalogServiceItem } from "./catalog-types";
+import {
+  CatalogDialogContent,
+  catalogFormFooterClassName,
+} from "./catalog-dialog";
 import {
   FolderPlus,
   Layers,
@@ -44,17 +49,6 @@ const dialogClassName =
   "rounded-2xl border-dashboard-border bg-dashboard-card sm:max-w-lg";
 
 type CategoryOption = { id: string; name: string };
-
-type ServiceItem = {
-  id: string;
-  name: string;
-  description: string | null;
-  duration: number;
-  price: number;
-  categoryId: string | null;
-  sortOrder: number;
-  employees: { employee: { id: string; name: string } }[];
-};
 
 type CategorySummary = { id: string; name: string; sortOrder: number };
 
@@ -78,7 +72,7 @@ type CategoryGroup = {
   id: string;
   name: string;
   sortOrder: number;
-  services: ServiceItem[];
+  services: CatalogServiceItem[];
 };
 
 export function BulkActionBar({
@@ -519,7 +513,7 @@ export function BulkAddServicesDialog({
   onOpenChange: (open: boolean) => void;
   categories: CategoryOption[];
   defaultCategoryId?: string;
-  onSuccess: (services: ServiceItem[]) => void;
+  onSuccess: (services: CatalogServiceItem[]) => void;
 }) {
   const [categoryId, setCategoryId] = useState(
     defaultCategoryId ?? categories[0]?.id ?? ""
@@ -603,7 +597,7 @@ export function BulkAddServicesDialog({
     }
 
     if ("services" in result && result.services) {
-      onSuccess(result.services as ServiceItem[]);
+      onSuccess(result.services as CatalogServiceItem[]);
       setRows([emptyServiceRow(), emptyServiceRow(), emptyServiceRow()]);
       onOpenChange(false);
     }
@@ -623,16 +617,11 @@ export function BulkAddServicesDialog({
         onOpenChange(next);
       }}
     >
-      <DialogContent className={cn(dialogClassName, "sm:max-w-2xl")}>
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-dashboard-text">
-            <ListPlus className="h-5 w-5 text-dashboard-primary" />
-            Add multiple services
-          </DialogTitle>
-          <DialogDescription className="text-dashboard-muted">
-            Add rows below, or paste lines in the format: name, duration, price.
-          </DialogDescription>
-        </DialogHeader>
+      <CatalogDialogContent
+        wide
+        title="Add multiple services"
+        description="Add rows below, or paste lines in the format: name, duration, price."
+      >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label className={invoiceModalStyles.label}>Category</Label>
@@ -751,17 +740,19 @@ export function BulkAddServicesDialog({
             </p>
           )}
           {error && <p className="text-sm text-dashboard-danger">{error}</p>}
-          <Button
-            type="submit"
-            disabled={loading || validRows.length === 0 || !categoryId}
-            className={cn("w-full", invoiceModalStyles.primaryButton)}
-          >
-            {loading
-              ? "Creating…"
-              : `Create ${validRows.length} service${validRows.length === 1 ? "" : "s"}`}
-          </Button>
+          <div className={catalogFormFooterClassName}>
+            <Button
+              type="submit"
+              disabled={loading || validRows.length === 0 || !categoryId}
+              className={cn("w-full", invoiceModalStyles.primaryButton)}
+            >
+              {loading
+                ? "Creating…"
+                : `Create ${validRows.length} service${validRows.length === 1 ? "" : "s"}`}
+            </Button>
+          </div>
         </form>
-      </DialogContent>
+      </CatalogDialogContent>
     </Dialog>
   );
 }

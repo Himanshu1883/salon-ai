@@ -1,10 +1,9 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
-  createService,
-  updateService,
   deleteService,
   duplicateService,
   reorderServices,
@@ -24,6 +23,17 @@ import {
   runBulkDeleteServices,
   type CategoryBulkDeleteHandling,
 } from "./service-bulk-actions";
+import { ServiceForm, PackageForm, AddOnForm } from "./catalog-forms";
+import { CatalogDialogContent, catalogFormFooterClassName } from "./catalog-dialog";
+import type { CatalogServiceItem, CatalogTab, CategoryGroup } from "./catalog-types";
+import {
+  AUDIENCE_LABELS,
+  CATALOG_TYPE_LABELS,
+  CATEGORY_GROUP_LABELS,
+  STATUS_LABELS,
+  SERVICE_AUDIENCES,
+  SERVICE_STATUSES,
+} from "@/lib/catalog/constants";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -32,9 +42,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -76,193 +83,57 @@ import {
   FolderOpen,
   ArrowUpDown,
   CheckSquare,
+  Package,
+  Sparkles,
 } from "lucide-react";
 import { invoiceModalStyles } from "@/components/billing/invoice-modal/styles";
 import { formatCurrency, formatDuration, cn } from "@/lib/utils";
 
 type Employee = { id: string; name: string };
 
-type ServiceItem = {
-  id: string;
-  name: string;
-  description: string | null;
-  duration: number;
-  price: number;
-  categoryId: string | null;
-  sortOrder: number;
-  employees: { employee: { id: string; name: string } }[];
-};
+const CATALOG_TABS: { id: CatalogTab; label: string }[] = [
+  { id: "ALL", label: "All" },
+  { id: "SERVICE", label: "Services" },
+  { id: "PACKAGE", label: "Packages" },
+  { id: "ADD_ON", label: "Add-ons" },
+];
 
-type CategoryGroup = {
-  id: string;
-  name: string;
-  sortOrder: number;
-  services: ServiceItem[];
-};
-
-const dialogClassName =
-  "rounded-2xl border-dashboard-border bg-dashboard-card sm:max-w-lg";
-
-function ServiceForm({
-  service,
-  categories,
-  employees,
-  defaultCategoryId,
-  onSuccess,
-}: {
-  service?: ServiceItem;
-  categories: { id: string; name: string }[];
-  employees: Employee[];
-  defaultCategoryId?: string;
-  onSuccess: (service?: ServiceItem) => void;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [categoryId, setCategoryId] = useState(
-    service?.categoryId ?? defaultCategoryId ?? categories[0]?.id ?? ""
-  );
-  const [selectedEmployees, setSelectedEmployees] = useState<string[]>(
-    service?.employees.map((e) => e.employee.id) ?? []
-  );
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    const formData = new FormData(e.currentTarget);
-    formData.set("categoryId", categoryId);
-    selectedEmployees.forEach((id) => formData.append("employeeIds", id));
-
-    const result = service
-      ? await updateService(service.id, formData)
-      : await createService(formData);
-
-    setLoading(false);
-    if (result.error) {
-      setError(result.error);
-      return;
-    }
-    if ("service" in result && result.service) {
-      onSuccess(result.service as ServiceItem);
-    } else {
-      onSuccess();
-    }
+function matchesCatalogFilters(
+  item: CatalogServiceItem,
+  opts: {
+    q: string;
+    catalogTab: CatalogTab;
+    audience: string | null;
+    status: string | null;
+    staffId: string | null;
+    minPrice: number | null;
+    maxPrice: number | null;
+    minDuration: number | null;
+    maxDuration: number | null;
   }
+) {
+  const haystack = [
+    item.name,
+    item.description ?? "",
+    item.categoryName ?? "",
+    AUDIENCE_LABELS[item.audience as keyof typeof AUDIENCE_LABELS] ?? item.audience,
+  ]
+    .join(" ")
+    .toLowerCase();
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="name" className={invoiceModalStyles.label}>
-            Service name
-          </Label>
-          <Input
-            id="name"
-            name="name"
-            required
-            defaultValue={service?.name}
-            className={invoiceModalStyles.input}
-          />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="description" className={invoiceModalStyles.label}>
-            Description
-          </Label>
-          <Textarea
-            id="description"
-            name="description"
-            defaultValue={service?.description ?? ""}
-            className={invoiceModalStyles.textarea}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="duration" className={invoiceModalStyles.label}>
-            Duration (minutes)
-          </Label>
-          <Input
-            id="duration"
-            name="duration"
-            type="number"
-            min={5}
-            required
-            defaultValue={service?.duration ?? 30}
-            className={invoiceModalStyles.input}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="price" className={invoiceModalStyles.label}>
-            Price (₹)
-          </Label>
-          <Input
-            id="price"
-            name="price"
-            type="number"
-            min={0}
-            step="0.01"
-            required
-            defaultValue={service?.price ?? 0}
-            className={invoiceModalStyles.input}
-          />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label className={invoiceModalStyles.label}>Category</Label>
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger className={invoiceModalStyles.selectTrigger}>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {employees.length > 0 && (
-        <div className="space-y-2">
-          <Label className={invoiceModalStyles.label}>
-            Assigned employees (optional)
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {employees.map((emp) => (
-              <button
-                key={emp.id}
-                type="button"
-                onClick={() =>
-                  setSelectedEmployees((prev) =>
-                    prev.includes(emp.id)
-                      ? prev.filter((id) => id !== emp.id)
-                      : [...prev, emp.id]
-                  )
-                }
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  selectedEmployees.includes(emp.id)
-                    ? "border-violet-300 bg-violet-50 text-violet-700"
-                    : "border-dashboard-border bg-white text-dashboard-muted hover:border-violet-200 hover:bg-violet-50/50"
-                )}
-              >
-                {emp.name}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {error && <p className="text-sm text-dashboard-danger">{error}</p>}
-      <Button
-        type="submit"
-        disabled={loading}
-        className={cn("w-full", invoiceModalStyles.primaryButton)}
-      >
-        {loading ? "Saving..." : service ? "Update service" : "Add service"}
-      </Button>
-    </form>
-  );
+  if (opts.q && !haystack.includes(opts.q)) return false;
+  if (opts.catalogTab !== "ALL" && item.catalogType !== opts.catalogTab) return false;
+  if (opts.audience && item.audience !== opts.audience) return false;
+  if (opts.status && item.status !== opts.status) return false;
+  if (opts.staffId) {
+    const ids = item.employees.map((e) => e.employee.id);
+    if (!ids.includes(opts.staffId)) return false;
+  }
+  if (opts.minPrice != null && item.price < opts.minPrice) return false;
+  if (opts.maxPrice != null && item.price > opts.maxPrice) return false;
+  if (opts.minDuration != null && item.duration < opts.minDuration) return false;
+  if (opts.maxDuration != null && item.duration > opts.maxDuration) return false;
+  return true;
 }
 
 type CategorySummary = { id: string; name: string; sortOrder: number };
@@ -337,13 +208,15 @@ function CategoryForm({
         />
       </div>
       {error && <p className="text-sm text-dashboard-danger">{error}</p>}
-      <Button
-        type="submit"
-        disabled={loading}
-        className={cn("w-full", invoiceModalStyles.primaryButton)}
-      >
-        {loading ? "Saving..." : category ? "Update category" : "Add category"}
-      </Button>
+      <div className={catalogFormFooterClassName}>
+        <Button
+          type="submit"
+          disabled={loading}
+          className={cn("w-full", invoiceModalStyles.primaryButton)}
+        >
+          {loading ? "Saving..." : category ? "Update category" : "Add category"}
+        </Button>
+      </div>
     </form>
   );
 }
@@ -358,7 +231,7 @@ function ServiceReorderCard({
   onDelete,
   onDuplicate,
 }: {
-  service: ServiceItem;
+  service: CatalogServiceItem;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onMoveUp: () => void;
@@ -486,8 +359,8 @@ function ServicesTable({
   onToggleSelect,
   onToggleSelectAll,
 }: {
-  services: ServiceItem[];
-  onEdit: (service: ServiceItem) => void;
+  services: CatalogServiceItem[];
+  onEdit: (service: CatalogServiceItem) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   bulkMode?: boolean;
@@ -523,7 +396,16 @@ function ServicesTable({
               </TableHead>
             )}
             <TableHead className="text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
-              Service
+              Type
+            </TableHead>
+            <TableHead className="text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
+              Name
+            </TableHead>
+            <TableHead className="hidden text-xs font-semibold uppercase tracking-wide text-dashboard-muted md:table-cell">
+              Category
+            </TableHead>
+            <TableHead className="hidden text-xs font-semibold uppercase tracking-wide text-dashboard-muted sm:table-cell">
+              Audience
             </TableHead>
             <TableHead className="text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
               Duration
@@ -531,8 +413,11 @@ function ServicesTable({
             <TableHead className="text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
               Price
             </TableHead>
-            <TableHead className="hidden text-xs font-semibold uppercase tracking-wide text-dashboard-muted sm:table-cell">
+            <TableHead className="hidden text-xs font-semibold uppercase tracking-wide text-dashboard-muted lg:table-cell">
               Staff
+            </TableHead>
+            <TableHead className="hidden text-xs font-semibold uppercase tracking-wide text-dashboard-muted md:table-cell">
+              Status
             </TableHead>
             <TableHead className="w-12 text-right text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
               Actions
@@ -560,6 +445,11 @@ function ServicesTable({
                 </TableCell>
               )}
               <TableCell>
+                <Badge variant="secondary" className="rounded-lg bg-violet-50 text-xs text-violet-700">
+                  {CATALOG_TYPE_LABELS[service.catalogType as keyof typeof CATALOG_TYPE_LABELS] ?? service.catalogType}
+                </Badge>
+              </TableCell>
+              <TableCell>
                 <div className="min-w-0">
                   <p className="font-medium text-dashboard-text">
                     {service.name}
@@ -569,7 +459,25 @@ function ServicesTable({
                       {service.description}
                     </p>
                   )}
+                  {service.catalogType === "PACKAGE" && service.packageItems.length > 0 && (
+                    <p className="mt-0.5 text-xs text-dashboard-muted">
+                      {service.packageItems.length} services
+                      {service.savings != null && service.savings > 0
+                        ? ` · Save ${formatCurrency(service.savings)}`
+                        : ""}
+                    </p>
+                  )}
                 </div>
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                <span className="text-sm text-dashboard-muted">
+                  {service.categoryName ?? "—"}
+                </span>
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
+                <Badge variant="secondary" className="rounded-lg bg-dashboard-bg text-xs">
+                  {AUDIENCE_LABELS[service.audience as keyof typeof AUDIENCE_LABELS] ?? service.audience}
+                </Badge>
               </TableCell>
               <TableCell>
                 <span className="inline-flex items-center gap-1.5 text-sm text-dashboard-muted">
@@ -580,7 +488,7 @@ function ServicesTable({
               <TableCell className="font-semibold tabular-nums text-dashboard-text">
                 {formatCurrency(service.price)}
               </TableCell>
-              <TableCell className="hidden sm:table-cell">
+              <TableCell className="hidden lg:table-cell">
                 {service.employees.length > 0 ? (
                   <div className="flex flex-wrap gap-1">
                     {service.employees.slice(0, 2).map(({ employee }) => (
@@ -604,6 +512,19 @@ function ServicesTable({
                 ) : (
                   <span className="text-xs text-dashboard-muted">Any staff</span>
                 )}
+              </TableCell>
+              <TableCell className="hidden md:table-cell">
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "rounded-lg text-xs",
+                    service.status === "ACTIVE" && "bg-emerald-50 text-emerald-700",
+                    service.status === "INACTIVE" && "bg-amber-50 text-amber-700",
+                    service.status === "ARCHIVED" && "bg-stone-100 text-stone-600"
+                  )}
+                >
+                  {STATUS_LABELS[service.status as keyof typeof STATUS_LABELS] ?? service.status}
+                </Badge>
               </TableCell>
               <TableCell className="text-right">
                 {!bulkMode && (
@@ -672,17 +593,28 @@ export function ServiceMenuClient({
   employees,
 }: {
   categories: CategoryGroup[];
-  uncategorized: ServiceItem[];
+  uncategorized: CatalogServiceItem[];
   employees: Employee[];
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
+  const [catalogTab, setCatalogTab] = useState<CatalogTab>("ALL");
+  const [filterAudience, setFilterAudience] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterStaffId, setFilterStaffId] = useState<string | null>(null);
+  const [filterMinPrice, setFilterMinPrice] = useState("");
+  const [filterMaxPrice, setFilterMaxPrice] = useState("");
+  const [filterMinDuration, setFilterMinDuration] = useState("");
+  const [filterMaxDuration, setFilterMaxDuration] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
     null
   );
   const [manageOrder, setManageOrder] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [editService, setEditService] = useState<ServiceItem | null>(null);
+  const [addPackageOpen, setAddPackageOpen] = useState(false);
+  const [addAddOnOpen, setAddAddOnOpen] = useState(false);
+  const [editItem, setEditItem] = useState<CatalogServiceItem | null>(null);
   const [addCategoryOpen, setAddCategoryOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<{
     id: string;
@@ -707,44 +639,105 @@ export function ServiceMenuClient({
     setLocalCategories(initialCategories);
   }, [initialCategories]);
 
-  const totalServices = useMemo(
-    () =>
-      initialCategories.reduce((sum, c) => sum + c.services.length, 0) +
-      uncategorized.length,
-    [initialCategories, uncategorized]
+  const allCatalogItems = useMemo(
+    () => [
+      ...localCategories.flatMap((c) => c.services),
+      ...uncategorized,
+    ],
+    [localCategories, uncategorized]
   );
 
+  const typeCounts = useMemo(() => {
+    const counts = { SERVICE: 0, PACKAGE: 0, ADD_ON: 0 };
+    for (const item of allCatalogItems) {
+      if (item.catalogType in counts) {
+        counts[item.catalogType as keyof typeof counts]++;
+      }
+    }
+    return counts;
+  }, [allCatalogItems]);
+
   const avgPrice = useMemo(() => {
-    const all = [
-      ...initialCategories.flatMap((c) => c.services),
-      ...uncategorized,
-    ];
-    if (all.length === 0) return 0;
-    return all.reduce((sum, s) => sum + s.price, 0) / all.length;
-  }, [initialCategories, uncategorized]);
+    if (allCatalogItems.length === 0) return 0;
+    return allCatalogItems.reduce((sum, s) => sum + s.price, 0) / allCatalogItems.length;
+  }, [allCatalogItems]);
+
+  const bookableServices = useMemo(
+    () => allCatalogItems.filter((s) => s.catalogType === "SERVICE"),
+    [allCatalogItems]
+  );
+
+  const addOnOptions = useMemo(
+    () => allCatalogItems.filter((s) => s.catalogType === "ADD_ON" && s.status !== "ARCHIVED"),
+    [allCatalogItems]
+  );
+
+  const filterOpts = useMemo(
+    () => ({
+      q: search.trim().toLowerCase(),
+      catalogTab,
+      audience: filterAudience,
+      status: filterStatus,
+      staffId: filterStaffId,
+      minPrice: filterMinPrice ? Number(filterMinPrice) : null,
+      maxPrice: filterMaxPrice ? Number(filterMaxPrice) : null,
+      minDuration: filterMinDuration ? Number(filterMinDuration) : null,
+      maxDuration: filterMaxDuration ? Number(filterMaxDuration) : null,
+    }),
+    [
+      search,
+      catalogTab,
+      filterAudience,
+      filterStatus,
+      filterStaffId,
+      filterMinPrice,
+      filterMaxPrice,
+      filterMinDuration,
+      filterMaxDuration,
+    ]
+  );
 
   const filteredGroups = useMemo(() => {
-    const q = search.trim().toLowerCase();
     let groups = localCategories.map((cat) => ({
       ...cat,
-      services: cat.services.filter((s) =>
-        q ? s.name.toLowerCase().includes(q) : true
-      ),
+      services: cat.services.filter((s) => matchesCatalogFilters(s, filterOpts)),
     }));
 
     if (selectedCategoryId) {
       groups = groups.filter((g) => g.id === selectedCategoryId);
     }
 
-    return groups.filter((g) => g.services.length > 0 || !q);
-  }, [localCategories, search, selectedCategoryId]);
+    return groups.filter((g) => g.services.length > 0 || !filterOpts.q);
+  }, [localCategories, selectedCategoryId, filterOpts]);
+
+  const filteredUncategorized = useMemo(
+    () => uncategorized.filter((s) => matchesCatalogFilters(s, filterOpts)),
+    [uncategorized, filterOpts]
+  );
 
   const categoryCounts = useMemo(() => {
     const map = new Map<string, number>();
     for (const cat of localCategories) {
-      map.set(cat.id, cat.services.length);
+      map.set(
+        cat.id,
+        cat.services.filter((s) => matchesCatalogFilters(s, filterOpts)).length
+      );
     }
     return map;
+  }, [localCategories, filterOpts]);
+
+  const sidebarSections = useMemo(() => {
+    const groups: Record<string, CategoryGroup[]> = {
+      SERVICES: [],
+      PACKAGES: [],
+      ADDONS: [],
+    };
+    for (const cat of localCategories) {
+      const key = cat.categoryGroup ?? "SERVICES";
+      if (groups[key]) groups[key].push(cat);
+      else groups.SERVICES.push(cat);
+    }
+    return groups;
   }, [localCategories]);
 
   function toggleBulkMode() {
@@ -863,9 +856,9 @@ export function ServiceMenuClient({
     }
   }
 
-  function handleBulkServicesCreated(services: ServiceItem[]) {
+  function handleBulkServicesCreated(services: CatalogServiceItem[]) {
     setLocalCategories((prev) => {
-      const byCategory = new Map<string, ServiceItem[]>();
+      const byCategory = new Map<string, CatalogServiceItem[]>();
       for (const service of services) {
         if (!service.categoryId) continue;
         const list = byCategory.get(service.categoryId) ?? [];
@@ -889,7 +882,7 @@ export function ServiceMenuClient({
     ]);
   }
 
-  function upsertLocalService(service: ServiceItem) {
+  function upsertLocalService(service: CatalogServiceItem) {
     setLocalCategories((prev) =>
       prev.map((cat) => {
         if (cat.id !== service.categoryId) {
@@ -936,7 +929,7 @@ export function ServiceMenuClient({
 
   async function moveService(
     categoryId: string,
-    services: ServiceItem[],
+    services: CatalogServiceItem[],
     index: number,
     direction: "up" | "down"
   ) {
@@ -958,9 +951,11 @@ export function ServiceMenuClient({
     );
   }
 
-  function openEditService(service: ServiceItem) {
-    setEditService(service);
-    setAddOpen(true);
+  function openEditItem(item: CatalogServiceItem) {
+    setEditItem(item);
+    if (item.catalogType === "PACKAGE") setAddPackageOpen(true);
+    else if (item.catalogType === "ADD_ON") setAddAddOnOpen(true);
+    else setAddOpen(true);
   }
 
   return (
@@ -994,7 +989,13 @@ export function ServiceMenuClient({
                     variant="secondary"
                     className="rounded-lg bg-dashboard-bg text-dashboard-text"
                   >
-                    {totalServices} services
+                    {allCatalogItems.length} catalog items
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-lg bg-dashboard-bg text-dashboard-text">
+                    {typeCounts.SERVICE} services
+                  </Badge>
+                  <Badge variant="secondary" className="rounded-lg bg-dashboard-bg text-dashboard-text">
+                    {typeCounts.PACKAGE} packages
                   </Badge>
                 </div>
               </div>
@@ -1034,36 +1035,95 @@ export function ServiceMenuClient({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              <Dialog open={addPackageOpen} onOpenChange={setAddPackageOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => setEditItem(null)} className="rounded-xl border-dashboard-border">
+                    <Package className="h-4 w-4" />
+                    Add package
+                  </Button>
+                </DialogTrigger>
+                <CatalogDialogContent
+                  wide
+                  title={editItem?.catalogType === "PACKAGE" ? "Edit package" : "Create package"}
+                >
+                  <PackageForm
+                    pkg={editItem?.catalogType === "PACKAGE" ? editItem : undefined}
+                    categories={localCategories.map((c) => ({ id: c.id, name: c.name, categoryGroup: c.categoryGroup }))}
+                    employees={employees}
+                    bookableServices={bookableServices}
+                    defaultCategoryId={selectedCategoryId ?? undefined}
+                    onSuccess={(service) => {
+                      setAddPackageOpen(false);
+                      setEditItem(null);
+                      if (service) {
+                        upsertLocalService(service);
+                        router.refresh();
+                      }
+                    }}
+                  />
+                </CatalogDialogContent>
+              </Dialog>
+              <Dialog open={addAddOnOpen} onOpenChange={setAddAddOnOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" onClick={() => setEditItem(null)} className="rounded-xl border-dashboard-border">
+                    <Sparkles className="h-4 w-4" />
+                    Add add-on
+                  </Button>
+                </DialogTrigger>
+                <CatalogDialogContent
+                  title={editItem?.catalogType === "ADD_ON" ? "Edit add-on" : "Add add-on"}
+                >
+                  <AddOnForm
+                    addOn={editItem?.catalogType === "ADD_ON" ? editItem : undefined}
+                    categories={localCategories.map((c) => ({ id: c.id, name: c.name, categoryGroup: c.categoryGroup }))}
+                    employees={employees}
+                    parentServiceOptions={bookableServices}
+                    defaultCategoryId={selectedCategoryId ?? undefined}
+                    onSuccess={(service) => {
+                      setAddAddOnOpen(false);
+                      setEditItem(null);
+                      if (service) {
+                        upsertLocalService(service);
+                        router.refresh();
+                      }
+                    }}
+                  />
+                </CatalogDialogContent>
+              </Dialog>
               <Dialog open={addOpen} onOpenChange={setAddOpen}>
                 <DialogTrigger asChild>
                   <Button
                     size="sm"
-                    onClick={() => setEditService(null)}
+                    onClick={() => setEditItem(null)}
                     className="rounded-xl bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20 hover:opacity-90"
                   >
                     <Plus className="h-4 w-4" />
                     Add service
                   </Button>
                 </DialogTrigger>
-                <DialogContent className={dialogClassName}>
-                  <DialogHeader>
-                    <DialogTitle className="text-dashboard-text">
-                      Add service
-                    </DialogTitle>
-                  </DialogHeader>
+                <CatalogDialogContent
+                  title={editItem?.catalogType === "SERVICE" ? "Edit service" : "Add service"}
+                >
                   <ServiceForm
+                    service={editItem?.catalogType === "SERVICE" ? editItem : undefined}
                     categories={localCategories.map((c) => ({
                       id: c.id,
                       name: c.name,
+                      categoryGroup: c.categoryGroup,
                     }))}
                     employees={employees}
+                    addOnOptions={addOnOptions}
                     defaultCategoryId={selectedCategoryId ?? undefined}
                     onSuccess={(service) => {
                       setAddOpen(false);
-                      if (service) upsertLocalService(service as ServiceItem);
+                      setEditItem(null);
+                      if (service) {
+                        upsertLocalService(service);
+                        router.refresh();
+                      }
                     }}
                   />
-                </DialogContent>
+                </CatalogDialogContent>
               </Dialog>
             </div>
           </div>
@@ -1073,8 +1133,8 @@ export function ServiceMenuClient({
       {/* Stats row */}
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="Total services"
-          value={String(totalServices)}
+          label="Total catalog items"
+          value={String(allCatalogItems.length)}
           icon={<Scissors className="h-5 w-5" />}
           iconBg="bg-violet-50"
           accent="text-dashboard-primary"
@@ -1098,12 +1158,32 @@ export function ServiceMenuClient({
         />
       </div>
 
+      {/* Catalog type tabs */}
+      <div className="flex flex-wrap gap-2 rounded-[20px] border border-dashboard-border bg-dashboard-card p-2 shadow-dashboard-card">
+        {CATALOG_TABS.map((tab) => (
+          <Button
+            key={tab.id}
+            size="sm"
+            variant={catalogTab === tab.id ? "default" : "ghost"}
+            onClick={() => setCatalogTab(tab.id)}
+            className={cn(
+              "rounded-xl",
+              catalogTab === tab.id
+                ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
+                : "text-dashboard-muted hover:bg-violet-50 hover:text-dashboard-primary"
+            )}
+          >
+            {tab.label}
+          </Button>
+        ))}
+      </div>
+
       {/* Search & filters toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative min-w-[220px] flex-1 max-w-md">
           <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted" />
           <Input
-            placeholder="Search service name"
+            placeholder="Search name, category, audience..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className={cn(invoiceModalStyles.input, "h-11 pl-11")}
@@ -1179,40 +1259,59 @@ export function ServiceMenuClient({
           animate={{ opacity: 1, height: "auto" }}
           className="overflow-hidden rounded-[20px] border border-dashboard-border bg-dashboard-card p-4 shadow-dashboard-card"
         >
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
-            Filter by category
-          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">Audience</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant={filterAudience === null ? "default" : "outline"} onClick={() => setFilterAudience(null)} className="rounded-xl">All</Button>
+                {SERVICE_AUDIENCES.map((a) => (
+                  <Button key={a} size="sm" variant={filterAudience === a ? "default" : "outline"} onClick={() => setFilterAudience(a)} className="rounded-xl">{AUDIENCE_LABELS[a]}</Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">Status</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant={filterStatus === null ? "default" : "outline"} onClick={() => setFilterStatus(null)} className="rounded-xl">All</Button>
+                {SERVICE_STATUSES.map((s) => (
+                  <Button key={s} size="sm" variant={filterStatus === s ? "default" : "outline"} onClick={() => setFilterStatus(s)} className="rounded-xl">{STATUS_LABELS[s]}</Button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">Staff</p>
+              <Select value={filterStaffId ?? "all"} onValueChange={(v) => setFilterStaffId(v === "all" ? null : v)}>
+                <SelectTrigger className={invoiceModalStyles.selectTrigger}><SelectValue placeholder="All staff" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All staff</SelectItem>
+                  {employees.map((e) => (<SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <Label className="text-xs text-dashboard-muted">Min price</Label>
+                <Input value={filterMinPrice} onChange={(e) => setFilterMinPrice(e.target.value)} type="number" min={0} className={invoiceModalStyles.input} />
+              </div>
+              <div>
+                <Label className="text-xs text-dashboard-muted">Max price</Label>
+                <Input value={filterMaxPrice} onChange={(e) => setFilterMaxPrice(e.target.value)} type="number" min={0} className={invoiceModalStyles.input} />
+              </div>
+              <div>
+                <Label className="text-xs text-dashboard-muted">Min duration</Label>
+                <Input value={filterMinDuration} onChange={(e) => setFilterMinDuration(e.target.value)} type="number" min={0} className={invoiceModalStyles.input} />
+              </div>
+              <div>
+                <Label className="text-xs text-dashboard-muted">Max duration</Label>
+                <Input value={filterMaxDuration} onChange={(e) => setFilterMaxDuration(e.target.value)} type="number" min={0} className={invoiceModalStyles.input} />
+              </div>
+            </div>
+          </div>
+          <p className="mb-3 mt-4 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">Category</p>
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              variant={selectedCategoryId === null ? "default" : "outline"}
-              onClick={() => setSelectedCategoryId(null)}
-              className={cn(
-                "rounded-xl",
-                selectedCategoryId === null
-                  ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary"
-                  : "border-dashboard-border hover:border-violet-200 hover:bg-violet-50"
-              )}
-            >
-              All categories
-            </Button>
+            <Button size="sm" variant={selectedCategoryId === null ? "default" : "outline"} onClick={() => setSelectedCategoryId(null)} className="rounded-xl">All categories</Button>
             {localCategories.map((cat) => (
-              <Button
-                key={cat.id}
-                size="sm"
-                variant={
-                  selectedCategoryId === cat.id ? "default" : "outline"
-                }
-                onClick={() => setSelectedCategoryId(cat.id)}
-                className={cn(
-                  "rounded-xl",
-                  selectedCategoryId === cat.id
-                    ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary"
-                    : "border-dashboard-border hover:border-violet-200 hover:bg-violet-50"
-                )}
-              >
-                {cat.name}
-              </Button>
+              <Button key={cat.id} size="sm" variant={selectedCategoryId === cat.id ? "default" : "outline"} onClick={() => setSelectedCategoryId(cat.id)} className="rounded-xl">{cat.name}</Button>
             ))}
           </div>
         </motion.div>
@@ -1250,59 +1349,68 @@ export function ServiceMenuClient({
                       : "bg-dashboard-bg text-dashboard-muted"
                   )}
                 >
-                  {totalServices}
+                  {allCatalogItems.filter((s) => matchesCatalogFilters(s, filterOpts)).length}
                 </span>
               </button>
             </li>
-            {localCategories.map((cat) => (
-              <li key={cat.id}>
-                <div
-                  className={cn(
-                    "flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors",
-                    selectedCategoryId === cat.id && !bulkMode
-                      ? "bg-violet-50"
-                      : bulkMode && selectedCategoryIds.has(cat.id)
-                        ? "bg-violet-50/70"
-                        : ""
-                  )}
-                >
-                  {bulkMode && (
-                    <Checkbox
-                      checked={selectedCategoryIds.has(cat.id)}
-                      onChange={() => toggleCategorySelection(cat.id)}
-                      aria-label={`Select category ${cat.name}`}
-                      className="ml-1 shrink-0"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      bulkMode
-                        ? toggleCategorySelection(cat.id)
-                        : setSelectedCategoryId(cat.id)
-                    }
-                    className={cn(
-                      "flex min-w-0 flex-1 items-center justify-between rounded-lg px-1 py-1.5 text-left text-sm transition-colors",
-                      selectedCategoryId === cat.id && !bulkMode
-                        ? "font-medium text-dashboard-primary"
-                        : "text-dashboard-muted hover:bg-dashboard-bg"
-                    )}
-                  >
-                    <span className="truncate">{cat.name}</span>
-                    <span
-                      className={cn(
-                        "ml-2 shrink-0 rounded-lg px-2 py-0.5 text-xs tabular-nums",
-                        selectedCategoryId === cat.id && !bulkMode
-                          ? "bg-violet-100 text-violet-700"
-                          : "bg-dashboard-bg text-dashboard-muted"
-                      )}
-                    >
-                      {categoryCounts.get(cat.id) ?? 0}
-                    </span>
-                  </button>
-                </div>
-              </li>
-            ))}
+            {(["SERVICES", "PACKAGES", "ADDONS"] as const).map((groupKey) => {
+              const sectionCats = sidebarSections[groupKey] ?? [];
+              if (sectionCats.length === 0) return null;
+              return (
+                <li key={groupKey} className="pt-3">
+                  <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
+                    {CATEGORY_GROUP_LABELS[groupKey]}
+                  </p>
+                  <ul className="space-y-1">
+                    {sectionCats.map((cat) => (
+                      <li key={cat.id}>
+                        <div
+                          className={cn(
+                            "flex w-full items-center gap-2 rounded-xl px-2 py-1 transition-colors",
+                            selectedCategoryId === cat.id && !bulkMode
+                              ? "bg-violet-50"
+                              : bulkMode && selectedCategoryIds.has(cat.id)
+                                ? "bg-violet-50/70"
+                                : ""
+                          )}
+                        >
+                          {bulkMode && (
+                            <Checkbox
+                              checked={selectedCategoryIds.has(cat.id)}
+                              onChange={() => toggleCategorySelection(cat.id)}
+                              aria-label={`Select category ${cat.name}`}
+                              className="ml-1 shrink-0"
+                            />
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedCategoryId(cat.id)}
+                            className={cn(
+                              "flex min-w-0 flex-1 items-center justify-between rounded-lg px-2 py-2 text-left text-sm transition-colors",
+                              selectedCategoryId === cat.id
+                                ? "font-medium text-dashboard-primary"
+                                : "text-dashboard-muted hover:bg-dashboard-bg"
+                            )}
+                          >
+                            <span className="truncate">{cat.name}</span>
+                            <span
+                              className={cn(
+                                "ml-2 shrink-0 rounded-lg px-2 py-0.5 text-xs tabular-nums",
+                                selectedCategoryId === cat.id
+                                  ? "bg-violet-100 text-violet-700"
+                                  : "bg-dashboard-bg text-dashboard-muted"
+                              )}
+                            >
+                              {categoryCounts.get(cat.id) ?? 0}
+                            </span>
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              );
+            })}
           </ul>
           <button
             type="button"
@@ -1328,7 +1436,7 @@ export function ServiceMenuClient({
               <Button
                 size="sm"
                 onClick={() => {
-                  setEditService(null);
+                  setEditItem(null);
                   setAddOpen(true);
                 }}
                 className="mt-4 rounded-xl bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
@@ -1406,7 +1514,7 @@ export function ServiceMenuClient({
                         onMoveDown={() =>
                           moveService(group.id, group.services, index, "down")
                         }
-                        onEdit={() => openEditService(service)}
+                        onEdit={() => openEditItem(service)}
                         onDelete={() => handleDeleteService(service.id)}
                         onDuplicate={() => handleDuplicate(service.id)}
                       />
@@ -1415,7 +1523,7 @@ export function ServiceMenuClient({
                 ) : (
                   <ServicesTable
                     services={group.services}
-                    onEdit={openEditService}
+                    onEdit={openEditItem}
                     onDelete={handleDeleteService}
                     onDuplicate={handleDuplicate}
                     bulkMode={bulkMode}
@@ -1430,44 +1538,8 @@ export function ServiceMenuClient({
         </div>
       </div>
 
-      <Dialog
-        open={!!editService && addOpen}
-        onOpenChange={(open) => {
-          if (!open) setEditService(null);
-          setAddOpen(open);
-        }}
-      >
-        <DialogContent className={dialogClassName}>
-          <DialogHeader>
-            <DialogTitle className="text-dashboard-text">
-              Edit service
-            </DialogTitle>
-          </DialogHeader>
-          {editService && (
-            <ServiceForm
-              service={editService}
-              categories={localCategories.map((c) => ({
-                id: c.id,
-                name: c.name,
-              }))}
-              employees={employees}
-              onSuccess={(service) => {
-                setEditService(null);
-                setAddOpen(false);
-                if (service) upsertLocalService(service);
-              }}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
       <Dialog open={addCategoryOpen} onOpenChange={setAddCategoryOpen}>
-        <DialogContent className={dialogClassName}>
-          <DialogHeader>
-            <DialogTitle className="text-dashboard-text">
-              Add category
-            </DialogTitle>
-          </DialogHeader>
+        <CatalogDialogContent title="Add category">
           <CategoryForm
             onSuccess={(category) => {
               setAddCategoryOpen(false);
@@ -1477,19 +1549,14 @@ export function ServiceMenuClient({
               ]);
             }}
           />
-        </DialogContent>
+        </CatalogDialogContent>
       </Dialog>
 
       <Dialog
         open={!!editCategory}
         onOpenChange={(open) => !open && setEditCategory(null)}
       >
-        <DialogContent className={dialogClassName}>
-          <DialogHeader>
-            <DialogTitle className="text-dashboard-text">
-              Edit category
-            </DialogTitle>
-          </DialogHeader>
+        <CatalogDialogContent title="Edit category">
           {editCategory && (
             <CategoryForm
               category={editCategory}
@@ -1509,7 +1576,7 @@ export function ServiceMenuClient({
               }}
             />
           )}
-        </DialogContent>
+        </CatalogDialogContent>
       </Dialog>
 
       <BulkDeleteConfirmDialog
