@@ -8,11 +8,11 @@ import {
   resolvePackagePrice,
 } from "@/lib/catalog/package-pricing";
 import { packageSchema } from "@/lib/validations";
-import { revalidateSalonCache } from "@/lib/salon-cache";
+import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { catalogInclude, serializeCatalogItem } from "@/lib/catalog/service-serializer";
 
 function revalidateServices(salonId: string) {
-  revalidateSalonCache(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
 }
 
 function parsePackageForm(formData: FormData) {

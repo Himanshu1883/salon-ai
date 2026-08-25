@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { requirePermission } from "@/lib/permissions/require";
-import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import {
   bulkCreateServicesSchema,
   bulkUpdateCatalogStatusSchema,
@@ -16,7 +16,7 @@ import {
 } from "@/lib/catalog/service-serializer";
 
 function revalidateServices(salonId: string) {
-  revalidateSalonCache(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
 }
 
 async function serviceHasHistory(id: string) {
@@ -145,65 +145,72 @@ export async function createService(formData: FormData) {
   }
 
   const addOnIds = parsed.data.addOnServiceIds ?? [];
+  const employeeIds = parsed.data.employeeIds ?? [];
 
-  const [category, maxOrder, addOnCount] = await Promise.all([
-    prisma.serviceCategory.findFirst({
-      where: { id: parsed.data.categoryId, salonId },
-      select: { id: true },
-    }),
-    prisma.service.aggregate({
-      where: { salonId, categoryId: parsed.data.categoryId },
-      _max: { sortOrder: true },
-    }),
-    addOnIds.length > 0
-      ? prisma.service.count({
-          where: {
-            id: { in: addOnIds },
-            salonId,
-            catalogType: "ADD_ON",
-          },
-        })
-      : Promise.resolve(addOnIds.length),
-  ]);
+  const created = await prisma.$transaction(async (tx) => {
+    const [category, maxOrder, addOnCount] = await Promise.all([
+      tx.serviceCategory.findFirst({
+        where: { id: parsed.data.categoryId, salonId },
+        select: { id: true, name: true },
+      }),
+      tx.service.aggregate({
+        where: { salonId, categoryId: parsed.data.categoryId },
+        _max: { sortOrder: true },
+      }),
+      addOnIds.length > 0
+        ? tx.service.count({
+            where: {
+              id: { in: addOnIds },
+              salonId,
+              catalogType: "ADD_ON",
+            },
+          })
+        : Promise.resolve(addOnIds.length),
+    ]);
 
-  if (!category) return { error: "Category not found" };
-  if (addOnCount !== addOnIds.length) {
-    return { error: "One or more add-ons were not found" };
-  }
+    if (!category) return { error: "Category not found" as const };
+    if (addOnCount !== addOnIds.length) {
+      return { error: "One or more add-ons were not found" as const };
+    }
 
-  const service = await prisma.service.create({
-    data: {
-      salonId,
-      name: parsed.data.name,
-      description: parsed.data.description,
-      duration: parsed.data.duration,
-      price: parsed.data.price,
-      categoryId: parsed.data.categoryId,
-      sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
-      catalogType: "SERVICE",
-      audience: parsed.data.audience,
-      status: parsed.data.status,
-      onlineBooking: parsed.data.onlineBooking,
-      inStoreBooking: parsed.data.inStoreBooking,
-      parentAddOnLinks: addOnIds.length
-        ? {
-            create: addOnIds.map((addOnServiceId, index) => ({
-              addOnServiceId,
-              sortOrder: index,
-            })),
-          }
-        : undefined,
-      employees: parsed.data.employeeIds?.length
-        ? {
-            create: parsed.data.employeeIds.map((employeeId) => ({ employeeId })),
-          }
-        : undefined,
-    },
-    include: catalogServiceInclude,
+    const row = await tx.service.create({
+      data: {
+        salonId,
+        name: parsed.data.name,
+        description: parsed.data.description,
+        duration: parsed.data.duration,
+        price: parsed.data.price,
+        categoryId: parsed.data.categoryId,
+        sortOrder: (maxOrder._max.sortOrder ?? -1) + 1,
+        catalogType: "SERVICE",
+        audience: parsed.data.audience,
+        status: parsed.data.status,
+        onlineBooking: parsed.data.onlineBooking,
+        inStoreBooking: parsed.data.inStoreBooking,
+        parentAddOnLinks: addOnIds.length
+          ? {
+              create: addOnIds.map((addOnServiceId, index) => ({
+                addOnServiceId,
+                sortOrder: index,
+              })),
+            }
+          : undefined,
+        employees: employeeIds.length
+          ? {
+              create: employeeIds.map((employeeId) => ({ employeeId })),
+            }
+          : undefined,
+      },
+      include: catalogServiceInclude,
+    });
+
+    return { row, categoryName: category.name };
   });
 
+  if ("error" in created) return { error: created.error };
+
   revalidateServices(salonId);
-  return { success: true, service: serializeCatalogItem(service) };
+  return { success: true, service: serializeCatalogItem(created.row) };
 }
 
 export async function updateService(id: string, formData: FormData) {
@@ -215,37 +222,39 @@ export async function updateService(id: string, formData: FormData) {
   }
 
   const addOnIds = parsed.data.addOnServiceIds ?? [];
+  const employeeIds = parsed.data.employeeIds ?? [];
 
-  const [existing, category, addOnCount] = await Promise.all([
-    prisma.service.findFirst({
-      where: { id, salonId, catalogType: "SERVICE" },
-      select: { id: true },
-    }),
-    prisma.serviceCategory.findFirst({
-      where: { id: parsed.data.categoryId, salonId },
-      select: { id: true },
-    }),
-    addOnIds.length > 0
-      ? prisma.service.count({
-          where: {
-            id: { in: addOnIds },
-            salonId,
-            catalogType: "ADD_ON",
-          },
-        })
-      : Promise.resolve(addOnIds.length),
-  ]);
+  const result = await prisma.$transaction(async (tx) => {
+    const [existing, category, addOnCount] = await Promise.all([
+      tx.service.findFirst({
+        where: { id, salonId, catalogType: "SERVICE" },
+        select: { id: true },
+      }),
+      tx.serviceCategory.findFirst({
+        where: { id: parsed.data.categoryId, salonId },
+        select: { id: true, name: true },
+      }),
+      addOnIds.length > 0
+        ? tx.service.count({
+            where: {
+              id: { in: addOnIds },
+              salonId,
+              catalogType: "ADD_ON",
+            },
+          })
+        : Promise.resolve(addOnIds.length),
+    ]);
 
-  if (!existing) return { error: "Service not found" };
-  if (!category) return { error: "Category not found" };
-  if (addOnCount !== addOnIds.length) {
-    return { error: "One or more add-ons were not found" };
-  }
+    if (!existing) return { error: "Service not found" as const };
+    if (!category) return { error: "Category not found" as const };
+    if (addOnCount !== addOnIds.length) {
+      return { error: "One or more add-ons were not found" as const };
+    }
 
-  const updated = await prisma.$transaction(async (tx) => {
     await tx.employeeService.deleteMany({ where: { serviceId: id } });
     await tx.serviceAddOnLink.deleteMany({ where: { parentServiceId: id } });
-    return tx.service.update({
+
+    const row = await tx.service.update({
       where: { id },
       data: {
         name: parsed.data.name,
@@ -265,18 +274,22 @@ export async function updateService(id: string, formData: FormData) {
               })),
             }
           : undefined,
-        employees: parsed.data.employeeIds?.length
+        employees: employeeIds.length
           ? {
-              create: parsed.data.employeeIds.map((employeeId) => ({ employeeId })),
+              create: employeeIds.map((employeeId) => ({ employeeId })),
             }
           : undefined,
       },
       include: catalogServiceInclude,
     });
+
+    return { row };
   });
 
+  if ("error" in result) return { error: result.error };
+
   revalidateServices(salonId);
-  return { success: true, service: serializeCatalogItem(updated) };
+  return { success: true, service: serializeCatalogItem(result.row) };
 }
 
 export async function deleteService(id: string) {

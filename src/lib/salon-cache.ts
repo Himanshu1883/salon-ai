@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { cachedRead, invalidateMemoryCachePrefix } from "@/lib/memory-cache";
 
@@ -18,18 +19,39 @@ export function salonCacheTag(salonId: string, scope: SalonCacheScope): string {
   return `${scope}:${salonId}`;
 }
 
+/** Clear in-process caches immediately (cheap). */
+export function invalidateSalonMemoryCache(salonId: string) {
+  invalidateMemoryCachePrefix(`salon-cache:`);
+  invalidateMemoryCachePrefix(`salon-layout:${salonId}`);
+  invalidateMemoryCachePrefix(`salon-plan:${salonId}`);
+  invalidateMemoryCachePrefix(`salon-blocked:${salonId}`);
+}
+
 /** Bust cached reads after mutations. */
 export function revalidateSalonCache(
   salonId: string,
   ...scopes: SalonCacheScope[]
 ) {
+  invalidateSalonMemoryCache(salonId);
   for (const scope of scopes) {
     revalidateTag(salonCacheTag(salonId, scope), "max");
   }
-  invalidateMemoryCachePrefix(`salon-cache:`);
-  invalidateMemoryCachePrefix(`salon-layout:${salonId}`);
-  invalidateMemoryCachePrefix(`salon-plan:${salonId}`);
-  invalidateMemoryCachePrefix(`salon-blocked:${salonId}`);
+}
+
+/**
+ * Non-blocking cache bust for hot-path mutations (e.g. catalog save).
+ * Returns before tag revalidation so server actions don't wait on RSC refetch.
+ */
+export function scheduleSalonCacheRevalidation(
+  salonId: string,
+  ...scopes: SalonCacheScope[]
+) {
+  invalidateSalonMemoryCache(salonId);
+  after(() => {
+    for (const scope of scopes) {
+      revalidateTag(salonCacheTag(salonId, scope), "max");
+    }
+  });
 }
 
 type CacheOpts = {

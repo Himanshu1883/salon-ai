@@ -4,10 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/require";
 import { addOnSchema } from "@/lib/validations";
 import { catalogInclude, serializeCatalogItem } from "@/lib/catalog/service-serializer";
-import { revalidateSalonCache } from "@/lib/salon-cache";
+import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 
 function revalidateServices(salonId: string) {
-  revalidateSalonCache(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
 }
 
 function parseAddOnForm(formData: FormData) {

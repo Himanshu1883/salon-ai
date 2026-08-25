@@ -89,7 +89,7 @@ export function ServiceForm({
     selectedAddOns.forEach((id) => formData.append("addOnServiceIds", id));
 
     if (!service) onSubmitStart?.();
-    const closeEarly = !service;
+    const closeEarly = true;
 
     const result = service
       ? await updateService(service.id, formData)

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   deleteService,
@@ -642,8 +642,13 @@ export function ServiceMenuClient({
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [bulkAddServicesOpen, setBulkAddServicesOpen] = useState(false);
   const [bulkAddCategoriesOpen, setBulkAddCategoriesOpen] = useState(false);
+  const skipNextCategoriesSync = useRef(false);
 
   useEffect(() => {
+    if (skipNextCategoriesSync.current) {
+      skipNextCategoriesSync.current = false;
+      return;
+    }
     setLocalCategories(initialCategories);
   }, [initialCategories]);
 
@@ -891,6 +896,7 @@ export function ServiceMenuClient({
   }
 
   function upsertLocalService(service: CatalogServiceItem) {
+    skipNextCategoriesSync.current = true;
     setLocalCategories((prev) =>
       prev.map((cat) => {
         if (cat.id !== service.categoryId) {
@@ -1118,14 +1124,12 @@ export function ServiceMenuClient({
                     defaultCategoryId={selectedCategoryId ?? undefined}
                     onSubmitStart={() => {
                       setAddOpen(false);
-                      setEditItem(null);
                     }}
                     onError={(message) => {
                       alert(message);
                       setAddOpen(true);
                     }}
                     onSuccess={(service) => {
-                      setAddOpen(false);
                       setEditItem(null);
                       if (service) upsertLocalService(service);
                     }}
