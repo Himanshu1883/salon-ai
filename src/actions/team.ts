@@ -8,6 +8,10 @@ import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { employeeSchema, employeeProfileSchema } from "@/lib/validations";
 import { saveEmployeeDocument } from "@/lib/employee-upload";
 import { parseOtherDocuments } from "@/lib/employee";
+import {
+  setLinkedLoginActiveState,
+} from "@/lib/employee-login-link";
+import { invalidateResolvedPermissionsCache } from "@/lib/permissions/resolve";
 
 const teamMemberSelect = {
   id: true,
@@ -24,6 +28,22 @@ const teamMemberSelect = {
     },
   },
 } as const;
+
+function revalidateTeamAccess(salonId: string, userIds: string[]) {
+  revalidatePath("/team/access");
+  for (const userId of userIds) {
+    invalidateResolvedPermissionsCache(salonId, userId);
+  }
+}
+
+async function syncStaffLoginWithStatus(
+  salonId: string,
+  employee: { id: string; email: string | null },
+  status: string
+) {
+  const loginActive = status === "active" || status === "on_break";
+  return setLinkedLoginActiveState(salonId, employee, loginActive);
+}
 
 function revalidateTeam(salonId: string) {
   revalidateSalonCache(
@@ -172,6 +192,18 @@ export async function updateTeamMember(id: string, formData: FormData) {
       },
     }),
   ]);
+
+  if (parsed.data.status !== existing.status) {
+    const affectedUserIds = await syncStaffLoginWithStatus(
+      session.user.salonId,
+      {
+        id: existing.id,
+        email: parsed.data.email ?? existing.email,
+      },
+      parsed.data.status
+    );
+    revalidateTeamAccess(session.user.salonId, affectedUserIds);
+  }
 
   const member = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
@@ -334,6 +366,7 @@ export async function deactivateTeamMember(id: string) {
   const session = await requirePermission("team.delete");
   const member = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
+    select: { id: true, email: true },
   });
   if (!member) return { error: "Team member not found" };
 
@@ -342,7 +375,14 @@ export async function deactivateTeamMember(id: string) {
     data: { status: "inactive" },
   });
 
+  const affectedUserIds = await syncStaffLoginWithStatus(
+    session.user.salonId,
+    member,
+    "inactive"
+  );
+
   revalidateTeam(session.user.salonId);
+  revalidateTeamAccess(session.user.salonId, affectedUserIds);
   revalidatePath(`/team/members/${id}`);
   return { success: true as const };
 }
@@ -351,6 +391,7 @@ export async function reactivateTeamMember(id: string) {
   const session = await requirePermission("team.update");
   const member = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
+    select: { id: true, email: true },
   });
   if (!member) return { error: "Team member not found" };
 
@@ -359,7 +400,14 @@ export async function reactivateTeamMember(id: string) {
     data: { status: "active" },
   });
 
+  const affectedUserIds = await syncStaffLoginWithStatus(
+    session.user.salonId,
+    member,
+    "active"
+  );
+
   revalidateTeam(session.user.salonId);
+  revalidateTeamAccess(session.user.salonId, affectedUserIds);
   revalidatePath(`/team/members/${id}`);
   return { success: true as const };
 }
@@ -368,11 +416,19 @@ export async function deleteTeamMember(id: string) {
   const session = await requirePermission("team.delete");
   const member = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
+    select: { id: true, email: true },
   });
   if (!member) return { error: "Team member not found" };
+
+  const affectedUserIds = await setLinkedLoginActiveState(
+    session.user.salonId,
+    member,
+    false
+  );
 
   await prisma.employee.delete({ where: { id } });
 
   revalidateTeam(session.user.salonId);
+  revalidateTeamAccess(session.user.salonId, affectedUserIds);
   return { success: true as const };
 }

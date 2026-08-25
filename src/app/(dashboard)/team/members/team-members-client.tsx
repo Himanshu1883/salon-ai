@@ -56,6 +56,7 @@ import { getRoleLabel } from "@/lib/team";
 import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import type { EmployeeLoginInfo } from "@/lib/employee-login-link";
+import { ResetStaffPasswordDialog } from "@/components/permissions/reset-staff-password-dialog";
 
 type TeamMember = {
   id: string;
@@ -260,6 +261,10 @@ export function TeamMembersClient({
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [passwordReset, setPasswordReset] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     setMembers(initialMembers);
@@ -301,7 +306,13 @@ export function TeamMembersClient({
   }
 
   async function handleDeactivate(id: string) {
-    if (!confirm("Deactivate this team member? They will lose active status.")) return;
+    if (
+      !confirm(
+        "Deactivate this team member? They will lose dashboard access and be marked inactive."
+      )
+    ) {
+      return;
+    }
     setMembers((prev) =>
       prev.map((m) => (m.id === id ? { ...m, status: "inactive" } : m))
     );
@@ -345,7 +356,54 @@ export function TeamMembersClient({
     router.refresh();
   }
 
+  function renderAccessCell(member: TeamMember) {
+    const login = loginByEmployeeId[member.id];
+    const staffInactive = member.status === "inactive";
+    const loginLive = Boolean(login?.loginActive && !staffInactive);
+
+    if (loginLive) {
+      return (
+        <div className="space-y-1">
+          <Badge variant="success" className="text-xs">
+            Login active
+          </Badge>
+          {canManageAccess && (
+            <Link
+              href={`/team/access/${login!.userId}`}
+              className="block text-xs text-dashboard-primary hover:underline"
+            >
+              Permissions
+            </Link>
+          )}
+        </div>
+      );
+    }
+
+    if (login) {
+      return (
+        <Badge variant="secondary" className="text-xs">
+          Login disabled
+        </Badge>
+      );
+    }
+
+    if (canManageAccess && !staffInactive) {
+      return (
+        <Link
+          href={`/team/access?employee=${member.id}`}
+          className="text-xs font-medium text-dashboard-primary hover:underline"
+        >
+          Create login
+        </Link>
+      );
+    }
+
+    return <span className="text-xs text-stone-400">No login</span>;
+  }
+
   function memberActions(member: TeamMember) {
+    const login = loginByEmployeeId[member.id];
+
     return (
       <>
         {canUpdate && (
@@ -356,6 +414,15 @@ export function TeamMembersClient({
             }}
           >
             Edit
+          </DropdownMenuItem>
+        )}
+        {canManageAccess && login && (
+          <DropdownMenuItem
+            onClick={() =>
+              setPasswordReset({ userId: login.userId, name: member.name })
+            }
+          >
+            Reset password
           </DropdownMenuItem>
         )}
         {canUpdate && member.status === "inactive" && (
@@ -590,32 +657,7 @@ export function TeamMembersClient({
                       <p className="text-sm text-stone-700">
                         {member.status === "inactive" ? "No access" : getRoleLabel(member.role)}
                       </p>
-                      <div className="text-sm">
-                        {loginByEmployeeId[member.id] ? (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <Badge variant="success" className="text-xs">
-                              Login active
-                            </Badge>
-                            {canManageAccess && (
-                              <Link
-                                href={`/team/access/${loginByEmployeeId[member.id].userId}`}
-                                className="text-xs text-dashboard-primary hover:underline"
-                              >
-                                Permissions
-                              </Link>
-                            )}
-                          </div>
-                        ) : canManageAccess && member.status !== "inactive" ? (
-                          <Link
-                            href={`/team/access?employee=${member.id}`}
-                            className="text-xs font-medium text-dashboard-primary hover:underline"
-                          >
-                            Create login
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-stone-400">No login</span>
-                        )}
-                      </div>
+                      <div className="text-sm">{renderAccessCell(member)}</div>
                       <div className="flex justify-end border-t border-stone-100 pt-2">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -708,32 +750,7 @@ export function TeamMembersClient({
                             : getRoleLabel(member.role)}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        {loginByEmployeeId[member.id] ? (
-                          <div className="space-y-1">
-                            <Badge variant="success" className="text-xs">
-                              Login active
-                            </Badge>
-                            {canManageAccess && (
-                              <Link
-                                href={`/team/access/${loginByEmployeeId[member.id].userId}`}
-                                className="block text-xs text-dashboard-primary hover:underline"
-                              >
-                                Permissions
-                              </Link>
-                            )}
-                          </div>
-                        ) : canManageAccess && member.status !== "inactive" ? (
-                          <Link
-                            href={`/team/access?employee=${member.id}`}
-                            className="text-xs font-medium text-dashboard-primary hover:underline"
-                          >
-                            Create login
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-stone-400">No login</span>
-                        )}
-                      </TableCell>
+                      <TableCell>{renderAccessCell(member)}</TableCell>
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -754,6 +771,15 @@ export function TeamMembersClient({
           }
         />
       </div>
+
+      <ResetStaffPasswordDialog
+        userId={passwordReset?.userId ?? null}
+        staffName={passwordReset?.name ?? ""}
+        open={passwordReset !== null}
+        onOpenChange={(next) => {
+          if (!next) setPasswordReset(null);
+        }}
+      />
     </div>
   );
 }

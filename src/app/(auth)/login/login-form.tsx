@@ -244,6 +244,7 @@ export default function LoginForm({ salon }: LoginFormProps) {
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
   const resetSuccess = searchParams.get("reset") === "success";
   const emailUpdated = searchParams.get("email") === "updated";
+  const accountDisabled = searchParams.get("error") === "account_disabled";
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -283,9 +284,8 @@ export default function LoginForm({ salon }: LoginFormProps) {
       redirect: false,
     });
 
-    setLoading(false);
-
     if (!result) {
+      setLoading(false);
       setError(
         "Sign-in is temporarily unavailable. Check that AUTH_SECRET is set in .env and restart the dev server."
       );
@@ -293,20 +293,14 @@ export default function LoginForm({ salon }: LoginFormProps) {
     }
 
     if (!result.ok || result.error) {
+      setLoading(false);
       setError(
         getSignInErrorMessage(result, "Invalid email or password for this salon")
       );
       return;
     }
 
-    const sessionRes = await fetch("/api/auth/session", { cache: "no-store" });
-    const session = await sessionRes.json();
-
-    if (session?.user?.isSuperAdmin) {
-      window.location.assign("/admin");
-      return;
-    }
-
+    // Session cookie is set by signIn — skip extra /api/auth/session round-trip.
     window.location.assign(callbackUrl);
   }
 
@@ -406,6 +400,11 @@ export default function LoginForm({ salon }: LoginFormProps) {
               {emailUpdated && (
                 <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                   Your login email has been updated. Sign in with your new email address.
+                </p>
+              )}
+              {accountDisabled && (
+                <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  Your account has been deactivated. Contact your salon owner if you need access again.
                 </p>
               )}
               <div className="space-y-2">

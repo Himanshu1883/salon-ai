@@ -1,12 +1,13 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { cachedRead, invalidateMemoryCachePrefix } from "@/lib/memory-cache";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import {
   DEFAULT_ROLE_PERMISSIONS,
   mapLegacyUserRoleToSystemKey,
   type SystemRoleKey,
 } from "@/lib/permissions/defaults";
-import { backfillSalonUserRoles } from "@/lib/permissions/seed";
+import { assignUserSalonRoleFromLegacy } from "@/lib/permissions/seed";
 
 export type PermissionSource = "owner" | "role" | "grant" | "deny" | "legacy";
 
@@ -51,37 +52,48 @@ export function resolveOwnerPermissions(
 }
 
 async function loadUserPermissionContext(userId: string, salonId: string) {
+  const userSelect = {
+    id: true,
+    role: true,
+    salonRoleId: true,
+    salonRole: {
+      select: {
+        key: true,
+        hierarchyLevel: true,
+        permissions: {
+          select: { permission: { select: { key: true } } },
+        },
+      },
+    },
+    permissionOverrides: {
+      select: {
+        granted: true,
+        permission: { select: { key: true } },
+      },
+    },
+  } as const;
+
   try {
     const user = await prisma.user.findFirst({
       where: { id: userId, salonId },
-      select: {
-        id: true,
-        role: true,
-        salonRoleId: true,
-        salonRole: {
-          select: {
-            key: true,
-            hierarchyLevel: true,
-            permissions: {
-              select: { permission: { select: { key: true } } },
-            },
-          },
-        },
-        permissionOverrides: {
-          select: {
-            granted: true,
-            permission: { select: { key: true } },
-          },
-        },
-      },
+      select: userSelect,
     });
 
     if (!user) return null;
 
     if (!user.salonRoleId) {
       try {
-        await backfillSalonUserRoles(prisma, salonId);
-        return loadUserPermissionContext(userId, salonId);
+        await assignUserSalonRoleFromLegacy(
+          prisma,
+          userId,
+          salonId,
+          user.role
+        );
+        const refreshed = await prisma.user.findFirst({
+          where: { id: userId, salonId },
+          select: userSelect,
+        });
+        if (refreshed?.salonRoleId) return refreshed;
       } catch {
         return loadLegacyUserPermissionContext(userId, salonId);
       }
@@ -187,19 +199,21 @@ function resolveFromContext(
 
 export const getResolvedPermissions = cache(
   async (userId: string, salonId: string): Promise<ResolvedPermissions> => {
-    const user = await loadUserPermissionContext(userId, salonId);
-    if (!user) {
-      return {
-        userId,
-        salonId,
-        isOwner: false,
-        roleKey: null,
-        hierarchyLevel: 0,
-        permissions: new Set(),
-        details: new Map(),
-      };
-    }
-    return resolveFromContext(user, salonId);
+    return cachedRead(`perms:${salonId}:${userId}`, 90, async () => {
+      const user = await loadUserPermissionContext(userId, salonId);
+      if (!user) {
+        return {
+          userId,
+          salonId,
+          isOwner: false,
+          roleKey: null,
+          hierarchyLevel: 0,
+          permissions: new Set(),
+          details: new Map(),
+        };
+      }
+      return resolveFromContext(user, salonId);
+    });
   }
 );
 
@@ -209,4 +223,15 @@ export function hasResolvedPermission(
 ): boolean {
   if (resolved.isOwner) return true;
   return resolved.permissions.has(permission);
+}
+
+export function invalidateResolvedPermissionsCache(
+  salonId: string,
+  userId?: string
+) {
+  if (userId) {
+    invalidateMemoryCachePrefix(`perms:${salonId}:${userId}`);
+    return;
+  }
+  invalidateMemoryCachePrefix(`perms:${salonId}:`);
 }

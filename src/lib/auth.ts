@@ -79,6 +79,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               isSuperAdmin: true,
               platformRole: true,
               salonId: true,
+              employeeId: true,
+              employee: { select: { status: true } },
               salon: {
                 select: { id: true, name: true, plan: true, slug: true },
               },
@@ -139,6 +141,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (salonSlug && user.salon.slug !== salonSlug) {
           return null;
+        }
+
+        if (user.role !== "owner") {
+          let staffStatus = user.employee?.status ?? null;
+
+          if (!staffStatus && user.salonId) {
+            const linkedEmployee = await prisma.employee.findFirst({
+              where: {
+                salonId: user.salonId,
+                OR: [
+                  ...(user.employeeId ? [{ id: user.employeeId }] : []),
+                  { email: { equals: user.email, mode: "insensitive" as const } },
+                ],
+              },
+              select: { status: true },
+            });
+            staffStatus = linkedEmployee?.status ?? null;
+          }
+
+          if (staffStatus === "inactive") {
+            if (process.env.NODE_ENV === "development") {
+              console.warn("[auth] inactive team member", parsed.data.email);
+            }
+            return null;
+          }
         }
 
         return {

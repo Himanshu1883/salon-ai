@@ -6,6 +6,7 @@ import { PlanGate } from "@/components/plans/plan-gate";
 import { PlanProvider } from "@/components/plans/plan-provider";
 import { PermissionLayoutGate } from "@/components/permissions/permission-layout-gate";
 import { getSalonLayoutContext } from "@/lib/salon-layout-context";
+import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import { DEFAULT_ROLE_PERMISSIONS } from "@/lib/permissions/defaults";
@@ -25,6 +26,22 @@ export default async function DashboardLayout({
   const userRole = session.user.role ?? "owner";
   const showSettings = userRole === "owner" || userRole === "manager";
   const isOwner = userRole === "owner";
+
+  if (
+    !isOwner &&
+    session.user.email &&
+    !(await isStaffDashboardAccessAllowed(salonId, {
+      id: session.user.id,
+      email: session.user.email,
+      role: userRole,
+    }))
+  ) {
+    redirect(
+      session.user.salonSlug
+        ? `/${session.user.salonSlug}/login?error=account_disabled`
+        : "/login?error=account_disabled"
+    );
+  }
 
   const sessionPlan = session.user.plan
     ? normalizeSalonPlan(session.user.plan)

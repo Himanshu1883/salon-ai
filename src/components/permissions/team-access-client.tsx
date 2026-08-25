@@ -7,6 +7,7 @@ import { Plus, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CreateSalonLoginDialog } from "@/components/permissions/create-salon-login-dialog";
+import { ResetStaffPasswordDialog } from "@/components/permissions/reset-staff-password-dialog";
 import { getRoleLabel } from "@/lib/team";
 
 export type SalonAccessUserRow = {
@@ -40,6 +41,10 @@ export function TeamAccessClient({
 }) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [passwordReset, setPasswordReset] = useState<{
+    userId: string;
+    name: string;
+  } | null>(null);
 
   useEffect(() => {
     if (preselectedEmployeeId) {
@@ -155,12 +160,25 @@ export function TeamAccessClient({
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/team/access/${user.id}`}
-                      className="font-medium text-dashboard-primary hover:underline"
-                    >
-                      Permissions
-                    </Link>
+                    <div className="flex flex-col items-end gap-1">
+                      <Link
+                        href={`/team/access/${user.id}`}
+                        className="font-medium text-dashboard-primary hover:underline"
+                      >
+                        Permissions
+                      </Link>
+                      {user.role !== "owner" && (
+                        <button
+                          type="button"
+                          className="text-xs text-stone-600 hover:text-dashboard-primary hover:underline"
+                          onClick={() =>
+                            setPasswordReset({ userId: user.id, name: user.name })
+                          }
+                        >
+                          Reset password
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -176,6 +194,15 @@ export function TeamAccessClient({
         onOpenChange={setDialogOpen}
         preselectedEmployeeId={preselectedEmployeeId}
         onCreated={() => router.refresh()}
+      />
+
+      <ResetStaffPasswordDialog
+        userId={passwordReset?.userId ?? null}
+        staffName={passwordReset?.name ?? ""}
+        open={passwordReset !== null}
+        onOpenChange={(next) => {
+          if (!next) setPasswordReset(null);
+        }}
       />
     </div>
   );

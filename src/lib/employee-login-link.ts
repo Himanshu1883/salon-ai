@@ -14,24 +14,83 @@ type SalonUserLinkRow = {
   email: string;
   employeeId: string | null;
   role: string;
+  isActive: boolean;
 };
 
-async function listSalonUsersForLinking(
-  salonId: string
+async function listSalonStaffLogins(
+  salonId: string,
+  options?: { activeOnly?: boolean }
 ): Promise<SalonUserLinkRow[]> {
+  const where = {
+    salonId,
+    role: { not: "owner" as const },
+    ...(options?.activeOnly ? { isActive: true } : {}),
+  };
+
   try {
     return await prisma.user.findMany({
-      where: { salonId, isActive: true },
-      select: { id: true, email: true, employeeId: true, role: true },
+      where,
+      select: {
+        id: true,
+        email: true,
+        employeeId: true,
+        role: true,
+        isActive: true,
+      },
     });
   } catch (error) {
     if (!isMissingEmployeeIdColumn(error)) throw error;
     const users = await prisma.user.findMany({
-      where: { salonId, isActive: true },
-      select: { id: true, email: true, role: true },
+      where,
+      select: { id: true, email: true, role: true, isActive: true },
     });
     return users.map((user) => ({ ...user, employeeId: null }));
   }
+}
+
+/** All login accounts linked to a team member (by employeeId or email). */
+export async function findLinkedLoginUsersForEmployee(
+  salonId: string,
+  employee: { id: string; email: string | null },
+  options?: { activeOnly?: boolean }
+) {
+  const users = await listSalonStaffLogins(salonId, options);
+  const linked = users.filter((user) => {
+    if (user.employeeId === employee.id) return true;
+    if (
+      employee.email &&
+      user.email.toLowerCase() === employee.email.toLowerCase()
+    ) {
+      return true;
+    }
+    return false;
+  });
+  const byId = new Map(linked.map((user) => [user.id, user]));
+  return Array.from(byId.values());
+}
+
+/** Enable or disable dashboard login for a team member's linked account(s). */
+export async function setLinkedLoginActiveState(
+  salonId: string,
+  employee: { id: string; email: string | null },
+  isActive: boolean
+): Promise<string[]> {
+  const linked = await findLinkedLoginUsersForEmployee(salonId, employee);
+  const userIds = linked.map((user) => user.id);
+  if (userIds.length === 0) return [];
+
+  await prisma.user.updateMany({
+    where: { id: { in: userIds }, salonId },
+    data: { isActive },
+  });
+
+  return userIds;
+}
+
+async function listSalonUsersForLinking(
+  salonId: string
+): Promise<SalonUserLinkRow[]> {
+  return listSalonStaffLogins(salonId, { activeOnly: true });
 }
 
 /** Resolve the login user linked to a staff member (employeeId first, then email). */
@@ -39,28 +98,13 @@ export async function findLoginUserForEmployee(
   salonId: string,
   employee: { id: string; email: string | null }
 ) {
-  try {
-    const byLink = await prisma.user.findFirst({
-      where: {
-        salonId,
-        isActive: true,
-        employeeId: employee.id,
-      },
-      select: { id: true, name: true, email: true },
-    });
-    if (byLink) return byLink;
-  } catch (error) {
-    if (!isMissingEmployeeIdColumn(error)) throw error;
-  }
-
-  if (!employee.email) return null;
-
+  const linked = await findLinkedLoginUsersForEmployee(salonId, employee, {
+    activeOnly: true,
+  });
+  const user = linked[0];
+  if (!user) return null;
   return prisma.user.findFirst({
-    where: {
-      salonId,
-      isActive: true,
-      email: employee.email.toLowerCase(),
-    },
+    where: { id: user.id, salonId },
     select: { id: true, name: true, email: true },
   });
 }
@@ -109,6 +153,7 @@ export type EmployeeLoginInfo = {
   userId: string;
   email: string;
   linkedBy: "employeeId" | "email";
+  loginActive: boolean;
 };
 
 /** Map employee id → login info (employeeId link first, email fallback). */
@@ -116,20 +161,20 @@ export async function getEmployeeLoginMap(salonId: string) {
   const [employees, users] = await Promise.all([
     prisma.employee.findMany({
       where: { salonId },
-      select: { id: true, email: true },
+      select: { id: true, email: true, status: true },
     }),
-    listSalonUsersForLinking(salonId),
+    listSalonStaffLogins(salonId),
   ]);
 
   const map = new Map<string, EmployeeLoginInfo>();
 
   for (const user of users) {
-    if (user.role === "owner") continue;
     if (user.employeeId) {
       map.set(user.employeeId, {
         userId: user.id,
         email: user.email,
         linkedBy: "employeeId",
+        loginActive: user.isActive,
       });
     }
   }
@@ -137,15 +182,14 @@ export async function getEmployeeLoginMap(salonId: string) {
   for (const employee of employees) {
     if (map.has(employee.id) || !employee.email) continue;
     const match = users.find(
-      (u) =>
-        u.role !== "owner" &&
-        u.email.toLowerCase() === employee.email!.toLowerCase()
+      (u) => u.email.toLowerCase() === employee.email!.toLowerCase()
     );
     if (match) {
       map.set(employee.id, {
         userId: match.id,
         email: match.email,
         linkedBy: "email",
+        loginActive: match.isActive,
       });
     }
   }
@@ -174,4 +218,62 @@ export async function findEmployeeLinkedToUser(
     },
     select: { id: true, name: true, role: true },
   });
+}
+
+/** Block dashboard access when login or linked staff profile is inactive. */
+export async function isStaffDashboardAccessAllowed(
+  salonId: string,
+  user: { id: string; email: string; role: string; employeeId?: string | null }
+) {
+  if (user.role === "owner") return true;
+
+  try {
+    const account = await prisma.user.findFirst({
+      where: { id: user.id, salonId },
+      select: {
+        isActive: true,
+        email: true,
+        employeeId: true,
+        employee: { select: { status: true } },
+      },
+    });
+
+    if (!account?.isActive) return false;
+
+    if (account.employee?.status === "inactive") return false;
+
+    if (!account.employee && account.email) {
+      const byEmail = await prisma.employee.findFirst({
+        where: {
+          salonId,
+          email: { equals: account.email, mode: "insensitive" },
+        },
+        select: { status: true },
+      });
+      if (byEmail?.status === "inactive") return false;
+    }
+
+    return true;
+  } catch (error) {
+    if (!isMissingEmployeeIdColumn(error)) throw error;
+
+    const account = await prisma.user.findFirst({
+      where: { id: user.id, salonId },
+      select: { isActive: true, email: true },
+    });
+    if (!account?.isActive) return false;
+
+    if (account.email) {
+      const byEmail = await prisma.employee.findFirst({
+        where: {
+          salonId,
+          email: { equals: account.email, mode: "insensitive" },
+        },
+        select: { status: true },
+      });
+      if (byEmail?.status === "inactive") return false;
+    }
+
+    return true;
+  }
 }

@@ -16,6 +16,7 @@ import {
 } from "@/lib/permissions/defaults";
 import {
   getResolvedPermissions,
+  invalidateResolvedPermissionsCache,
   type PermissionSource,
 } from "@/lib/permissions/resolve";
 import { requirePermission } from "@/lib/permissions/require";
@@ -50,6 +51,11 @@ const createSalonLoginUserSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   roleKey: z.enum(["MANAGER", "RECEPTIONIST", "EMPLOYEE"]),
   overrides: z.array(permissionOverrideEntrySchema).optional(),
+});
+
+const updateStaffLoginPasswordSchema = z.object({
+  userId: z.string().min(1),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 function legacyRoleFromSystemKey(key: SystemRoleKey): string {
@@ -270,6 +276,7 @@ export async function updateUserSalonRoleAction(data: unknown) {
     });
 
     revalidatePath("/team");
+    invalidateResolvedPermissionsCache(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
@@ -372,6 +379,7 @@ export async function updateUserPermissionOverridesAction(data: unknown) {
     await applyUserPermissionOverrides(userId, salonId, overrides);
 
     revalidatePath("/team");
+    invalidateResolvedPermissionsCache(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
@@ -390,11 +398,67 @@ export async function resetUserPermissionsToRoleDefaultsAction(userId: string) {
     await assertCanManageTargetUser(session.user.id, salonId, userId);
     await prisma.userPermissionOverride.deleteMany({ where: { userId } });
     revalidatePath("/team");
+    invalidateResolvedPermissionsCache(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
       error:
         error instanceof Error ? error.message : "Unable to reset permissions",
+    };
+  }
+}
+
+export async function updateStaffLoginPasswordAction(data: unknown) {
+  const session = await requireSession();
+  await requirePermission("permissions.manage");
+  const salonId = session.user.salonId!;
+
+  const parsed = updateStaffLoginPasswordSchema.safeParse(data);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  const { userId, password } = parsed.data;
+
+  try {
+    await assertCanManageTargetUser(session.user.id, salonId, userId);
+
+    const target = await prisma.user.findFirst({
+      where: { id: userId, salonId },
+      select: { id: true, role: true, salonRole: { select: { key: true } } },
+    });
+
+    if (!target) {
+      return { error: "Login account not found" };
+    }
+
+    if (
+      (target.role === "owner" || target.salonRole?.key === "OWNER") &&
+      session.user.role !== "owner"
+    ) {
+      return { error: "Only the owner can reset the owner password" };
+    }
+
+    const hashed = await bcrypt.hash(password, 10);
+
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: userId },
+        data: { password: hashed },
+      }),
+      prisma.passwordResetToken.deleteMany({
+        where: { userId, usedAt: null },
+      }),
+    ]);
+
+    revalidatePath("/team/access");
+    revalidatePath("/team/members");
+
+    return { success: true as const };
+  } catch (error) {
+    return {
+      error:
+        error instanceof Error ? error.message : "Unable to update password",
     };
   }
 }
@@ -556,6 +620,7 @@ export async function createSalonLoginUserAction(data: unknown) {
     revalidatePath("/team/access");
     revalidatePath("/team/members");
     revalidatePath(`/team/members/${employee.id}`);
+    invalidateResolvedPermissionsCache(salonId, user.id);
 
     return {
       success: true as const,

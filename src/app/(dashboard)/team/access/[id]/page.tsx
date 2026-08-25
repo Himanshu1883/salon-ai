@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { getUserPermissionDetailsAction } from "@/actions/permissions";
 import { getResolvedPermissions } from "@/lib/permissions/resolve";
-import { EmployeePermissionsEditor } from "@/components/permissions/employee-permissions-editor";
+import { TeamAccessUserClient } from "@/components/permissions/team-access-user-client";
 import { prisma } from "@/lib/prisma";
 
 export default async function TeamAccessUserPage({
@@ -18,7 +18,7 @@ export default async function TeamAccessUserPage({
 
   const loginUser = await prisma.user.findFirst({
     where: { id, salonId },
-    select: { id: true, name: true },
+    select: { id: true, name: true, role: true },
   });
 
   if (!loginUser) notFound();
@@ -32,6 +32,9 @@ export default async function TeamAccessUserPage({
   const details = await getUserPermissionDetailsAction(loginUser.id);
   if ("error" in details) notFound();
 
+  const canResetPassword =
+    loginUser.role !== "owner" && session.user.id !== loginUser.id;
+
   return (
     <div className="space-y-6">
       <Link
@@ -42,9 +45,10 @@ export default async function TeamAccessUserPage({
         Back to team access
       </Link>
 
-      <EmployeePermissionsEditor
+      <TeamAccessUserClient
         userId={loginUser.id}
         userName={loginUser.name}
+        canResetPassword={canResetPassword}
         initialRoleKey={details.roleKey}
         initialModules={details.modules}
         canEdit={canEdit}
