@@ -7,10 +7,13 @@ import {
   serviceCategorySchema,
 } from "@/lib/validations";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
-import { revalidateSalonCache } from "@/lib/salon-cache";
+import {
+  revalidateSalonCache,
+  scheduleSalonCacheRevalidation,
+} from "@/lib/salon-cache";
 
 function revalidateCatalog(salonId: string) {
-  revalidateSalonCache(salonId, "catalog", "check-in");
+  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in");
 }
 
 function actionError(err: unknown, fallback: string) {
@@ -135,15 +138,22 @@ export async function deleteServiceCategory(id: string) {
       include: { _count: { select: { services: true } } },
     });
     if (!category) return { error: "Category not found" };
-    if (category._count.services > 0) {
-      return {
-        error: "Remove or reassign services before deleting this category",
-      };
-    }
 
-    await prisma.serviceCategory.delete({ where: { id } });
+    await prisma.$transaction(async (tx) => {
+      if (category._count.services > 0) {
+        await tx.service.updateMany({
+          where: { salonId: session.user.salonId, categoryId: id },
+          data: { categoryId: null },
+        });
+      }
+      await tx.serviceCategory.delete({ where: { id } });
+    });
+
     revalidateCatalog(session.user.salonId);
-    return { success: true };
+    return {
+      success: true,
+      uncategorizedCount: category._count.services,
+    };
   } catch (err) {
     return actionError(err, "Could not delete category. Please try again.");
   }

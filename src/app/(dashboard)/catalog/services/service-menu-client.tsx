@@ -629,6 +629,7 @@ export function ServiceMenuClient({
     name: string;
   } | null>(null);
   const [localCategories, setLocalCategories] = useState(initialCategories);
+  const [localUncategorized, setLocalUncategorized] = useState(uncategorized);
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(
     new Set()
@@ -650,14 +651,15 @@ export function ServiceMenuClient({
       return;
     }
     setLocalCategories(initialCategories);
-  }, [initialCategories]);
+    setLocalUncategorized(uncategorized);
+  }, [initialCategories, uncategorized]);
 
   const allCatalogItems = useMemo(
     () => [
       ...localCategories.flatMap((c) => c.services),
-      ...uncategorized,
+      ...localUncategorized,
     ],
-    [localCategories, uncategorized]
+    [localCategories, localUncategorized]
   );
 
   const typeCounts = useMemo(() => {
@@ -724,8 +726,8 @@ export function ServiceMenuClient({
   }, [localCategories, selectedCategoryId, filterOpts]);
 
   const filteredUncategorized = useMemo(
-    () => uncategorized.filter((s) => matchesCatalogFilters(s, filterOpts)),
-    [uncategorized, filterOpts]
+    () => localUncategorized.filter((s) => matchesCatalogFilters(s, filterOpts)),
+    [localUncategorized, filterOpts]
   );
 
   const categoryCounts = useMemo(() => {
@@ -931,14 +933,46 @@ export function ServiceMenuClient({
   }
 
   async function handleDeleteCategory(id: string) {
-    if (!confirm("Delete this category?")) return;
-    const result = await deleteServiceCategory(id);
-    if ("error" in result && result.error) {
-      alert(result.error);
-      return;
+    const category = localCategories.find((c) => c.id === id);
+    if (!category) return;
+
+    const totalItems = category.services.length;
+    const message =
+      totalItems > 0
+        ? `Delete "${category.name}"? ${totalItems} catalog item(s) will become uncategorized.`
+        : `Delete "${category.name}"?`;
+
+    if (!confirm(message)) return;
+
+    try {
+      const result = await withTimeout(
+        deleteServiceCategory(id),
+        "Delete timed out. Check your connection and try again."
+      );
+
+      if ("error" in result && result.error) {
+        alert(result.error);
+        return;
+      }
+
+      skipNextCategoriesSync.current = true;
+      if (selectedCategoryId === id) setSelectedCategoryId(null);
+
+      setLocalCategories((prev) => prev.filter((c) => c.id !== id));
+
+      if (category.services.length > 0) {
+        setLocalUncategorized((prev) => [
+          ...prev,
+          ...category.services.map((s) => ({
+            ...s,
+            categoryId: null,
+            categoryName: null,
+          })),
+        ]);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not delete category.");
     }
-    if (selectedCategoryId === id) setSelectedCategoryId(null);
-    setLocalCategories((prev) => prev.filter((c) => c.id !== id));
   }
 
   async function moveService(
@@ -1457,7 +1491,10 @@ export function ServiceMenuClient({
               </Button>
             </div>
           ) : (
-            filteredGroups.map((group, groupIndex) => (
+            filteredGroups.map((group, groupIndex) => {
+              const totalItems =
+                localCategories.find((c) => c.id === group.id)?.services.length ?? 0;
+              return (
               <motion.section
                 key={group.id}
                 initial={{ opacity: 0, y: 12 }}
@@ -1474,8 +1511,11 @@ export function ServiceMenuClient({
                         {group.name}
                       </h2>
                       <p className="text-xs text-dashboard-muted">
-                        {group.services.length}{" "}
-                        {group.services.length === 1 ? "service" : "services"}
+                        {totalItems}{" "}
+                        {totalItems === 1 ? "item" : "items"}
+                        {totalItems !== group.services.length
+                          ? ` · ${group.services.length} shown`
+                          : ""}
                       </p>
                     </div>
                   </div>
@@ -1492,16 +1532,20 @@ export function ServiceMenuClient({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="rounded-xl">
                       <DropdownMenuItem
-                        onClick={() =>
-                          setEditCategory({ id: group.id, name: group.name })
-                        }
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          setEditCategory({ id: group.id, name: group.name });
+                        }}
                         className="rounded-lg"
                       >
                         <Pencil className="mr-2 h-4 w-4" />
                         Edit category
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDeleteCategory(group.id)}
+                        onSelect={(e) => {
+                          e.preventDefault();
+                          void handleDeleteCategory(group.id);
+                        }}
                         className="rounded-lg text-dashboard-danger focus:text-dashboard-danger"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
@@ -1544,7 +1588,8 @@ export function ServiceMenuClient({
                   />
                 )}
               </motion.section>
-            ))
+            );
+            })
           )}
         </div>
       </div>
