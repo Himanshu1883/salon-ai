@@ -52,14 +52,26 @@ export function TeamAccessClient({
     }
   }, [preselectedEmployeeId]);
 
+  const loginCount = users.length;
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-dashboard-text">
-            Team Access
-          </h1>
-          <p className="mt-1 text-sm text-stone-500">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-dashboard-text">
+              Team Access
+            </h1>
+            {loginCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="rounded-full px-2.5 font-normal text-dashboard-muted"
+              >
+                {loginCount}
+              </Badge>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-dashboard-muted">
             Pick a team member, then create their login and choose what they can
             see and update.
           </p>
@@ -68,25 +80,36 @@ export function TeamAccessClient({
           <Button
             type="button"
             onClick={() => setDialogOpen(true)}
-            className="rounded-xl"
+            className="rounded-full px-5 shadow-sm"
             disabled={employees.length === 0}
           >
             <UserPlus className="mr-2 h-4 w-4" />
             Create login
           </Button>
-          <Button asChild variant="outline">
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-full border-dashboard-border bg-white shadow-sm hover:bg-violet-50/60"
+          >
             <Link href="/team/members">Team members</Link>
           </Button>
-          <Button asChild variant="outline">
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-full border-dashboard-border bg-white shadow-sm hover:bg-violet-50/60"
+          >
             <Link href="/team/roles">View roles</Link>
           </Button>
         </div>
       </div>
 
       {employees.length === 0 && users.filter((u) => u.role !== "owner").length === 0 && (
-        <div className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div className="rounded-2xl border border-violet-200/80 bg-violet-50/80 px-4 py-3 text-sm text-violet-900">
           Add staff in{" "}
-          <Link href="/team/members" className="font-semibold underline">
+          <Link
+            href="/team/members"
+            className="font-semibold text-dashboard-primary hover:underline"
+          >
             Team → Members
           </Link>{" "}
           first, then come back here to create their login and permissions.
@@ -95,14 +118,15 @@ export function TeamAccessClient({
 
       <div className="overflow-hidden rounded-2xl border border-dashboard-border bg-white shadow-dashboard-card">
         {users.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 px-6 py-14 text-center">
-            <p className="text-sm text-stone-500">
+          <div className="flex flex-col items-center gap-4 px-6 py-14 text-center">
+            <p className="max-w-sm text-sm text-dashboard-muted">
               No login accounts yet. Create one for managers, receptionists, or
               staff.
             </p>
             <Button
               type="button"
               onClick={() => setDialogOpen(true)}
+              className="rounded-full px-5 shadow-sm"
               disabled={employees.length === 0}
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -110,37 +134,37 @@ export function TeamAccessClient({
             </Button>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-stone-100 text-sm">
-            <thead className="bg-stone-50/80">
+          <table className="min-w-full divide-y divide-dashboard-border/60 text-sm">
+            <thead className="bg-violet-50/40">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-stone-600">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
                   Login
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
                   Team member
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
                   Email
                 </th>
-                <th className="px-4 py-3 text-left font-medium text-stone-600">
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
                   Role
                 </th>
-                <th className="px-4 py-3 text-right font-medium text-stone-600">
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100">
+            <tbody className="divide-y divide-dashboard-border/40">
               {users.map((user) => (
-                <tr key={user.id}>
-                  <td className="px-4 py-3 font-medium text-dashboard-text">
+                <tr key={user.id} className="transition-colors hover:bg-violet-50/30">
+                  <td className="px-5 py-3.5 font-medium text-dashboard-text">
                     {user.name}
                   </td>
-                  <td className="px-4 py-3 text-stone-600">
+                  <td className="px-5 py-3.5 text-dashboard-muted">
                     {user.employee ? (
                       <Link
                         href={`/team/members/${user.employee.id}`}
-                        className="hover:text-dashboard-primary hover:underline"
+                        className="text-dashboard-text hover:text-dashboard-primary hover:underline"
                       >
                         {user.employee.name}
                         <span className="ml-1 text-xs text-stone-400">
@@ -153,24 +177,27 @@ export function TeamAccessClient({
                       <span className="text-stone-400">Not linked</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-stone-600">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <Badge variant="secondary">
+                  <td className="px-5 py-3.5 text-dashboard-muted">{user.email}</td>
+                  <td className="px-5 py-3.5">
+                    <Badge
+                      variant="secondary"
+                      className="rounded-full border-0 bg-stone-100 px-2.5 py-0.5 font-normal text-stone-600"
+                    >
                       {user.salonRole?.name ?? user.role}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-5 py-3.5 text-right">
                     <div className="flex flex-col items-end gap-1">
                       <Link
                         href={`/team/access/${user.id}`}
-                        className="font-medium text-dashboard-primary hover:underline"
+                        className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover hover:underline"
                       >
                         Permissions
                       </Link>
                       {user.role !== "owner" && (
                         <button
                           type="button"
-                          className="text-xs text-stone-600 hover:text-dashboard-primary hover:underline"
+                          className="text-xs text-dashboard-muted hover:text-stone-700 hover:underline"
                           onClick={() =>
                             setPasswordReset({ userId: user.id, name: user.name })
                           }

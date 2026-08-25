@@ -37,10 +37,10 @@ export function TeamAccessUserClient({
   return (
     <div className="space-y-6">
       {canResetPassword && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-stone-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashboard-border bg-white p-5 shadow-dashboard-card">
           <div>
-            <p className="text-sm font-medium text-stone-900">Login password</p>
-            <p className="text-xs text-stone-500">
+            <p className="text-sm font-semibold text-dashboard-text">Login password</p>
+            <p className="mt-0.5 text-xs text-dashboard-muted">
               Set a new password if the team member forgot theirs or you need to
               rotate access.
             </p>
@@ -48,9 +48,10 @@ export function TeamAccessUserClient({
           <Button
             type="button"
             variant="outline"
+            className="rounded-full border-dashboard-border bg-white shadow-sm hover:bg-violet-50/60"
             onClick={() => setPasswordOpen(true)}
           >
-            <KeyRound className="mr-2 h-4 w-4" />
+            <KeyRound className="mr-2 h-4 w-4 text-dashboard-muted" />
             Reset password
           </Button>
         </div>

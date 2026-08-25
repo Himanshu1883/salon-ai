@@ -73,7 +73,7 @@ export function ResetStaffPasswordDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl">
+      <DialogContent className="max-w-md rounded-2xl border-dashboard-border shadow-dashboard-card">
         <DialogHeader>
           <DialogTitle>Reset password</DialogTitle>
           <DialogDescription>
@@ -87,7 +87,11 @@ export function ResetStaffPasswordDialog({
             <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
               Password updated. Share the new password with {staffName} securely.
             </p>
-            <Button type="button" onClick={() => handleOpenChange(false)}>
+            <Button
+              type="button"
+              className="rounded-full shadow-sm"
+              onClick={() => handleOpenChange(false)}
+            >
               Done
             </Button>
           </div>
@@ -134,12 +138,17 @@ export function ResetStaffPasswordDialog({
               <Button
                 type="button"
                 variant="outline"
+                className="rounded-full border-dashboard-border"
                 disabled={pending}
                 onClick={() => handleOpenChange(false)}
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={pending || !userId}>
+              <Button
+                type="submit"
+                className="rounded-full shadow-sm"
+                disabled={pending || !userId}
+              >
                 {pending ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin" />

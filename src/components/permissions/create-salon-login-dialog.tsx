@@ -222,7 +222,7 @@ export function CreateSalonLoginDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-2xl">
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto rounded-2xl border-dashboard-border shadow-dashboard-card">
         {success ? (
           <>
             <DialogHeader>
@@ -247,11 +247,20 @@ export function CreateSalonLoginDialog({
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" onClick={copyCredentials}>
+              <Button
+                type="button"
+                variant="outline"
+                className="rounded-full border-dashboard-border"
+                onClick={copyCredentials}
+              >
                 <Copy className="mr-2 h-4 w-4" />
                 Copy credentials
               </Button>
-              <Button type="button" onClick={() => handleOpenChange(false)}>
+              <Button
+                type="button"
+                className="rounded-full shadow-sm"
+                onClick={() => handleOpenChange(false)}
+              >
                 Done
               </Button>
             </div>
@@ -271,7 +280,11 @@ export function CreateSalonLoginDialog({
               </Link>{" "}
               to add staff, then return to create their access.
             </p>
-            <Button type="button" onClick={() => handleOpenChange(false)}>
+            <Button
+              type="button"
+              className="rounded-full shadow-sm"
+              onClick={() => handleOpenChange(false)}
+            >
               Close
             </Button>
           </>
@@ -295,7 +308,7 @@ export function CreateSalonLoginDialog({
                   onValueChange={handleEmployeeChange}
                   disabled={pending}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-xl border-stone-200 bg-stone-50/50 focus:ring-dashboard-primary/20">
                     <SelectValue placeholder="Select staff member" />
                   </SelectTrigger>
                   <SelectContent>
@@ -361,7 +374,7 @@ export function CreateSalonLoginDialog({
                     setRoleKey(e.target.value as SystemRoleKey)
                   }
                   disabled={pending}
-                  className="h-11 w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 text-sm"
+                  className="h-11 w-full rounded-xl border border-stone-200 bg-stone-50/50 px-3 text-sm focus:border-dashboard-primary focus:outline-none focus:ring-2 focus:ring-dashboard-primary/20"
                 >
                   {CREATE_ROLE_OPTIONS.map((option) => (
                     <option key={option.key} value={option.key}>
@@ -389,7 +402,7 @@ export function CreateSalonLoginDialog({
                 modules.map((group) => (
                   <div
                     key={group.module}
-                    className="rounded-xl border border-stone-100 p-3"
+                    className="rounded-xl border border-dashboard-border/60 bg-violet-50/20 p-3"
                   >
                     <h3 className="text-sm font-semibold text-dashboard-text">
                       {getModuleLabel(group.module as never)}
@@ -412,7 +425,10 @@ export function CreateSalonLoginDialog({
                               {perm.name}
                             </span>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
+                          <Badge
+                            variant="secondary"
+                            className="rounded-full border-0 bg-stone-100 px-2 font-normal text-stone-600"
+                          >
                             {perm.granted ? "On" : "Off"}
                           </Badge>
                         </label>
@@ -431,12 +447,17 @@ export function CreateSalonLoginDialog({
                 <Button
                   type="button"
                   variant="outline"
+                  className="rounded-full border-dashboard-border"
                   disabled={pending}
                   onClick={() => handleOpenChange(false)}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={pending || !employeeId}>
+                <Button
+                  type="submit"
+                  className="rounded-full shadow-sm"
+                  disabled={pending || !employeeId}
+                >
                   {pending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
