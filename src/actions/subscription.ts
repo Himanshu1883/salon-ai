@@ -147,11 +147,16 @@ export async function syncAllSalonOverdueStates() {
 }
 
 export async function getSalonSubscriptionStatus(salonId: string) {
+  await syncOverdueState(salonId);
+
   const [subscription, invoices, overdueInvoice, blocked, salon] = await Promise.all([
-    getSalonSubscription(salonId),
-    getPlatformInvoices(salonId),
-    getOverduePlatformInvoice(salonId),
-    isSalonAccessBlocked(salonId),
+    prisma.salonSubscription.findUnique({ where: { salonId } }),
+    prisma.platformInvoice.findMany({
+      where: { salonId },
+      orderBy: { dueDate: "desc" },
+    }),
+    getOverduePlatformInvoiceReadOnly(salonId),
+    isSalonAccessBlockedReadOnly(salonId),
     prisma.salon.findUnique({
       where: { id: salonId },
       select: { plan: true },
@@ -166,6 +171,25 @@ export async function getSalonSubscriptionStatus(salonId: string) {
     overdueInvoice,
     blocked,
     planMonthlyFallback: billing.monthlyAmount,
+  };
+}
+
+export async function getBillingSubscriptionTabData() {
+  const session = await requireSession();
+  const salonId = session.user.salonId!;
+  let status = await getSalonSubscriptionStatus(salonId);
+
+  if (
+    status.subscription?.status === "trial" &&
+    status.subscription.trialEndsAt
+  ) {
+    await generateTrialInvoice(salonId).catch(() => undefined);
+    status = await getSalonSubscriptionStatus(salonId);
+  }
+
+  return {
+    invoices: status.invoices,
+    subscriptionPlanName: status.subscription?.planName ?? "Enterprise",
   };
 }
 

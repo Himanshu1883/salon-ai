@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   deleteInvoice,
   updateInvoiceStatus,
 } from "@/actions/billing";
+import { getBillingSubscriptionTabData } from "@/actions/subscription";
 import { BillingInvoiceDialog } from "@/components/billing/billing-invoice-dialog";
 import { BillingHeader } from "@/components/billing/billing-header";
 import { BillingKpiCards } from "@/components/billing/billing-kpi-cards";
@@ -39,7 +40,7 @@ export function BillingClient({
   salonName = "Salon",
   gstEnabled = true,
   whatsappSettings,
-  platformInvoices = [],
+  platformInvoices: platformInvoicesProp = [],
   subscriptionPlanName = "Enterprise",
   initialTab = "customers",
 }: {
@@ -68,6 +69,40 @@ export function BillingClient({
   const [open, setOpen] = useState(autoOpenCreate);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState(initialTab);
+  const [platformInvoices, setPlatformInvoices] = useState(platformInvoicesProp);
+  const [subscriptionPlanNameState, setSubscriptionPlanNameState] =
+    useState(subscriptionPlanName);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const subscriptionLoadedRef = useRef(platformInvoicesProp.length > 0);
+
+  useEffect(() => {
+    setPlatformInvoices(platformInvoicesProp);
+    setSubscriptionPlanNameState(subscriptionPlanName);
+    if (platformInvoicesProp.length > 0) {
+      subscriptionLoadedRef.current = true;
+    }
+  }, [platformInvoicesProp, subscriptionPlanName]);
+
+  useEffect(() => {
+    if (activeTab !== "subscription" || subscriptionLoadedRef.current) return;
+
+    let cancelled = false;
+    setSubscriptionLoading(true);
+    getBillingSubscriptionTabData()
+      .then((data) => {
+        if (cancelled) return;
+        setPlatformInvoices(data.invoices);
+        setSubscriptionPlanNameState(data.subscriptionPlanName);
+        subscriptionLoadedRef.current = true;
+      })
+      .finally(() => {
+        if (!cancelled) setSubscriptionLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab]);
 
   useEffect(() => {
     setInvoices(initialInvoices);
@@ -241,11 +276,17 @@ export function BillingClient({
 
         <TabsContent value="subscription" className="mt-0">
           <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
-            <PlatformSubscriptionInvoices
-              invoices={platformInvoices}
-              planName={subscriptionPlanName}
-              salonName={salonName}
-            />
+            {subscriptionLoading ? (
+              <div className="flex min-h-[240px] items-center justify-center p-8 text-sm text-[#9CA3AF]">
+                Loading subscription invoices…
+              </div>
+            ) : (
+              <PlatformSubscriptionInvoices
+                invoices={platformInvoices}
+                planName={subscriptionPlanNameState}
+                salonName={salonName}
+              />
+            )}
           </div>
         </TabsContent>
       </Tabs>

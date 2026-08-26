@@ -8,8 +8,9 @@ import { getStockStatus } from "@/lib/stock";
 import { startOfMonth, subDays, format } from "date-fns";
 
 async function fetchInventoryDashboardStats(salonId: string) {
-  const monthStart = startOfMonth(new Date());
-  const thirtyDaysAgo = subDays(new Date(), 30);
+  const now = new Date();
+  const monthStart = startOfMonth(now);
+  const thirtyDaysAgo = subDays(now, 30);
 
   const [
     items,
@@ -21,7 +22,7 @@ async function fetchInventoryDashboardStats(salonId: string) {
     consumptionThisMonth,
     salesThisMonth,
     movementByDay,
-    dailyPurchases,
+    purchaseTrendRows,
   ] = await Promise.all([
     prisma.stockItem.count({ where: { salonId, status: "active" } }),
     getLowStockCountForSalon(salonId),
@@ -29,7 +30,7 @@ async function fetchInventoryDashboardStats(salonId: string) {
       where: {
         salonId,
         status: "active",
-        expiryDate: { lte: subDays(new Date(), -30), gte: new Date() },
+        expiryDate: { lte: subDays(now, -30), gte: now },
       },
     }),
     prisma.$queryRaw<{ total: number }[]>`
@@ -39,7 +40,11 @@ async function fetchInventoryDashboardStats(salonId: string) {
     `,
     prisma.stockLedgerEntry.findMany({
       where: { salonId, createdAt: { gte: thirtyDaysAgo } },
-      include: {
+      select: {
+        id: true,
+        movementType: true,
+        quantity: true,
+        createdAt: true,
         stockItem: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
@@ -69,14 +74,15 @@ async function fetchInventoryDashboardStats(salonId: string) {
       where: { salonId, createdAt: { gte: thirtyDaysAgo } },
       _count: { id: true },
     }),
-    prisma.stockLedgerEntry.findMany({
-      where: {
-        salonId,
-        movementType: { in: ["purchase", "grn"] },
-        createdAt: { gte: thirtyDaysAgo },
-      },
-      select: { createdAt: true, quantity: true },
-    }),
+    prisma.$queryRaw<{ day: Date; qty: number }[]>`
+      SELECT DATE("createdAt") AS day, COALESCE(SUM(ABS(quantity)), 0)::float AS qty
+      FROM "StockLedgerEntry"
+      WHERE "salonId" = ${salonId}
+        AND "movementType" IN ('purchase', 'grn')
+        AND "createdAt" >= ${thirtyDaysAgo}
+      GROUP BY DATE("createdAt")
+      ORDER BY day ASC
+    `,
   ]);
 
   const inventoryValue = inventoryValueRow[0]?.total ?? 0;
@@ -88,12 +94,12 @@ async function fetchInventoryDashboardStats(salonId: string) {
 
   const purchaseTrend: Record<string, number> = {};
   for (let i = 29; i >= 0; i--) {
-    const d = format(subDays(new Date(), i), "MMM d");
+    const d = format(subDays(now, i), "MMM d");
     purchaseTrend[d] = 0;
   }
-  for (const p of dailyPurchases) {
-    const key = format(p.createdAt, "MMM d");
-    if (key in purchaseTrend) purchaseTrend[key] += Math.abs(p.quantity);
+  for (const row of purchaseTrendRows) {
+    const key = format(row.day, "MMM d");
+    if (key in purchaseTrend) purchaseTrend[key] = row.qty;
   }
 
   return {

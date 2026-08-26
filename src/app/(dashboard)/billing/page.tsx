@@ -1,9 +1,9 @@
 import { getInvoices, getBillingStats } from "@/actions/billing";
-import { generateTrialInvoice, getSalonSubscriptionStatus } from "@/actions/subscription";
+import { getBillingSubscriptionTabData } from "@/actions/subscription";
 import { BillingClient } from "./billing-client";
 import { getServiceOptions } from "@/actions/services";
-import { getActiveEmployees } from "@/actions/employees";
-import { getSeats } from "@/actions/seats";
+import { getEmployeeOptions } from "@/actions/employees";
+import { getSeatOptions } from "@/actions/seats";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { requireSession } from "@/lib/auth";
@@ -25,37 +25,39 @@ export default async function BillingPage({
 }) {
   const session = await requireSession();
   const params = await searchParams;
-  const plan = await getSalonPlan(session.user.salonId);
+  const loadSubscription = params.tab === "subscription";
+
+  const [
+    plan,
+    invoices,
+    stats,
+    services,
+    employees,
+    seats,
+    salon,
+    subscriptionTab,
+    whatsappSettings,
+  ] = await Promise.all([
+    getSalonPlan(session.user.salonId),
+    getInvoices({
+      status: params.status,
+      dateFrom: params.dateFrom,
+      dateTo: params.dateTo,
+      employeeId: params.employeeId,
+    }),
+    getBillingStats(),
+    getServiceOptions(),
+    getEmployeeOptions(),
+    getSeatOptions(),
+    prisma.salon.findUnique({
+      where: { id: session.user.salonId },
+      select: { name: true, gstEnabled: true },
+    }),
+    loadSubscription ? getBillingSubscriptionTabData() : Promise.resolve(null),
+    getWhatsAppSettingsAction(),
+  ]);
+
   const basicBilling = isBasicPlan(plan);
-
-  const [invoices, stats, services, employees, seats, salon, platformBilling, whatsappSettings] =
-    await Promise.all([
-      getInvoices({
-        status: params.status,
-        dateFrom: params.dateFrom,
-        dateTo: params.dateTo,
-        employeeId: params.employeeId,
-      }),
-      getBillingStats(),
-      getServiceOptions(),
-      getActiveEmployees(),
-      getSeats(),
-      prisma.salon.findUnique({
-        where: { id: session.user.salonId },
-        select: { name: true, gstEnabled: true },
-      }),
-      getSalonSubscriptionStatus(session.user.salonId),
-      getWhatsAppSettingsAction(),
-    ]);
-
-  if (
-    platformBilling.subscription?.status === "trial" &&
-    platformBilling.subscription.trialEndsAt
-  ) {
-    await generateTrialInvoice(session.user.salonId).catch(() => undefined);
-    const refreshed = await getSalonSubscriptionStatus(session.user.salonId);
-    platformBilling.invoices = refreshed.invoices;
-  }
 
   return (
     <BillingClient
@@ -70,7 +72,7 @@ export default async function BillingPage({
         description: s.description,
       }))}
       employees={employees.map((e) => ({ id: e.id, name: e.name }))}
-      seats={seats.map((s) => ({ id: s.id, number: s.number }))}
+      seats={seats}
       filters={{
         status: params.status ?? "all",
         dateFrom: params.dateFrom ?? "",
@@ -86,11 +88,9 @@ export default async function BillingPage({
       salonName={salon?.name ?? "Salon"}
       gstEnabled={salon?.gstEnabled ?? true}
       whatsappSettings={whatsappSettings}
-      platformInvoices={platformBilling.invoices}
-      subscriptionPlanName={
-        platformBilling.subscription?.planName ?? "Enterprise"
-      }
-      initialTab={params.tab === "subscription" ? "subscription" : "customers"}
+      platformInvoices={subscriptionTab?.invoices ?? []}
+      subscriptionPlanName={subscriptionTab?.subscriptionPlanName ?? "Enterprise"}
+      initialTab={loadSubscription ? "subscription" : "customers"}
     />
   );
 }

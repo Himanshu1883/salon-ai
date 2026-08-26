@@ -8,7 +8,7 @@ import {
   invoiceSchemaBasic,
   markPaidSchema,
 } from "@/lib/validations";
-import { revalidateSalonCache } from "@/lib/salon-cache";
+import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays } from "date-fns";
@@ -159,9 +159,15 @@ export async function getBillingStatsForSalon(salonId: string) {
   };
 }
 
+const getCachedBillingStats = cachedBySalon(
+  "billing",
+  getBillingStatsForSalon,
+  { revalidate: 30, key: "stats" }
+);
+
 export async function getBillingStats() {
   const session = await requireSession();
-  return getBillingStatsForSalon(session.user.salonId);
+  return getCachedBillingStats(session.user.salonId!);
 }
 
 export async function getEmployeeEarnings() {
@@ -339,12 +345,42 @@ export async function getInvoices(filters?: {
 
   return prisma.invoice.findMany({
     where,
-    include: {
-      lineItems: { include: { service: true } },
-      appointment: { include: { service: true } },
-      checkIn: { include: { customer: true } },
-      employee: true,
-      seat: true,
+    select: {
+      id: true,
+      customerName: true,
+      customerPhone: true,
+      status: true,
+      subtotal: true,
+      tax: true,
+      total: true,
+      dueDate: true,
+      paidAt: true,
+      paymentMethod: true,
+      createdAt: true,
+      lineItems: {
+        select: {
+          id: true,
+          description: true,
+          quantity: true,
+          unitPrice: true,
+          total: true,
+          service: { select: { name: true } },
+        },
+      },
+      appointment: {
+        select: {
+          id: true,
+          service: { select: { name: true } },
+        },
+      },
+      checkIn: {
+        select: {
+          id: true,
+          customer: { select: { name: true } },
+        },
+      },
+      employee: { select: { id: true, name: true } },
+      seat: { select: { id: true, number: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 500,

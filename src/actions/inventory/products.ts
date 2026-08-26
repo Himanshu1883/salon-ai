@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getInventoryAccess, requireInventoryWrite } from "@/lib/inventory/permissions";
+import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { getStockStatus } from "@/lib/stock";
 import { STOCK_UNITS } from "@/lib/validations";
 import { z } from "zod";
@@ -36,7 +37,9 @@ const productSchema = z.object({
 
 const PATHS = ["/inventory/products", "/inventory/stock", "/catalog/products"];
 
-function revalidate() {
+function revalidate(salonId: string) {
+  scheduleSalonCacheRevalidation(salonId, "dashboard-stats");
+  revalidatePath("/inventory");
   for (const p of PATHS) revalidatePath(p);
 }
 
@@ -190,7 +193,7 @@ export async function createProduct(formData: FormData) {
     },
   });
 
-  revalidate();
+  revalidate(session.user.salonId!);
   return { success: true, id: item.id };
 }
 
@@ -251,7 +254,7 @@ export async function updateProduct(id: string, formData: FormData) {
     },
   });
 
-  revalidate();
+  revalidate(session.user.salonId!);
   revalidatePath(`/inventory/products/${id}`);
   return { success: true };
 }
@@ -265,7 +268,7 @@ export async function deleteProduct(id: string) {
   if (!item) return { error: "Product not found" };
 
   await prisma.stockItem.delete({ where: { id } });
-  revalidate();
+  revalidate(session.user.salonId!);
   return { success: true };
 }
 

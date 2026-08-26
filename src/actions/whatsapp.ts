@@ -4,6 +4,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
+import { revalidateSalonCache } from "@/lib/salon-cache";
 import {
   DEFAULT_BILLING_MESSAGE_TEMPLATE,
   buildBillingWhatsAppMessage,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/whatsapp";
 import type { WhatsAppInvoiceContext } from "@/lib/whatsapp";
 import { getAppOrigin } from "@/lib/salon-paths";
+import { cachedBySalon } from "@/lib/salon-cache";
 
 async function getOrCreateWhatsAppSettings(salonId: string) {
   let settings = await prisma.whatsAppSettings.findUnique({
@@ -27,13 +29,28 @@ async function getOrCreateWhatsAppSettings(salonId: string) {
   return settings;
 }
 
+const getCachedWhatsAppBillingSettings = cachedBySalon(
+  "billing",
+  async (salonId: string) => {
+    const settings = await prisma.whatsAppSettings.findUnique({
+      where: { salonId },
+      select: {
+        billingMessageTemplate: true,
+        autoOpenAfterPayment: true,
+      },
+    });
+    return {
+      billingMessageTemplate:
+        settings?.billingMessageTemplate ?? DEFAULT_BILLING_MESSAGE_TEMPLATE,
+      autoOpenAfterPayment: settings?.autoOpenAfterPayment ?? false,
+    };
+  },
+  { revalidate: 120, key: "whatsapp-settings" }
+);
+
 export async function getWhatsAppSettingsAction() {
   const session = await requireSession();
-  const settings = await getOrCreateWhatsAppSettings(session.user.salonId);
-  return {
-    billingMessageTemplate: settings.billingMessageTemplate,
-    autoOpenAfterPayment: settings.autoOpenAfterPayment,
-  };
+  return getCachedWhatsAppBillingSettings(session.user.salonId!);
 }
 
 const updateSchema = z.object({
@@ -67,7 +84,9 @@ export async function updateWhatsAppSettings(data: {
     },
   });
 
+  revalidateSalonCache(session.user.salonId!, "billing");
   revalidatePath("/settings/whatsapp");
+  revalidatePath("/billing");
   return { success: true as const };
 }
 

@@ -2,8 +2,25 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { seatsConfigSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
+
+const getCachedSeatOptions = cachedBySalon(
+  "team",
+  async (salonId: string) =>
+    prisma.seat.findMany({
+      where: { salonId },
+      select: { id: true, number: true },
+      orderBy: { number: "asc" },
+    }),
+  { revalidate: 60, key: "seat-options" }
+);
+
+export async function getSeatOptions() {
+  const session = await requireSession();
+  return getCachedSeatOptions(session.user.salonId!);
+}
 
 export async function getSeats() {
   const session = await requireSession();
@@ -67,8 +84,10 @@ export async function updateSeatsConfig(formData: FormData) {
     data: { totalSeats: newTotal },
   });
 
+  scheduleSalonCacheRevalidation(session.user.salonId!, "team");
   revalidatePath("/seats");
   revalidatePath("/dashboard");
+  revalidatePath("/billing");
   return { success: true };
 }
 
