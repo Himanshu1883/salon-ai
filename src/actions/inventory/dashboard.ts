@@ -1,19 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { cachedBySalon } from "@/lib/salon-cache";
 import { getInventoryAccess } from "@/lib/inventory/permissions";
 import { getLowStockCountForSalon } from "@/actions/stock";
 import { getStockStatus } from "@/lib/stock";
 import { startOfMonth, subDays, format } from "date-fns";
-
-const PATHS = ["/inventory", "/inventory/products", "/dashboard"];
-
-function revalidateInventoryPages(salonId: string) {
-  scheduleSalonCacheRevalidation(salonId, "dashboard-stats");
-  for (const p of PATHS) revalidatePath(p);
-}
 
 async function fetchInventoryDashboardStats(salonId: string) {
   const monthStart = startOfMonth(new Date());
@@ -168,5 +160,3 @@ export async function getInventoryAlerts() {
 
   return { lowStock, expiring };
 }
-
-export { revalidateInventoryPages };
