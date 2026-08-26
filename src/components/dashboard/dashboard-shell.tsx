@@ -20,7 +20,7 @@ type DashboardShellProps = {
   plan?: import("@/lib/plans").SalonPlan;
   permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
   isOwner?: boolean;
-  headerAlertCount?: number;
+  headerAlerts?: React.ReactNode;
   recordSaleFormData?: RecordSaleFormData | null;
   children: React.ReactNode;
 };
@@ -48,13 +48,12 @@ function DashboardShellInner({
   plan = "ENTERPRISE",
   permissionKeys = [],
   isOwner = false,
-  headerAlertCount = 0,
+  headerAlerts = null,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarReady, setSidebarReady] = useState(false);
-  const [alertCount, setAlertCount] = useState(headerAlertCount);
   const { openRecordSale } = useRecordSale();
 
   useEffect(() => {
@@ -84,10 +83,6 @@ function DashboardShellInner({
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
   }, [sidebarReady]);
-
-  useEffect(() => {
-    setAlertCount(headerAlertCount);
-  }, [headerAlertCount]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileOpen((open) => !open);
@@ -170,7 +165,7 @@ function DashboardShellInner({
           salonSlug={salonSlug}
           userRole={userRole}
           showSettings={showSettings}
-          alertCount={alertCount}
+          alertBadge={headerAlerts}
           accessBlocked={accessBlocked}
         />
 
@@ -191,13 +186,13 @@ function DashboardShellInner({
 
 export function DashboardShell({
   recordSaleFormData = null,
-  headerAlertCount = 0,
+  headerAlerts = null,
   ...props
 }: DashboardShellProps) {
   return (
     <RecordSaleProvider initialFormData={recordSaleFormData}>
       <div className="dashboard-shell flex h-dvh overflow-hidden font-[family-name:var(--font-inter)]">
-        <DashboardShellInner {...props} headerAlertCount={headerAlertCount} />
+        <DashboardShellInner {...props} headerAlerts={headerAlerts} />
       </div>
     </RecordSaleProvider>
   );

@@ -2,15 +2,12 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession, getAuthSession } from "@/lib/auth";
-import { cachedBySalon, salonCacheTag } from "@/lib/salon-cache";
 import {
   startOfMonth,
   endOfMonth,
 } from "date-fns";
-import { getBillingStatsForSalon } from "@/actions/billing";
-import { getPendingSmsCountForSalon } from "@/actions/sms";
-import { getLowStockCountForSalon } from "@/actions/stock";
-import { getOverduePlatformInvoiceReadOnly } from "@/actions/subscription";
+import { salonCacheTag } from "@/lib/salon-cache";
+import { fetchLayoutAlertMetrics } from "@/lib/layout/alert-metrics";
 import { getCachedDashboardPageData } from "@/lib/dashboard/page-data";
 
 export type RevenueDay = {
@@ -96,51 +93,16 @@ export async function getLayoutHeaderData() {
   if (!session?.user?.salonId) {
     return { alertCount: 0, showUpgrade: false };
   }
-  return getCachedLayoutHeaderData(session.user.salonId);
+  return getLayoutHeaderDataForSalon(session.user.salonId);
 }
 
 export async function getLayoutHeaderDataForSalon(salonId: string) {
-  return getCachedLayoutHeaderData(salonId);
+  const metrics = await fetchLayoutAlertMetrics(salonId);
+  return {
+    alertCount: metrics.alertCount,
+    showUpgrade: metrics.showUpgrade,
+    subscriptionStatus: null,
+  };
 }
-
-function getCachedLayoutHeaderData(salonId: string) {
-  return getLayoutHeaderDataCached(salonId);
-}
-
-const getLayoutHeaderDataCached = cachedBySalon(
-  "layout-alerts",
-  async (salonId: string) => {
-      const now = new Date();
-
-      const [lowStockCount, billingStats, pendingSms, subscription, overduePlatformInvoice] =
-        await Promise.all([
-          getLowStockCountForSalon(salonId),
-          getBillingStatsForSalon(salonId),
-          getPendingSmsCountForSalon(salonId),
-          prisma.salonSubscription.findUnique({ where: { salonId } }),
-          getOverduePlatformInvoiceReadOnly(salonId),
-        ]);
-
-      let alertCount = 0;
-      if (lowStockCount > 0) alertCount += lowStockCount;
-      if (billingStats.unpaidCount > 0) alertCount += billingStats.unpaidCount;
-      if (pendingSms > 0) alertCount += pendingSms;
-      if (overduePlatformInvoice) alertCount += 1;
-
-      const trialEndingSoon =
-        subscription?.status === "trial" &&
-        subscription.trialEndsAt &&
-        subscription.trialEndsAt.getTime() - now.getTime() <= 7 * 24 * 60 * 60 * 1000;
-      if (trialEndingSoon) alertCount += 1;
-
-      return {
-        alertCount,
-        subscriptionStatus: subscription?.status ?? null,
-        showUpgrade:
-          subscription?.status === "trial" || subscription?.status === "past_due",
-      };
-  },
-  { revalidate: 30 }
-);
 
 export { salonCacheTag };

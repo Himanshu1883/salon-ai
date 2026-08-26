@@ -8,6 +8,8 @@ import bcrypt from "bcryptjs";
 import { performance } from "node:perf_hooks";
 import { prisma } from "@/lib/prisma";
 import { fetchDashboardPageData } from "@/lib/dashboard/page-data";
+import { fetchDashboardBillingMetrics } from "@/lib/dashboard/billing-metrics";
+import { fetchLayoutAlertMetrics } from "@/lib/layout/alert-metrics";
 import { startOfWeek, endOfWeek, addDays, max, startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 
 async function timed<T>(label: string, fn: () => Promise<T>) {
@@ -122,31 +124,14 @@ async function measurePostLoginDashboard(salonId: string, userId: string) {
   );
 
   const now = new Date();
-  await timed("layout: header alerts (5 parallel queries)", () =>
-    Promise.all([
-      prisma.$queryRaw<{ count: number }[]>`
-        SELECT COUNT(*)::int AS count FROM "StockItem"
-        WHERE "salonId" = ${salonId}
-          AND ("quantityOnHand" <= 0 OR ("reorderLevel" IS NOT NULL AND "quantityOnHand" <= "reorderLevel"))
-      `.then((r) => r[0]?.count ?? 0),
-      Promise.all([
-        prisma.invoice.aggregate({
-          where: { salonId, status: "paid", paidAt: { gte: startOfDay(now), lte: endOfDay(now) } },
-          _sum: { total: true },
-        }),
-        prisma.invoice.aggregate({
-          where: { salonId, status: "paid", paidAt: { gte: startOfMonth(now), lte: endOfMonth(now) } },
-          _sum: { total: true },
-        }),
-        prisma.invoice.count({ where: { salonId, status: { in: ["sent", "partial"] } } }),
-      ]),
-      prisma.smsReminder.count({ where: { salonId, status: "pending" } }).catch(() => 0),
-      prisma.salonSubscription.findUnique({ where: { salonId } }),
-    ])
+  await timed("layout: header alerts (cached, ≤3 queries)", () =>
+    fetchLayoutAlertMetrics(salonId)
   );
-
-  await timed("dashboard: fetchDashboardPageData (19+ parallel queries)", () =>
+  await timed("dashboard: fetchDashboardPageData (~14 parallel queries)", () =>
     fetchDashboardPageData(salonId)
+  );
+  await timed("dashboard: billing metrics SQL (3 queries)", () =>
+    fetchDashboardBillingMetrics(salonId)
   );
 }
 

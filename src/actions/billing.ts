@@ -10,6 +10,7 @@ import {
   markPaidSchema,
 } from "@/lib/validations";
 import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { getCachedBillingStats } from "@/lib/billing/stats-cache";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays } from "date-fns";
@@ -218,12 +219,6 @@ export async function getBillingStatsForSalon(salonId: string) {
     unpaidCount,
   };
 }
-
-const getCachedBillingStats = cachedBySalon(
-  "billing",
-  getBillingStatsForSalon,
-  { revalidate: 30, key: "stats" }
-);
 
 export async function getBillingStats() {
   const session = await requireSession();
@@ -497,6 +492,12 @@ export async function createInvoice(formData: FormData) {
   };
   const clientGstEnabled = formData.get("gstEnabled");
   const clientEmployeeCount = formData.get("activeEmployeeCount");
+  const immediatePaymentMethod = formData.get("paymentMethod") as string | null;
+  const immediatePaymentAmountRaw = formData.get("amount");
+  const immediatePaymentAmount =
+    immediatePaymentAmountRaw != null && immediatePaymentAmountRaw !== ""
+      ? Number(immediatePaymentAmountRaw)
+      : undefined;
 
   const [plan, activeEmployeeCount] = await Promise.all([
     getSalonPlan(salonId),
@@ -646,7 +647,84 @@ export async function createInvoice(formData: FormData) {
   }
 
   let invoice;
+  const lineItemsForStock = parsed.data.lineItems.map((item) => ({
+    itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
+    stockItemId: item.stockItemId,
+    quantity: item.quantity,
+  }));
+
   try {
+    if (immediatePaymentMethod) {
+      const paymentAmount = immediatePaymentAmount ?? totals.total;
+      if (paymentAmount > totals.total + 0.009) {
+        return {
+          error: `Payment cannot exceed the invoice total (${totals.total.toFixed(2)})`,
+        };
+      }
+      const fullyPaid = isInvoiceFullyPaid({
+        total: totals.total,
+        amountPaid: paymentAmount,
+      });
+
+      invoice = await prisma.$transaction(async (tx) => {
+        const created = await tx.invoice.create({
+          data: {
+            salonId,
+            customerId: customer.id,
+            customerName: parsed.data.customerName,
+            customerPhone: parsed.data.customerPhone,
+            notes: invoiceNotes || null,
+            dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
+            status: fullyPaid ? "paid" : "partial",
+            employeeId: invoiceEmployeeId,
+            seatId: parsed.data.seatId || null,
+            subtotal: totals.subtotal,
+            tax: totals.tax,
+            total: totals.total,
+            amountPaid: paymentAmount,
+            paidAt: fullyPaid ? new Date() : null,
+            paymentMethod: immediatePaymentMethod,
+            lineItems: {
+              create: resolvedLineItems.map((item) => ({
+                description: item.description,
+                quantity: item.quantity,
+                unitPrice: item.unitPrice,
+                total: item.quantity * item.unitPrice,
+                serviceId: item.serviceId || null,
+                stockItemId: item.stockItemId || null,
+                itemType:
+                  item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
+                employeeId: item.employeeId || null,
+              })),
+            },
+          },
+        });
+
+        if (fullyPaid) {
+          await deductProductLineItems(
+            salonId,
+            created.id,
+            lineItemsForStock,
+            customer.id,
+            invoiceEmployeeId,
+            session.user.id,
+            tx
+          );
+        }
+
+        return created;
+      });
+
+      invalidateBillingCache(salonId);
+      return {
+        success: true,
+        id: invoice.id,
+        status: fullyPaid ? "paid" : "partial",
+        amountPaid: paymentAmount,
+        balanceDue: fullyPaid ? 0 : totals.total - paymentAmount,
+      };
+    }
+
     invoice = await prisma.invoice.create({
       data: {
         salonId,
@@ -692,11 +770,7 @@ export async function createInvoice(formData: FormData) {
     await deductProductLineItems(
       salonId,
       invoice.id,
-      parsed.data.lineItems.map((item) => ({
-        itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
-        stockItemId: item.stockItemId,
-        quantity: item.quantity,
-      })),
+      lineItemsForStock,
       customer.id,
       invoiceEmployeeId,
       session.user.id

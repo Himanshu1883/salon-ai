@@ -45,7 +45,7 @@ type DashboardHeaderProps = {
   salonSlug?: string;
   userRole?: string;
   showSettings?: boolean;
-  alertCount?: number;
+  alertBadge?: React.ReactNode;
   accessBlocked?: boolean;
 };
 
@@ -55,7 +55,7 @@ export function DashboardHeader({
   salonSlug,
   userRole = "owner",
   showSettings = false,
-  alertCount = 0,
+  alertBadge = null,
   accessBlocked = false,
 }: DashboardHeaderProps) {
   const { isEnterprise } = usePlan();
@@ -113,11 +113,7 @@ export function DashboardHeader({
               >
                 <Link href="/dashboard" aria-label="Notifications">
                   <Bell className="h-4 w-4 text-dashboard-muted" />
-                  {alertCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-dashboard-danger px-1 text-[10px] font-semibold text-white">
-                      {alertCount > 9 ? "9+" : alertCount}
-                    </span>
-                  )}
+                  {alertBadge}
                 </Link>
               </Button>
 

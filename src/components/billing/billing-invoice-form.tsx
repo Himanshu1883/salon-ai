@@ -7,7 +7,6 @@ import { X } from "lucide-react";
 import {
   createInvoice,
   markInvoicePaid,
-  updateInvoiceStatus,
 } from "@/actions/billing";
 import { getProducts } from "@/actions/inventory/products";
 import { resolveLineItemLabel } from "@/lib/service-display";
@@ -474,25 +473,36 @@ export function BillingInvoiceForm({
       : "Receive Payment & Complete"
     : "Receive Payment & Complete";
 
-  async function handleCreateInvoice() {
+  async function handleProceedToPayment() {
     if (!validateStep1()) return;
-
-    setLoading(true);
     setError("");
+    setSplitRows([{ key: crypto.randomUUID(), method: "cash", amount: displayTotal }]);
+    setStep(2);
+  }
 
+  function buildInvoiceFormData(invoiceStatus: string, payment?: {
+    method: string;
+    amount?: number;
+  }) {
     const formData = new FormData();
     formData.set("customerName", customer.name.trim());
     formData.set("customerPhone", customer.phone.trim());
     if (customer.id) formData.set("customerId", customer.id);
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
-    formData.set("status", status);
+    formData.set("status", invoiceStatus);
     formData.set("gstEnabled", gstEnabled ? "1" : "0");
     formData.set("activeEmployeeCount", String(employees.length));
     const primaryEmployeeId =
       lineItems.find((item) => item.employeeId)?.employeeId ?? employeeId;
     if (primaryEmployeeId) formData.set("employeeId", primaryEmployeeId);
     if (seatId && !isBasicPlan) formData.set("seatId", seatId);
+    if (payment?.method) {
+      formData.set("paymentMethod", payment.method);
+      if (payment.amount != null) {
+        formData.set("amount", String(payment.amount));
+      }
+    }
     formData.set(
       "lineItems",
       JSON.stringify(
@@ -507,25 +517,11 @@ export function BillingInvoiceForm({
         }))
       )
     );
+    return formData;
+  }
 
-    const result = await createInvoice(formData);
-    if ("error" in result && result.error) {
-      setLoading(false);
-      setError(result.error);
-      return;
-    }
-    if (!("id" in result) || !result.id) {
-      setLoading(false);
-      setError("Invoice was created but the response was incomplete.");
-      return;
-    }
-
-    clearInvoiceDraft();
-    setCreatedInvoiceId(result.id);
-    setInvoiceNumber(formatInvoiceNumber(result.id));
-    setSplitRows([{ key: crypto.randomUUID(), method: "cash", amount: displayTotal }]);
-    setLoading(false);
-    setStep(2);
+  async function handleCreateInvoice() {
+    await handleProceedToPayment();
   }
 
   function buildInvoiceForCallback(
@@ -576,16 +572,29 @@ export function BillingInvoiceForm({
   }
 
   async function handleSaveDraft() {
-    if (!createdInvoiceId) return;
     setLoading(true);
-    await updateInvoiceStatus(createdInvoiceId, "draft");
+    setError("");
+
+    const formData = buildInvoiceFormData("draft");
+    const result = await createInvoice(formData);
+    if ("error" in result && result.error) {
+      setLoading(false);
+      setError(result.error);
+      return;
+    }
+    if (!("id" in result) || !result.id) {
+      setLoading(false);
+      setError("Invoice was saved but the response was incomplete.");
+      return;
+    }
+
     setLoading(false);
     clearInvoiceDraft();
-    onSuccess(buildInvoiceForCallback(createdInvoiceId, "draft", null));
+    onSuccess(buildInvoiceForCallback(result.id, "draft", null));
   }
 
   async function handleReceivePayment() {
-    if (!createdInvoiceId || !validateStep2()) return;
+    if (!validateStep2()) return;
 
     if (selectedPayment === "pay_later") return;
 
@@ -593,37 +602,82 @@ export function BillingInvoiceForm({
     setError("");
 
     const backendMethod = getBackendPaymentMethod(selectedPayment);
-    const paidForm = new FormData();
-    paidForm.set("invoiceId", createdInvoiceId);
-    paidForm.set("paymentMethod", backendMethod);
-    if (partialPaymentEnabled) {
-      paidForm.set("amount", String(paymentAmountNow));
+
+    if (createdInvoiceId) {
+      const paidForm = new FormData();
+      paidForm.set("invoiceId", createdInvoiceId);
+      paidForm.set("paymentMethod", backendMethod);
+      if (partialPaymentEnabled) {
+        paidForm.set("amount", String(paymentAmountNow));
+      }
+
+      const result = await markInvoicePaid(paidForm);
+      if ("error" in result && result.error) {
+        setLoading(false);
+        setError(result.error);
+        return;
+      }
+
+      setLoading(false);
+      const paidAt = new Date();
+      const invoiceStatus =
+        "status" in result && result.status === "partial" ? "partial" : "paid";
+      const invoice = buildInvoiceForCallback(
+        createdInvoiceId,
+        invoiceStatus,
+        backendMethod
+      );
+      setCompletedInvoice(invoice);
+      setSuccessContext({
+        ...buildWhatsAppContext(
+          createdInvoiceId,
+          invoiceNumber,
+          backendMethod,
+          paidAt
+        ),
+        amount: paymentAmountNow,
+        isPartial: invoiceStatus === "partial",
+        balanceDue: outstandingBalance,
+        invoiceTotal: displayTotal,
+      });
+      clearInvoiceDraft();
+      setStep(3);
+      return;
     }
 
-    const result = await markInvoicePaid(paidForm);
+    const formData = buildInvoiceFormData("sent", {
+      method: backendMethod,
+      amount: partialPaymentEnabled ? paymentAmountNow : undefined,
+    });
+
+    const result = await createInvoice(formData);
     if ("error" in result && result.error) {
       setLoading(false);
       setError(result.error);
       return;
     }
+    if (!("id" in result) || !result.id) {
+      setLoading(false);
+      setError("Payment was recorded but the response was incomplete.");
+      return;
+    }
+
+    const invoiceId = result.id;
+    setCreatedInvoiceId(invoiceId);
+    setInvoiceNumber(formatInvoiceNumber(invoiceId));
 
     setLoading(false);
     const paidAt = new Date();
     const invoiceStatus =
       "status" in result && result.status === "partial" ? "partial" : "paid";
     const invoice = buildInvoiceForCallback(
-      createdInvoiceId,
+      invoiceId,
       invoiceStatus,
       backendMethod
     );
     setCompletedInvoice(invoice);
     setSuccessContext({
-      ...buildWhatsAppContext(
-        createdInvoiceId,
-        invoiceNumber,
-        backendMethod,
-        paidAt
-      ),
+      ...buildWhatsAppContext(invoiceId, formatInvoiceNumber(invoiceId), backendMethod, paidAt),
       amount: paymentAmountNow,
       isPartial: invoiceStatus === "partial",
       balanceDue: outstandingBalance,
