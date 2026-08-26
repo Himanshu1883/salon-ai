@@ -58,7 +58,7 @@ export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBot
             <Link
               key={item.href}
               href={item.href}
-              prefetch
+              prefetch={false}
               className={cn(
                 "flex min-h-[var(--touch-target)] min-w-[4.5rem] flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1.5 transition-colors",
                 active

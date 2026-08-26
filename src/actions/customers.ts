@@ -89,23 +89,11 @@ function resolveOrderBy(sort: CustomerSort) {
   }
 }
 
-function matchCustomerInvoice(
-  customer: { id: string; name: string; phone: string | null },
-  inv: {
-    customerId: string | null;
-    customerPhone: string | null;
-    customerName: string;
-  }
+function matchCustomerName(
+  customerName: string,
+  targetName: string
 ) {
-  return (
-    inv.customerId === customer.id ||
-    (!inv.customerId &&
-      customer.phone &&
-      inv.customerPhone === customer.phone) ||
-    (!inv.customerId &&
-      !customer.phone &&
-      inv.customerName.toLowerCase() === customer.name.toLowerCase())
-  );
+  return customerName.toLowerCase() === targetName.toLowerCase();
 }
 
 export async function getCustomers(options?: GetCustomersOptions): Promise<{
@@ -144,78 +132,137 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
   const phones = [
     ...new Set(customers.map((c) => c.phone).filter(Boolean)),
   ] as string[];
-  const names = customers.map((c) => c.name);
 
-  const invoiceOr: Array<Record<string, unknown>> = [
-    { customerId: { in: customerIds } },
-  ];
-  if (phones.length > 0) {
-    invoiceOr.push({ customerId: null, customerPhone: { in: phones } });
-  }
-  for (const name of names) {
-    invoiceOr.push({
-      customerId: null,
-      customerName: { equals: name, mode: "insensitive" },
-    });
-  }
+  const nameOnlyCustomers = customers.filter((c) => !c.phone);
 
-  const [paidInvoices, completedCheckIns, completedAppointments] =
-    await Promise.all([
-      prisma.invoice.findMany({
-        where: { salonId, status: "paid", OR: invoiceOr },
-        select: {
-          customerId: true,
-          customerPhone: true,
-          customerName: true,
-          total: true,
-        },
-      }),
-      prisma.queueEntry.findMany({
-        where: { salonId, status: "completed", customerId: { in: customerIds } },
-        select: {
-          customerId: true,
-          completedAt: true,
-          checkedInAt: true,
-        },
-      }),
-      prisma.appointment.findMany({
-        where: {
-          salonId,
-          status: "completed",
-          customerId: { in: customerIds },
-        },
-        select: {
-          customerId: true,
-          scheduledAt: true,
-        },
-      }),
-    ]);
+  const [
+    salesByCustomerId,
+    salesByPhone,
+    nameOnlyInvoices,
+    checkInStats,
+    appointmentStats,
+  ] = await Promise.all([
+    prisma.invoice.groupBy({
+      by: ["customerId"],
+      where: {
+        salonId,
+        status: "paid",
+        customerId: { in: customerIds },
+      },
+      _sum: { total: true },
+      _count: { _all: true },
+    }),
+    phones.length > 0
+      ? prisma.invoice.groupBy({
+          by: ["customerPhone"],
+          where: {
+            salonId,
+            status: "paid",
+            customerId: null,
+            customerPhone: { in: phones },
+          },
+          _sum: { total: true },
+        })
+      : Promise.resolve([]),
+    nameOnlyCustomers.length > 0
+      ? prisma.invoice.findMany({
+          where: {
+            salonId,
+            status: "paid",
+            customerId: null,
+            OR: nameOnlyCustomers.map((c) => ({
+              customerName: { equals: c.name, mode: "insensitive" as const },
+            })),
+          },
+          select: { customerName: true, total: true },
+        })
+      : Promise.resolve([]),
+    prisma.queueEntry.groupBy({
+      by: ["customerId"],
+      where: {
+        salonId,
+        status: "completed",
+        customerId: { in: customerIds },
+      },
+      _count: { _all: true },
+      _max: { completedAt: true, checkedInAt: true },
+    }),
+    prisma.appointment.groupBy({
+      by: ["customerId"],
+      where: {
+        salonId,
+        status: "completed",
+        customerId: { in: customerIds },
+      },
+      _count: { _all: true },
+      _max: { scheduledAt: true },
+    }),
+  ]);
+
+  const salesMap = new Map(
+    salesByCustomerId
+      .filter((row) => row.customerId)
+      .map((row) => [row.customerId!, row._sum.total ?? 0])
+  );
+  const phoneSalesMap = new Map(
+    salesByPhone.map((row) => [row.customerPhone, row._sum.total ?? 0])
+  );
+  const nameSalesByCustomerId = new Map<string, number>();
+  for (const customer of nameOnlyCustomers) {
+    const total = nameOnlyInvoices
+      .filter((inv) => matchCustomerName(inv.customerName, customer.name))
+      .reduce((sum, inv) => sum + inv.total, 0);
+    if (total > 0) {
+      nameSalesByCustomerId.set(customer.id, total);
+    }
+  }
+  const checkInMap = new Map(
+    checkInStats.map((row) => [
+      row.customerId,
+      {
+        visits: row._count._all,
+        lastVisit: row._max.completedAt ?? row._max.checkedInAt,
+      },
+    ])
+  );
+  const appointmentMap = new Map(
+    appointmentStats.map((row) => [
+      row.customerId,
+      {
+        visits: row._count._all,
+        lastVisit: row._max.scheduledAt,
+      },
+    ])
+  );
 
   const enriched = customers.map((customer) => {
-    const customerInvoices = paidInvoices.filter((inv) =>
-      matchCustomerInvoice(customer, inv)
-    );
+    const linkedSales = salesMap.get(customer.id) ?? 0;
+    const phoneSales = customer.phone
+      ? phoneSalesMap.get(customer.phone) ?? 0
+      : 0;
+    const nameSales = nameSalesByCustomerId.get(customer.id) ?? 0;
+    const totalSales = linkedSales + phoneSales + nameSales;
 
-    const visits = [
-      ...completedCheckIns
-        .filter((e) => e.customerId === customer.id)
-        .map((e) => e.completedAt ?? e.checkedInAt),
-      ...completedAppointments
-        .filter((a) => a.customerId === customer.id)
-        .map((a) => a.scheduledAt),
-    ];
+    const checkIn = checkInMap.get(customer.id);
+    const appt = appointmentMap.get(customer.id);
+    const visits =
+      (checkIn?.visits ?? 0) + (appt?.visits ?? 0);
 
+    const lastVisitCandidates = [
+      checkIn?.lastVisit,
+      appt?.lastVisit,
+    ].filter(Boolean) as Date[];
     const lastVisit =
-      visits.length > 0
-        ? new Date(Math.max(...visits.map((d) => d.getTime())))
+      lastVisitCandidates.length > 0
+        ? new Date(
+            Math.max(...lastVisitCandidates.map((d) => d.getTime()))
+          )
         : null;
-
-    const totalSales = customerInvoices.reduce((sum, inv) => sum + inv.total, 0);
 
     return {
       ...customer,
       loyaltyPoints: customer.loyaltyPoints ?? 0,
-      visitCount: visits.length,
+      visitCount: visits,
       totalPaid: totalSales,
       totalSales,
       reviewCount: 0,

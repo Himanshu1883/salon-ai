@@ -109,7 +109,7 @@ function NavLinkItem({
   return (
     <Link
       href={item.href}
-      prefetch
+      prefetch={false}
       onClick={onNavigate}
       title={collapsed ? item.label : undefined}
       className={cn(

@@ -55,10 +55,20 @@ export async function getAppointmentsInRange(start: Date, end: Date) {
       scheduledAt: { gte: start, lte: end },
       status: { not: "cancelled" },
     },
-    include: {
-      customer: true,
-      service: { include: { category: true } },
-      employee: true,
+    select: {
+      id: true,
+      scheduledAt: true,
+      status: true,
+      notes: true,
+      customer: { select: { name: true, phone: true } },
+      service: {
+        select: {
+          name: true,
+          duration: true,
+          category: { select: { id: true, name: true } },
+        },
+      },
+      employee: { select: { id: true, name: true } },
     },
     orderBy: { scheduledAt: "asc" },
   });

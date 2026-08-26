@@ -42,14 +42,17 @@ const getCachedQueueEntries = cachedBySalon("queue", fetchQueueEntries, {
 });
 
 async function fetchEstimatedWaitMinutes(salonId: string) {
-  const waiting = await prisma.queueEntry.findMany({
-    where: { salonId, status: "waiting" },
-    include: { services: { include: { service: true } } },
-  });
-
-  const activeEmployees = await prisma.employee.count({
-    where: { salonId, status: "active" },
-  });
+  const [waiting, activeEmployees] = await Promise.all([
+    prisma.queueEntry.findMany({
+      where: { salonId, status: "waiting" },
+      select: {
+        services: { select: { service: { select: { duration: true } } } },
+      },
+    }),
+    prisma.employee.count({
+      where: { salonId, status: "active" },
+    }),
+  ]);
 
   const totalDuration = waiting.reduce(
     (sum, entry) =>

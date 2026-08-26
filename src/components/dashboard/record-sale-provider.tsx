@@ -82,12 +82,6 @@ export function RecordSaleProvider({
     }
   }, [initialFormData]);
 
-  useEffect(() => {
-    if (prefetchStarted.current || formData) return;
-    prefetchStarted.current = true;
-    void loadFormData();
-  }, [formData, loadFormData]);
-
   const openRecordSale = useCallback(() => {
     setOpen(true);
     setError("");

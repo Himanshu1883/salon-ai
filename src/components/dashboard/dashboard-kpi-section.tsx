@@ -1,19 +1,14 @@
 import { getDashboardKpis } from "@/actions/dashboard";
 import { KpiGrid } from "@/components/dashboard/widgets/kpi-grid";
 import { getAuthSession } from "@/lib/auth";
-import { getSalonPlan } from "@/lib/plan-access";
 import { normalizeSalonPlan } from "@/lib/plans";
 import { QuickActionsWidget } from "./widgets/quick-actions-widget";
 
 export async function DashboardKpiSection() {
   const session = await getAuthSession();
-  const salonId = session?.user?.salonId;
+  const plan = normalizeSalonPlan(session?.user?.plan);
 
-  const [kpis, plan] = await Promise.all([
-    getDashboardKpis(),
-    salonId ? getSalonPlan(salonId) : Promise.resolve(normalizeSalonPlan(null)),
-  ]);
-
+  const kpis = await getDashboardKpis();
   return (<>
     <QuickActionsWidget delay={0.05} />
     <KpiGrid

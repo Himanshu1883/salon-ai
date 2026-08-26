@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Menu, Plus, X } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { HeaderDataLoader } from "@/components/dashboard/header-data-loader";
 import { RecordSaleProvider, useRecordSale } from "@/components/dashboard/record-sale-provider";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
@@ -21,6 +20,7 @@ type DashboardShellProps = {
   plan?: import("@/lib/plans").SalonPlan;
   permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
   isOwner?: boolean;
+  headerAlertCount?: number;
   recordSaleFormData?: RecordSaleFormData | null;
   children: React.ReactNode;
 };
@@ -48,12 +48,13 @@ function DashboardShellInner({
   plan = "ENTERPRISE",
   permissionKeys = [],
   isOwner = false,
+  headerAlertCount = 0,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [sidebarReady, setSidebarReady] = useState(false);
-  const [alertCount, setAlertCount] = useState(0);
+  const [alertCount, setAlertCount] = useState(headerAlertCount);
   const { openRecordSale } = useRecordSale();
 
   useEffect(() => {
@@ -84,12 +85,9 @@ function DashboardShellInner({
     return () => mq.removeEventListener("change", onChange);
   }, [sidebarReady]);
 
-  const handleHeaderData = useCallback(
-    (data: { alertCount: number; showUpgrade: boolean }) => {
-      setAlertCount(data.alertCount);
-    },
-    []
-  );
+  useEffect(() => {
+    setAlertCount(headerAlertCount);
+  }, [headerAlertCount]);
 
   const toggleMobileMenu = useCallback(() => {
     setMobileOpen((open) => !open);
@@ -97,7 +95,6 @@ function DashboardShellInner({
 
   return (
     <>
-      <HeaderDataLoader onData={handleHeaderData} />
       {mobileOpen && (
         <button
           type="button"
@@ -194,12 +191,13 @@ function DashboardShellInner({
 
 export function DashboardShell({
   recordSaleFormData = null,
+  headerAlertCount = 0,
   ...props
 }: DashboardShellProps) {
   return (
     <RecordSaleProvider initialFormData={recordSaleFormData}>
       <div className="dashboard-shell flex h-dvh overflow-hidden font-[family-name:var(--font-inter)]">
-        <DashboardShellInner {...props} />
+        <DashboardShellInner {...props} headerAlertCount={headerAlertCount} />
       </div>
     </RecordSaleProvider>
   );
