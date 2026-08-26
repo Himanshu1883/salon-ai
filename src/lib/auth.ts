@@ -48,6 +48,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             salonName: owner.salon!.name,
             salonSlug: owner.salon!.slug,
             plan: owner.salon!.plan,
+            dashboardAccessVerified: true,
           };
         }
 
@@ -146,6 +147,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.role !== "owner") {
           let staffStatus = user.employee?.status ?? null;
 
+          if (staffStatus === "inactive") {
+            if (process.env.NODE_ENV === "development") {
+              console.warn("[auth] inactive team member", parsed.data.email);
+            }
+            return null;
+          }
+
           if (!staffStatus && user.salonId) {
             const linkedEmployee = await prisma.employee.findFirst({
               where: {
@@ -158,13 +166,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               select: { status: true },
             });
             staffStatus = linkedEmployee?.status ?? null;
-          }
 
-          if (staffStatus === "inactive") {
-            if (process.env.NODE_ENV === "development") {
-              console.warn("[auth] inactive team member", parsed.data.email);
+            if (staffStatus === "inactive") {
+              if (process.env.NODE_ENV === "development") {
+                console.warn("[auth] inactive team member", parsed.data.email);
+              }
+              return null;
             }
-            return null;
           }
         }
 
@@ -178,6 +186,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           salonName: user.salon.name,
           salonSlug: user.salon.slug,
           plan: user.salon.plan,
+          dashboardAccessVerified: true,
         };
       },
     }),

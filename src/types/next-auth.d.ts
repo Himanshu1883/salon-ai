@@ -14,6 +14,7 @@ declare module "next-auth" {
       salonName?: string;
       salonSlug?: string;
       plan?: string;
+      dashboardAccessVerified?: boolean;
     };
   }
 
@@ -25,6 +26,7 @@ declare module "next-auth" {
     salonName?: string | null;
     salonSlug?: string | null;
     plan?: string | null;
+    dashboardAccessVerified?: boolean;
   }
 }
 
@@ -37,5 +39,6 @@ declare module "next-auth/jwt" {
     salonName?: string;
     salonSlug?: string;
     plan?: string;
+    dashboardAccessVerified?: boolean;
   }
 }

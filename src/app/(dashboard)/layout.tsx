@@ -6,7 +6,6 @@ import { PlanGate } from "@/components/plans/plan-gate";
 import { PlanProvider } from "@/components/plans/plan-provider";
 import { PermissionLayoutGate } from "@/components/permissions/permission-layout-gate";
 import { getSalonLayoutContext } from "@/lib/salon-layout-context";
-import { getBillingInvoiceFormDataForSalon } from "@/actions/billing";
 import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
 import type { PermissionKey } from "@/lib/permissions/catalog";
@@ -28,15 +27,30 @@ export default async function DashboardLayout({
   const showSettings = userRole === "owner" || userRole === "manager";
   const isOwner = userRole === "owner";
 
-  if (
-    !isOwner &&
-    session.user.email &&
-    !(await isStaffDashboardAccessAllowed(salonId, {
-      id: session.user.id,
-      email: session.user.email,
-      role: userRole,
-    }))
-  ) {
+  const sessionPlan = session.user.plan
+    ? normalizeSalonPlan(session.user.plan)
+    : null;
+
+  const skipStaffAccessCheck =
+    isOwner || session.user.dashboardAccessVerified === true;
+
+  const [staffAccessOk, layoutContext, resolved] = await Promise.all([
+    skipStaffAccessCheck
+      ? Promise.resolve(true)
+      : session.user.email
+        ? isStaffDashboardAccessAllowed(salonId, {
+            id: session.user.id,
+            email: session.user.email,
+            role: userRole,
+          })
+        : Promise.resolve(false),
+    getSalonLayoutContext(salonId),
+    isOwner
+      ? Promise.resolve(resolveOwnerPermissions(session.user.id, salonId))
+      : getResolvedPermissions(session.user.id, salonId),
+  ]);
+
+  if (!staffAccessOk) {
     redirect(
       session.user.salonSlug
         ? `/${session.user.salonSlug}/login?error=account_disabled`
@@ -44,30 +58,12 @@ export default async function DashboardLayout({
     );
   }
 
-  const sessionPlan = session.user.plan
-    ? normalizeSalonPlan(session.user.plan)
-    : null;
-
-  const [layoutContext, resolved, ownerBillingPrefetch] = await Promise.all([
-    getSalonLayoutContext(salonId),
-    isOwner
-      ? Promise.resolve(resolveOwnerPermissions(session.user.id, salonId))
-      : getResolvedPermissions(session.user.id, salonId),
-    isOwner ? getBillingInvoiceFormDataForSalon(salonId) : Promise.resolve(null),
-  ]);
-
   const plan = sessionPlan ?? layoutContext.plan;
   const blocked = layoutContext.accessBlocked;
 
   const permissionKeys = isOwner
     ? (DEFAULT_ROLE_PERMISSIONS.OWNER as PermissionKey[])
     : (Array.from(resolved.permissions) as PermissionKey[]);
-
-  const canRecordSale =
-    isOwner || permissionKeys.includes("sales.create" as PermissionKey);
-  const recordSaleFormData =
-    ownerBillingPrefetch ??
-    (canRecordSale ? await getBillingInvoiceFormDataForSalon(salonId) : null);
 
   return (
     <PlanProvider plan={plan}>
@@ -81,7 +77,6 @@ export default async function DashboardLayout({
         plan={plan}
         permissionKeys={permissionKeys}
         isOwner={resolved.isOwner}
-        recordSaleFormData={recordSaleFormData}
       >
         <AccessGate blocked={blocked}>
           <PlanGate plan={plan}>

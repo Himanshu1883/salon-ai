@@ -17,6 +17,7 @@ export const authConfig = {
         token.salonName = user.salonName ?? undefined;
         token.salonSlug = user.salonSlug ?? undefined;
         token.plan = user.plan ?? undefined;
+        token.dashboardAccessVerified = user.dashboardAccessVerified ?? undefined;
       }
       return token;
     },
@@ -32,6 +33,8 @@ export const authConfig = {
         session.user.salonName = token.salonName as string | undefined;
         session.user.salonSlug = token.salonSlug as string | undefined;
         session.user.plan = token.plan as string | undefined;
+        session.user.dashboardAccessVerified =
+          token.dashboardAccessVerified === true;
       }
       return session;
     },
