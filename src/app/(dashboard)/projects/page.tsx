@@ -1,11 +1,11 @@
 import { getProjects } from "@/actions/projects";
-import { getEmployees } from "@/actions/employees";
+import { getEmployeeOptions } from "@/actions/employees";
 import { ProjectsClient } from "./projects-client";
 
 export default async function ProjectsPage() {
   const [projects, employees] = await Promise.all([
     getProjects(),
-    getEmployees(),
+    getEmployeeOptions(),
   ]);
 
   return (

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/permissions/require";
 import { revalidatePath } from "next/cache";
@@ -89,7 +90,7 @@ export async function getReportsCatalog(
   return reports;
 }
 
-export async function getFavoriteReportSlugs(): Promise<string[]> {
+export const getFavoriteReportSlugs = cache(async (): Promise<string[]> => {
   const session = await requirePermission("reports.view");
   const favorites = await prisma.reportFavorite.findMany({
     where: {
@@ -99,7 +100,7 @@ export async function getFavoriteReportSlugs(): Promise<string[]> {
     select: { reportSlug: true },
   });
   return favorites.map((f) => f.reportSlug);
-}
+});
 
 export async function toggleReportFavorite(reportSlug: string) {
   const session = await requirePermission("reports.view");

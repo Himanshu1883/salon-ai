@@ -126,17 +126,43 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
     where.OR = buildCustomerSearchConditions(options.search);
   }
 
-  const [customers, totalCount, paidInvoices, completedCheckIns, completedAppointments] =
+  const [customers, totalCount] = await Promise.all([
+    prisma.customer.findMany({
+      where,
+      orderBy: resolveOrderBy(sort),
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.customer.count({ where }),
+  ]);
+
+  if (customers.length === 0) {
+    return { customers: [], totalCount, page, pageSize };
+  }
+
+  const customerIds = customers.map((c) => c.id);
+  const phones = [
+    ...new Set(customers.map((c) => c.phone).filter(Boolean)),
+  ] as string[];
+  const names = customers.map((c) => c.name);
+
+  const invoiceOr: Array<Record<string, unknown>> = [
+    { customerId: { in: customerIds } },
+  ];
+  if (phones.length > 0) {
+    invoiceOr.push({ customerId: null, customerPhone: { in: phones } });
+  }
+  for (const name of names) {
+    invoiceOr.push({
+      customerId: null,
+      customerName: { equals: name, mode: "insensitive" },
+    });
+  }
+
+  const [paidInvoices, completedCheckIns, completedAppointments] =
     await Promise.all([
-      prisma.customer.findMany({
-        where,
-        orderBy: resolveOrderBy(sort),
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-      }),
-      prisma.customer.count({ where }),
       prisma.invoice.findMany({
-        where: { salonId, status: "paid" },
+        where: { salonId, status: "paid", OR: invoiceOr },
         select: {
           customerId: true,
           customerPhone: true,
@@ -145,7 +171,7 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
         },
       }),
       prisma.queueEntry.findMany({
-        where: { salonId, status: "completed" },
+        where: { salonId, status: "completed", customerId: { in: customerIds } },
         select: {
           customerId: true,
           completedAt: true,
@@ -153,7 +179,11 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
         },
       }),
       prisma.appointment.findMany({
-        where: { salonId, status: "completed" },
+        where: {
+          salonId,
+          status: "completed",
+          customerId: { in: customerIds },
+        },
         select: {
           customerId: true,
           scheduledAt: true,

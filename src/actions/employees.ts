@@ -2,8 +2,36 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { cachedBySalon } from "@/lib/salon-cache";
+import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { employeeSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
+
+function revalidateEmployeePages(salonId: string) {
+  scheduleSalonCacheRevalidation(salonId, "team", "catalog");
+  revalidatePath("/employees");
+  revalidatePath("/team/members");
+  revalidatePath("/team/shifts");
+  revalidatePath("/dashboard");
+  revalidatePath("/catalog/services");
+  revalidatePath("/projects");
+}
+
+const getCachedEmployeeOptions = cachedBySalon(
+  "team",
+  async (salonId: string) =>
+    prisma.employee.findMany({
+      where: { salonId, status: { not: "inactive" } },
+      select: { id: true, name: true, avatarUrl: true },
+      orderBy: { name: "asc" },
+    }),
+  { revalidate: 60, key: "employee-options" }
+);
+
+export async function getEmployeeOptions() {
+  const session = await requireSession();
+  return getCachedEmployeeOptions(session.user.salonId!);
+}
 
 export async function getEmployees(search?: string) {
   const session = await requireSession();
@@ -65,10 +93,7 @@ export async function createEmployee(formData: FormData) {
     },
   });
 
-  revalidatePath("/employees");
-  revalidatePath("/team/members");
-  revalidatePath("/team/shifts");
-  revalidatePath("/dashboard");
+  revalidateEmployeePages(session.user.salonId!);
   return { success: true };
 }
 
@@ -118,10 +143,7 @@ export async function updateEmployee(id: string, formData: FormData) {
     }),
   ]);
 
-  revalidatePath("/employees");
-  revalidatePath("/team/members");
-  revalidatePath("/team/shifts");
-  revalidatePath("/dashboard");
+  revalidateEmployeePages(session.user.salonId!);
   return { success: true };
 }
 
@@ -133,10 +155,7 @@ export async function deleteEmployee(id: string) {
   if (!employee) return { error: "Employee not found" };
 
   await prisma.employee.delete({ where: { id } });
-  revalidatePath("/employees");
-  revalidatePath("/team/members");
-  revalidatePath("/team/shifts");
-  revalidatePath("/dashboard");
+  revalidateEmployeePages(session.user.salonId!);
   return { success: true };
 }
 

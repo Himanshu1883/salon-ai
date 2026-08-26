@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin, requirePlatformAdmin } from "@/lib/auth";
@@ -35,9 +35,7 @@ export type SalonSubscriptionAction =
   | "suspend"
   | "generate_invoice";
 
-export async function getAdminStats() {
-  await requirePlatformAdmin();
-
+async function fetchAdminStats() {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
@@ -70,6 +68,20 @@ export async function getAdminStats() {
     basicPlan,
     enterprisePlan,
   };
+}
+
+const getCachedAdminStats = unstable_cache(fetchAdminStats, ["admin-stats"], {
+  revalidate: 60,
+  tags: ["admin-stats"],
+});
+
+function revalidateAdminStats() {
+  revalidateTag("admin-stats", "max");
+}
+
+export async function getAdminStats() {
+  await requirePlatformAdmin();
+  return getCachedAdminStats();
 }
 
 export async function getAllSalons(options?: {
@@ -121,7 +133,13 @@ export async function getAllSalons(options?: {
       take: pageSize,
       orderBy: { createdAt: "desc" },
       include: {
-        subscription: true,
+        subscription: {
+          select: {
+            status: true,
+            trialEndsAt: true,
+            currentPeriodEnd: true,
+          },
+        },
         users: {
           where: { role: "owner" },
           take: 1,
@@ -299,6 +317,7 @@ export async function updateSalonSubscription(
       return { error: "Unknown action" };
   }
 
+  revalidateAdminStats();
   revalidatePath("/admin");
   revalidatePath("/admin/salons");
   revalidatePath(`/admin/salons/${salonId}`);
@@ -345,6 +364,7 @@ export async function resetSalonOwnerPassword(
     },
   });
 
+  revalidateAdminStats();
   revalidatePath("/admin/salons");
   revalidatePath(`/admin/salons/${salonId}`);
 

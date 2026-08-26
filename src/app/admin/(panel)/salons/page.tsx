@@ -5,7 +5,7 @@ import {
   type SalonStatusFilter,
 } from "@/actions/platform-admin";
 import { SalonsListClient } from "./salons-list-client";
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/auth";
 import { isSuperAdminRole, resolvePlatformRole } from "@/lib/platform-permissions";
 
 export default async function AdminSalonsPage({
@@ -18,7 +18,7 @@ export default async function AdminSalonsPage({
     page?: string;
   }>;
 }) {
-  const session = await auth();
+  const session = await getAuthSession();
   const platformRole = resolvePlatformRole(session?.user ?? {});
   const readOnly = !isSuperAdminRole({
     platformRole,

@@ -1,5 +1,6 @@
 "use server";
 
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { requirePermission } from "@/lib/permissions/require";
@@ -20,14 +21,19 @@ function revalidateServices(salonId: string) {
 }
 
 async function serviceHasHistory(id: string) {
-  const [appointments, lineItems, queueServices, packageRefs] =
-    await Promise.all([
-      prisma.appointment.count({ where: { serviceId: id } }),
-      prisma.invoiceLineItem.count({ where: { serviceId: id } }),
-      prisma.queueService.count({ where: { serviceId: id } }),
-      prisma.servicePackageItem.count({ where: { includedServiceId: id } }),
-    ]);
-  return appointments + lineItems + queueServices + packageRefs > 0;
+  const [appointments, lineItems, queueServices] = await Promise.all([
+    prisma.appointment.count({ where: { serviceId: id } }),
+    prisma.invoiceLineItem.count({ where: { serviceId: id } }),
+    prisma.queueService.count({ where: { serviceId: id } }),
+  ]);
+  return appointments + lineItems + queueServices > 0;
+}
+
+async function permanentlyDeleteCatalogService(id: string, salonId: string) {
+  await prisma.$transaction(async (tx) => {
+    await tx.servicePackageItem.deleteMany({ where: { includedServiceId: id } });
+    await tx.service.delete({ where: { id, salonId } });
+  });
 }
 
 function parseServiceForm(formData: FormData) {
@@ -310,18 +316,35 @@ export async function deleteService(id: string) {
     await requirePermission(permission);
   }
 
-  if (await serviceHasHistory(id)) {
-    await prisma.service.update({
-      where: { id },
-      data: { status: "ARCHIVED" },
-    });
-    revalidateServices(salonId);
-    return { success: true, archived: true };
-  }
+  try {
+    if (service.status === "ARCHIVED") {
+      await permanentlyDeleteCatalogService(id, salonId);
+      revalidateServices(salonId);
+      return { success: true, deleted: true };
+    }
 
-  await prisma.service.delete({ where: { id } });
-  revalidateServices(salonId);
-  return { success: true };
+    if (await serviceHasHistory(id)) {
+      await prisma.service.update({
+        where: { id },
+        data: { status: "ARCHIVED" },
+      });
+      revalidateServices(salonId);
+      return { success: true, archived: true };
+    }
+
+    await permanentlyDeleteCatalogService(id, salonId);
+    revalidateServices(salonId);
+    return { success: true, deleted: true };
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2003") {
+      return {
+        error:
+          "This service is linked to other catalog items. Remove those links first, then delete again.",
+      };
+    }
+    console.error("deleteService failed", err);
+    return { error: "Could not delete this service. Please try again." };
+  }
 }
 
 export async function duplicateService(id: string) {
@@ -402,7 +425,7 @@ export async function bulkDeleteServices(ids: string[]) {
 
   const services = await prisma.service.findMany({
     where: { id: { in: ids }, salonId },
-    select: { id: true },
+    select: { id: true, status: true },
   });
 
   if (services.length !== ids.length) {
@@ -412,31 +435,41 @@ export async function bulkDeleteServices(ids: string[]) {
   const toArchive: string[] = [];
   const toDelete: string[] = [];
 
-  for (const { id } of services) {
-    if (await serviceHasHistory(id)) {
-      toArchive.push(id);
+  for (const service of services) {
+    if (service.status === "ARCHIVED") {
+      toDelete.push(service.id);
+      continue;
+    }
+    if (await serviceHasHistory(service.id)) {
+      toArchive.push(service.id);
     } else {
-      toDelete.push(id);
+      toDelete.push(service.id);
     }
   }
 
-  await prisma.$transaction([
-    ...(toArchive.length
-      ? [
-          prisma.service.updateMany({
-            where: { id: { in: toArchive }, salonId },
-            data: { status: "ARCHIVED" },
-          }),
-        ]
-      : []),
-    ...(toDelete.length
-      ? [
-          prisma.service.deleteMany({
-            where: { id: { in: toDelete }, salonId },
-          }),
-        ]
-      : []),
-  ]);
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (toArchive.length) {
+        await tx.service.updateMany({
+          where: { id: { in: toArchive }, salonId },
+          data: { status: "ARCHIVED" },
+        });
+      }
+      for (const id of toDelete) {
+        await tx.servicePackageItem.deleteMany({ where: { includedServiceId: id } });
+        await tx.service.delete({ where: { id, salonId } });
+      }
+    });
+  } catch (err) {
+    if (err instanceof PrismaClientKnownRequestError && err.code === "P2003") {
+      return {
+        error:
+          "Some services are linked to other catalog items. Remove those links first.",
+      };
+    }
+    console.error("bulkDeleteServices failed", err);
+    return { error: "Could not delete selected services. Please try again." };
+  }
 
   revalidateServices(salonId);
   return {

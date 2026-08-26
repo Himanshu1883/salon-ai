@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { cachedRead } from "@/lib/memory-cache";
 
 export function isMissingEmployeeIdColumn(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
@@ -227,6 +228,17 @@ export async function isStaffDashboardAccessAllowed(
 ) {
   if (user.role === "owner") return true;
 
+  return cachedRead(
+    `staff-access:${salonId}:${user.id}`,
+    120,
+    () => checkStaffDashboardAccessAllowed(salonId, user)
+  );
+}
+
+async function checkStaffDashboardAccessAllowed(
+  salonId: string,
+  user: { id: string; email: string; role: string; employeeId?: string | null }
+) {
   try {
     const account = await prisma.user.findFirst({
       where: { id: user.id, salonId },

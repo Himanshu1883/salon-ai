@@ -285,16 +285,31 @@ function ServiceReorderCard({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-xl">
-            <DropdownMenuItem onClick={onEdit} className="rounded-lg">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onEdit();
+              }}
+              className="rounded-lg"
+            >
               <Pencil className="mr-2 h-4 w-4" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDuplicate} className="rounded-lg">
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                onDuplicate();
+              }}
+              className="rounded-lg"
+            >
               <Copy className="mr-2 h-4 w-4" />
               Duplicate
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={onDelete}
+              onSelect={(e) => {
+                e.preventDefault();
+                onDelete();
+              }}
               className="rounded-lg text-dashboard-danger focus:text-dashboard-danger"
             >
               <Trash2 className="mr-2 h-4 w-4" />
@@ -328,16 +343,31 @@ function ServiceActionsMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="rounded-xl">
-        <DropdownMenuItem onClick={onEdit} className="rounded-lg">
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            onEdit();
+          }}
+          className="rounded-lg"
+        >
           <Pencil className="mr-2 h-4 w-4" />
           Edit
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDuplicate} className="rounded-lg">
+        <DropdownMenuItem
+          onSelect={(e) => {
+            e.preventDefault();
+            onDuplicate();
+          }}
+          className="rounded-lg"
+        >
           <Copy className="mr-2 h-4 w-4" />
           Duplicate
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={onDelete}
+          onSelect={(e) => {
+            e.preventDefault();
+            onDelete();
+          }}
           className="rounded-lg text-dashboard-danger focus:text-dashboard-danger"
         >
           <Trash2 className="mr-2 h-4 w-4" />
@@ -918,14 +948,52 @@ export function ServiceMenuClient({
   }
 
   async function handleDeleteService(id: string) {
-    if (!confirm("Delete this service?")) return;
-    setLocalCategories((prev) =>
-      prev.map((cat) => ({
-        ...cat,
-        services: cat.services.filter((s) => s.id !== id),
-      }))
-    );
-    await deleteService(id);
+    const service = allCatalogItems.find((s) => s.id === id);
+    const isArchived = service?.status === "ARCHIVED";
+    const message = isArchived
+      ? `Permanently delete "${service?.name ?? "this item"}"? Past bookings and invoices will keep their records.`
+      : `Delete "${service?.name ?? "this item"}"? Items with booking history will be archived instead of deleted.`;
+
+    if (!confirm(message)) return;
+
+    try {
+      const result = await withTimeout(
+        deleteService(id),
+        "Delete timed out. Check your connection and try again."
+      );
+
+      if ("error" in result && result.error) {
+        alert(result.error);
+        return;
+      }
+
+      skipNextCategoriesSync.current = true;
+
+      if ("archived" in result && result.archived) {
+        setLocalCategories((prev) =>
+          prev.map((cat) => ({
+            ...cat,
+            services: cat.services.map((s) =>
+              s.id === id ? { ...s, status: "ARCHIVED" } : s
+            ),
+          }))
+        );
+        setLocalUncategorized((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, status: "ARCHIVED" } : s))
+        );
+        return;
+      }
+
+      setLocalCategories((prev) =>
+        prev.map((cat) => ({
+          ...cat,
+          services: cat.services.filter((s) => s.id !== id),
+        }))
+      );
+      setLocalUncategorized((prev) => prev.filter((s) => s.id !== id));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Could not delete service.");
+    }
   }
 
   async function handleDuplicate(id: string) {

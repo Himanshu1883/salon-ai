@@ -1,5 +1,5 @@
 import { getServicesGroupedByCategory } from "@/actions/services";
-import { getEmployees } from "@/actions/employees";
+import { getEmployeeOptions } from "@/actions/employees";
 import { ServiceMenuClient } from "./service-menu-client";
 import {
   CatalogSchemaUpgradeNotice,
@@ -10,14 +10,14 @@ export default async function CatalogServicesPage() {
   try {
     const [{ categories, uncategorized }, employees] = await Promise.all([
       getServicesGroupedByCategory(),
-      getEmployees(),
+      getEmployeeOptions(),
     ]);
 
     return (
       <ServiceMenuClient
         categories={categories}
         uncategorized={uncategorized}
-        employees={employees.map((e) => ({ id: e.id, name: e.name }))}
+        employees={employees}
       />
     );
   } catch (error) {

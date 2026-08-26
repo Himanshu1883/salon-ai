@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ChevronRight, Building2 } from "lucide-react";
 import { getSalonDetail } from "@/actions/platform-admin";
 import { SalonDetailClient } from "./salon-detail-client";
-import { auth } from "@/lib/auth";
+import { getAuthSession } from "@/lib/auth";
 import { isSuperAdminRole, resolvePlatformRole } from "@/lib/platform-permissions";
 
 export default async function AdminSalonDetailPage({
@@ -12,7 +12,7 @@ export default async function AdminSalonDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
+  const session = await getAuthSession();
   const platformRole = resolvePlatformRole(session?.user ?? {});
   const readOnly = !isSuperAdminRole({
     platformRole,

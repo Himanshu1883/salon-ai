@@ -477,17 +477,13 @@ export async function updateAdminSupportConversationPriority(
 export async function getAdminSupportUnreadCount() {
   await requirePlatformAdmin();
 
-  const conversations = await prisma.supportConversation.findMany({
-    select: { id: true, adminLastReadAt: true },
-  });
+  const rows = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count
+    FROM "SupportMessage" m
+    INNER JOIN "SupportConversation" c ON m."conversationId" = c.id
+    WHERE m."senderType" = 'SALON'
+      AND (c."adminLastReadAt" IS NULL OR m."createdAt" > c."adminLastReadAt")
+  `;
 
-  let total = 0;
-  for (const conversation of conversations) {
-    total += await countUnreadForAdmin(
-      conversation.id,
-      conversation.adminLastReadAt
-    );
-  }
-
-  return total;
+  return rows[0]?.count ?? 0;
 }
