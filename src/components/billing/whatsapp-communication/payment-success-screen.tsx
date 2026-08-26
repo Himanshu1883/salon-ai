@@ -50,7 +50,9 @@ export function PaymentSuccessScreen({
           transition={{ delay: 0.15 }}
           className="mt-6 text-2xl font-bold text-[#111827]"
         >
-          Payment Received Successfully
+          {context.isPartial
+            ? "Partial Payment Recorded"
+            : "Payment Received Successfully"}
         </motion.h2>
 
         <motion.div
@@ -63,7 +65,14 @@ export function PaymentSuccessScreen({
             <p className="text-4xl font-bold tracking-tight text-[#111827]">
               {formatCurrency(context.amount)}
             </p>
-            <p className="mt-1 text-sm font-semibold text-[#10B981]">Paid Successfully</p>
+            <p className="mt-1 text-sm font-semibold text-[#10B981]">
+              {context.isPartial ? "Partial payment saved" : "Paid Successfully"}
+            </p>
+            {context.isPartial && context.balanceDue != null && (
+              <p className="mt-2 text-sm text-amber-700">
+                Balance pending: {formatCurrency(context.balanceDue)}
+              </p>
+            )}
           </div>
 
           <dl className="mt-6 grid gap-3 border-t border-[#E5E7EB] pt-6 text-sm sm:grid-cols-2">
@@ -77,6 +86,9 @@ export function PaymentSuccessScreen({
                 value: format(context.paidAt, "d MMM yyyy, h:mm a"),
               },
               { label: "Staff Name", value: context.staffName },
+              ...(context.invoiceTotal != null
+                ? [{ label: "Invoice Total", value: formatCurrency(context.invoiceTotal) }]
+                : []),
             ].map((row) => (
               <div key={row.label}>
                 <dt className="text-[11px] font-medium uppercase tracking-wide text-[#9CA3AF]">

@@ -50,6 +50,7 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   ChevronDown,
+  BarChart3,
 } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { getRoleLabel } from "@/lib/team";
@@ -243,6 +244,7 @@ export function TeamMembersClient({
   canDelete,
   canManageAccess,
   loginByEmployeeId,
+  canViewAnalytics = false,
 }: {
   members: TeamMember[];
   services: Service[];
@@ -251,6 +253,7 @@ export function TeamMembersClient({
   canDelete: boolean;
   canManageAccess: boolean;
   loginByEmployeeId: Record<string, EmployeeLoginInfo>;
+  canViewAnalytics?: boolean;
 }) {
   const router = useRouter();
   const [members, setMembers] = useState(initialMembers);
@@ -481,6 +484,14 @@ export function TeamMembersClient({
           </Badge>
         </div>
         <div className="flex items-center gap-2">
+          {canViewAnalytics && (
+            <Button variant="outline" asChild className="rounded-xl">
+              <Link href="/team/analytics">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Staff Analytics
+              </Link>
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">

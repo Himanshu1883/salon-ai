@@ -29,6 +29,7 @@ import type {
   PrefilledCustomer,
   Service,
 } from "@/components/appointments/types";
+import type { OpeningHours } from "@/lib/onboarding";
 import {
   filterAppointments,
   type ViewMode,
@@ -41,6 +42,7 @@ export function AppointmentsClient({
   upcomingAppointments,
   services,
   employees,
+  openingHours,
   prefilledCustomer,
   autoOpenCreate = false,
 }: {
@@ -50,6 +52,7 @@ export function AppointmentsClient({
   upcomingAppointments: Appointment[];
   services: Service[];
   employees: Employee[];
+  openingHours: OpeningHours;
   prefilledCustomer?: PrefilledCustomer;
   autoOpenCreate?: boolean;
 }) {
@@ -81,6 +84,18 @@ export function AppointmentsClient({
     mq.addEventListener("change", handleChange);
     return () => mq.removeEventListener("change", handleChange);
   }, [view]);
+
+  const existingAppointments = useMemo(() => {
+    const byId = new Map<string, Appointment>();
+    for (const apt of [
+      ...weekAppointments,
+      ...todayAppointments,
+      ...upcomingAppointments,
+    ]) {
+      byId.set(apt.id, apt);
+    }
+    return [...byId.values()];
+  }, [weekAppointments, todayAppointments, upcomingAppointments]);
 
   function handleSuccess() {
     setOpen(false);
@@ -170,6 +185,8 @@ export function AppointmentsClient({
         onOpenChange={setOpen}
         services={services}
         employees={employees}
+        openingHours={openingHours}
+        existingAppointments={existingAppointments}
         prefilledCustomer={prefilledCustomer}
         defaultScheduledAt={defaultScheduledAt}
         onSuccess={handleSuccess}
@@ -211,6 +228,7 @@ export function AppointmentsClient({
                 weekStart={weekStart}
                 appointments={filteredWeekAppointments}
                 employees={employees}
+                openingHours={openingHours}
                 viewMode={view}
                 selectedDay={selectedDay}
                 onSelectDay={(day) => {

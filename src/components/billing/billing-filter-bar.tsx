@@ -14,23 +14,44 @@ import { FilterDrawer } from "@/components/ui/filter-drawer";
 import type { BillingEmployee, BillingFilters } from "./types";
 
 type BillingFilterBarProps = {
-  filters: BillingFilters;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  employeeId: string;
   employees: BillingEmployee[];
   isBasicPlan?: boolean;
-  onApply: (e: React.FormEvent<HTMLFormElement>) => void;
+  onStatusChange: (value: string) => void;
+  onDateFromChange: (value: string) => void;
+  onDateToChange: (value: string) => void;
+  onEmployeeIdChange: (value: string) => void;
+  onApply: () => void;
   onReset: () => void;
 };
 
 function BillingFilterFields({
-  filters,
+  status,
+  dateFrom,
+  dateTo,
+  employeeId,
   employees,
   isBasicPlan,
   stacked = false,
+  onStatusChange,
+  onDateFromChange,
+  onDateToChange,
+  onEmployeeIdChange,
 }: {
-  filters: BillingFilters;
+  status: string;
+  dateFrom: string;
+  dateTo: string;
+  employeeId: string;
   employees: BillingEmployee[];
   isBasicPlan?: boolean;
   stacked?: boolean;
+  onStatusChange: (value: string) => void;
+  onDateFromChange: (value: string) => void;
+  onDateToChange: (value: string) => void;
+  onEmployeeIdChange: (value: string) => void;
 }) {
   const triggerClass = stacked
     ? "h-11 w-full rounded-xl border-[#ECECEC] bg-white text-sm"
@@ -41,7 +62,7 @@ function BillingFilterFields({
 
   return (
     <>
-      <Select name="status" defaultValue={filters.status}>
+      <Select value={status} onValueChange={onStatusChange}>
         <SelectTrigger className={triggerClass}>
           <SelectValue placeholder="Status" />
         </SelectTrigger>
@@ -49,6 +70,7 @@ function BillingFilterFields({
           <SelectItem value="all">All statuses</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
           <SelectItem value="sent">Sent</SelectItem>
+          <SelectItem value="partial">Partial payment</SelectItem>
           <SelectItem value="paid">Paid</SelectItem>
           <SelectItem value="overdue">Overdue</SelectItem>
           <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -56,22 +78,22 @@ function BillingFilterFields({
       </Select>
 
       <Input
-        name="dateFrom"
         type="date"
-        defaultValue={filters.dateFrom}
+        value={dateFrom}
+        onChange={(e) => onDateFromChange(e.target.value)}
         className={dateClass}
         aria-label="From date"
       />
       <Input
-        name="dateTo"
         type="date"
-        defaultValue={filters.dateTo}
+        value={dateTo}
+        onChange={(e) => onDateToChange(e.target.value)}
         className={dateClass}
         aria-label="To date"
       />
 
       {!isBasicPlan && (
-        <Select name="employeeId" defaultValue={filters.employeeId}>
+        <Select value={employeeId} onValueChange={onEmployeeIdChange}>
           <SelectTrigger
             className={
               stacked
@@ -96,29 +118,40 @@ function BillingFilterFields({
 }
 
 export function BillingFilterBar({
-  filters,
+  status,
+  dateFrom,
+  dateTo,
+  employeeId,
   employees,
   isBasicPlan,
+  onStatusChange,
+  onDateFromChange,
+  onDateToChange,
+  onEmployeeIdChange,
   onApply,
   onReset,
 }: BillingFilterBarProps) {
-  const formId = "billing-invoice-filters";
+  const fieldProps = {
+    status,
+    dateFrom,
+    dateTo,
+    employeeId,
+    employees,
+    isBasicPlan,
+    onStatusChange,
+    onDateFromChange,
+    onDateToChange,
+    onEmployeeIdChange,
+  };
 
   return (
     <div className="w-full min-w-0 lg:w-auto">
-      <form
-        id={formId}
-        onSubmit={onApply}
-        className="hidden w-full flex-wrap items-center justify-end gap-2 lg:flex lg:gap-3"
-      >
-        <BillingFilterFields
-          filters={filters}
-          employees={employees}
-          isBasicPlan={isBasicPlan}
-        />
+      <div className="hidden w-full flex-wrap items-center justify-end gap-2 lg:flex lg:gap-3">
+        <BillingFilterFields {...fieldProps} />
         <Button
-          type="submit"
+          type="button"
           size="sm"
+          onClick={onApply}
           className="h-9 rounded-xl bg-[#6C3CF0] px-4 hover:bg-[#5B2FE0]"
         >
           <Filter className="h-3.5 w-3.5" />
@@ -134,30 +167,17 @@ export function BillingFilterBar({
           <RotateCcw className="h-3.5 w-3.5" />
           Reset
         </Button>
-      </form>
+      </div>
 
-      <form
-        id={`${formId}-mobile`}
-        onSubmit={onApply}
-        className="lg:hidden"
-      >
+      <div className="lg:hidden">
         <FilterDrawer
           triggerLabel="Filter invoices"
-          onApply={() =>
-            (
-              document.getElementById(`${formId}-mobile`) as HTMLFormElement | null
-            )?.requestSubmit()
-          }
+          onApply={onApply}
           onReset={onReset}
         >
-          <BillingFilterFields
-            filters={filters}
-            employees={employees}
-            isBasicPlan={isBasicPlan}
-            stacked
-          />
+          <BillingFilterFields {...fieldProps} stacked />
         </FilterDrawer>
-      </form>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,21 @@ import { appointmentSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, addDays, startOfWeek, endOfWeek, max } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
+import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { assertEmployeeAvailableForSlot } from "@/lib/appointments/availability";
+import {
+  parseOpeningHours,
+  validateAppointmentAgainstSalonHours,
+} from "@/lib/appointments/salon-hours";
+
+export async function getSalonOpeningHours() {
+  const session = await requireSession();
+  const salon = await prisma.salon.findUnique({
+    where: { id: session.user.salonId },
+    select: { openingHours: true },
+  });
+  return parseOpeningHours(salon?.openingHours);
+}
 
 export async function getAppointments(filter: "today" | "upcoming" = "upcoming") {
   const session = await requireSession();
@@ -79,29 +94,64 @@ export async function createAppointment(formData: FormData) {
     phone: parsed.data.customerPhone,
   });
 
+  const service = await prisma.service.findFirst({
+    where: { id: parsed.data.serviceId, salonId: session.user.salonId },
+    select: { duration: true },
+  });
+  if (!service) {
+    return { error: "Service not found" };
+  }
+
+  const scheduledAt = new Date(parsed.data.scheduledAt);
+
+  const salon = await prisma.salon.findUnique({
+    where: { id: session.user.salonId },
+    select: { openingHours: true, name: true },
+  });
+  const openingHours = parseOpeningHours(salon?.openingHours);
+  const hoursCheck = validateAppointmentAgainstSalonHours(
+    openingHours,
+    scheduledAt,
+    service.duration
+  );
+  if (!hoursCheck.ok) {
+    return { error: hoursCheck.error };
+  }
+
+  if (parsed.data.employeeId) {
+    const availability = await assertEmployeeAvailableForSlot(
+      session.user.salonId,
+      parsed.data.employeeId,
+      scheduledAt,
+      service.duration
+    );
+    if (availability.error) {
+      return { error: availability.error };
+    }
+  }
+
   const appointment = await prisma.appointment.create({
     data: {
       salonId: session.user.salonId,
       customerId: customer.id,
       serviceId: parsed.data.serviceId,
       employeeId: parsed.data.employeeId || null,
-      scheduledAt: new Date(parsed.data.scheduledAt),
+      scheduledAt,
       notes: parsed.data.notes,
     },
   });
 
-  const salon = await prisma.salon.findUnique({
-    where: { id: session.user.salonId },
-  });
   if (salon) {
     const { scheduleAppointmentReminder } = await import("@/actions/sms");
-    await scheduleAppointmentReminder(appointment.id, salon.name);
+    await scheduleAppointmentReminder(appointment.id, salon.name ?? "Salon");
   }
 
   revalidatePath("/sales/appointments");
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
   revalidatePath("/customers");
+  revalidatePath("/team/analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
   return { success: true };
 }
 
@@ -145,6 +195,8 @@ export async function updateAppointmentStatus(
   revalidatePath("/sales/appointments");
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
+  revalidatePath("/team/analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
   return { success: true };
 }
 
@@ -159,5 +211,7 @@ export async function deleteAppointment(id: string) {
   revalidatePath("/sales/appointments");
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
+  revalidatePath("/team/analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
   return { success: true };
 }

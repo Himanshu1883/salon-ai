@@ -41,6 +41,9 @@ export type WhatsAppInvoiceContext = {
   salonName: string;
   loyaltyPoints?: number;
   services?: string;
+  isPartial?: boolean;
+  balanceDue?: number;
+  invoiceTotal?: number;
 };
 
 export type AttachmentKey = "pdf_invoice" | "payment_receipt" | "loyalty_points";

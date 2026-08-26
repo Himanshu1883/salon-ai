@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import type { InvoiceCustomer } from "../customer-search";
 import { PaymentSelector, type PaymentMethodId } from "../payment-selector";
+import { PartialPaymentFields } from "../partial-payment-fields";
 import { SuccessBanner } from "../success-banner";
 import { NotesSection } from "./notes-section";
 
@@ -23,6 +24,11 @@ type PaymentStepContentProps = {
   onPaymentNotesChange: (value: string) => void;
   splitError?: string;
   paymentError?: string;
+  partialPaymentEnabled?: boolean;
+  onPartialPaymentEnabledChange?: (enabled: boolean) => void;
+  partialAmount?: string;
+  onPartialAmountChange?: (value: string) => void;
+  partialError?: string;
   onSendWhatsApp: () => void;
   notesMaxLength: number;
 };
@@ -40,6 +46,11 @@ export function PaymentStepContent({
   onPaymentNotesChange,
   splitError,
   paymentError,
+  partialPaymentEnabled = false,
+  onPartialPaymentEnabledChange,
+  partialAmount = "",
+  onPartialAmountChange,
+  partialError,
   onSendWhatsApp,
   notesMaxLength,
 }: PaymentStepContentProps) {
@@ -100,6 +111,17 @@ export function PaymentStepContent({
           splitError={splitError}
         />
       </motion.div>
+
+      {onPartialPaymentEnabledChange && onPartialAmountChange && (
+        <PartialPaymentFields
+          enabled={partialPaymentEnabled}
+          onEnabledChange={onPartialPaymentEnabledChange}
+          amount={partialAmount}
+          onAmountChange={onPartialAmountChange}
+          total={displayTotal}
+          error={partialError}
+        />
+      )}
 
       {paymentError && (
         <p className="text-[12px] text-red-500">{paymentError}</p>

@@ -47,6 +47,22 @@ if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
   }
 
   try {
+    execSync("npx tsx scripts/ensure-invoice-amount-paid.ts", {
+      stdio: "inherit",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isVercel) {
+      console.error(
+        "CRITICAL: invoice amountPaid column ensure failed on Vercel build.",
+        message
+      );
+    } else {
+      console.warn("Invoice amountPaid column ensure failed:", message);
+    }
+  }
+
+  try {
     execSync("npm run db:seed", { stdio: "inherit" });
     execSync("npm run db:backfill-slugs", { stdio: "inherit" });
   } catch (error) {

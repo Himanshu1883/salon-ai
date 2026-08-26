@@ -21,6 +21,10 @@ import {
   getActiveMembershipDiscount,
   applyMembershipDiscount,
 } from "@/lib/memberships/discount";
+import {
+  getInvoiceBalanceDue,
+  isInvoiceFullyPaid,
+} from "@/lib/billing/invoice-balance";
 
 const TAX_RATE = 0.08;
 
@@ -32,7 +36,8 @@ function invalidateBillingCache(salonId: string) {
     "dashboard-kpis",
     "dashboard-widgets",
     "dashboard-stats",
-    "queue"
+    "queue",
+    "staff-analytics"
   );
 }
 
@@ -148,7 +153,7 @@ export async function getBillingStatsForSalon(salonId: string) {
     prisma.invoice.count({
       where: {
         salonId,
-        status: { in: ["draft", "sent", "overdue"] },
+        status: { in: ["draft", "sent", "overdue", "partial"] },
       },
     }),
   ]);
@@ -354,6 +359,7 @@ export async function getInvoices(filters?: {
       subtotal: true,
       tax: true,
       total: true,
+      amountPaid: true,
       dueDate: true,
       paidAt: true,
       paymentMethod: true,
@@ -799,6 +805,9 @@ export async function markInvoicePaid(formData: FormData) {
   const raw = {
     invoiceId: formData.get("invoiceId") as string,
     paymentMethod: formData.get("paymentMethod") as string,
+    amount: formData.get("amount")
+      ? Number(formData.get("amount"))
+      : undefined,
   };
 
   const parsed = markPaidSchema.safeParse(raw);
@@ -811,27 +820,56 @@ export async function markInvoicePaid(formData: FormData) {
     include: { lineItems: true },
   });
   if (!invoice) return { error: "Invoice not found" };
+  if (invoice.status === "cancelled") {
+    return { error: "Cancelled invoices cannot be paid" };
+  }
+
+  const balanceDue = getInvoiceBalanceDue(invoice);
+  if (balanceDue <= 0) {
+    return { error: "This invoice is already fully paid" };
+  }
+
+  const paymentAmount = parsed.data.amount ?? balanceDue;
+  if (paymentAmount > balanceDue + 0.009) {
+    return {
+      error: `Payment cannot exceed the balance due (${balanceDue.toFixed(2)})`,
+    };
+  }
+
+  const newAmountPaid = (invoice.amountPaid ?? 0) + paymentAmount;
+  const fullyPaid = isInvoiceFullyPaid({
+    total: invoice.total,
+    amountPaid: newAmountPaid,
+  });
 
   await prisma.invoice.update({
     where: { id: parsed.data.invoiceId },
     data: {
-      status: "paid",
-      paidAt: new Date(),
+      amountPaid: newAmountPaid,
+      status: fullyPaid ? "paid" : "partial",
+      paidAt: fullyPaid ? new Date() : invoice.paidAt,
       paymentMethod: parsed.data.paymentMethod,
     },
   });
 
-  await deductProductLineItems(
-    session.user.salonId,
-    invoice.id,
-    invoice.lineItems,
-    invoice.customerId,
-    invoice.employeeId,
-    session.user.id
-  );
+  if (fullyPaid) {
+    await deductProductLineItems(
+      session.user.salonId,
+      invoice.id,
+      invoice.lineItems,
+      invoice.customerId,
+      invoice.employeeId,
+      session.user.id
+    );
+  }
 
   invalidateBillingCache(session.user.salonId);
-  return { success: true };
+  return {
+    success: true,
+    status: fullyPaid ? "paid" : "partial",
+    amountPaid: newAmountPaid,
+    balanceDue: fullyPaid ? 0 : invoice.total - newAmountPaid,
+  };
 }
 
 export async function updateInvoiceStatus(id: string, status: string) {

@@ -1,4 +1,4 @@
-import { getAppointmentsInRange } from "@/actions/appointments";
+import { getAppointmentsInRange, getSalonOpeningHours } from "@/actions/appointments";
 import { getServiceOptions } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
 import { AppointmentsClient } from "@/app/(dashboard)/appointments/appointments-client";
@@ -31,10 +31,11 @@ export default async function SalesAppointmentsPage({
   const upcomingEnd = endOfDay(addDays(now, 30));
   const rangeEnd = max([weekEnd, upcomingEnd]);
 
-  const [allAppointments, services, employees] = await Promise.all([
+  const [allAppointments, services, employees, openingHours] = await Promise.all([
     getAppointmentsInRange(weekStart, rangeEnd),
     getServiceOptions(),
     getActiveEmployees(),
+    getSalonOpeningHours(),
   ]);
 
   const todayStart = startOfDay(now);
@@ -96,7 +97,13 @@ export default async function SalesAppointmentsPage({
         name: s.name,
         duration: s.duration,
       }))}
-      employees={employees.map((e) => ({ id: e.id, name: e.name }))}
+      employees={employees.map((e) => ({
+        id: e.id,
+        name: e.name,
+        role: e.role,
+        specialties: e.specialties,
+      }))}
+      openingHours={openingHours}
       prefilledCustomer={{
         customerId: params.customerId ?? "",
         name: params.name ?? "",

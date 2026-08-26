@@ -64,6 +64,7 @@ type FieldErrors = {
   lineItems?: Record<number, string>;
   payment?: string;
   split?: string;
+  partial?: string;
 };
 
 type BillingInvoiceFormProps = {
@@ -91,6 +92,7 @@ function statusLabel(status: string) {
     draft: "Draft",
     sent: "Unpaid",
     paid: "Paid",
+    partial: "Partially paid",
     cancelled: "Cancelled",
   };
   return map[status] ?? "Unpaid";
@@ -136,6 +138,8 @@ export function BillingInvoiceForm({
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethodId>("cash");
+  const [partialPaymentEnabled, setPartialPaymentEnabled] = useState(false);
+  const [partialAmount, setPartialAmount] = useState("");
   const [splitRows, setSplitRows] = useState([
     { key: crypto.randomUUID(), method: "cash", amount: 0 },
   ]);
@@ -428,16 +432,47 @@ export function BillingInvoiceForm({
     const errors: FieldErrors = {};
     if (selectedPayment === "split") {
       const splitTotal = splitRows.reduce((sum, row) => sum + (row.amount || 0), 0);
-      if (Math.abs(splitTotal - displayTotal) > 0.01) {
+      if (partialPaymentEnabled) {
+        if (splitTotal <= 0 || splitTotal >= displayTotal) {
+          errors.split = "Split partial total must be greater than 0 and less than invoice total";
+        }
+      } else if (Math.abs(splitTotal - displayTotal) > 0.01) {
         errors.split = "Split payment total must equal invoice amount";
       }
     }
     if (selectedPayment === "pay_later") {
       errors.payment = "Select a payment method or use Save Draft for pay later";
     }
+    if (partialPaymentEnabled && selectedPayment !== "split") {
+      const amount = Number.parseFloat(partialAmount);
+      if (!amount || amount <= 0) {
+        errors.partial = "Enter the amount received";
+      } else if (amount >= displayTotal) {
+        errors.partial = "Partial amount must be less than the invoice total";
+      }
+    }
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
+
+  const paymentAmountNow = useMemo(() => {
+    if (!partialPaymentEnabled) return displayTotal;
+    if (selectedPayment === "split") {
+      return splitRows.reduce((sum, row) => sum + (row.amount || 0), 0);
+    }
+    return Number.parseFloat(partialAmount) || 0;
+  }, [partialPaymentEnabled, partialAmount, selectedPayment, splitRows, displayTotal]);
+
+  const outstandingBalance = useMemo(
+    () => Math.max(0, displayTotal - paymentAmountNow),
+    [displayTotal, paymentAmountNow]
+  );
+
+  const step2ProceedLabel = partialPaymentEnabled
+    ? outstandingBalance > 0
+      ? "Record Partial Payment"
+      : "Receive Payment & Complete"
+    : "Receive Payment & Complete";
 
   async function handleCreateInvoice() {
     if (!validateStep1()) return;
@@ -508,8 +543,9 @@ export function BillingInvoiceForm({
       subtotal: displaySubtotal,
       tax: displayTax,
       total: displayTotal,
+      amountPaid: invoiceStatus === "partial" ? paymentAmountNow : invoiceStatus === "paid" ? displayTotal : 0,
       dueDate: dueDate ? new Date(dueDate) : null,
-      paidAt: invoiceStatus === "paid" ? new Date() : null,
+      paidAt: invoiceStatus === "paid" || invoiceStatus === "partial" ? new Date() : null,
       paymentMethod,
       createdAt: new Date(),
       lineItems: lineItems.map((item, i) => ({
@@ -557,6 +593,9 @@ export function BillingInvoiceForm({
     const paidForm = new FormData();
     paidForm.set("invoiceId", createdInvoiceId);
     paidForm.set("paymentMethod", backendMethod);
+    if (partialPaymentEnabled) {
+      paidForm.set("amount", String(paymentAmountNow));
+    }
 
     const result = await markInvoicePaid(paidForm);
     if ("error" in result && result.error) {
@@ -567,13 +606,26 @@ export function BillingInvoiceForm({
 
     setLoading(false);
     const paidAt = new Date();
+    const invoiceStatus =
+      "status" in result && result.status === "partial" ? "partial" : "paid";
     const invoice = buildInvoiceForCallback(
       createdInvoiceId,
-      "paid",
+      invoiceStatus,
       backendMethod
     );
     setCompletedInvoice(invoice);
-    setSuccessContext(buildWhatsAppContext(createdInvoiceId, invoiceNumber, backendMethod, paidAt));
+    setSuccessContext({
+      ...buildWhatsAppContext(
+        createdInvoiceId,
+        invoiceNumber,
+        backendMethod,
+        paidAt
+      ),
+      amount: paymentAmountNow,
+      isPartial: invoiceStatus === "partial",
+      balanceDue: outstandingBalance,
+      invoiceTotal: displayTotal,
+    });
     clearInvoiceDraft();
     setStep(3);
   }
@@ -638,7 +690,11 @@ export function BillingInvoiceForm({
 
   const currentStep = step === 1 ? 1 : 2;
   const paymentStatusLabel =
-    step === 2 ? "Pending Payment" : statusLabel(status);
+    step === 2
+      ? partialPaymentEnabled && outstandingBalance > 0
+        ? "Partial payment"
+        : "Pending Payment"
+      : statusLabel(status);
 
   return (
     <>
@@ -728,6 +784,11 @@ export function BillingInvoiceForm({
                     onPaymentNotesChange={setPaymentNotes}
                     splitError={fieldErrors.split}
                     paymentError={fieldErrors.payment}
+                    partialPaymentEnabled={partialPaymentEnabled}
+                    onPartialPaymentEnabledChange={setPartialPaymentEnabled}
+                    partialAmount={partialAmount}
+                    onPartialAmountChange={setPartialAmount}
+                    partialError={fieldErrors.partial}
                     onSendWhatsApp={openWhatsAppDrawerFromStep2}
                     notesMaxLength={PAYMENT_NOTES_MAX}
                   />
@@ -753,6 +814,7 @@ export function BillingInvoiceForm({
               gstEnabled={gstEnabled}
               customer={customer}
               paymentStatus={paymentStatusLabel}
+              outstandingBalance={step === 2 ? outstandingBalance : 0}
               loading={loading}
               onProceed={
                 step === 1
@@ -761,7 +823,7 @@ export function BillingInvoiceForm({
               }
               disableProceed={step === 2 && selectedPayment === "pay_later"}
               proceedLabel={
-                step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
+                step === 1 ? "Proceed to Payment" : step2ProceedLabel
               }
             />
           </aside>
@@ -777,6 +839,7 @@ export function BillingInvoiceForm({
           gstEnabled={gstEnabled}
           customer={customer}
           paymentStatus={paymentStatusLabel}
+          outstandingBalance={step === 2 ? outstandingBalance : 0}
           loading={loading}
           onProceed={
             step === 1
@@ -784,9 +847,7 @@ export function BillingInvoiceForm({
               : () => void handleReceivePayment()
           }
           disableProceed={step === 2 && selectedPayment === "pay_later"}
-          proceedLabel={
-            step === 1 ? "Proceed to Payment" : "Receive Payment & Complete"
-          }
+          proceedLabel={step === 1 ? "Proceed to Payment" : step2ProceedLabel}
           onBack={step === 2 ? () => setStep(1) : undefined}
           onCancel={() => onCancel?.()}
           onSaveDraft={step === 2 ? () => void handleSaveDraft() : undefined}

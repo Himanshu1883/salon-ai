@@ -80,6 +80,21 @@ export function getStatusColor(status: string) {
   }
 }
 
+export function getStatusAccentClass(status: string) {
+  switch (status) {
+    case "completed":
+      return "before:bg-emerald-500";
+    case "checked_in":
+      return "before:bg-amber-500";
+    case "cancelled":
+      return "before:bg-red-400";
+    case "no_show":
+      return "before:bg-orange-400";
+    default:
+      return "before:bg-[#6C3BFF]";
+  }
+}
+
 export function getStatusLabel(status: string) {
   switch (status) {
     case "checked_in":

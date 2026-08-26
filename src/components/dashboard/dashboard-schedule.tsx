@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { format, isPast, isFuture } from "date-fns";
-import { Calendar, UserCheck, CheckCircle2, UserPlus, Receipt } from "lucide-react";
+import { addMinutes, format, isPast, isFuture } from "date-fns";
+import { Calendar, Clock, UserCheck, CheckCircle2, UserPlus, Receipt, UserRound } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ type Appointment = {
   scheduledAt: Date;
   status: string;
   customer: { name: string };
-  service: { name: string };
+  service: { name: string; duration: number };
   employee: { name: string } | null;
 };
 
@@ -85,11 +85,11 @@ export function DashboardSchedule({
           ) : (
             <div className="space-y-3">
               {appointments.map((apt) => {
-                const time = format(new Date(apt.scheduledAt), "hh:mm a");
-                const statusInfo = getAppointmentStatus(
-                  new Date(apt.scheduledAt),
-                  apt.status
-                );
+                const start = new Date(apt.scheduledAt);
+                const end = addMinutes(start, apt.service.duration);
+                const time = format(start, "hh:mm a");
+                const timeRange = `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`;
+                const statusInfo = getAppointmentStatus(start, apt.status);
 
                 return (
                   <div
@@ -110,16 +110,20 @@ export function DashboardSchedule({
                       </p>
                       <p className="mt-0.5 text-sm text-zinc-500">
                         {apt.service.name}
-                        {apt.employee
-                          ? ` · Stylist: ${apt.employee.name}`
-                          : ""}
+                      </p>
+                      <p className="mt-1 flex items-center gap-1.5 text-xs text-zinc-500">
+                        <UserRound className="h-3.5 w-3.5 shrink-0" />
+                        {apt.employee?.name ?? "Unassigned stylist"}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-1.5 text-xs text-zinc-500">
+                        <Clock className="h-3.5 w-3.5 shrink-0" />
+                        {timeRange} · {apt.service.duration} min
                       </p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
                       <Badge variant={statusInfo.variant}>
                         {statusInfo.label}
                       </Badge>
-                      <span className="text-xs text-zinc-400">{time}</span>
                     </div>
                   </div>
                 );

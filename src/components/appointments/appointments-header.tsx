@@ -10,7 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import type { Employee, PrefilledCustomer, Service } from "./types";
+import type { Appointment, Employee, PrefilledCustomer, Service } from "./types";
+import type { OpeningHours } from "@/lib/onboarding";
 import { AppointmentForm } from "./appointment-form";
 
 type AppointmentsHeaderProps = {
@@ -18,6 +19,8 @@ type AppointmentsHeaderProps = {
   onOpenChange: (open: boolean) => void;
   services: Service[];
   employees: Employee[];
+  openingHours: OpeningHours;
+  existingAppointments?: Appointment[];
   prefilledCustomer?: PrefilledCustomer;
   defaultScheduledAt?: string;
   onSuccess: () => void;
@@ -28,6 +31,8 @@ export function AppointmentsHeader({
   onOpenChange,
   services,
   employees,
+  openingHours,
+  existingAppointments,
   prefilledCustomer,
   defaultScheduledAt,
   onSuccess,
@@ -67,6 +72,8 @@ export function AppointmentsHeader({
             <AppointmentForm
               services={services}
               employees={employees}
+              openingHours={openingHours}
+              existingAppointments={existingAppointments}
               prefilledCustomer={prefilledCustomer}
               defaultScheduledAt={defaultScheduledAt}
               onSuccess={onSuccess}

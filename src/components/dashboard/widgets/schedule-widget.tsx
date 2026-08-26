@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { format, isPast, isFuture } from "date-fns";
-import { Calendar } from "lucide-react";
+import { addMinutes, format, isPast, isFuture } from "date-fns";
+import { Calendar, Clock, UserRound } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ type Appointment = {
   scheduledAt: Date;
   status: string;
   customer: { name: string };
-  service: { name: string };
+  service: { name: string; duration: number };
   employee: { name: string } | null;
 };
 
@@ -70,11 +70,11 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
           <div className="relative space-y-0">
             <div className="absolute bottom-4 left-[27px] top-4 w-px bg-gradient-to-b from-dashboard-primary/30 via-dashboard-secondary/20 to-transparent" />
             {appointments.map((apt) => {
-              const time = format(new Date(apt.scheduledAt), "hh:mm a");
-              const statusInfo = getAppointmentStatus(
-                new Date(apt.scheduledAt),
-                apt.status
-              );
+              const start = new Date(apt.scheduledAt);
+              const end = addMinutes(start, apt.service.duration);
+              const time = format(start, "hh:mm a");
+              const timeRange = `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`;
+              const statusInfo = getAppointmentStatus(start, apt.status);
 
               return (
                 <div
@@ -99,8 +99,21 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
                           </p>
                           <p className="mt-0.5 truncate text-sm text-dashboard-muted">
                             {apt.service.name}
-                            {apt.employee ? ` · ${apt.employee.name}` : ""}
                           </p>
+                          <div className="mt-1.5 space-y-1">
+                            <p className="flex items-center gap-1.5 text-xs text-dashboard-muted">
+                              <UserRound className="h-3.5 w-3.5 shrink-0 text-dashboard-primary/70" />
+                              <span className="truncate">
+                                {apt.employee?.name ?? "Unassigned stylist"}
+                              </span>
+                            </p>
+                            <p className="flex items-center gap-1.5 text-xs text-dashboard-muted">
+                              <Clock className="h-3.5 w-3.5 shrink-0 text-dashboard-primary/70" />
+                              <span className="truncate">
+                                {timeRange} · {apt.service.duration} min
+                              </span>
+                            </p>
+                          </div>
                         </div>
                       </div>
                       <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>

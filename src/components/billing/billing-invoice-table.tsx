@@ -10,6 +10,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatCurrency, getInitials, cn } from "@/lib/utils";
+import { getInvoiceBalanceDue } from "@/lib/billing/invoice-balance";
 import { resolveLineItemLabel } from "@/lib/service-display";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { Button } from "@/components/ui/button";
@@ -29,11 +30,35 @@ import {
 } from "./types";
 import { BillingMarkPaidDialog } from "./billing-mark-paid-dialog";
 
+function InvoiceAmountDisplay({ inv }: { inv: BillingInvoice }) {
+  const balanceDue = getInvoiceBalanceDue(inv);
+  const amountPaid = inv.amountPaid ?? 0;
+
+  if (inv.status === "partial" || (amountPaid > 0 && balanceDue > 0.009)) {
+    return (
+      <div className="text-right">
+        <p className="font-semibold tabular-nums text-amber-700">
+          {formatCurrency(balanceDue)}
+        </p>
+        <p className="text-xs text-[#9CA3AF]">
+          paid {formatCurrency(amountPaid)} / {formatCurrency(inv.total)}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <span className="font-semibold tabular-nums text-[#EF4444]">
+      {formatCurrency(inv.total)}
+    </span>
+  );
+}
+
 type BillingInvoiceTableProps = {
   invoices: BillingInvoice[];
   loading: boolean;
   isBasicPlan?: boolean;
-  onMarkPaid: (invoiceId: string, method: string) => void;
+  onMarkPaid: (invoiceId: string, method: string, amountPaid: number, status: string) => void;
   onMarkSent: (id: string) => void;
   onDelete: (id: string) => void;
 };
@@ -47,7 +72,7 @@ function InvoiceRowActions({
 }: {
   inv: BillingInvoice;
   loading: boolean;
-  onMarkPaid: (invoiceId: string, method: string) => void;
+  onMarkPaid: (invoiceId: string, method: string, amountPaid: number, status: string) => void;
   onMarkSent: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
@@ -56,7 +81,11 @@ function InvoiceRowActions({
       {inv.status !== "paid" && inv.status !== "cancelled" && (
         <BillingMarkPaidDialog
           invoiceId={inv.id}
-          onSuccess={(method) => onMarkPaid(inv.id, method)}
+          total={inv.total}
+          amountPaid={inv.amountPaid ?? 0}
+          onSuccess={(method, amountPaid, status) =>
+            onMarkPaid(inv.id, method, amountPaid, status)
+          }
         />
       )}
       <DropdownMenu>
@@ -141,9 +170,7 @@ function BillingInvoiceMobileCards({
                   </p>
                 </div>
               </div>
-              <p className="shrink-0 text-base font-bold tabular-nums text-[#EF4444]">
-                {formatCurrency(inv.total)}
-              </p>
+              <InvoiceAmountDisplay inv={inv} />
             </div>
 
             {services && (
@@ -341,8 +368,8 @@ export function BillingInvoiceTable({
                       )}
                     </div>
                   </td>
-                  <td className="whitespace-nowrap px-5 py-3.5 text-right font-semibold text-[#EF4444]">
-                    {formatCurrency(inv.total)}
+                  <td className="whitespace-nowrap px-5 py-3.5 text-right">
+                    <InvoiceAmountDisplay inv={inv} />
                   </td>
                   <td className="px-5 py-3.5 text-center">
                     <InvoiceRowActions

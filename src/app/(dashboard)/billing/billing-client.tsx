@@ -74,6 +74,10 @@ export function BillingClient({
     useState(subscriptionPlanName);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
   const subscriptionLoadedRef = useRef(platformInvoicesProp.length > 0);
+  const [status, setStatus] = useState(filters.status);
+  const [dateFrom, setDateFrom] = useState(filters.dateFrom);
+  const [dateTo, setDateTo] = useState(filters.dateTo);
+  const [employeeId, setEmployeeId] = useState(filters.employeeId);
 
   useEffect(() => {
     setPlatformInvoices(platformInvoicesProp);
@@ -113,6 +117,13 @@ export function BillingClient({
     setActiveTab(initialTab);
   }, [initialTab]);
 
+  useEffect(() => {
+    setStatus(filters.status);
+    setDateFrom(filters.dateFrom);
+    setDateTo(filters.dateTo);
+    setEmployeeId(filters.employeeId);
+  }, [filters]);
+
   function handleTabChange(value: string) {
     const tab = value as "customers" | "subscription";
     setActiveTab(tab);
@@ -135,26 +146,49 @@ export function BillingClient({
         revenueToday: s.revenueToday + invoice.total,
         revenueMonth: s.revenueMonth + invoice.total,
       }));
+    } else if (invoice.status === "partial") {
+      setStats((s) => ({
+        ...s,
+        revenueToday: s.revenueToday + (invoice.amountPaid ?? 0),
+        revenueMonth: s.revenueMonth + (invoice.amountPaid ?? 0),
+        unpaidCount: s.unpaidCount + 1,
+      }));
     } else {
       setStats((s) => ({ ...s, unpaidCount: s.unpaidCount + 1 }));
     }
   }
 
-  function handleInvoicePaid(invoiceId: string, method: string) {
+  function handleInvoicePaid(
+    invoiceId: string,
+    method: string,
+    amountPaid: number,
+    status: string
+  ) {
     setInvoices((prev) =>
       prev.map((inv) =>
         inv.id === invoiceId
-          ? { ...inv, status: "paid", paidAt: new Date(), paymentMethod: method }
+          ? {
+              ...inv,
+              status,
+              paidAt: status === "paid" ? new Date() : inv.paidAt,
+              paymentMethod: method,
+              amountPaid,
+            }
           : inv
       )
     );
     const inv = invoices.find((i) => i.id === invoiceId);
     if (inv) {
+      const previousPaid = inv.amountPaid ?? 0;
+      const receivedNow = Math.max(0, amountPaid - previousPaid);
       setStats((s) => ({
         ...s,
-        revenueToday: s.revenueToday + inv.total,
-        revenueMonth: s.revenueMonth + inv.total,
-        unpaidCount: Math.max(0, s.unpaidCount - 1),
+        revenueToday: s.revenueToday + receivedNow,
+        revenueMonth: s.revenueMonth + receivedNow,
+        unpaidCount:
+          status === "paid"
+            ? Math.max(0, s.unpaidCount - 1)
+            : s.unpaidCount,
       }));
     }
   }
@@ -173,23 +207,21 @@ export function BillingClient({
     }
   }
 
-  function applyFilters(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
+  function applyFilters() {
     const params = new URLSearchParams();
-    const status = fd.get("status") as string;
-    const dateFrom = fd.get("dateFrom") as string;
-    const dateTo = fd.get("dateTo") as string;
-    const employeeId = fd.get("employeeId") as string;
     if (status && status !== "all") params.set("status", status);
     if (dateFrom) params.set("dateFrom", dateFrom);
     if (dateTo) params.set("dateTo", dateTo);
     if (employeeId && employeeId !== "all") params.set("employeeId", employeeId);
     if (activeTab === "subscription") params.set("tab", "subscription");
-    router.push(`/billing?${params.toString()}`);
+    router.push(params.size > 0 ? `/billing?${params.toString()}` : "/billing");
   }
 
   function resetFilters() {
+    setStatus("all");
+    setDateFrom("");
+    setDateTo("");
+    setEmployeeId("all");
     const params = activeTab === "subscription" ? "?tab=subscription" : "";
     router.push(`/billing${params}`);
   }
@@ -247,9 +279,16 @@ export function BillingClient({
                 </p>
               </div>
               <BillingFilterBar
-                filters={filters}
+                status={status}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                employeeId={employeeId}
                 employees={employees}
                 isBasicPlan={isBasicPlan}
+                onStatusChange={setStatus}
+                onDateFromChange={setDateFrom}
+                onDateToChange={setDateTo}
+                onEmployeeIdChange={setEmployeeId}
                 onApply={applyFilters}
                 onReset={resetFilters}
               />

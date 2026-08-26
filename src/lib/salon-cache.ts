@@ -8,6 +8,7 @@ export type SalonCacheScope =
   | "dashboard-stats"
   | "queue"
   | "team"
+  | "staff-analytics"
   | "catalog"
   | "catalog-options"
   | "customers"

@@ -13,7 +13,12 @@ export type Appointment = {
 };
 
 export type Service = { id: string; name: string; duration: number };
-export type Employee = { id: string; name: string };
+export type Employee = {
+  id: string;
+  name: string;
+  role?: string;
+  specialties?: string | null;
+};
 
 export type PrefilledCustomer = {
   customerId: string;
@@ -24,4 +29,4 @@ export type PrefilledCustomer = {
 export const CALENDAR_START_HOUR = 8;
 export const CALENDAR_END_HOUR = 20;
 export const SLOT_MINUTES = 30;
-export const SLOT_HEIGHT_PX = 36;
+export const SLOT_HEIGHT_PX = 40;

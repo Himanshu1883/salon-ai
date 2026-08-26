@@ -1,4 +1,5 @@
 import { getTeamMembers } from "@/actions/team";
+import { canAccessStaffAnalytics } from "@/actions/staff-analytics";
 import { getServiceOptions } from "@/actions/services";
 import { hasPermission } from "@/lib/permissions/require";
 import { requireSession } from "@/lib/auth";
@@ -17,6 +18,7 @@ export default async function TeamMembersPage() {
     canDelete,
     canManageAccess,
     loginMap,
+    canViewAnalytics,
   ] = await Promise.all([
     getTeamMembers(),
     getServiceOptions(),
@@ -25,6 +27,7 @@ export default async function TeamMembersPage() {
     hasPermission("team.delete"),
     hasPermission("permissions.manage"),
     getEmployeeLoginMap(salonId),
+    canAccessStaffAnalytics(),
   ]);
 
   const loginByEmployeeId = Object.fromEntries(loginMap.entries());
@@ -38,6 +41,7 @@ export default async function TeamMembersPage() {
       canDelete={canDelete}
       canManageAccess={canManageAccess}
       loginByEmployeeId={loginByEmployeeId}
+      canViewAnalytics={canViewAnalytics}
     />
   );
 }

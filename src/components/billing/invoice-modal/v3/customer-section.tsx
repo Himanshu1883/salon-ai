@@ -114,54 +114,52 @@ export function CustomerSection({
           </CompactField>
         </div>
 
-        <div className="md:col-span-3 [&_label]:hidden [&_input]:h-12 [&_input]:rounded-[14px] [&_input]:text-base sm:[&_input]:h-10 sm:[&_input]:text-[13px]">
-          <CompactField label="Phone" required>
-            <PhoneSearch value={customer} onChange={onChange} />
-          </CompactField>
-        </div>
-
-        {requiresEmployee ? (
-          <div className="md:col-span-3">
-            <CompactField label="Staff" required>
-              <Select value={employeeId} onValueChange={onEmployeeChange}>
-                <SelectTrigger
-                  className={cn(v3.selectTrigger, employeeError && v3.inputError)}
-                >
-                  <SelectValue placeholder="Staff" />
-                </SelectTrigger>
-                <SelectContent className="rounded-[12px]">
-                  {employees.map((emp) => (
-                    <SelectItem key={emp.id} value={emp.id}>
-                      <span className="inline-flex items-center gap-1.5 text-[13px]">
-                        <UserCircle className="h-3.5 w-3.5 text-[#6B7280]" />
-                        {emp.name}
-                      </span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end md:col-span-7">
+          <div className="min-w-0 flex-1 [&_label]:hidden [&_input]:h-12 [&_input]:rounded-[14px] [&_input]:text-base sm:[&_input]:h-10 sm:[&_input]:text-[13px]">
+            <CompactField label="Phone" required>
+              <PhoneSearch value={customer} onChange={onChange} />
             </CompactField>
-            {employeeError && (
-              <p className="mt-0.5 text-[11px] text-red-500">{employeeError}</p>
-            )}
           </div>
-        ) : (
-          <div className="hidden md:col-span-3 md:block" aria-hidden />
-        )}
 
-        <div className="flex items-end md:col-span-1">
           <button
             type="button"
             onClick={startNewCustomer}
             className={cn(
               v3.outlineButton,
-              "h-12 w-full whitespace-nowrap px-2 text-[11px] text-[#7C3AED] sm:h-10 md:h-9"
+              "h-12 shrink-0 whitespace-nowrap px-3 text-[11px] text-[#7C3AED] sm:h-10 md:h-9"
             )}
             title="New customer"
           >
             <Plus className="h-4 w-4 sm:h-3.5 sm:w-3.5" />
             <span className="hidden lg:inline">New</span>
           </button>
+
+          {requiresEmployee ? (
+            <div className="min-w-0 flex-1">
+              <CompactField label="Staff" required>
+                <Select value={employeeId} onValueChange={onEmployeeChange}>
+                  <SelectTrigger
+                    className={cn(v3.selectTrigger, employeeError && v3.inputError)}
+                  >
+                    <SelectValue placeholder="Staff" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-[12px]">
+                    {employees.map((emp) => (
+                      <SelectItem key={emp.id} value={emp.id}>
+                        <span className="inline-flex items-center gap-1.5 text-[13px]">
+                          <UserCircle className="h-3.5 w-3.5 text-[#6B7280]" />
+                          {emp.name}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </CompactField>
+              {employeeError && (
+                <p className="mt-0.5 text-[11px] text-red-500">{employeeError}</p>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 

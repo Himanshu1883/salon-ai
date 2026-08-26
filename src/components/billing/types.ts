@@ -15,6 +15,7 @@ export type BillingInvoice = {
   subtotal: number;
   tax: number;
   total: number;
+  amountPaid?: number;
   dueDate: Date | null;
   paidAt: Date | null;
   paymentMethod: string | null;
@@ -73,6 +74,10 @@ export const STATUS_STYLES: Record<
   paid: {
     label: "Paid",
     className: "bg-emerald-50 text-emerald-700",
+  },
+  partial: {
+    label: "Partial",
+    className: "bg-orange-50 text-orange-700",
   },
   overdue: {
     label: "Overdue",

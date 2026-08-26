@@ -359,7 +359,7 @@ export const invoiceSchema = z.object({
   customerPhone: z.string().optional(),
   notes: z.string().optional(),
   dueDate: z.string().optional(),
-  status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]).default("draft"),
+  status: z.enum(["draft", "sent", "paid", "partial", "overdue", "cancelled"]).default("draft"),
   employeeId: z.string().optional(),
   seatId: z.string().optional(),
   lineItems: z.array(invoiceLineItemSchema).min(1, "Add at least one line item"),
@@ -374,6 +374,7 @@ export const PAYMENT_METHODS = ["cash", "card", "upi", "wallet", "other"] as con
 export const markPaidSchema = z.object({
   invoiceId: z.string(),
   paymentMethod: z.enum(PAYMENT_METHODS),
+  amount: z.coerce.number().positive("Amount must be greater than 0").optional(),
 });
 
 export const createInvoiceFromCheckInOptionsSchema = z.object({

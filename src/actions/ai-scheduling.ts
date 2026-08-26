@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { aiSchedulingSchema } from "@/lib/validations";
 import { findBestSlots, enrichWithAiExplanation } from "@/lib/ai-scheduling";
+import { assertEmployeeAvailableForSlot } from "@/lib/appointments/availability";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, addDays } from "date-fns";
 
@@ -92,6 +93,28 @@ export async function bookSuggestedSlot(formData: FormData) {
     return { error: "Missing required fields" };
   }
 
+  const service = await prisma.service.findFirst({
+    where: { id: serviceId, salonId },
+    select: { duration: true },
+  });
+  if (!service) {
+    return { error: "Service not found" };
+  }
+
+  const slotStart = new Date(scheduledAt);
+
+  if (employeeId) {
+    const availability = await assertEmployeeAvailableForSlot(
+      salonId,
+      employeeId,
+      slotStart,
+      service.duration
+    );
+    if (availability.error) {
+      return { error: availability.error };
+    }
+  }
+
   const customer = await prisma.customer.create({
     data: { salonId, name: customerName, phone: customerPhone },
   });
@@ -102,7 +125,7 @@ export async function bookSuggestedSlot(formData: FormData) {
       customerId: customer.id,
       serviceId,
       employeeId: employeeId || null,
-      scheduledAt: new Date(scheduledAt),
+      scheduledAt: slotStart,
       notes: "Booked via AI scheduling",
     },
   });
