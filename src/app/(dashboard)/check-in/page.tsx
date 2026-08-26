@@ -1,4 +1,4 @@
-import { getServices } from "@/actions/services";
+import { getServiceOptions } from "@/actions/services";
 import {
   getQueueEntries,
   getEstimatedWaitMinutes,
@@ -29,7 +29,7 @@ export default async function CheckInPage({
     recentCustomers,
     billingStats,
   ] = await Promise.all([
-    getServices(),
+    getServiceOptions(),
     getQueueEntries(),
     getEstimatedWaitMinutes(),
     getRecentCompletedCheckIns(),

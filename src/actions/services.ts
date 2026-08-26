@@ -12,6 +12,7 @@ import {
 } from "@/lib/validations";
 import {
   catalogInclude,
+  catalogListInclude,
   catalogServiceInclude,
   serializeCatalogItem,
 } from "@/lib/catalog/service-serializer";
@@ -57,7 +58,7 @@ async function fetchServicesGroupedByCategory(salonId: string) {
     where: { salonId },
     include: {
       services: {
-        include: catalogInclude,
+        include: catalogListInclude,
         orderBy: { sortOrder: "asc" },
       },
     },
@@ -66,7 +67,7 @@ async function fetchServicesGroupedByCategory(salonId: string) {
 
   const uncategorized = await prisma.service.findMany({
     where: { salonId, categoryId: null },
-    include: catalogInclude,
+    include: catalogListInclude,
     orderBy: { sortOrder: "asc" },
   });
 
@@ -88,17 +89,32 @@ const getCachedServicesGrouped = cachedBySalon(
   { revalidate: 60, key: "grouped" }
 );
 
+const getCachedServiceOptions = cachedBySalon(
+  "catalog",
+  async (salonId: string) =>
+    prisma.service.findMany({
+      where: {
+        salonId,
+        status: { not: "ARCHIVED" },
+        catalogType: { in: ["SERVICE", "PACKAGE"] },
+      },
+      select: {
+        id: true,
+        name: true,
+        catalogType: true,
+        price: true,
+        duration: true,
+        description: true,
+        category: { select: { name: true } },
+      },
+      orderBy: { name: "asc" },
+    }),
+  { revalidate: 60, key: "options" }
+);
+
 export async function getServiceOptions() {
   const session = await requireSession();
-  return prisma.service.findMany({
-    where: {
-      salonId: session.user.salonId,
-      status: { not: "ARCHIVED" },
-      catalogType: { in: ["SERVICE", "PACKAGE"] },
-    },
-    select: { id: true, name: true, catalogType: true, price: true, duration: true },
-    orderBy: { name: "asc" },
-  });
+  return getCachedServiceOptions(session.user.salonId!);
 }
 
 export async function getBookableServices() {

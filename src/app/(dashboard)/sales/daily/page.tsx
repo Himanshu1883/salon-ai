@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { getDailySalesSummary } from "@/actions/daily-sales";
-import { getServices } from "@/actions/services";
+import { getServiceOptions } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
 import { DailySalesClient } from "./daily-sales-client";
 
@@ -14,7 +14,7 @@ export default async function DailySalesPage({
 
   const [summary, services, employees] = await Promise.all([
     getDailySalesSummary(date),
-    getServices(),
+    getServiceOptions(),
     getActiveEmployees(),
   ]);
 

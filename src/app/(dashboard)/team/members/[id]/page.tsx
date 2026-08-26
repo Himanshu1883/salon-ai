@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTeamMember } from "@/actions/team";
-import { getServices } from "@/actions/services";
+import { getServiceOptions } from "@/actions/services";
 import { getEmployeeFaceStatus } from "@/actions/attendance";
 import { hasPermission } from "@/lib/permissions/require";
 import { parseOtherDocuments } from "@/lib/employee";
@@ -15,7 +15,7 @@ export default async function MemberDetailPage({
   const [member, services, faceStatus, canUpdate, canDelete] =
     await Promise.all([
       getTeamMember(id),
-      getServices(),
+      getServiceOptions(),
       getEmployeeFaceStatus(id),
       hasPermission("team.update"),
       hasPermission("team.delete"),

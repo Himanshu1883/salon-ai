@@ -36,6 +36,34 @@ export const catalogInclude = {
   },
 } as const;
 
+/** Lighter include for service menu list — skips add-on parent reverse links. */
+export const catalogListInclude = {
+  category: { select: { id: true, name: true, categoryGroup: true } },
+  employees: { include: { employee: { select: { id: true, name: true } } } },
+  packageItems: {
+    include: {
+      includedService: {
+        select: { id: true, name: true, price: true, duration: true },
+      },
+    },
+    orderBy: { sortOrder: "asc" as const },
+  },
+  parentAddOnLinks: {
+    include: {
+      addOnService: {
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          duration: true,
+          status: true,
+        },
+      },
+    },
+    orderBy: { sortOrder: "asc" as const },
+  },
+} as const;
+
 /** Lighter include for service CRUD — skips empty package/add-on parent relations. */
 export const catalogServiceInclude = {
   category: true,

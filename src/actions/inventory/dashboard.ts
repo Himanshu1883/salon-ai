@@ -2,37 +2,37 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getInventoryAccess, requireInventoryWrite } from "@/lib/inventory/permissions";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { getInventoryAccess } from "@/lib/inventory/permissions";
+import { getLowStockCountForSalon } from "@/actions/stock";
 import { getStockStatus } from "@/lib/stock";
 import { startOfMonth, subDays, format } from "date-fns";
 
 const PATHS = ["/inventory", "/inventory/products", "/dashboard"];
 
-function revalidate() {
+function revalidateInventoryPages(salonId: string) {
+  scheduleSalonCacheRevalidation(salonId, "dashboard-stats");
   for (const p of PATHS) revalidatePath(p);
 }
 
-export async function getInventoryDashboardStats() {
-  const { session } = await getInventoryAccess();
-  const salonId = session.user.salonId;
+async function fetchInventoryDashboardStats(salonId: string) {
   const monthStart = startOfMonth(new Date());
   const thirtyDaysAgo = subDays(new Date(), 30);
 
   const [
     items,
-    lowStockItems,
+    lowStockCount,
     expiringSoon,
-    totalValue,
+    inventoryValueRow,
     recentMovements,
     purchaseOrders,
     consumptionThisMonth,
     salesThisMonth,
+    movementByDay,
+    dailyPurchases,
   ] = await Promise.all([
     prisma.stockItem.count({ where: { salonId, status: "active" } }),
-    prisma.stockItem.findMany({
-      where: { salonId, status: "active" },
-      select: { quantityOnHand: true, reorderLevel: true },
-    }),
+    getLowStockCountForSalon(salonId),
     prisma.stockItem.count({
       where: {
         salonId,
@@ -40,10 +40,11 @@ export async function getInventoryDashboardStats() {
         expiryDate: { lte: subDays(new Date(), -30), gte: new Date() },
       },
     }),
-    prisma.stockItem.aggregate({
-      where: { salonId, status: "active" },
-      _sum: { quantityOnHand: true },
-    }),
+    prisma.$queryRaw<{ total: number }[]>`
+      SELECT COALESCE(SUM("quantityOnHand" * "avgCost"), 0)::float AS total
+      FROM "StockItem"
+      WHERE "salonId" = ${salonId} AND status = 'active'
+    `,
     prisma.stockLedgerEntry.findMany({
       where: { salonId, createdAt: { gte: thirtyDaysAgo } },
       include: {
@@ -71,42 +72,27 @@ export async function getInventoryDashboardStats() {
       },
       _sum: { quantity: true },
     }),
+    prisma.stockLedgerEntry.groupBy({
+      by: ["movementType"],
+      where: { salonId, createdAt: { gte: thirtyDaysAgo } },
+      _count: { id: true },
+    }),
+    prisma.stockLedgerEntry.findMany({
+      where: {
+        salonId,
+        movementType: { in: ["purchase", "grn"] },
+        createdAt: { gte: thirtyDaysAgo },
+      },
+      select: { createdAt: true, quantity: true },
+    }),
   ]);
 
-  const lowStockCount = lowStockItems.filter((i) => {
-    const s = getStockStatus(i);
-    return s === "low" || s === "out";
-  }).length;
-
-  const itemsWithCost = await prisma.stockItem.findMany({
-    where: { salonId, status: "active" },
-    select: { quantityOnHand: true, avgCost: true },
-  });
-  const inventoryValue = itemsWithCost.reduce(
-    (sum, i) => sum + i.quantityOnHand * i.avgCost,
-    0
-  );
-
-  const movementByDay = await prisma.stockLedgerEntry.groupBy({
-    by: ["movementType"],
-    where: { salonId, createdAt: { gte: thirtyDaysAgo } },
-    _count: { id: true },
-  });
-
+  const inventoryValue = inventoryValueRow[0]?.total ?? 0;
 
   const chartData = movementByDay.map((m) => ({
     type: m.movementType,
     count: m._count.id,
   }));
-
-  const dailyPurchases = await prisma.stockLedgerEntry.findMany({
-    where: {
-      salonId,
-      movementType: { in: ["purchase", "grn"] },
-      createdAt: { gte: thirtyDaysAgo },
-    },
-    select: { createdAt: true, quantity: true },
-  });
 
   const purchaseTrend: Record<string, number> = {};
   for (let i = 29; i >= 0; i--) {
@@ -141,6 +127,17 @@ export async function getInventoryDashboardStats() {
   };
 }
 
+const getCachedInventoryDashboardStats = cachedBySalon(
+  "dashboard-stats",
+  fetchInventoryDashboardStats,
+  { revalidate: 60, key: "inventory-dashboard" }
+);
+
+export async function getInventoryDashboardStats() {
+  const { session } = await getInventoryAccess();
+  return getCachedInventoryDashboardStats(session.user.salonId!);
+}
+
 export async function getInventoryAlerts() {
   const { session } = await getInventoryAccess();
   const salonId = session.user.salonId;
@@ -171,3 +168,5 @@ export async function getInventoryAlerts() {
 
   return { lowStock, expiring };
 }
+
+export { revalidateInventoryPages };

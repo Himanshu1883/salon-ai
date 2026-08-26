@@ -1,7 +1,7 @@
 import { getInvoices, getBillingStats } from "@/actions/billing";
 import { generateTrialInvoice, getSalonSubscriptionStatus } from "@/actions/subscription";
 import { BillingClient } from "./billing-client";
-import { getServices } from "@/actions/services";
+import { getServiceOptions } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
 import { getSeats } from "@/actions/seats";
 import { getSalonPlan } from "@/lib/plan-access";
@@ -37,7 +37,7 @@ export default async function BillingPage({
         employeeId: params.employeeId,
       }),
       getBillingStats(),
-      getServices(),
+      getServiceOptions(),
       getActiveEmployees(),
       getSeats(),
       prisma.salon.findUnique({

@@ -4,13 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { appointmentSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import {
-  startOfDay,
-  endOfDay,
-  addDays,
-  startOfWeek,
-  endOfWeek,
-} from "date-fns";
+import { startOfDay, endOfDay, addDays, startOfWeek, endOfWeek, max } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
 
 export async function getAppointments(filter: "today" | "upcoming" = "upcoming") {
@@ -37,15 +31,14 @@ export async function getAppointments(filter: "today" | "upcoming" = "upcoming")
   });
 }
 
-export async function getAppointmentsForWeek(weekStart: Date) {
+export async function getAppointmentsInRange(start: Date, end: Date) {
   const session = await requireSession();
-  const start = startOfWeek(weekStart, { weekStartsOn: 1 });
-  const end = endOfWeek(weekStart, { weekStartsOn: 1 });
 
   return prisma.appointment.findMany({
     where: {
       salonId: session.user.salonId,
       scheduledAt: { gte: start, lte: end },
+      status: { not: "cancelled" },
     },
     include: {
       customer: true,
@@ -54,6 +47,12 @@ export async function getAppointmentsForWeek(weekStart: Date) {
     },
     orderBy: { scheduledAt: "asc" },
   });
+}
+
+export async function getAppointmentsForWeek(weekStart: Date) {
+  const start = startOfWeek(weekStart, { weekStartsOn: 1 });
+  const end = endOfWeek(weekStart, { weekStartsOn: 1 });
+  return getAppointmentsInRange(start, end);
 }
 
 export async function createAppointment(formData: FormData) {

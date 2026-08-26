@@ -1,8 +1,16 @@
-import { getAppointments, getAppointmentsForWeek } from "@/actions/appointments";
-import { getServices } from "@/actions/services";
+import { getAppointmentsInRange } from "@/actions/appointments";
+import { getServiceOptions } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
 import { AppointmentsClient } from "@/app/(dashboard)/appointments/appointments-client";
-import { startOfWeek, format } from "date-fns";
+import {
+  startOfWeek,
+  endOfWeek,
+  format,
+  startOfDay,
+  endOfDay,
+  addDays,
+  max,
+} from "date-fns";
 
 export default async function SalesAppointmentsPage({
   searchParams,
@@ -15,23 +23,33 @@ export default async function SalesAppointmentsPage({
   }>;
 }) {
   const params = await searchParams;
+  const now = new Date();
   const weekStart = params.weekStart
     ? startOfWeek(new Date(params.weekStart), { weekStartsOn: 1 })
-    : startOfWeek(new Date(), { weekStartsOn: 1 });
+    : startOfWeek(now, { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
+  const upcomingEnd = endOfDay(addDays(now, 30));
+  const rangeEnd = max([weekEnd, upcomingEnd]);
 
-  const [
-    weekAppointments,
-    todayAppointments,
-    upcomingAppointments,
-    services,
-    employees,
-  ] = await Promise.all([
-    getAppointmentsForWeek(weekStart),
-    getAppointments("today"),
-    getAppointments("upcoming"),
-    getServices(),
+  const [allAppointments, services, employees] = await Promise.all([
+    getAppointmentsInRange(weekStart, rangeEnd),
+    getServiceOptions(),
     getActiveEmployees(),
   ]);
+
+  const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
+
+  const weekAppointments = allAppointments.filter(
+    (a) => new Date(a.scheduledAt) <= weekEnd
+  );
+  const todayAppointments = allAppointments.filter((a) => {
+    const at = new Date(a.scheduledAt);
+    return at >= todayStart && at <= todayEnd;
+  });
+  const upcomingAppointments = allAppointments.filter(
+    (a) => new Date(a.scheduledAt) > todayEnd
+  );
 
   return (
     <AppointmentsClient

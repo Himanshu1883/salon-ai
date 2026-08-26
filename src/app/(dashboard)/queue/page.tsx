@@ -7,17 +7,12 @@ import {
 import { getActiveEmployees } from "@/actions/employees";
 import { getAvailableSeats } from "@/actions/seats";
 import { getBillingStats } from "@/actions/billing";
-import { getServices } from "@/actions/services";
-import { getAppointmentsForWeek } from "@/actions/appointments";
-import { endOfDay, isWithinInterval, startOfDay } from "date-fns";
+import { getServiceOptions } from "@/actions/services";
+import { getAppointments } from "@/actions/appointments";
 import { QueueClient } from "./queue-client";
 import { QueueLoadingSkeleton } from "@/components/dashboard/loading-skeletons";
 
 async function QueuePageContent() {
-  const now = new Date();
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
-
   const [
     entries,
     employees,
@@ -26,7 +21,7 @@ async function QueuePageContent() {
     completedEntries,
     billingStats,
     services,
-    weekAppointments,
+    todayAppointments,
   ] = await Promise.all([
     getQueueEntries(),
     getActiveEmployees(),
@@ -34,18 +29,11 @@ async function QueuePageContent() {
     getEstimatedWaitMinutes(),
     getRecentCompletedCheckIns(),
     getBillingStats(),
-    getServices(),
-    getAppointmentsForWeek(now),
+    getServiceOptions(),
+    getAppointments("today"),
   ]);
 
-  const appointmentsToday = weekAppointments
-    .filter((a) =>
-      isWithinInterval(new Date(a.scheduledAt), {
-        start: todayStart,
-        end: todayEnd,
-      })
-    )
-    .map((a) => ({
+  const appointmentsToday = todayAppointments.map((a) => ({
       id: a.id,
       status: a.status,
       scheduledAt: a.scheduledAt,

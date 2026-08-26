@@ -11,7 +11,7 @@ import {
 import { revalidateSalonCache } from "@/lib/salon-cache";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
-import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
+import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
 import { getSalonBillingWhatsAppTemplate } from "@/actions/whatsapp";
 import { deductRetailSale } from "@/lib/inventory/ledger";
@@ -333,6 +333,8 @@ export async function getInvoices(filters?: {
         new Date(filters.dateTo)
       );
     }
+  } else {
+    where.createdAt = { gte: subDays(new Date(), 90) };
   }
 
   return prisma.invoice.findMany({
@@ -345,6 +347,7 @@ export async function getInvoices(filters?: {
       seat: true,
     },
     orderBy: { createdAt: "desc" },
+    take: 500,
   });
 }
 
