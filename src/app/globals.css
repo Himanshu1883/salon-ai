@@ -54,6 +54,18 @@
   --rose-50: #fff1f2;
   --rose-600: #e11d48;
   --rose-700: #be123c;
+
+  /* Premium scrollbar tokens */
+  --scrollbar-size: 7px;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: rgba(109, 40, 217, 0.32);
+  --scrollbar-thumb-hover: rgba(109, 40, 217, 0.52);
+  --scrollbar-thumb-active: rgba(91, 33, 182, 0.68);
+
+  --scrollbar-dark-track: rgba(255, 255, 255, 0.05);
+  --scrollbar-dark-thumb: rgba(167, 139, 250, 0.4);
+  --scrollbar-dark-thumb-hover: rgba(196, 181, 253, 0.62);
+  --scrollbar-dark-thumb-active: rgba(221, 214, 254, 0.78);
 }
 
 @theme inline {
@@ -284,6 +296,8 @@
 html {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 body {
@@ -291,7 +305,88 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
+
+/*
+ * Premium scrollbars — site-wide (Firefox + WebKit).
+ * Elements that hide scrollbars keep their existing Tailwind utilities.
+ */
+*,
+*::before,
+*::after {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  min-height: 2.5rem;
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: var(--scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-button:single-button,
+*::-webkit-scrollbar-button:vertical:start:decrement,
+*::-webkit-scrollbar-button:vertical:end:increment,
+*::-webkit-scrollbar-button:horizontal:start:decrement,
+*::-webkit-scrollbar-button:horizontal:end:increment {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* Dark panels — dashboard sidebar, admin shells, etc. */
+.scrollbar-dark {
+  scrollbar-color: var(--scrollbar-dark-thumb) var(--scrollbar-dark-track);
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: var(--scrollbar-dark-track);
+  margin-block: 4px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-dark-thumb);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-dark-thumb-hover);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 12px rgba(139, 92, 246, 0.35);
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:active {
+  background-color: var(--scrollbar-dark-thumb-active);
+}
+
 
 /* Responsive spacing & type scale for dashboard pages */
 :root {
