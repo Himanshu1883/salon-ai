@@ -1666,6 +1666,7 @@ export function ServiceMenuClient({
         <CatalogDialogContent title="Add category">
           <CategoryForm
             onSuccess={(category) => {
+              skipNextCategoriesSync.current = true;
               setAddCategoryOpen(false);
               setLocalCategories((prev) => [
                 ...prev,
@@ -1685,6 +1686,7 @@ export function ServiceMenuClient({
             <CategoryForm
               category={editCategory}
               onSuccess={(category) => {
+                skipNextCategoriesSync.current = true;
                 setEditCategory(null);
                 setLocalCategories((prev) =>
                   prev.map((c) =>

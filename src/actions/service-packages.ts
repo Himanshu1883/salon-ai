@@ -12,7 +12,7 @@ import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { catalogInclude, serializeCatalogItem } from "@/lib/catalog/service-serializer";
 
 function revalidateServices(salonId: string) {
-  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog-options", "check-in", "billing");
 }
 
 function parsePackageForm(formData: FormData) {

@@ -9,6 +9,7 @@ export type SalonCacheScope =
   | "queue"
   | "team"
   | "catalog"
+  | "catalog-options"
   | "customers"
   | "billing"
   | "check-in"

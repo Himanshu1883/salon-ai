@@ -7,7 +7,7 @@ import { catalogInclude, serializeCatalogItem } from "@/lib/catalog/service-seri
 import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 
 function revalidateServices(salonId: string) {
-  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog-options", "check-in", "billing");
 }
 
 function parseAddOnForm(formData: FormData) {

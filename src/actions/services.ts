@@ -18,16 +18,18 @@ import {
 } from "@/lib/catalog/service-serializer";
 
 function revalidateServices(salonId: string) {
-  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in", "billing");
+  scheduleSalonCacheRevalidation(salonId, "catalog-options", "check-in", "billing");
 }
 
 async function serviceHasHistory(id: string) {
-  const [appointments, lineItems, queueServices] = await Promise.all([
-    prisma.appointment.count({ where: { serviceId: id } }),
-    prisma.invoiceLineItem.count({ where: { serviceId: id } }),
-    prisma.queueService.count({ where: { serviceId: id } }),
-  ]);
-  return appointments + lineItems + queueServices > 0;
+  const result = await prisma.$queryRaw<{ hasHistory: boolean }[]>`
+    SELECT (
+      EXISTS (SELECT 1 FROM "Appointment" WHERE "serviceId" = ${id})
+      OR EXISTS (SELECT 1 FROM "InvoiceLineItem" WHERE "serviceId" = ${id})
+      OR EXISTS (SELECT 1 FROM "QueueService" WHERE "serviceId" = ${id})
+    ) AS "hasHistory"
+  `;
+  return result[0]?.hasHistory ?? false;
 }
 
 async function permanentlyDeleteCatalogService(id: string, salonId: string) {
@@ -90,7 +92,7 @@ const getCachedServicesGrouped = cachedBySalon(
 );
 
 const getCachedServiceOptions = cachedBySalon(
-  "catalog",
+  "catalog-options",
   async (salonId: string) =>
     prisma.service.findMany({
       where: {
@@ -319,6 +321,7 @@ export async function deleteService(id: string) {
   const salonId = session.user.salonId!;
   const service = await prisma.service.findFirst({
     where: { id, salonId },
+    select: { id: true, catalogType: true, status: true, categoryId: true },
   });
   if (!service) return { error: "Service not found" };
 
@@ -339,7 +342,8 @@ export async function deleteService(id: string) {
       return { success: true, deleted: true };
     }
 
-    if (await serviceHasHistory(id)) {
+    const hasHistory = await serviceHasHistory(id);
+    if (hasHistory) {
       await prisma.service.update({
         where: { id },
         data: { status: "ARCHIVED" },

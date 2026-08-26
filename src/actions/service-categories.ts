@@ -12,8 +12,14 @@ import {
   scheduleSalonCacheRevalidation,
 } from "@/lib/salon-cache";
 
-function revalidateCatalog(salonId: string) {
-  scheduleSalonCacheRevalidation(salonId, "catalog", "check-in");
+function revalidateCatalogFull(salonId: string) {
+  scheduleSalonCacheRevalidation(
+    salonId,
+    "catalog",
+    "catalog-options",
+    "check-in",
+    "billing"
+  );
 }
 
 function actionError(err: unknown, fallback: string) {
@@ -67,15 +73,17 @@ export async function createServiceCategory(formData: FormData) {
       return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
     }
 
+    const salonId = session.user.salonId!;
     const sortOrder =
       parsed.data.sortOrder ??
-      (await prisma.serviceCategory.count({
-        where: { salonId: session.user.salonId },
-      }));
+      ((await prisma.serviceCategory.aggregate({
+        where: { salonId },
+        _max: { sortOrder: true },
+      }))._max.sortOrder ?? -1) + 1;
 
     const category = await prisma.serviceCategory.create({
       data: {
-        salonId: session.user.salonId,
+        salonId,
         name: parsed.data.name,
         sortOrder,
         categoryGroup: parsed.data.categoryGroup,
@@ -83,7 +91,6 @@ export async function createServiceCategory(formData: FormData) {
       select: { id: true, name: true, sortOrder: true, categoryGroup: true },
     });
 
-    revalidateCatalog(session.user.salonId);
     return { success: true, category };
   } catch (err) {
     return actionError(err, "Could not save category. Please try again.");
@@ -123,7 +130,6 @@ export async function updateServiceCategory(id: string, formData: FormData) {
       select: { id: true, name: true, sortOrder: true, categoryGroup: true },
     });
 
-    revalidateCatalog(session.user.salonId);
     return { success: true, category };
   } catch (err) {
     return actionError(err, "Could not update category. Please try again.");
@@ -149,7 +155,6 @@ export async function deleteServiceCategory(id: string) {
       await tx.serviceCategory.delete({ where: { id } });
     });
 
-    revalidateCatalog(session.user.salonId);
     return {
       success: true,
       uncategorizedCount: category._count.services,
@@ -185,7 +190,6 @@ export async function bulkCreateCategories(names: string[]) {
       )
     );
 
-    revalidateCatalog(session.user.salonId);
     return { success: true, categories: created };
   } catch (err) {
     return actionError(err, "Could not create categories. Please try again.");
@@ -264,9 +268,9 @@ export async function bulkDeleteServiceCategories(
       });
     });
 
-    revalidateCatalog(session.user.salonId);
+    revalidateCatalogFull(session.user.salonId);
     if (serviceIds.length > 0) {
-      revalidateSalonCache(session.user.salonId, "billing", "check-in");
+      revalidateSalonCache(session.user.salonId, "billing");
     }
     return {
       success: true,
@@ -300,7 +304,6 @@ export async function reorderCategories(orderedIds: string[]) {
       )
     );
 
-    revalidateCatalog(session.user.salonId);
     return { success: true };
   } catch (err) {
     return actionError(err, "Could not reorder categories. Please try again.");
