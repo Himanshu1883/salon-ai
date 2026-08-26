@@ -364,15 +364,45 @@ export async function getStaffEarningsTotal() {
   return result._sum.total ?? 0;
 }
 
-export async function getInvoices(filters?: {
-  status?: string;
-  dateFrom?: string;
-  dateTo?: string;
-  employeeId?: string;
-}) {
-  const session = await requireSession();
+const invoiceListSelect = {
+  id: true,
+  customerName: true,
+  customerPhone: true,
+  status: true,
+  subtotal: true,
+  tax: true,
+  total: true,
+  amountPaid: true,
+  dueDate: true,
+  paidAt: true,
+  paymentMethod: true,
+  createdAt: true,
+  lineItems: {
+    select: {
+      id: true,
+      description: true,
+      quantity: true,
+      unitPrice: true,
+      total: true,
+      service: { select: { name: true } },
+    },
+    take: 8,
+    orderBy: { id: "asc" as const },
+  },
+  employee: { select: { id: true, name: true } },
+  seat: { select: { id: true, number: true } },
+} as const;
 
-  const where: Record<string, unknown> = { salonId: session.user.salonId };
+function buildInvoiceListWhere(
+  salonId: string,
+  filters?: {
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    employeeId?: string;
+  }
+) {
+  const where: Record<string, unknown> = { salonId };
 
   if (filters?.status && filters.status !== "all") {
     where.status = filters.status;
@@ -398,49 +428,41 @@ export async function getInvoices(filters?: {
     where.createdAt = { gte: subDays(new Date(), 90) };
   }
 
-  return prisma.invoice.findMany({
-    where,
-    select: {
-      id: true,
-      customerName: true,
-      customerPhone: true,
-      status: true,
-      subtotal: true,
-      tax: true,
-      total: true,
-      amountPaid: true,
-      dueDate: true,
-      paidAt: true,
-      paymentMethod: true,
-      createdAt: true,
-      lineItems: {
-        select: {
-          id: true,
-          description: true,
-          quantity: true,
-          unitPrice: true,
-          total: true,
-          service: { select: { name: true } },
-        },
-      },
-      appointment: {
-        select: {
-          id: true,
-          service: { select: { name: true } },
-        },
-      },
-      checkIn: {
-        select: {
-          id: true,
-          customer: { select: { name: true } },
-        },
-      },
-      employee: { select: { id: true, name: true } },
-      seat: { select: { id: true, number: true } },
-    },
-    orderBy: { createdAt: "desc" },
-    take: 500,
-  });
+  return where;
+}
+
+export async function getInvoices(filters?: {
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  employeeId?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  const session = await requireSession();
+  const salonId = session.user.salonId!;
+  const where = buildInvoiceListWhere(salonId, filters);
+  const page = Math.max(1, filters?.page ?? 1);
+  const pageSize = Math.min(100, Math.max(1, filters?.pageSize ?? 50));
+
+  const [rows, totalCount] = await Promise.all([
+    prisma.invoice.findMany({
+      where,
+      select: invoiceListSelect,
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.invoice.count({ where }),
+  ]);
+
+  const invoices = rows.map((row) => ({
+    ...row,
+    appointment: null,
+    checkIn: null,
+  }));
+
+  return { invoices, totalCount, page, pageSize };
 }
 
 export async function getInvoice(id: string) {

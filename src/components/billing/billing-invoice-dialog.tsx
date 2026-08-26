@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { BillingInvoiceForm } from "@/components/billing/billing-invoice-form";
 import { v3 } from "@/components/billing/invoice-modal/v3";
 import { cn } from "@/lib/utils";
+import { getBillingInvoiceFormData } from "@/actions/billing";
 import type {
   BillingEmployee,
   BillingInvoice,
@@ -14,33 +16,113 @@ import type {
 type BillingInvoiceDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  services: BillingService[];
-  employees: BillingEmployee[];
-  seats: BillingSeat[];
   prefilledCustomer?: { name: string; phone: string };
   isBasicPlan?: boolean;
   salonName?: string;
   gstEnabled?: boolean;
+  onSuccess: (invoice: BillingInvoice) => void;
+  services?: BillingService[];
+  employees?: BillingEmployee[];
+  seats?: BillingSeat[];
   whatsappSettings?: {
     billingMessageTemplate: string;
     autoOpenAfterPayment: boolean;
   };
-  onSuccess: (invoice: BillingInvoice) => void;
+};
+
+type LoadedFormData = {
+  services: BillingService[];
+  employees: BillingEmployee[];
+  seats: BillingSeat[];
+  isBasicPlan: boolean;
+  salonName: string;
+  gstEnabled: boolean;
+  whatsappSettings: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
 };
 
 export function BillingInvoiceDialog({
   open,
   onOpenChange,
-  services,
-  employees,
-  seats,
   prefilledCustomer,
-  isBasicPlan = false,
-  salonName = "Salon",
-  gstEnabled = true,
-  whatsappSettings,
+  isBasicPlan: isBasicPlanProp,
+  salonName: salonNameProp = "Salon",
+  gstEnabled: gstEnabledProp = true,
   onSuccess,
+  services: servicesProp,
+  employees: employeesProp,
+  seats: seatsProp,
+  whatsappSettings: whatsappSettingsProp,
 }: BillingInvoiceDialogProps) {
+  const hasPreloadedData =
+    servicesProp !== undefined &&
+    employeesProp !== undefined &&
+    seatsProp !== undefined;
+
+  const [formData, setFormData] = useState<LoadedFormData | null>(
+    hasPreloadedData
+      ? {
+          services: servicesProp,
+          employees: employeesProp,
+          seats: seatsProp,
+          isBasicPlan: isBasicPlanProp ?? false,
+          salonName: salonNameProp,
+          gstEnabled: gstEnabledProp,
+          whatsappSettings: whatsappSettingsProp ?? {
+            billingMessageTemplate: "",
+            autoOpenAfterPayment: false,
+          },
+        }
+      : null
+  );
+  const [loading, setLoading] = useState(false);
+  const loadPromiseRef = useRef<Promise<LoadedFormData> | null>(null);
+
+  useEffect(() => {
+    if (hasPreloadedData) {
+      setFormData({
+        services: servicesProp,
+        employees: employeesProp,
+        seats: seatsProp,
+        isBasicPlan: isBasicPlanProp ?? false,
+        salonName: salonNameProp,
+        gstEnabled: gstEnabledProp,
+        whatsappSettings: whatsappSettingsProp ?? {
+          billingMessageTemplate: "",
+          autoOpenAfterPayment: false,
+        },
+      });
+    }
+  }, [
+    hasPreloadedData,
+    servicesProp,
+    employeesProp,
+    seatsProp,
+    isBasicPlanProp,
+    salonNameProp,
+    gstEnabledProp,
+    whatsappSettingsProp,
+  ]);
+
+  useEffect(() => {
+    if (!open || hasPreloadedData || formData) return;
+
+    if (!loadPromiseRef.current) {
+      setLoading(true);
+      loadPromiseRef.current = getBillingInvoiceFormData().then((data) => {
+        setFormData(data);
+        return data;
+      });
+      loadPromiseRef.current.finally(() => setLoading(false));
+    }
+  }, [open, hasPreloadedData, formData]);
+
+  const resolvedBasicPlan = formData?.isBasicPlan ?? isBasicPlanProp ?? false;
+  const salonName = formData?.salonName ?? salonNameProp;
+  const gstEnabled = formData?.gstEnabled ?? gstEnabledProp;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
@@ -52,18 +134,24 @@ export function BillingInvoiceDialog({
         )}
         onOpenAutoFocus={(event) => event.preventDefault()}
       >
-        <BillingInvoiceForm
-          services={services}
-          employees={employees}
-          seats={seats}
-          prefilledCustomer={prefilledCustomer}
-          isBasicPlan={isBasicPlan}
-          salonName={salonName}
-          gstEnabled={gstEnabled}
-          whatsappSettings={whatsappSettings}
-          onSuccess={onSuccess}
-          onCancel={() => onOpenChange(false)}
-        />
+        {loading || !formData ? (
+          <div className="flex min-h-[320px] items-center justify-center p-8 text-sm text-[#9CA3AF]">
+            Loading billing form…
+          </div>
+        ) : (
+          <BillingInvoiceForm
+            services={formData.services}
+            employees={formData.employees}
+            seats={formData.seats}
+            prefilledCustomer={prefilledCustomer}
+            isBasicPlan={resolvedBasicPlan}
+            salonName={salonName}
+            gstEnabled={gstEnabled}
+            whatsappSettings={formData.whatsappSettings}
+            onSuccess={onSuccess}
+            onCancel={() => onOpenChange(false)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

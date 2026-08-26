@@ -1,7 +1,11 @@
-import { getInventoryDashboardStats } from "@/actions/inventory/dashboard";
-import { InventoryDashboardClient } from "@/components/inventory/inventory-dashboard-client";
+import { Suspense } from "react";
+import { InventoryDashboardSkeleton } from "@/components/inventory/inventory-dashboard-skeleton";
+import { InventoryDashboardContent } from "./inventory-dashboard-content";
 
 export default async function InventoryDashboardPage() {
-  const stats = await getInventoryDashboardStats();
-  return <InventoryDashboardClient stats={stats} />;
+  return (
+    <Suspense fallback={<InventoryDashboardSkeleton />}>
+      <InventoryDashboardContent />
+    </Suspense>
+  );
 }

@@ -1,30 +1,11 @@
-import { getServicesGroupedByCategory } from "@/actions/services";
-import { getEmployeeOptions } from "@/actions/employees";
-import { ServiceMenuClient } from "./service-menu-client";
-import {
-  CatalogSchemaUpgradeNotice,
-  isCatalogSchemaError,
-} from "./catalog-schema-notice";
+import { Suspense } from "react";
+import { ServiceMenuSkeleton } from "./service-menu-skeleton";
+import { CatalogServicesContent } from "./catalog-services-content";
 
-export default async function CatalogServicesPage() {
-  try {
-    const [{ categories, uncategorized }, employees] = await Promise.all([
-      getServicesGroupedByCategory(),
-      getEmployeeOptions(),
-    ]);
-
-    return (
-      <ServiceMenuClient
-        categories={categories}
-        uncategorized={uncategorized}
-        employees={employees}
-      />
-    );
-  } catch (error) {
-    if (isCatalogSchemaError(error)) {
-      console.error("Catalog schema missing on database:", error);
-      return <CatalogSchemaUpgradeNotice />;
-    }
-    throw error;
-  }
+export default function CatalogServicesPage() {
+  return (
+    <Suspense fallback={<ServiceMenuSkeleton />}>
+      <CatalogServicesContent />
+    </Suspense>
+  );
 }

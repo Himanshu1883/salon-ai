@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { stockItemSchema, stockPurchaseSchema } from "@/lib/validations";
 import { getStockStatus } from "@/lib/stock";
 import { saveBillAttachment } from "@/lib/stock-upload";
@@ -9,15 +10,22 @@ import { revalidatePath } from "next/cache";
 
 const STOCK_PATH = "/inventory/stock";
 
-const stockItemInclude = {
-  category: {
-    select: { id: true, name: true },
-  },
+const stockListSelect = {
+  id: true,
+  name: true,
+  sku: true,
+  categoryId: true,
+  category: { select: { id: true, name: true } },
+  unit: true,
+  quantityOnHand: true,
+  reorderLevel: true,
+  description: true,
   purchases: {
+    select: { purchaseDate: true },
     orderBy: { purchaseDate: "desc" as const },
     take: 1,
   },
-};
+} as const;
 
 function mapStockItem(
   item: {
@@ -48,11 +56,12 @@ function mapStockItem(
   };
 }
 
-function revalidateStock(id?: string) {
+function revalidateStock(salonId: string, id?: string) {
   revalidatePath(STOCK_PATH);
   revalidatePath("/stock");
   revalidatePath("/catalog/products");
   revalidatePath("/dashboard");
+  scheduleSalonCacheRevalidation(salonId, "stock");
   if (id) {
     revalidatePath(`${STOCK_PATH}/${id}`);
     revalidatePath(`/stock/${id}`);
@@ -65,50 +74,51 @@ function parseReorderLevel(value: FormDataEntryValue | null) {
   return Number.isFinite(num) ? num : null;
 }
 
+async function fetchStockListItems(salonId: string) {
+  const items = await prisma.stockItem.findMany({
+    where: { salonId },
+    select: stockListSelect,
+    orderBy: { name: "asc" },
+  });
+
+  return items.map(mapStockItem);
+}
+
+const getCachedStockListItems = cachedBySalon(
+  "stock",
+  fetchStockListItems,
+  { revalidate: 60, key: "items" }
+);
+
 export async function getStockItems(filters?: {
   query?: string;
   category?: string;
   lowStockOnly?: boolean;
 }) {
   const session = await requireSession();
-  const salonId = session.user.salonId;
+  const salonId = session.user.salonId!;
 
-  const where: {
-    salonId: string;
-    categoryId?: string;
-    OR?: Array<{
-      name?: { contains: string };
-      sku?: { contains: string };
-      category?: { name: { contains: string } };
-    }>;
-  } = { salonId };
+  let items = await getCachedStockListItems(salonId);
 
   if (filters?.category && filters.category !== "all") {
-    where.categoryId = filters.category;
+    items = items.filter((item) => item.categoryId === filters.category);
   }
 
   if (filters?.query?.trim()) {
-    const q = filters.query.trim();
-    where.OR = [
-      { name: { contains: q } },
-      { sku: { contains: q } },
-      { category: { name: { contains: q } } },
-    ];
+    const q = filters.query.trim().toLowerCase();
+    items = items.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        (item.sku?.toLowerCase().includes(q) ?? false) ||
+        item.category.toLowerCase().includes(q)
+    );
   }
-
-  const items = await prisma.stockItem.findMany({
-    where,
-    include: stockItemInclude,
-    orderBy: { name: "asc" },
-  });
-
-  const mapped = items.map(mapStockItem);
 
   if (filters?.lowStockOnly) {
-    return mapped.filter((item) => item.status === "low" || item.status === "out");
+    items = items.filter((item) => item.status === "low" || item.status === "out");
   }
 
-  return mapped;
+  return items;
 }
 
 export async function searchStock(
@@ -249,7 +259,7 @@ export async function createStockItem(formData: FormData) {
     },
   });
 
-  revalidateStock();
+  revalidateStock(session.user.salonId!);
   return { success: true, id: item.id };
 }
 
@@ -296,7 +306,7 @@ export async function updateStockItem(id: string, formData: FormData) {
     },
   });
 
-  revalidateStock(id);
+  revalidateStock(session.user.salonId!, id);
   return { success: true };
 }
 
@@ -308,7 +318,7 @@ export async function deleteStockItem(id: string) {
   if (!item) return { error: "Stock item not found" };
 
   await prisma.stockItem.delete({ where: { id } });
-  revalidateStock();
+  revalidateStock(session.user.salonId!);
   return { success: true };
 }
 
@@ -381,7 +391,7 @@ export async function recordPurchase(formData: FormData) {
     });
   });
 
-  revalidateStock(parsed.data.stockItemId);
+  revalidateStock(salonId, parsed.data.stockItemId);
   revalidatePath(`${STOCK_PATH}/purchases/new`);
   revalidatePath("/stock/purchases/new");
   return { success: true };

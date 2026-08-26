@@ -11,6 +11,7 @@ export type SalonCacheScope =
   | "staff-analytics"
   | "catalog"
   | "catalog-options"
+  | "stock"
   | "customers"
   | "billing"
   | "check-in"
