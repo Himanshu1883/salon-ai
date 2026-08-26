@@ -515,7 +515,10 @@ export function StaffAnalyticsClient({
               <div className="rounded-2xl border border-[#E8ECF4] bg-[#FAFAFF] p-4">
                 <div className="flex items-center gap-2 text-sm text-[#6C3BFF]">
                   <CalendarClock className="h-4 w-4" />
-                  {format(parseISO(data.nextAppointment.scheduledAt), "EEE · h:mm a")}
+                  {format(
+                    parseISO(data.nextAppointment.scheduledAt),
+                    "EEE, MMM d · h:mm a"
+                  )}
                 </div>
                 <p className="mt-2 text-lg font-semibold text-[#1C103D]">
                   {data.nextAppointment.customerName}
@@ -556,6 +559,9 @@ export function StaffAnalyticsClient({
                     <p className="text-sm text-[#6B7280]">{apt.serviceName}</p>
                   </div>
                   <div className="text-right text-sm">
+                    <p className="font-medium text-[#1C103D]">
+                      {format(parseISO(apt.scheduledAt), "EEE, MMM d")}
+                    </p>
                     <p className="font-medium text-[#6C3BFF]">
                       {format(parseISO(apt.scheduledAt), "h:mm a")}
                     </p>

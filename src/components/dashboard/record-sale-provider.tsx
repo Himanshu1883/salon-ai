@@ -4,7 +4,10 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
+  useRef,
   useState,
+  startTransition,
 } from "react";
 import { useRouter } from "next/navigation";
 import { getBillingInvoiceFormData } from "@/actions/billing";
@@ -49,27 +52,42 @@ export function RecordSaleProvider({ children }: { children: React.ReactNode }) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState<BillingFormData | null>(null);
+  const prefetchStarted = useRef(false);
 
-  const openRecordSale = useCallback(async () => {
-    setOpen(true);
-    setError("");
-
-    if (formData) return;
-
+  const loadFormData = useCallback(async () => {
+    if (formData) return formData;
     setLoading(true);
+    setError("");
     try {
       const result = await getBillingInvoiceFormData();
       setFormData(result);
+      return result;
     } catch {
       setError("Could not load sale form");
+      return null;
     } finally {
       setLoading(false);
     }
   }, [formData]);
 
+  useEffect(() => {
+    if (prefetchStarted.current || formData) return;
+    prefetchStarted.current = true;
+    void loadFormData();
+  }, [formData, loadFormData]);
+
+  const openRecordSale = useCallback(async () => {
+    setOpen(true);
+    setError("");
+    if (formData) return;
+    await loadFormData();
+  }, [formData, loadFormData]);
+
   function handleSuccess(_invoice: BillingInvoice) {
     setOpen(false);
-    router.refresh();
+    startTransition(() => {
+      router.refresh();
+    });
   }
 
   return (

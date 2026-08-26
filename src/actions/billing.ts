@@ -51,13 +51,9 @@ async function deductProductLineItems(
   }>,
   customerId?: string | null,
   employeeId?: string | null,
-  createdById?: string | null
+  createdById?: string | null,
+  tx?: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
 ) {
-  const existing = await prisma.stockLedgerEntry.count({
-    where: { salonId, invoiceId, movementType: "sale" },
-  });
-  if (existing > 0) return;
-
   const productLines = lineItems.filter(
     (item) =>
       item.stockItemId &&
@@ -65,10 +61,17 @@ async function deductProductLineItems(
   );
   if (productLines.length === 0) return;
 
-  await prisma.$transaction(async (tx) => {
+  const runDeductions = async (
+    client: Parameters<Parameters<typeof prisma.$transaction>[0]>[0]
+  ) => {
+    const existing = await client.stockLedgerEntry.count({
+      where: { salonId, invoiceId, movementType: "sale" },
+    });
+    if (existing > 0) return;
+
     for (const item of productLines) {
       if (!item.stockItemId) continue;
-      await deductRetailSale(tx, {
+      await deductRetailSale(client, {
         salonId,
         stockItemId: item.stockItemId,
         quantity: item.quantity,
@@ -78,7 +81,14 @@ async function deductProductLineItems(
         createdById,
       });
     }
-  });
+  };
+
+  if (tx) {
+    await runDeductions(tx);
+    return;
+  }
+
+  await prisma.$transaction(runDeductions);
 }
 
 function calcTotals(
@@ -96,12 +106,20 @@ function calcTotals(
   return { subtotal, tax, total };
 }
 
+const getCachedSalonGstEnabled = cachedBySalon(
+  "billing",
+  async (salonId) => {
+    const salon = await prisma.salon.findUnique({
+      where: { id: salonId },
+      select: { gstEnabled: true },
+    });
+    return salon?.gstEnabled ?? true;
+  },
+  { revalidate: 300, key: "gst-enabled" }
+);
+
 async function getSalonGstEnabled(salonId: string) {
-  const salon = await prisma.salon.findUnique({
-    where: { id: salonId },
-    select: { gstEnabled: true },
-  });
-  return salon?.gstEnabled ?? true;
+  return getCachedSalonGstEnabled(salonId);
 }
 
 async function validateEmployeeAndSeat(
@@ -433,6 +451,7 @@ export async function createInvoice(formData: FormData) {
   const raw = {
     customerName: formData.get("customerName") as string,
     customerPhone: (formData.get("customerPhone") as string) || undefined,
+    customerId: (formData.get("customerId") as string) || undefined,
     notes: (formData.get("notes") as string) || undefined,
     dueDate: (formData.get("dueDate") as string) || undefined,
     status: (formData.get("status") as string) || "draft",
@@ -489,6 +508,22 @@ export async function createInvoice(formData: FormData) {
       parsed.data.lineItems.map((i) => i.stockItemId).filter(Boolean) as string[]
     ),
   ];
+  const needsServiceLookup = parsed.data.lineItems.some(
+    (item) =>
+      item.serviceId &&
+      !resolveLineItemLabel({ description: item.description, fallback: "" })
+  );
+  const needsStockLookup = parsed.data.lineItems.some(
+    (item) =>
+      item.stockItemId &&
+      !resolveLineItemLabel({ description: item.description, fallback: "" })
+  );
+
+  const customerPromise = upsertCustomer(salonId, {
+    customerId: raw.customerId,
+    name: parsed.data.customerName,
+    phone: parsed.data.customerPhone,
+  });
 
   const [
     validation,
@@ -497,25 +532,23 @@ export async function createInvoice(formData: FormData) {
     stockRecords,
     customer,
     validLineEmployeeCount,
+    membershipDiscount,
   ] = await Promise.all([
     validateEmployeeAndSeat(salonId, invoiceEmployeeId, parsed.data.seatId),
     getSalonGstEnabled(salonId),
-    serviceIds.length
+    serviceIds.length && needsServiceLookup
       ? prisma.service.findMany({
           where: { salonId, id: { in: serviceIds } },
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
-    stockIds.length
+    stockIds.length && needsStockLookup
       ? prisma.stockItem.findMany({
           where: { salonId, id: { in: stockIds } },
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
-    upsertCustomer(salonId, {
-      name: parsed.data.customerName,
-      phone: parsed.data.customerPhone,
-    }),
+    customerPromise,
     lineEmployeeIds.length > 0
       ? prisma.employee.count({
           where: {
@@ -525,6 +558,9 @@ export async function createInvoice(formData: FormData) {
           },
         })
       : Promise.resolve(0),
+    customerPromise.then((createdCustomer) =>
+      getActiveMembershipDiscount(salonId, createdCustomer.id)
+    ),
   ]);
 
   if ("error" in validation) return validation;
@@ -553,10 +589,6 @@ export async function createInvoice(formData: FormData) {
     }),
   }));
 
-  const membershipDiscount = await getActiveMembershipDiscount(
-    salonId,
-    customer.id
-  );
   if (membershipDiscount && membershipDiscount.discountPercent > 0) {
     const { discountedSubtotal, discountAmount } = applyMembershipDiscount(
       totals.subtotal,
@@ -842,26 +874,29 @@ export async function markInvoicePaid(formData: FormData) {
     amountPaid: newAmountPaid,
   });
 
-  await prisma.invoice.update({
-    where: { id: parsed.data.invoiceId },
-    data: {
-      amountPaid: newAmountPaid,
-      status: fullyPaid ? "paid" : "partial",
-      paidAt: fullyPaid ? new Date() : invoice.paidAt,
-      paymentMethod: parsed.data.paymentMethod,
-    },
-  });
+  await prisma.$transaction(async (tx) => {
+    await tx.invoice.update({
+      where: { id: parsed.data.invoiceId },
+      data: {
+        amountPaid: newAmountPaid,
+        status: fullyPaid ? "paid" : "partial",
+        paidAt: fullyPaid ? new Date() : invoice.paidAt,
+        paymentMethod: parsed.data.paymentMethod,
+      },
+    });
 
-  if (fullyPaid) {
-    await deductProductLineItems(
-      session.user.salonId,
-      invoice.id,
-      invoice.lineItems,
-      invoice.customerId,
-      invoice.employeeId,
-      session.user.id
-    );
-  }
+    if (fullyPaid) {
+      await deductProductLineItems(
+        session.user.salonId,
+        invoice.id,
+        invoice.lineItems,
+        invoice.customerId,
+        invoice.employeeId,
+        session.user.id,
+        tx
+      );
+    }
+  });
 
   invalidateBillingCache(session.user.salonId);
   return {
@@ -896,33 +931,38 @@ export async function deleteInvoice(id: string) {
   return { success: true };
 }
 
-export async function getBillingInvoiceFormData() {
-  const session = await requireSession();
-  const salonId = session.user.salonId;
-
-  const [services, employees, seats, salon, plan, whatsappSettings] = await Promise.all([
-    prisma.service.findMany({
-      where: { salonId },
-      include: { category: true },
-      orderBy: { sortOrder: "asc" },
-    }),
-    prisma.employee.findMany({
-      where: { salonId, status: "active" },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
-    }),
-    prisma.seat.findMany({
-      where: { salonId },
-      orderBy: { number: "asc" },
-      select: { id: true, number: true },
-    }),
-    prisma.salon.findUnique({
-      where: { id: salonId },
-      select: { name: true, gstEnabled: true },
-    }),
-    getSalonPlan(salonId),
-    getSalonBillingWhatsAppTemplate(salonId),
-  ]);
+async function fetchBillingInvoiceFormData(salonId: string) {
+  const [services, employees, seats, salon, plan, whatsappSettings] =
+    await Promise.all([
+      prisma.service.findMany({
+        where: { salonId },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          duration: true,
+          description: true,
+          category: { select: { name: true } },
+        },
+        orderBy: { sortOrder: "asc" },
+      }),
+      prisma.employee.findMany({
+        where: { salonId, status: "active" },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      }),
+      prisma.seat.findMany({
+        where: { salonId },
+        orderBy: { number: "asc" },
+        select: { id: true, number: true },
+      }),
+      prisma.salon.findUnique({
+        where: { id: salonId },
+        select: { name: true, gstEnabled: true },
+      }),
+      getSalonPlan(salonId),
+      getCachedBillingWhatsAppSettings(salonId),
+    ]);
 
   return {
     services: services.map((s) => ({
@@ -940,4 +980,21 @@ export async function getBillingInvoiceFormData() {
     gstEnabled: salon?.gstEnabled ?? true,
     whatsappSettings,
   };
+}
+
+const getCachedBillingWhatsAppSettings = cachedBySalon(
+  "billing",
+  getSalonBillingWhatsAppTemplate,
+  { revalidate: 300, key: "whatsapp-template" }
+);
+
+const getCachedBillingInvoiceFormData = cachedBySalon(
+  "billing",
+  fetchBillingInvoiceFormData,
+  { revalidate: 120, key: "invoice-form" }
+);
+
+export async function getBillingInvoiceFormData() {
+  const session = await requireSession();
+  return getCachedBillingInvoiceFormData(session.user.salonId!);
 }

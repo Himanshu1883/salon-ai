@@ -483,6 +483,7 @@ export function BillingInvoiceForm({
     const formData = new FormData();
     formData.set("customerName", customer.name.trim());
     formData.set("customerPhone", customer.phone.trim());
+    if (customer.id) formData.set("customerId", customer.id);
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
     formData.set("status", status);
