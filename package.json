@@ -23,6 +23,8 @@
     "db:reset-demo-passwords": "npx tsx scripts/reset-demo-passwords.ts",
     "db:backfill-slugs": "npx tsx scripts/backfill-salon-slugs.ts",
     "db:backfill-roles": "npx tsx scripts/backfill-roles.ts",
+    "db:backfill-employee-id": "npx tsx scripts/backfill-user-employee-id.ts",
+    "db:backfill-employee-id:dry-run": "npx tsx scripts/backfill-user-employee-id.ts --dry-run",
     "db:sync-subscription-plans": "npx tsx scripts/sync-subscription-plans.ts"
   },
   "prisma": {

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
+import { warmDatabasePool } from "@/lib/warm-database-pool";
 import LoginForm from "./login-form";
 import LoginWorkspaceGate from "./login-workspace-gate";
 
@@ -53,6 +54,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LoginPage() {
+  void warmDatabasePool();
+
   const salonSlug = await resolveSalonSlug();
 
   // No salon context (marketing /login) → workspace picker.
