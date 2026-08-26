@@ -1,11 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/generated/prisma/client";
-import {
-  format,
-  startOfDay,
-} from "date-fns";
+import { format } from "date-fns";
 import type { AnalyticsDateRange } from "./date-range";
 import { growthPercent } from "./date-range";
+import {
+  SHIFT_MINUTES_CASE,
+  employeeAppointmentFilter,
+  employeeInvoiceFilter,
+  employeeShiftFilter,
+} from "./staff-analytics-sql";
 
 export type StaffAnalyticsFilters = {
   salonId: string;
@@ -44,17 +47,25 @@ type CustomerRow = {
   lastVisit: string;
 };
 
-function parseTimeToMinutes(time: string): number {
-  const [hours, minutes] = time.split(":").map(Number);
-  return (hours ?? 0) * 60 + (minutes ?? 0);
-}
+type EmployeeOption = {
+  id: string;
+  name: string;
+  role: string;
+  status: string;
+  avatarUrl: string | null;
+  specialties: string | null;
+};
 
-function shiftMinutes(startTime?: string | null, endTime?: string | null) {
-  if (!startTime || !endTime) return 0;
-  const start = parseTimeToMinutes(startTime);
-  const end = parseTimeToMinutes(endTime);
-  return Math.max(0, end - start);
-}
+type UpcomingRow = {
+  id: string;
+  scheduledAt: string;
+  status: string;
+  customerName: string;
+  serviceName: string;
+  duration: number;
+  price: number;
+  employeeName: string | null;
+};
 
 async function getAttributedRevenueBothPeriods(
   salonId: string,
@@ -64,10 +75,7 @@ async function getAttributedRevenueBothPeriods(
   prevTo: Date,
   employeeId: string | null
 ): Promise<{ current: RevenueRow[]; previous: RevenueRow[] }> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
-
+  const employeeFilter = employeeInvoiceFilter(employeeId);
   const rangeStart =
     prevFrom.getTime() < from.getTime() ? prevFrom : from;
   const rangeEnd = prevTo.getTime() > to.getTime() ? prevTo : to;
@@ -117,9 +125,7 @@ async function getAttributedRevenue(
   to: Date,
   employeeId: string | null
 ): Promise<RevenueRow[]> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
+  const employeeFilter = employeeInvoiceFilter(employeeId);
 
   const rows = await prisma.$queryRaw<
     { employeeId: string; revenue: number; invoiceCount: bigint }[]
@@ -151,9 +157,7 @@ async function getDailyRevenueTrend(
   to: Date,
   employeeId: string | null
 ): Promise<DailyRevenueRow[]> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
+  const employeeFilter = employeeInvoiceFilter(employeeId);
 
   const rows = await prisma.$queryRaw<{ day: Date; revenue: number }[]>(
     Prisma.sql`
@@ -179,14 +183,17 @@ async function getServicePerformance(
   to: Date,
   employeeId: string | null
 ): Promise<ServiceRow[]> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
-    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
+  const employeeFilter = employeeAppointmentFilter(employeeId);
 
-  const [apptRows, revenueRows] = await Promise.all([
-    prisma.$queryRaw<
-      { serviceId: string; serviceName: string; appointments: bigint }[]
-    >(Prisma.sql`
+  const rows = await prisma.$queryRaw<
+    {
+      serviceId: string;
+      serviceName: string;
+      appointments: bigint;
+      revenue: number;
+    }[]
+  >(Prisma.sql`
+    WITH appt_counts AS (
       SELECT s.id AS "serviceId", s.name AS "serviceName", COUNT(*)::bigint AS appointments
       FROM "Appointment" a
       INNER JOIN "Service" s ON s.id = a."serviceId"
@@ -196,38 +203,35 @@ async function getServicePerformance(
         AND a.status NOT IN ('cancelled')
         ${employeeFilter}
       GROUP BY s.id, s.name
-      ORDER BY appointments DESC
-      LIMIT 10
-    `),
-    prisma.$queryRaw<{ serviceId: string | null; revenue: number }[]>(
-      Prisma.sql`
-        SELECT li."serviceId" AS "serviceId", SUM(li.total)::float AS revenue
-        FROM "Invoice" i
-        INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
-        WHERE i."salonId" = ${salonId}
-          AND i.status = 'paid'
-          AND i."paidAt" >= ${from}
-          AND i."paidAt" <= ${to}
-          AND li."itemType" = 'SERVICE'
-          ${
-            employeeId
-              ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-              : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`
-          }
-        GROUP BY li."serviceId"
-      `
     ),
-  ]);
+    revenue_totals AS (
+      SELECT li."serviceId", SUM(li.total)::float AS revenue
+      FROM "Invoice" i
+      INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
+      WHERE i."salonId" = ${salonId}
+        AND i.status = 'paid'
+        AND i."paidAt" >= ${from}
+        AND i."paidAt" <= ${to}
+        AND li."itemType" = 'SERVICE'
+        ${employeeInvoiceFilter(employeeId)}
+      GROUP BY li."serviceId"
+    )
+    SELECT
+      ac."serviceId",
+      ac."serviceName",
+      ac.appointments,
+      COALESCE(rt.revenue, 0)::float AS revenue
+    FROM appt_counts ac
+    LEFT JOIN revenue_totals rt ON rt."serviceId" = ac."serviceId"
+    ORDER BY ac.appointments DESC
+    LIMIT 10
+  `);
 
-  const revenueByService = new Map(
-    revenueRows.map((row) => [row.serviceId, row.revenue ?? 0])
-  );
-
-  return apptRows.map((row) => ({
+  return rows.map((row) => ({
     serviceId: row.serviceId,
     serviceName: row.serviceName,
     appointments: Number(row.appointments),
-    revenue: revenueByService.get(row.serviceId) ?? 0,
+    revenue: row.revenue ?? 0,
   }));
 }
 
@@ -238,85 +242,77 @@ async function getCustomerPerformance(
   employeeId: string | null,
   limit = 20
 ): Promise<{ rows: CustomerRow[]; totalCustomers: number; newCustomers: number }> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
-    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
-
+  const employeeFilter = employeeAppointmentFilter(employeeId);
   const revenueFilter = employeeId
     ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
     : Prisma.sql``;
 
-  const [customerRows, revenueByCustomer, allCustomers, newCustomers] =
-    await Promise.all([
-      prisma.$queryRaw<
-        {
-          customerId: string;
-          customerName: string;
-          visits: bigint;
-          lastVisit: Date;
-        }[]
-      >(Prisma.sql`
-        SELECT
-          c.id AS "customerId",
-          c.name AS "customerName",
-          COUNT(*)::bigint AS visits,
-          MAX(a."scheduledAt") AS "lastVisit"
-        FROM "Appointment" a
-        INNER JOIN "Customer" c ON c.id = a."customerId"
-        WHERE a."salonId" = ${salonId}
-          AND a."scheduledAt" >= ${from}
-          AND a."scheduledAt" <= ${to}
-          AND a.status IN ('completed', 'checked_in', 'scheduled')
-          ${employeeFilter}
-        GROUP BY c.id, c.name
-        ORDER BY visits DESC, "lastVisit" DESC
-        LIMIT ${limit}
-      `),
-      employeeId
-        ? prisma.$queryRaw<{ customerId: string; revenue: number }[]>(
-            Prisma.sql`
-              SELECT i."customerId" AS "customerId", SUM(li.total)::float AS revenue
-              FROM "Invoice" i
-              INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
-              WHERE i."salonId" = ${salonId}
-                AND i.status = 'paid'
-                AND i."paidAt" >= ${from}
-                AND i."paidAt" <= ${to}
-                AND i."customerId" IS NOT NULL
-                ${revenueFilter}
-              GROUP BY i."customerId"
-            `
-          )
-        : Promise.resolve([]),
-      prisma.$queryRaw<{ count: bigint }[]>(
-        Prisma.sql`
-          SELECT COUNT(DISTINCT a."customerId")::bigint AS count
+  const [customerRows, revenueByCustomer, counts] = await Promise.all([
+    limit > 0
+      ? prisma.$queryRaw<
+          {
+            customerId: string;
+            customerName: string;
+            visits: bigint;
+            lastVisit: Date;
+          }[]
+        >(Prisma.sql`
+          SELECT
+            c.id AS "customerId",
+            c.name AS "customerName",
+            COUNT(*)::bigint AS visits,
+            MAX(a."scheduledAt") AS "lastVisit"
           FROM "Appointment" a
+          INNER JOIN "Customer" c ON c.id = a."customerId"
           WHERE a."salonId" = ${salonId}
             AND a."scheduledAt" >= ${from}
             AND a."scheduledAt" <= ${to}
-            AND a.status NOT IN ('cancelled', 'no_show')
+            AND a.status IN ('completed', 'checked_in', 'scheduled')
             ${employeeFilter}
-        `
-      ),
-      prisma.$queryRaw<{ count: bigint }[]>(
-        Prisma.sql`
-          SELECT COUNT(*)::bigint AS count
-          FROM "Customer" c
-          WHERE c."salonId" = ${salonId}
-            AND c."createdAt" >= ${from}
-            AND c."createdAt" <= ${to}
-            AND EXISTS (
-              SELECT 1 FROM "Appointment" a
-              WHERE a."customerId" = c.id
-                AND a."salonId" = ${salonId}
-                AND a."scheduledAt" >= ${from}
-                AND a."scheduledAt" <= ${to}
-                ${employeeFilter}
-            )
-        `
-      ),
-    ]);
+          GROUP BY c.id, c.name
+          ORDER BY visits DESC, "lastVisit" DESC
+          LIMIT ${limit}
+        `)
+      : Promise.resolve([]),
+    employeeId
+      ? prisma.$queryRaw<{ customerId: string; revenue: number }[]>(
+          Prisma.sql`
+            SELECT i."customerId" AS "customerId", SUM(li.total)::float AS revenue
+            FROM "Invoice" i
+            INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
+            WHERE i."salonId" = ${salonId}
+              AND i.status = 'paid'
+              AND i."paidAt" >= ${from}
+              AND i."paidAt" <= ${to}
+              AND i."customerId" IS NOT NULL
+              ${revenueFilter}
+            GROUP BY i."customerId"
+          `
+        )
+      : Promise.resolve([]),
+    prisma.$queryRaw<{ totalCustomers: bigint; newCustomers: bigint }[]>(
+      Prisma.sql`
+        SELECT
+          COUNT(DISTINCT a."customerId") FILTER (
+            WHERE a.status NOT IN ('cancelled', 'no_show')
+          )::bigint AS "totalCustomers",
+          COUNT(DISTINCT c.id) FILTER (
+            WHERE c."createdAt" >= ${from}
+              AND c."createdAt" <= ${to}
+          )::bigint AS "newCustomers"
+        FROM "Appointment" a
+        LEFT JOIN "Customer" c
+          ON c.id = a."customerId"
+          AND c."salonId" = ${salonId}
+          AND c."createdAt" >= ${from}
+          AND c."createdAt" <= ${to}
+        WHERE a."salonId" = ${salonId}
+          AND a."scheduledAt" >= ${from}
+          AND a."scheduledAt" <= ${to}
+          ${employeeFilter}
+      `
+    ),
+  ]);
 
   const revenueMap = new Map(
     revenueByCustomer.map((row) => [row.customerId, row.revenue ?? 0])
@@ -330,8 +326,8 @@ async function getCustomerPerformance(
       revenue: revenueMap.get(row.customerId) ?? 0,
       lastVisit: row.lastVisit.toISOString(),
     })),
-    totalCustomers: Number(allCustomers[0]?.count ?? 0),
-    newCustomers: Number(newCustomers[0]?.count ?? 0),
+    totalCustomers: Number(counts[0]?.totalCustomers ?? 0),
+    newCustomers: Number(counts[0]?.newCustomers ?? 0),
   };
 }
 
@@ -341,9 +337,7 @@ async function getBusyHours(
   to: Date,
   employeeId: string | null
 ): Promise<HourBucket[]> {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
-    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
+  const employeeFilter = employeeAppointmentFilter(employeeId);
 
   const rows = await prisma.$queryRaw<{ hour: number; count: bigint }[]>(
     Prisma.sql`
@@ -362,43 +356,61 @@ async function getBusyHours(
   return rows.map((row) => ({ hour: row.hour, count: Number(row.count) }));
 }
 
+async function getShiftAvailableMinutes(
+  salonId: string,
+  from: Date,
+  to: Date,
+  employeeId: string | null
+) {
+  const shiftFilter = employeeShiftFilter(employeeId);
+
+  const rows = await prisma.$queryRaw<{ availableMinutes: number }[]>(
+    Prisma.sql`
+      SELECT COALESCE(SUM(${SHIFT_MINUTES_CASE}), 0)::float AS "availableMinutes"
+      FROM "Shift" sh
+      WHERE sh."salonId" = ${salonId}
+        AND sh.date >= ${from}
+        AND sh.date <= ${to}
+        AND sh."isWorking" = true
+        ${shiftFilter}
+    `
+  );
+
+  return rows[0]?.availableMinutes ?? 0;
+}
+
+async function getBookedMinutes(
+  salonId: string,
+  from: Date,
+  to: Date,
+  employeeId: string | null
+) {
+  const employeeFilter = employeeAppointmentFilter(employeeId);
+
+  const rows = await prisma.$queryRaw<{ bookedMinutes: number }[]>(Prisma.sql`
+    SELECT COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
+    FROM "Appointment" a
+    INNER JOIN "Service" s ON s.id = a."serviceId"
+    WHERE a."salonId" = ${salonId}
+      AND a."scheduledAt" >= ${from}
+      AND a."scheduledAt" <= ${to}
+      AND a.status IN ('scheduled', 'checked_in', 'completed')
+      ${employeeFilter}
+  `);
+
+  return rows[0]?.bookedMinutes ?? 0;
+}
+
 async function getUtilization(
   salonId: string,
   from: Date,
   to: Date,
   employeeId: string | null
 ) {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
-    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
-
-  const [shifts, bookedRows] = await Promise.all([
-    prisma.shift.findMany({
-      where: {
-        salonId,
-        date: { gte: from, lte: to },
-        isWorking: true,
-        ...(employeeId ? { employeeId } : {}),
-      },
-      select: { startTime: true, endTime: true },
-    }),
-    prisma.$queryRaw<{ bookedMinutes: number }[]>(Prisma.sql`
-      SELECT COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
-      FROM "Appointment" a
-      INNER JOIN "Service" s ON s.id = a."serviceId"
-      WHERE a."salonId" = ${salonId}
-        AND a."scheduledAt" >= ${from}
-        AND a."scheduledAt" <= ${to}
-        AND a.status IN ('scheduled', 'checked_in', 'completed')
-        ${employeeFilter}
-    `),
+  const [availableMinutes, bookedMinutes] = await Promise.all([
+    getShiftAvailableMinutes(salonId, from, to, employeeId),
+    getBookedMinutes(salonId, from, to, employeeId),
   ]);
-
-  const availableMinutes = shifts.reduce(
-    (sum, shift) => sum + shiftMinutes(shift.startTime, shift.endTime),
-    0
-  );
-  const bookedMinutes = bookedRows[0]?.bookedMinutes ?? 0;
 
   return {
     bookedMinutes,
@@ -417,58 +429,87 @@ async function getAttendanceSummary(
   to: Date,
   employeeId: string | null
 ) {
-  const [records, shifts] = await Promise.all([
-    prisma.attendanceRecord.findMany({
-      where: {
-        salonId,
-        date: { gte: from, lte: to },
-        ...(employeeId ? { employeeId } : {}),
-      },
-      select: { checkInAt: true, checkOutAt: true },
-    }),
-    prisma.shift.findMany({
-      where: {
-        salonId,
-        date: { gte: from, lte: to },
-        isWorking: true,
-        ...(employeeId ? { employeeId } : {}),
-      },
-      select: { date: true, startTime: true },
-    }),
-  ]);
+  const employeeFilter = employeeId
+    ? Prisma.sql`AND ar."employeeId" = ${employeeId}`
+    : Prisma.sql``;
+  const shiftEmployeeFilter = employeeId
+    ? Prisma.sql`AND sh."employeeId" = ${employeeId}`
+    : Prisma.sql``;
 
-  let daysPresent = records.length;
-  let hoursWorked = 0;
-  for (const record of records) {
-    if (record.checkOutAt) {
-      hoursWorked +=
-        (record.checkOutAt.getTime() - record.checkInAt.getTime()) / 3600000;
-    }
-  }
+  const rows = await prisma.$queryRaw<
+    {
+      daysPresent: bigint;
+      hoursWorked: number;
+      scheduledDays: bigint;
+      lateArrivals: bigint;
+    }[]
+  >(Prisma.sql`
+    WITH attendance AS (
+      SELECT
+        COUNT(*)::bigint AS "daysPresent",
+        COALESCE(
+          SUM(
+            EXTRACT(EPOCH FROM (ar."checkOutAt" - ar."checkInAt")) / 3600
+          ),
+          0
+        )::float AS "hoursWorked"
+      FROM "AttendanceRecord" ar
+      WHERE ar."salonId" = ${salonId}
+        AND ar.date >= ${from}
+        AND ar.date <= ${to}
+        ${employeeFilter}
+    ),
+    shifts AS (
+      SELECT COUNT(*)::bigint AS "scheduledDays"
+      FROM "Shift" sh
+      WHERE sh."salonId" = ${salonId}
+        AND sh.date >= ${from}
+        AND sh.date <= ${to}
+        AND sh."isWorking" = true
+        ${shiftEmployeeFilter}
+    ),
+    late AS (
+      SELECT COUNT(*)::bigint AS "lateArrivals"
+      FROM "AttendanceRecord" ar
+      INNER JOIN "Shift" sh
+        ON sh."employeeId" = ar."employeeId"
+        AND sh."salonId" = ar."salonId"
+        AND DATE(sh.date) = DATE(ar.date)
+        AND sh."isWorking" = true
+        AND sh."startTime" IS NOT NULL
+      WHERE ar."salonId" = ${salonId}
+        AND ar.date >= ${from}
+        AND ar.date <= ${to}
+        ${employeeFilter}
+        AND (
+          EXTRACT(HOUR FROM ar."checkInAt")::int * 60 +
+          EXTRACT(MINUTE FROM ar."checkInAt")::int
+        ) > (
+          split_part(sh."startTime", ':', 1)::int * 60 +
+          split_part(sh."startTime", ':', 2)::int + 5
+        )
+    )
+    SELECT
+      attendance."daysPresent",
+      attendance."hoursWorked",
+      shifts."scheduledDays",
+      late."lateArrivals"
+    FROM attendance, shifts, late
+  `);
 
-  let lateArrivals = 0;
-  for (const record of records) {
-    const dayShift = shifts.find(
-      (shift) =>
-        startOfDay(shift.date).getTime() ===
-          startOfDay(record.checkInAt).getTime() && shift.startTime
-    );
-    if (dayShift?.startTime) {
-      const checkIn = new Date(record.checkInAt);
-      const actual = checkIn.getHours() * 60 + checkIn.getMinutes();
-      if (actual > parseTimeToMinutes(dayShift.startTime) + 5) lateArrivals++;
-    }
-  }
+  const row = rows[0];
+  const daysPresent = Number(row?.daysPresent ?? 0);
+  const scheduledDays = Number(row?.scheduledDays ?? 0);
+  const hoursWorked = row?.hoursWorked ?? 0;
 
-  const scheduledDays = shifts.length;
   return {
     daysPresent,
     daysAbsent: Math.max(0, scheduledDays - daysPresent),
-    lateArrivals,
+    lateArrivals: Number(row?.lateArrivals ?? 0),
     hoursWorked: Math.round(hoursWorked * 10) / 10,
     averageHoursPerDay:
       daysPresent > 0 ? Math.round((hoursWorked / daysPresent) * 10) / 10 : 0,
-    hasData: records.length > 0 || shifts.length > 0,
+    hasData: daysPresent > 0 || scheduledDays > 0,
   };
 }
 
@@ -478,9 +519,7 @@ async function getProductSales(
   to: Date,
   employeeId: string | null
 ) {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
+  const employeeFilter = employeeInvoiceFilter(employeeId);
 
   const rows = await prisma.$queryRaw<
     { revenue: number; quantity: bigint; saleCount: bigint }[]
@@ -520,9 +559,7 @@ async function getCompletedCountsBothPeriods(
   prevTo: Date,
   employeeId: string | null
 ) {
-  const employeeFilter = employeeId
-    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
-    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
+  const employeeFilter = employeeAppointmentFilter(employeeId);
 
   const rows = await prisma.$queryRaw<
     { currentCompleted: bigint; previousCompleted: bigint }[]
@@ -557,6 +594,8 @@ async function getDayOfWeekBuckets(
   to: Date,
   employeeId: string | null
 ) {
+  const employeeFilter = employeeAppointmentFilter(employeeId);
+
   return prisma.$queryRaw<{ day: number; count: bigint }[]>(Prisma.sql`
     SELECT EXTRACT(DOW FROM a."scheduledAt")::int AS day, COUNT(*)::bigint AS count
     FROM "Appointment" a
@@ -564,101 +603,116 @@ async function getDayOfWeekBuckets(
       AND a."scheduledAt" >= ${from}
       AND a."scheduledAt" <= ${to}
       AND a.status NOT IN ('cancelled')
-      ${employeeId ? Prisma.sql`AND a."employeeId" = ${employeeId}` : Prisma.sql`AND a."employeeId" IS NOT NULL`}
+      ${employeeFilter}
     GROUP BY day
     ORDER BY count DESC
   `);
 }
 
-export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
-  const { salonId, employeeId, range } = filters;
-  const { from, to, prevFrom, prevTo } = range;
+async function getAppointmentStatusCounts(
+  salonId: string,
+  from: Date,
+  to: Date,
+  employeeId: string | null
+) {
+  const employeeFilter = employeeAppointmentFilter(employeeId);
 
-  const appointmentWhere = {
-    salonId,
-    scheduledAt: { gte: from, lte: to },
-    ...(employeeId ? { employeeId } : { employeeId: { not: null } }),
-  } as const;
+  const rows = await prisma.$queryRaw<{ status: string; count: bigint }[]>(
+    Prisma.sql`
+      SELECT a.status, COUNT(*)::bigint AS count
+      FROM "Appointment" a
+      WHERE a."salonId" = ${salonId}
+        AND a."scheduledAt" >= ${from}
+        AND a."scheduledAt" <= ${to}
+        ${employeeFilter}
+      GROUP BY a.status
+    `
+  );
 
-  const [
+  return rows.map((row) => ({
+    status: row.status,
+    count: Number(row.count),
+  }));
+}
+
+async function getUpcomingAppointments(
+  salonId: string,
+  employeeId: string | null,
+  take = 8
+) {
+  return prisma.appointment.findMany({
+    where: {
+      salonId,
+      scheduledAt: { gte: new Date() },
+      status: { in: ["scheduled", "checked_in"] },
+      ...(employeeId ? { employeeId } : {}),
+    },
+    select: {
+      id: true,
+      scheduledAt: true,
+      status: true,
+      customer: { select: { name: true } },
+      service: { select: { name: true, duration: true, price: true } },
+      employee: { select: { name: true } },
+    },
+    orderBy: { scheduledAt: "asc" },
+    take,
+  });
+}
+
+export async function fetchStaffAnalyticsEmployees(salonId: string) {
+  return prisma.employee.findMany({
+    where: { salonId, status: "active" },
+    select: {
+      id: true,
+      name: true,
+      role: true,
+      status: true,
+      avatarUrl: true,
+      specialties: true,
+    },
+    orderBy: { name: "asc" },
+  });
+}
+
+function mapUpcoming(
+  apt: Awaited<ReturnType<typeof getUpcomingAppointments>>[number]
+): UpcomingRow {
+  return {
+    id: apt.id,
+    scheduledAt: apt.scheduledAt.toISOString(),
+    status: apt.status,
+    customerName: apt.customer.name,
+    serviceName: apt.service.name,
+    duration: apt.service.duration,
+    price: apt.service.price,
+    employeeName: apt.employee?.name ?? null,
+  };
+}
+
+function computeOverviewFromParts(input: {
+  range: AnalyticsDateRange;
+  employeeId: string | null;
+  employees: EmployeeOption[];
+  revenueByPeriod: Awaited<ReturnType<typeof getAttributedRevenueBothPeriods>>;
+  statusGroups: Awaited<ReturnType<typeof getAppointmentStatusCounts>>;
+  completedCounts: Awaited<ReturnType<typeof getCompletedCountsBothPeriods>>;
+  customers: { totalCustomers: number; newCustomers: number };
+  utilization: Awaited<ReturnType<typeof getUtilization>>;
+}) {
+  const {
+    range,
+    employeeId,
+    employees,
     revenueByPeriod,
     statusGroups,
-    dailyRevenue,
-    services,
-    customers,
-    busyHours,
-    utilization,
-    attendance,
-    productSales,
-    employees,
-    upcomingAppointments,
     completedCounts,
-    dayBuckets,
-  ] = await Promise.all([
-    getAttributedRevenueBothPeriods(
-      salonId,
-      from,
-      to,
-      prevFrom,
-      prevTo,
-      employeeId
-    ),
-    prisma.appointment.groupBy({
-      by: ["status"],
-      where: appointmentWhere,
-      _count: { _all: true },
-    }),
-    getDailyRevenueTrend(salonId, from, to, employeeId),
-    getServicePerformance(salonId, from, to, employeeId),
-    getCustomerPerformance(salonId, from, to, employeeId),
-    getBusyHours(salonId, from, to, employeeId),
-    getUtilization(salonId, from, to, employeeId),
-    getAttendanceSummary(salonId, from, to, employeeId),
-    getProductSales(salonId, from, to, employeeId),
-    prisma.employee.findMany({
-      where: { salonId, status: "active" },
-      select: {
-        id: true,
-        name: true,
-        role: true,
-        status: true,
-        avatarUrl: true,
-        specialties: true,
-      },
-      orderBy: { name: "asc" },
-    }),
-    prisma.appointment.findMany({
-      where: {
-        salonId,
-        scheduledAt: { gte: new Date() },
-        status: { in: ["scheduled", "checked_in"] },
-        ...(employeeId ? { employeeId } : {}),
-      },
-      include: {
-        customer: { select: { name: true, phone: true } },
-        service: { select: { name: true, duration: true, price: true } },
-        employee: { select: { id: true, name: true } },
-      },
-      orderBy: { scheduledAt: "asc" },
-      take: 8,
-    }),
-    getCompletedCountsBothPeriods(
-      salonId,
-      from,
-      to,
-      prevFrom,
-      prevTo,
-      employeeId
-    ),
-    getDayOfWeekBuckets(salonId, from, to, employeeId),
-  ]);
+    customers,
+    utilization,
+  } = input;
 
   const currentRevenueRows = revenueByPeriod.current;
   const previousRevenueRows = revenueByPeriod.previous;
-  const completedCount = completedCounts.currentCompleted;
-  const prevCompletedCount = completedCounts.previousCompleted;
-  const nextAppointment = upcomingAppointments[0] ?? null;
-
   const revenue = currentRevenueRows.reduce((sum, row) => sum + row.revenue, 0);
   const previousRevenue = previousRevenueRows.reduce(
     (sum, row) => sum + row.revenue,
@@ -666,18 +720,16 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
   );
 
   const statusMap = Object.fromEntries(
-    statusGroups.map((group) => [group.status, group._count._all])
+    statusGroups.map((group) => [group.status, group.count])
   );
-  const totalAppointments = statusGroups.reduce(
-    (sum, group) => sum + group._count._all,
-    0
-  );
+  const totalAppointments = statusGroups.reduce((sum, group) => sum + group.count, 0);
   const completed = statusMap.completed ?? 0;
   const upcomingCount = (statusMap.scheduled ?? 0) + (statusMap.checked_in ?? 0);
   const cancelled = statusMap.cancelled ?? 0;
   const noShow = statusMap.no_show ?? 0;
 
-  const billableDenominator = completed > 0 ? completed : completedCount;
+  const billableDenominator =
+    completed > 0 ? completed : completedCounts.currentCompleted;
   const averageTicket =
     billableDenominator > 0
       ? Math.round((revenue / billableDenominator) * 100) / 100
@@ -685,7 +737,7 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
 
   const prevRevenueForTicket =
     previousRevenueRows.reduce((sum, row) => sum + row.revenue, 0) /
-    Math.max(prevCompletedCount, 1);
+    Math.max(completedCounts.previousCompleted, 1);
   const averageTicketGrowth = growthPercent(
     averageTicket,
     Math.round(prevRevenueForTicket * 100) / 100
@@ -700,49 +752,11 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
       ? Math.round((returningCustomers / customers.totalCustomers) * 1000) / 10
       : 0;
 
-  const peakHourBucket = [...busyHours].sort((a, b) => b.count - a.count)[0];
-  const leastBusyHourBucket = [...busyHours]
-    .filter((bucket) => bucket.count > 0)
-    .sort((a, b) => a.count - b.count)[0];
-
-  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const peakDay = dayBuckets[0]
-    ? dayNames[dayBuckets[0].day] ?? "—"
-    : "—";
-
-  const teamRanking = employeeId
-    ? []
-    : await buildTeamRanking(salonId, from, to, employees);
-
-  const insights = buildInsights({
-    employeeId,
-    revenue,
-    revenueGrowth: growthPercent(revenue, previousRevenue),
-    utilization: utilization.utilizationPercent,
-    repeatRate,
-    peakHour: peakHourBucket?.hour,
-    peakDay,
-    topService: services[0]?.serviceName,
-    cancellationRate:
-      totalAppointments > 0
-        ? Math.round((cancelled / totalAppointments) * 1000) / 10
-        : 0,
-    upcomingCount,
-  });
-
-  const alerts = buildAlerts({
-    cancellationRate:
-      totalAppointments > 0 ? (cancelled / totalAppointments) * 100 : 0,
-    utilization: utilization.utilizationPercent,
-    upcomingTomorrow: upcomingCount,
-    revenueGrowth: growthPercent(revenue, previousRevenue),
-  });
-
   return {
     range: {
       label: range.label,
-      from: from.toISOString(),
-      to: to.toISOString(),
+      from: range.from.toISOString(),
+      to: range.to.toISOString(),
     },
     employee: employeeId
       ? employees.find((employee) => employee.id === employeeId) ?? null
@@ -781,10 +795,6 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
       scheduled: statusMap.scheduled ?? 0,
       checkedIn: statusMap.checked_in ?? 0,
     },
-    revenueTrend: dailyRevenue.map((row) => ({
-      label: format(row.day, "MMM d"),
-      revenue: row.revenue,
-    })),
     utilization: {
       bookedMinutes: utilization.bookedMinutes,
       availableMinutes: utilization.availableMinutes,
@@ -796,41 +806,7 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
       new: customers.newCustomers,
       returning: returningCustomers,
       repeatRate,
-      rows: customers.rows,
     },
-    services,
-    busyHours: busyHours.map((bucket) => ({
-      hour: bucket.hour,
-      label: format(new Date().setHours(bucket.hour, 0, 0, 0), "ha"),
-      count: bucket.count,
-    })),
-    attendance,
-    productSales,
-    upcoming: upcomingAppointments.map((apt) => ({
-      id: apt.id,
-      scheduledAt: apt.scheduledAt.toISOString(),
-      status: apt.status,
-      customerName: apt.customer.name,
-      serviceName: apt.service.name,
-      duration: apt.service.duration,
-      price: apt.service.price,
-      employeeName: apt.employee?.name ?? null,
-    })),
-    nextAppointment: nextAppointment
-      ? {
-          id: nextAppointment.id,
-          scheduledAt: nextAppointment.scheduledAt.toISOString(),
-          status: nextAppointment.status,
-          customerName: nextAppointment.customer.name,
-          serviceName: nextAppointment.service.name,
-          duration: nextAppointment.service.duration,
-          price: nextAppointment.service.price,
-          employeeName: nextAppointment.employee?.name ?? null,
-        }
-      : null,
-    teamRanking,
-    insights,
-    alerts,
     employees: employees.map((employee) => ({
       id: employee.id,
       name: employee.name,
@@ -841,76 +817,280 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
   };
 }
 
+export async function fetchStaffAnalyticsOverview(
+  filters: StaffAnalyticsFilters
+) {
+  const { salonId, employeeId, range } = filters;
+  const { from, to, prevFrom, prevTo } = range;
+
+  const [
+    revenueByPeriod,
+    statusGroups,
+    completedCounts,
+    utilization,
+    customerCounts,
+    employees,
+    upcomingAppointments,
+    attendance,
+    productSales,
+  ] = await Promise.all([
+    getAttributedRevenueBothPeriods(
+      salonId,
+      from,
+      to,
+      prevFrom,
+      prevTo,
+      employeeId
+    ),
+    getAppointmentStatusCounts(salonId, from, to, employeeId),
+    getCompletedCountsBothPeriods(
+      salonId,
+      from,
+      to,
+      prevFrom,
+      prevTo,
+      employeeId
+    ),
+    getUtilization(salonId, from, to, employeeId),
+    getCustomerPerformance(salonId, from, to, employeeId, 0),
+    fetchStaffAnalyticsEmployees(salonId),
+    getUpcomingAppointments(salonId, employeeId),
+    getAttendanceSummary(salonId, from, to, employeeId),
+    getProductSales(salonId, from, to, employeeId),
+  ]);
+
+  const core = computeOverviewFromParts({
+    range,
+    employeeId,
+    employees,
+    revenueByPeriod,
+    statusGroups,
+    completedCounts,
+    customers: {
+      totalCustomers: customerCounts.totalCustomers,
+      newCustomers: customerCounts.newCustomers,
+    },
+    utilization,
+  });
+
+  const upcoming = upcomingAppointments.map(mapUpcoming);
+
+  return {
+    ...core,
+    attendance,
+    productSales,
+    upcoming,
+    nextAppointment: upcoming[0] ?? null,
+  };
+}
+
+export async function fetchStaffAnalyticsCharts(
+  filters: StaffAnalyticsFilters
+) {
+  const { salonId, employeeId, range } = filters;
+  const { from, to } = range;
+
+  const [dailyRevenue, services, busyHours, dayBuckets] = await Promise.all([
+    getDailyRevenueTrend(salonId, from, to, employeeId),
+    getServicePerformance(salonId, from, to, employeeId),
+    getBusyHours(salonId, from, to, employeeId),
+    getDayOfWeekBuckets(salonId, from, to, employeeId),
+  ]);
+
+  const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const peakDay = dayBuckets[0]
+    ? dayNames[dayBuckets[0].day] ?? "—"
+    : "—";
+
+  return {
+    revenueTrend: dailyRevenue.map((row) => ({
+      label: format(row.day, "MMM d"),
+      revenue: row.revenue,
+    })),
+    services,
+    busyHours: busyHours.map((bucket) => ({
+      hour: bucket.hour,
+      label: format(new Date().setHours(bucket.hour, 0, 0, 0), "ha"),
+      count: bucket.count,
+    })),
+    peakDay,
+    peakHour: [...busyHours].sort((a, b) => b.count - a.count)[0]?.hour,
+  };
+}
+
+export async function fetchStaffAnalyticsDetailsOnly(
+  filters: StaffAnalyticsFilters,
+  context: {
+    overview: Awaited<ReturnType<typeof fetchStaffAnalyticsOverview>>;
+    charts: Awaited<ReturnType<typeof fetchStaffAnalyticsCharts>>;
+  }
+) {
+  const { salonId, employeeId, range } = filters;
+  const { from, to } = range;
+  const { overview, charts } = context;
+
+  const [customers, teamRanking] = await Promise.all([
+    getCustomerPerformance(salonId, from, to, employeeId, 20),
+    employeeId
+      ? Promise.resolve([])
+      : buildTeamRanking(salonId, from, to, overview.employees),
+  ]);
+
+  const insights = buildInsights({
+    employeeId,
+    revenue: overview.overview.revenue,
+    revenueGrowth: overview.overview.revenueGrowth,
+    utilization: overview.utilization.utilizationPercent,
+    repeatRate: overview.customers.repeatRate,
+    peakHour: charts.peakHour,
+    peakDay: charts.peakDay,
+    topService: charts.services[0]?.serviceName,
+    cancellationRate: overview.overview.cancellationRate,
+    upcomingCount: overview.appointments.upcoming,
+  });
+
+  const alerts = buildAlerts({
+    cancellationRate: overview.overview.cancellationRate,
+    utilization: overview.utilization.utilizationPercent,
+    upcomingTomorrow: overview.appointments.upcoming,
+    revenueGrowth: overview.overview.revenueGrowth,
+  });
+
+  return {
+    customers: {
+      ...overview.customers,
+      rows: customers.rows,
+    },
+    teamRanking,
+    insights,
+    alerts,
+  };
+}
+
+export async function fetchStaffAnalyticsDetails(
+  filters: StaffAnalyticsFilters,
+  context?: {
+    overview?: Awaited<ReturnType<typeof fetchStaffAnalyticsOverview>>;
+    charts?: Awaited<ReturnType<typeof fetchStaffAnalyticsCharts>>;
+  }
+) {
+  const [overview, charts] = await Promise.all([
+    context?.overview ?? fetchStaffAnalyticsOverview(filters),
+    context?.charts ?? fetchStaffAnalyticsCharts(filters),
+  ]);
+  return fetchStaffAnalyticsDetailsOnly(filters, { overview, charts });
+}
+
+/** Full payload — used for CSV export and backward compatibility. */
+export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
+  const [overview, charts] = await Promise.all([
+    fetchStaffAnalyticsOverview(filters),
+    fetchStaffAnalyticsCharts(filters),
+  ]);
+  const details = await fetchStaffAnalyticsDetailsOnly(filters, { overview, charts });
+
+  return {
+    range: overview.range,
+    employee: overview.employee,
+    overview: overview.overview,
+    appointments: overview.appointments,
+    revenueTrend: charts.revenueTrend,
+    utilization: overview.utilization,
+    customers: details.customers,
+    services: charts.services,
+    busyHours: charts.busyHours,
+    attendance: overview.attendance,
+    productSales: overview.productSales,
+    upcoming: overview.upcoming,
+    nextAppointment: overview.nextAppointment,
+    teamRanking: details.teamRanking,
+    insights: details.insights,
+    alerts: details.alerts,
+    employees: overview.employees,
+  };
+}
+
+async function getBookedMinutesByEmployee(
+  salonId: string,
+  from: Date,
+  to: Date
+) {
+  return prisma.$queryRaw<{ employeeId: string; bookedMinutes: number }[]>(
+    Prisma.sql`
+      SELECT a."employeeId", COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
+      FROM "Appointment" a
+      INNER JOIN "Service" s ON s.id = a."serviceId"
+      WHERE a."salonId" = ${salonId}
+        AND a."scheduledAt" >= ${from}
+        AND a."scheduledAt" <= ${to}
+        AND a."employeeId" IS NOT NULL
+        AND a.status IN ('scheduled', 'checked_in', 'completed')
+      GROUP BY a."employeeId"
+    `
+  );
+}
+
+async function getAvailableMinutesByEmployee(
+  salonId: string,
+  from: Date,
+  to: Date
+) {
+  return prisma.$queryRaw<{ employeeId: string; availableMinutes: number }[]>(
+    Prisma.sql`
+      SELECT sh."employeeId",
+        SUM(${SHIFT_MINUTES_CASE})::float AS "availableMinutes"
+      FROM "Shift" sh
+      WHERE sh."salonId" = ${salonId}
+        AND sh.date >= ${from}
+        AND sh.date <= ${to}
+        AND sh."isWorking" = true
+      GROUP BY sh."employeeId"
+    `
+  );
+}
+
 async function buildTeamRanking(
   salonId: string,
   from: Date,
   to: Date,
   employees: { id: string; name: string; role: string }[]
 ) {
-  const [revenueRows, appointmentRows, allShifts, allAppointments] =
+  const [revenueRows, appointmentRows, availableRows, bookedRows] =
     await Promise.all([
       getAttributedRevenue(salonId, from, to, null),
-      prisma.appointment.groupBy({
-        by: ["employeeId"],
-        where: {
-          salonId,
-          scheduledAt: { gte: from, lte: to },
-          employeeId: { not: null },
-          status: { not: "cancelled" },
-        },
-        _count: { _all: true },
-      }),
-      prisma.shift.findMany({
-        where: {
-          salonId,
-          date: { gte: from, lte: to },
-          isWorking: true,
-        },
-        select: { employeeId: true, startTime: true, endTime: true },
-      }),
-      prisma.appointment.findMany({
-        where: {
-          salonId,
-          scheduledAt: { gte: from, lte: to },
-          employeeId: { not: null },
-          status: { in: ["scheduled", "checked_in", "completed"] },
-        },
-        select: {
-          employeeId: true,
-          service: { select: { duration: true } },
-        },
-      }),
+      prisma.$queryRaw<{ employeeId: string; appointments: bigint }[]>(
+        Prisma.sql`
+          SELECT a."employeeId", COUNT(*)::bigint AS appointments
+          FROM "Appointment" a
+          WHERE a."salonId" = ${salonId}
+            AND a."scheduledAt" >= ${from}
+            AND a."scheduledAt" <= ${to}
+            AND a."employeeId" IS NOT NULL
+            AND a.status NOT IN ('cancelled')
+          GROUP BY a."employeeId"
+        `
+      ),
+      getAvailableMinutesByEmployee(salonId, from, to),
+      getBookedMinutesByEmployee(salonId, from, to),
     ]);
 
   const revenueMap = new Map(
     revenueRows.map((row) => [row.employeeId, row.revenue])
   );
   const appointmentMap = new Map(
-    appointmentRows.map((row) => [row.employeeId!, row._count._all])
+    appointmentRows.map((row) => [row.employeeId, Number(row.appointments)])
   );
-
-  const availableByEmployee = new Map<string, number>();
-  for (const shift of allShifts) {
-    availableByEmployee.set(
-      shift.employeeId,
-      (availableByEmployee.get(shift.employeeId) ?? 0) +
-        shiftMinutes(shift.startTime, shift.endTime)
-    );
-  }
-
-  const bookedByEmployee = new Map<string, number>();
-  for (const apt of allAppointments) {
-    if (!apt.employeeId) continue;
-    bookedByEmployee.set(
-      apt.employeeId,
-      (bookedByEmployee.get(apt.employeeId) ?? 0) + apt.service.duration
-    );
-  }
+  const availableMap = new Map(
+    availableRows.map((row) => [row.employeeId, row.availableMinutes ?? 0])
+  );
+  const bookedMap = new Map(
+    bookedRows.map((row) => [row.employeeId, row.bookedMinutes ?? 0])
+  );
 
   return employees
     .map((employee) => {
-      const available = availableByEmployee.get(employee.id) ?? 0;
-      const booked = bookedByEmployee.get(employee.id) ?? 0;
+      const available = availableMap.get(employee.id) ?? 0;
+      const booked = bookedMap.get(employee.id) ?? 0;
       return {
         id: employee.id,
         name: employee.name,

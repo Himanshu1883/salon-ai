@@ -1,6 +1,7 @@
 type CacheEntry = { value: unknown; expiresAt: number };
 
 const store = new Map<string, CacheEntry>();
+const inflight = new Map<string, Promise<unknown>>();
 
 /** Short-lived in-process cache — helps local dev where unstable_cache resets each request. */
 export function cachedRead<T>(
@@ -14,10 +15,24 @@ export function cachedRead<T>(
     return Promise.resolve(hit.value as T);
   }
 
-  return loader().then((value) => {
-    store.set(key, { value, expiresAt: now + ttlSeconds * 1000 });
-    return value;
-  });
+  const pending = inflight.get(key);
+  if (pending) {
+    return pending as Promise<T>;
+  }
+
+  const promise = loader()
+    .then((value) => {
+      store.set(key, { value, expiresAt: now + ttlSeconds * 1000 });
+      inflight.delete(key);
+      return value;
+    })
+    .catch((error) => {
+      inflight.delete(key);
+      throw error;
+    });
+
+  inflight.set(key, promise);
+  return promise;
 }
 
 export function invalidateMemoryCachePrefix(prefix: string) {
