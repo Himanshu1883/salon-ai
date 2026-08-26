@@ -1,5 +1,5 @@
-import { InventoryLoadingSkeleton } from "@/components/dashboard/loading-skeletons";
+import { InventoryDashboardSkeleton } from "@/components/inventory/inventory-dashboard-skeleton";
 
 export default function InventoryLoading() {
-  return <InventoryLoadingSkeleton />;
+  return <InventoryDashboardSkeleton />;
 }

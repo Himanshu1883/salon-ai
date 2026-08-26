@@ -1,9 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { requireSession } from "@/lib/auth";
 import { cachedBySalon } from "@/lib/salon-cache";
 import { getInventoryAccess } from "@/lib/inventory/permissions";
-import { getLowStockCountForSalon } from "@/actions/stock";
 import { getStockStatus } from "@/lib/stock";
 import { startOfMonth, subDays, format } from "date-fns";
 
@@ -11,35 +11,50 @@ async function fetchInventoryDashboardStats(salonId: string) {
   const now = new Date();
   const monthStart = startOfMonth(now);
   const thirtyDaysAgo = subDays(now, 30);
+  const expiringCutoff = subDays(now, -30);
 
   const [
-    items,
-    lowStockCount,
-    expiringSoon,
-    inventoryValueRow,
+    stockKpis,
     recentMovements,
     purchaseOrders,
-    consumptionThisMonth,
-    salesThisMonth,
-    movementByDay,
+    ledgerStats,
     purchaseTrendRows,
   ] = await Promise.all([
-    prisma.stockItem.count({ where: { salonId, status: "active" } }),
-    getLowStockCountForSalon(salonId),
-    prisma.stockItem.count({
-      where: {
-        salonId,
-        status: "active",
-        expiryDate: { lte: subDays(now, -30), gte: now },
-      },
-    }),
-    prisma.$queryRaw<{ total: number }[]>`
-      SELECT COALESCE(SUM("quantityOnHand" * "avgCost"), 0)::float AS total
+    prisma.$queryRaw<
+      {
+        totalProducts: number;
+        lowStockCount: number;
+        expiringSoon: number;
+        inventoryValue: number;
+      }[]
+    >`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'active')::int AS "totalProducts",
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+            AND (
+              "quantityOnHand" <= 0
+              OR (
+                "reorderLevel" IS NOT NULL
+                AND "quantityOnHand" <= "reorderLevel"
+              )
+            )
+        )::int AS "lowStockCount",
+        COUNT(*) FILTER (
+          WHERE status = 'active'
+            AND "expiryDate" IS NOT NULL
+            AND "expiryDate" <= ${expiringCutoff}
+            AND "expiryDate" >= ${now}
+        )::int AS "expiringSoon",
+        COALESCE(
+          SUM("quantityOnHand" * "avgCost") FILTER (WHERE status = 'active'),
+          0
+        )::float AS "inventoryValue"
       FROM "StockItem"
-      WHERE "salonId" = ${salonId} AND status = 'active'
+      WHERE "salonId" = ${salonId}
     `,
     prisma.stockLedgerEntry.findMany({
-      where: { salonId, createdAt: { gte: thirtyDaysAgo } },
+      where: { salonId },
       select: {
         id: true,
         movementType: true,
@@ -53,27 +68,25 @@ async function fetchInventoryDashboardStats(salonId: string) {
     prisma.purchaseOrder.count({
       where: { salonId, status: { in: ["draft", "ordered", "partial"] } },
     }),
-    prisma.stockLedgerEntry.aggregate({
-      where: {
-        salonId,
-        movementType: "consumption",
-        createdAt: { gte: monthStart },
-      },
-      _sum: { quantity: true },
-    }),
-    prisma.stockLedgerEntry.aggregate({
-      where: {
-        salonId,
-        movementType: "sale",
-        createdAt: { gte: monthStart },
-      },
-      _sum: { quantity: true },
-    }),
-    prisma.stockLedgerEntry.groupBy({
-      by: ["movementType"],
-      where: { salonId, createdAt: { gte: thirtyDaysAgo } },
-      _count: { id: true },
-    }),
+    prisma.$queryRaw<
+      {
+        movementType: string;
+        count30d: number;
+        monthQty: number;
+      }[]
+    >`
+      SELECT
+        "movementType",
+        COUNT(*) FILTER (WHERE "createdAt" >= ${thirtyDaysAgo})::int AS "count30d",
+        COALESCE(
+          SUM(ABS(quantity)) FILTER (WHERE "createdAt" >= ${monthStart}),
+          0
+        )::float AS "monthQty"
+      FROM "StockLedgerEntry"
+      WHERE "salonId" = ${salonId}
+        AND "createdAt" >= ${thirtyDaysAgo}
+      GROUP BY "movementType"
+    `,
     prisma.$queryRaw<{ day: Date; qty: number }[]>`
       SELECT DATE("createdAt") AS day, COALESCE(SUM(ABS(quantity)), 0)::float AS qty
       FROM "StockLedgerEntry"
@@ -85,12 +98,23 @@ async function fetchInventoryDashboardStats(salonId: string) {
     `,
   ]);
 
-  const inventoryValue = inventoryValueRow[0]?.total ?? 0;
+  const kpis = stockKpis[0] ?? {
+    totalProducts: 0,
+    lowStockCount: 0,
+    expiringSoon: 0,
+    inventoryValue: 0,
+  };
 
-  const chartData = movementByDay.map((m) => ({
-    type: m.movementType,
-    count: m._count.id,
-  }));
+  let consumptionThisMonth = 0;
+  let salesThisMonth = 0;
+  const chartData = ledgerStats.map((row) => {
+    if (row.movementType === "consumption") {
+      consumptionThisMonth = Math.abs(row.monthQty);
+    } else if (row.movementType === "sale") {
+      salesThisMonth = Math.abs(row.monthQty);
+    }
+    return { type: row.movementType, count: row.count30d };
+  });
 
   const purchaseTrend: Record<string, number> = {};
   for (let i = 29; i >= 0; i--) {
@@ -103,13 +127,13 @@ async function fetchInventoryDashboardStats(salonId: string) {
   }
 
   return {
-    totalProducts: items,
-    lowStockCount,
-    expiringSoon,
-    inventoryValue,
+    totalProducts: kpis.totalProducts,
+    lowStockCount: kpis.lowStockCount,
+    expiringSoon: kpis.expiringSoon,
+    inventoryValue: kpis.inventoryValue,
     openPurchaseOrders: purchaseOrders,
-    consumptionThisMonth: Math.abs(consumptionThisMonth._sum.quantity ?? 0),
-    salesThisMonth: Math.abs(salesThisMonth._sum.quantity ?? 0),
+    consumptionThisMonth,
+    salesThisMonth,
     recentMovements: recentMovements.map((m) => ({
       id: m.id,
       product: m.stockItem.name,
@@ -128,11 +152,11 @@ async function fetchInventoryDashboardStats(salonId: string) {
 const getCachedInventoryDashboardStats = cachedBySalon(
   "dashboard-stats",
   fetchInventoryDashboardStats,
-  { revalidate: 60, key: "inventory-dashboard" }
+  { revalidate: 120, key: "inventory-dashboard" }
 );
 
 export async function getInventoryDashboardStats() {
-  const { session } = await getInventoryAccess();
+  const session = await requireSession();
   return getCachedInventoryDashboardStats(session.user.salonId!);
 }
 

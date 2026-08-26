@@ -6,10 +6,19 @@ import {
 
 export async function getInventoryAccess() {
   const session = await requireSession();
-  const resolved = await getResolvedPermissions(
-    session.user.id,
-    session.user.salonId!
-  );
+  const salonId = session.user.salonId!;
+  const role = session.user.role ?? "staff";
+
+  if (role === "owner") {
+    return {
+      session,
+      role,
+      canWrite: true,
+      canRead: true,
+    };
+  }
+
+  const resolved = await getResolvedPermissions(session.user.id, salonId);
 
   const canRead =
     resolved.isOwner || hasResolvedPermission(resolved, "inventory.view");
@@ -21,7 +30,7 @@ export async function getInventoryAccess() {
 
   return {
     session,
-    role: session.user.role ?? "staff",
+    role,
     canWrite,
     canRead,
   };
