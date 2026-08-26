@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
 
+type UpsertCustomerResult = Awaited<ReturnType<typeof prisma.customer.create>> & {
+  isNew: boolean;
+};
+
 export async function upsertCustomer(
   salonId: string,
   data: {
@@ -8,13 +12,13 @@ export async function upsertCustomer(
     email?: string | null;
     customerId?: string | null;
   }
-) {
+): Promise<UpsertCustomerResult> {
   if (data.customerId) {
     const existing = await prisma.customer.findFirst({
       where: { id: data.customerId, salonId },
     });
     if (existing) {
-      return prisma.customer.update({
+      const customer = await prisma.customer.update({
         where: { id: existing.id },
         data: {
           name: data.name,
@@ -22,6 +26,7 @@ export async function upsertCustomer(
           email: data.email ?? existing.email,
         },
       });
+      return { ...customer, isNew: false };
     }
   }
 
@@ -30,17 +35,18 @@ export async function upsertCustomer(
       where: { salonId, phone: data.phone },
     });
     if (byPhone) {
-      return prisma.customer.update({
+      const customer = await prisma.customer.update({
         where: { id: byPhone.id },
         data: {
           name: data.name,
           email: data.email ?? byPhone.email,
         },
       });
+      return { ...customer, isNew: false };
     }
   }
 
-  return prisma.customer.create({
+  const customer = await prisma.customer.create({
     data: {
       salonId,
       name: data.name,
@@ -48,6 +54,7 @@ export async function upsertCustomer(
       email: data.email,
     },
   });
+  return { ...customer, isNew: true };
 }
 
 export async function linkInvoiceToCustomer(

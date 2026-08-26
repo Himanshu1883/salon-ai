@@ -122,6 +122,42 @@ async function getSalonGstEnabled(salonId: string) {
   return getCachedSalonGstEnabled(salonId);
 }
 
+async function validateEmployeesAndSeat(
+  salonId: string,
+  employeeIds: string[],
+  seatId?: string
+) {
+  const uniqueIds = [...new Set(employeeIds.filter(Boolean))];
+
+  const [employees, seat] = await Promise.all([
+    uniqueIds.length > 0
+      ? prisma.employee.findMany({
+          where: {
+            salonId,
+            status: "active",
+            id: { in: uniqueIds },
+          },
+          select: { id: true },
+        })
+      : Promise.resolve([]),
+    seatId
+      ? prisma.seat.findFirst({
+          where: { id: seatId, salonId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ]);
+
+  if (uniqueIds.length > 0 && employees.length !== uniqueIds.length) {
+    return { error: "Invalid or inactive employee on a line item" as const };
+  }
+  if (seatId && !seat) {
+    return { error: "Invalid seat" as const };
+  }
+
+  return { success: true as const };
+}
+
 async function validateEmployeeAndSeat(
   salonId: string,
   employeeId?: string | null,
@@ -459,10 +495,14 @@ export async function createInvoice(formData: FormData) {
     seatId: (formData.get("seatId") as string) || undefined,
     lineItems: lineItemsRaw,
   };
+  const clientGstEnabled = formData.get("gstEnabled");
+  const clientEmployeeCount = formData.get("activeEmployeeCount");
 
   const [plan, activeEmployeeCount] = await Promise.all([
     getSalonPlan(salonId),
-    prisma.employee.count({ where: { salonId, status: "active" } }),
+    clientEmployeeCount != null && clientEmployeeCount !== ""
+      ? Promise.resolve(Number(clientEmployeeCount))
+      : prisma.employee.count({ where: { salonId, status: "active" } }),
   ]);
   const basicBilling = isBasicPlan(plan);
   if (basicBilling) {
@@ -497,6 +537,10 @@ export async function createInvoice(formData: FormData) {
         .filter(Boolean) as string[]
     ),
   ];
+  const employeeIdsToValidate = [
+    ...lineEmployeeIds,
+    ...(invoiceEmployeeId ? [invoiceEmployeeId] : []),
+  ];
 
   const serviceIds = [
     ...new Set(
@@ -525,17 +569,25 @@ export async function createInvoice(formData: FormData) {
     phone: parsed.data.customerPhone,
   });
 
+  const gstEnabledPromise =
+    clientGstEnabled === "1" || clientGstEnabled === "0"
+      ? Promise.resolve(clientGstEnabled === "1")
+      : getSalonGstEnabled(salonId);
+
   const [
     validation,
     gstEnabled,
     serviceRecords,
     stockRecords,
     customer,
-    validLineEmployeeCount,
     membershipDiscount,
   ] = await Promise.all([
-    validateEmployeeAndSeat(salonId, invoiceEmployeeId, parsed.data.seatId),
-    getSalonGstEnabled(salonId),
+    validateEmployeesAndSeat(
+      salonId,
+      employeeIdsToValidate,
+      parsed.data.seatId
+    ),
+    gstEnabledPromise,
     serviceIds.length && needsServiceLookup
       ? prisma.service.findMany({
           where: { salonId, id: { in: serviceIds } },
@@ -549,28 +601,14 @@ export async function createInvoice(formData: FormData) {
         })
       : Promise.resolve([]),
     customerPromise,
-    lineEmployeeIds.length > 0
-      ? prisma.employee.count({
-          where: {
-            salonId,
-            status: "active",
-            id: { in: lineEmployeeIds },
-          },
-        })
-      : Promise.resolve(0),
     customerPromise.then((createdCustomer) =>
-      getActiveMembershipDiscount(salonId, createdCustomer.id)
+      createdCustomer.isNew
+        ? null
+        : getActiveMembershipDiscount(salonId, createdCustomer.id)
     ),
   ]);
 
   if ("error" in validation) return validation;
-
-  if (
-    lineEmployeeIds.length > 0 &&
-    validLineEmployeeCount !== lineEmployeeIds.length
-  ) {
-    return { error: "Invalid or inactive employee on a line item" };
-  }
 
   let totals = calcTotals(parsed.data.lineItems, gstEnabled);
   let invoiceNotes = parsed.data.notes ?? "";
@@ -849,7 +887,22 @@ export async function markInvoicePaid(formData: FormData) {
 
   const invoice = await prisma.invoice.findFirst({
     where: { id: parsed.data.invoiceId, salonId: session.user.salonId },
-    include: { lineItems: true },
+    select: {
+      id: true,
+      status: true,
+      total: true,
+      amountPaid: true,
+      paidAt: true,
+      customerId: true,
+      employeeId: true,
+      lineItems: {
+        select: {
+          itemType: true,
+          stockItemId: true,
+          quantity: true,
+        },
+      },
+    },
   });
   if (!invoice) return { error: "Invoice not found" };
   if (invoice.status === "cancelled") {
@@ -996,5 +1049,9 @@ const getCachedBillingInvoiceFormData = cachedBySalon(
 
 export async function getBillingInvoiceFormData() {
   const session = await requireSession();
-  return getCachedBillingInvoiceFormData(session.user.salonId!);
+  return getBillingInvoiceFormDataForSalon(session.user.salonId!);
+}
+
+export async function getBillingInvoiceFormDataForSalon(salonId: string) {
+  return getCachedBillingInvoiceFormData(salonId);
 }

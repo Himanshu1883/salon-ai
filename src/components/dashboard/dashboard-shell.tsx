@@ -21,7 +21,21 @@ type DashboardShellProps = {
   plan?: import("@/lib/plans").SalonPlan;
   permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
   isOwner?: boolean;
+  recordSaleFormData?: RecordSaleFormData | null;
   children: React.ReactNode;
+};
+
+type RecordSaleFormData = {
+  services: import("@/components/billing/types").BillingService[];
+  employees: import("@/components/billing/types").BillingEmployee[];
+  seats: import("@/components/billing/types").BillingSeat[];
+  isBasicPlan: boolean;
+  salonName: string;
+  gstEnabled: boolean;
+  whatsappSettings: {
+    billingMessageTemplate: string;
+    autoOpenAfterPayment: boolean;
+  };
 };
 
 function DashboardShellInner({
@@ -178,9 +192,12 @@ function DashboardShellInner({
   );
 }
 
-export function DashboardShell(props: DashboardShellProps) {
+export function DashboardShell({
+  recordSaleFormData = null,
+  ...props
+}: DashboardShellProps) {
   return (
-    <RecordSaleProvider>
+    <RecordSaleProvider initialFormData={recordSaleFormData}>
       <div className="dashboard-shell flex h-dvh overflow-hidden font-[family-name:var(--font-inter)]">
         <DashboardShellInner {...props} />
       </div>

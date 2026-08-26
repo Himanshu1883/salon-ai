@@ -487,6 +487,8 @@ export function BillingInvoiceForm({
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
     formData.set("status", status);
+    formData.set("gstEnabled", gstEnabled ? "1" : "0");
+    formData.set("activeEmployeeCount", String(employees.length));
     const primaryEmployeeId =
       lineItems.find((item) => item.employeeId)?.employeeId ?? employeeId;
     if (primaryEmployeeId) formData.set("employeeId", primaryEmployeeId);

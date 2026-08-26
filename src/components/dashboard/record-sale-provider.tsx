@@ -7,9 +7,7 @@ import {
   useEffect,
   useRef,
   useState,
-  startTransition,
 } from "react";
-import { useRouter } from "next/navigation";
 import { getBillingInvoiceFormData } from "@/actions/billing";
 import { BillingInvoiceDialog } from "@/components/billing/billing-invoice-dialog";
 import type {
@@ -46,13 +44,20 @@ export function useRecordSale() {
   return ctx;
 }
 
-export function RecordSaleProvider({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
+export function RecordSaleProvider({
+  children,
+  initialFormData = null,
+}: {
+  children: React.ReactNode;
+  initialFormData?: BillingFormData | null;
+}) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [formData, setFormData] = useState<BillingFormData | null>(null);
-  const prefetchStarted = useRef(false);
+  const [formData, setFormData] = useState<BillingFormData | null>(
+    initialFormData
+  );
+  const prefetchStarted = useRef(Boolean(initialFormData));
 
   const loadFormData = useCallback(async () => {
     if (formData) return formData;
@@ -71,23 +76,28 @@ export function RecordSaleProvider({ children }: { children: React.ReactNode }) 
   }, [formData]);
 
   useEffect(() => {
+    if (initialFormData) {
+      setFormData(initialFormData);
+      prefetchStarted.current = true;
+    }
+  }, [initialFormData]);
+
+  useEffect(() => {
     if (prefetchStarted.current || formData) return;
     prefetchStarted.current = true;
     void loadFormData();
   }, [formData, loadFormData]);
 
-  const openRecordSale = useCallback(async () => {
+  const openRecordSale = useCallback(() => {
     setOpen(true);
     setError("");
-    if (formData) return;
-    await loadFormData();
+    if (!formData) {
+      void loadFormData();
+    }
   }, [formData, loadFormData]);
 
   function handleSuccess(_invoice: BillingInvoice) {
     setOpen(false);
-    startTransition(() => {
-      router.refresh();
-    });
   }
 
   return (

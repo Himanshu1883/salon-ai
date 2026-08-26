@@ -6,6 +6,7 @@ import { PlanGate } from "@/components/plans/plan-gate";
 import { PlanProvider } from "@/components/plans/plan-provider";
 import { PermissionLayoutGate } from "@/components/permissions/permission-layout-gate";
 import { getSalonLayoutContext } from "@/lib/salon-layout-context";
+import { getBillingInvoiceFormDataForSalon } from "@/actions/billing";
 import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
 import type { PermissionKey } from "@/lib/permissions/catalog";
@@ -47,11 +48,12 @@ export default async function DashboardLayout({
     ? normalizeSalonPlan(session.user.plan)
     : null;
 
-  const [layoutContext, resolved] = await Promise.all([
+  const [layoutContext, resolved, ownerBillingPrefetch] = await Promise.all([
     getSalonLayoutContext(salonId),
     isOwner
       ? Promise.resolve(resolveOwnerPermissions(session.user.id, salonId))
       : getResolvedPermissions(session.user.id, salonId),
+    isOwner ? getBillingInvoiceFormDataForSalon(salonId) : Promise.resolve(null),
   ]);
 
   const plan = sessionPlan ?? layoutContext.plan;
@@ -60,6 +62,12 @@ export default async function DashboardLayout({
   const permissionKeys = isOwner
     ? (DEFAULT_ROLE_PERMISSIONS.OWNER as PermissionKey[])
     : (Array.from(resolved.permissions) as PermissionKey[]);
+
+  const canRecordSale =
+    isOwner || permissionKeys.includes("sales.create" as PermissionKey);
+  const recordSaleFormData =
+    ownerBillingPrefetch ??
+    (canRecordSale ? await getBillingInvoiceFormDataForSalon(salonId) : null);
 
   return (
     <PlanProvider plan={plan}>
@@ -73,6 +81,7 @@ export default async function DashboardLayout({
         plan={plan}
         permissionKeys={permissionKeys}
         isOwner={resolved.isOwner}
+        recordSaleFormData={recordSaleFormData}
       >
         <AccessGate blocked={blocked}>
           <PlanGate plan={plan}>
