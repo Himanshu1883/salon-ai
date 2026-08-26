@@ -128,7 +128,9 @@ export function BillingInvoiceForm({
   const [paymentNotes, setPaymentNotes] = useState("");
   const [employeeId, setEmployeeId] = useState("");
   const [seatId, setSeatId] = useState("");
-  const [lineItems, setLineItems] = useState<LineItem[]>([newLineItem()]);
+  const [lineItems, setLineItems] = useState<LineItem[]>(() => [
+    newLineItem(employees[0]?.id ?? ""),
+  ]);
   const [products, setProducts] = useState<BillingProduct[]>([]);
 
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
@@ -172,14 +174,15 @@ export function BillingInvoiceForm({
     setNotes(draft.notes);
     setEmployeeId(draft.employeeId);
     setSeatId(draft.seatId);
-    if (draft.lineItems.length > 0) setLineItems(draft.lineItems);
-  }, [prefilledCustomer]);
-
-  useEffect(() => {
-    if (!isBasicPlan && employees.length > 0 && !employeeId) {
-      setEmployeeId(employees[0].id);
+    if (draft.lineItems.length > 0) {
+      setLineItems(
+        draft.lineItems.map((item) => ({
+          ...item,
+          employeeId: item.employeeId ?? employees[0]?.id ?? "",
+        }))
+      );
     }
-  }, [employees, employeeId, isBasicPlan]);
+  }, [prefilledCustomer, employees]);
 
   useEffect(() => {
     getProducts({ status: "active" })
@@ -272,6 +275,17 @@ export function BillingInvoiceForm({
     [lineItems, services]
   );
 
+  const assignedStaffSummary = useMemo(() => {
+    const names = [
+      ...new Set(
+        lineItems
+          .map((item) => employees.find((e) => e.id === item.employeeId)?.name)
+          .filter(Boolean) as string[]
+      ),
+    ];
+    return names.length > 0 ? names.join(", ") : "Staff";
+  }, [lineItems, employees]);
+
   const buildWhatsAppContext = useCallback(
     (
       invoiceId: string,
@@ -287,12 +301,12 @@ export function BillingInvoiceForm({
       amount: displayTotal,
       paymentMethod,
       paidAt,
-      staffName: employees.find((e) => e.id === employeeId)?.name ?? "Staff",
+      staffName: assignedStaffSummary,
       salonName,
       loyaltyPoints: customer.loyaltyPoints,
       services: servicesSummary || "—",
     }),
-    [customer, displayTotal, employeeId, employees, salonName, servicesSummary]
+    [assignedStaffSummary, customer, displayTotal, salonName, servicesSummary]
   );
 
   useEffect(() => {
@@ -366,6 +380,7 @@ export function BillingInvoiceForm({
         description: svc?.name || option.label,
         unitPrice: option.price,
         taxRate: gstEnabled ? option.taxRate : 0,
+        employeeId: lineItems[index]?.employeeId || employees[0]?.id || "",
       });
     } else {
       updateLineItem(index, {
@@ -375,6 +390,7 @@ export function BillingInvoiceForm({
         description: option.label,
         unitPrice: option.price,
         taxRate: gstEnabled ? option.taxRate : 0,
+        employeeId: "",
       });
     }
   }
@@ -383,9 +399,6 @@ export function BillingInvoiceForm({
     const errors: FieldErrors = {};
     if (!customer.name.trim() || customer.name.trim().length < 2) {
       errors.customer = "Customer name is required";
-    }
-    if (requiresEmployee && !employeeId) {
-      errors.employee = "Assigned stylist is required";
     }
     if (lineItems.length === 0) {
       errors.items = "Add at least one item";
@@ -397,6 +410,12 @@ export function BillingInvoiceForm({
         lineErrors[i] = "Select a service or product";
       } else if (item.unitPrice < 0) {
         lineErrors[i] = "Price cannot be negative";
+      } else if (
+        requiresEmployee &&
+        (item.itemType === "SERVICE" || item.serviceId) &&
+        !item.employeeId
+      ) {
+        lineErrors[i] = "Select staff for this service";
       }
     });
     if (Object.keys(lineErrors).length > 0) errors.lineItems = lineErrors;
@@ -432,7 +451,9 @@ export function BillingInvoiceForm({
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
     formData.set("status", status);
-    if (employeeId) formData.set("employeeId", employeeId);
+    const primaryEmployeeId =
+      lineItems.find((item) => item.employeeId)?.employeeId ?? employeeId;
+    if (primaryEmployeeId) formData.set("employeeId", primaryEmployeeId);
     if (seatId && !isBasicPlan) formData.set("seatId", seatId);
     formData.set(
       "lineItems",
@@ -444,6 +465,7 @@ export function BillingInvoiceForm({
           serviceId: item.serviceId || undefined,
           stockItemId: item.stockItemId || undefined,
           itemType: item.itemType,
+          employeeId: item.employeeId || undefined,
         }))
       )
     );
@@ -473,7 +495,9 @@ export function BillingInvoiceForm({
     invoiceStatus: string,
     paymentMethod: string | null
   ): BillingInvoice {
-    const emp = employees.find((e) => e.id === employeeId);
+    const primaryEmployeeId =
+      lineItems.find((item) => item.employeeId)?.employeeId ?? employeeId;
+    const emp = employees.find((e) => e.id === primaryEmployeeId);
     const seat = seats.find((s) => s.id === seatId);
 
     return {
@@ -648,7 +672,7 @@ export function BillingInvoiceForm({
                     employeeId={employeeId}
                     onEmployeeChange={setEmployeeId}
                     employees={employees}
-                    requiresEmployee={requiresEmployee}
+                    requiresEmployee={false}
                     employeeError={fieldErrors.employee}
                   />
 
@@ -657,6 +681,8 @@ export function BillingInvoiceForm({
                     products={products}
                     servicesByCategory={servicesByCategory}
                     catalogOptions={catalogOptions}
+                    employees={employees}
+                    showStaffColumn={requiresEmployee}
                     gstIncluded={gstIncluded}
                     gstEnabled={gstEnabled}
                     fieldErrors={fieldErrors.lineItems}
@@ -667,7 +693,10 @@ export function BillingInvoiceForm({
                       setLineItems((prev) => prev.filter((_, i) => i !== index))
                     }
                     onAddItem={() =>
-                      setLineItems((prev) => [...prev, newLineItem()])
+                      setLineItems((prev) => [
+                        ...prev,
+                        newLineItem(employees[0]?.id ?? ""),
+                      ])
                     }
                   />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Trash2 } from "lucide-react";
+import { Trash2, UserCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -15,6 +15,7 @@ import type { LineItem } from "../utils";
 import { lineTotal } from "../utils";
 import { GST_OPTIONS, v3 } from "./tokens";
 import { ItemSelector, type CatalogOption } from "./item-selector";
+import type { BillingEmployee } from "../../types";
 
 type ItemRowProps = {
   index: number;
@@ -23,6 +24,8 @@ type ItemRowProps = {
   catalogOptions: CatalogOption[];
   servicesByCategory: Map<string, { id: string; name: string; duration: number; price: number }[]>;
   products: { id: string; name: string; category: string; retailPrice: number }[];
+  employees: BillingEmployee[];
+  showStaffColumn: boolean;
   gstIncluded: boolean;
   gstEnabled?: boolean;
   error?: string;
@@ -101,6 +104,49 @@ function GstSelect({
   );
 }
 
+function StaffSelect({
+  item,
+  employees,
+  onUpdate,
+  required,
+}: {
+  item: LineItem;
+  employees: BillingEmployee[];
+  onUpdate: (patch: Partial<LineItem>) => void;
+  required?: boolean;
+}) {
+  if (item.itemType !== "SERVICE" && !item.serviceId) {
+    return <span className="text-[11px] text-[#9CA3AF]">—</span>;
+  }
+
+  return (
+    <Select
+      value={item.employeeId || undefined}
+      onValueChange={(value) => onUpdate({ employeeId: value })}
+    >
+      <SelectTrigger
+        className={cn(
+          v3.selectTrigger,
+          "h-12 px-2 sm:h-10 md:h-9",
+          required && !item.employeeId && v3.inputError
+        )}
+      >
+        <SelectValue placeholder="Staff" />
+      </SelectTrigger>
+      <SelectContent className="rounded-[12px]">
+        {employees.map((emp) => (
+          <SelectItem key={emp.id} value={emp.id}>
+            <span className="inline-flex items-center gap-1.5 text-[13px]">
+              <UserCircle className="h-3.5 w-3.5 text-[#6B7280]" />
+              {emp.name}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
 export function ItemRow({
   index,
   item,
@@ -108,6 +154,8 @@ export function ItemRow({
   catalogOptions,
   servicesByCategory,
   products,
+  employees,
+  showStaffColumn,
   gstIncluded,
   gstEnabled = true,
   error,
@@ -149,6 +197,18 @@ export function ItemRow({
             </button>
           ) : null}
         </div>
+
+        {showStaffColumn ? (
+          <div>
+            <span className={v3.label}>Staff</span>
+            <StaffSelect
+              item={item}
+              employees={employees}
+              onUpdate={onUpdate}
+              required
+            />
+          </div>
+        ) : null}
 
         <div className="grid grid-cols-2 gap-2">
           <div>
@@ -207,8 +267,13 @@ export function ItemRow({
         animate={{ opacity: 1 }}
         transition={{ duration: 0.2, delay: index * 0.02 }}
         className={cn(
-          v3.itemRow,
-          !gstEnabled && v3.itemRowNoGst,
+          showStaffColumn
+            ? gstEnabled
+              ? v3.itemRowWithStaff
+              : v3.itemRowWithStaffNoGst
+            : gstEnabled
+              ? v3.itemRow
+              : v3.itemRowNoGst,
           error && "bg-red-50/30"
         )}
       >
@@ -222,6 +287,15 @@ export function ItemRow({
             error={undefined}
           />
         </div>
+
+        {showStaffColumn ? (
+          <StaffSelect
+            item={item}
+            employees={employees}
+            onUpdate={onUpdate}
+            required
+          />
+        ) : null}
 
         <Input
           type="number"

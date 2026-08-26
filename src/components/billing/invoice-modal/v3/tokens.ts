@@ -95,6 +95,23 @@ export const v3 = {
   itemHeaderNoGst: cn(
     "lg:grid-cols-[minmax(140px,2fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
   ),
+  itemRowWithStaff: cn(
+    "hidden items-center gap-2 border-b border-[#ECECF5]/80 px-1 md:grid md:h-14",
+    "md:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]",
+    "lg:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]",
+    "transition-colors duration-200 hover:bg-[#FAFBFF]/60"
+  ),
+  itemRowWithStaffNoGst: cn(
+    "md:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_32px]",
+    "lg:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+  ),
+  itemHeaderWithStaff: cn(
+    "hidden gap-2 px-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#6B7280] lg:grid",
+    "lg:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_72px_32px]"
+  ),
+  itemHeaderWithStaffNoGst: cn(
+    "lg:grid-cols-[minmax(120px,2fr)_minmax(96px,1fr)_56px_80px_minmax(100px,1fr)_72px_32px]"
+  ),
   itemCard: cn(
     "space-y-3 border-b border-[#ECECF5]/80 p-3.5 md:hidden",
     "transition-colors duration-200"

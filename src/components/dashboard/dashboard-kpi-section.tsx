@@ -3,6 +3,7 @@ import { KpiGrid } from "@/components/dashboard/widgets/kpi-grid";
 import { getAuthSession } from "@/lib/auth";
 import { getSalonPlan } from "@/lib/plan-access";
 import { normalizeSalonPlan } from "@/lib/plans";
+import { QuickActionsWidget } from "./widgets/quick-actions-widget";
 
 export async function DashboardKpiSection() {
   const session = await getAuthSession();
@@ -13,7 +14,8 @@ export async function DashboardKpiSection() {
     salonId ? getSalonPlan(salonId) : Promise.resolve(normalizeSalonPlan(null)),
   ]);
 
-  return (
+  return (<>
+    <QuickActionsWidget delay={0.05} />
     <KpiGrid
       plan={plan}
       revenueToday={kpis.revenueToday}
@@ -27,6 +29,10 @@ export async function DashboardKpiSection() {
       lowStockCount={kpis.lowStockCount}
       unpaidInvoices={kpis.unpaidInvoices}
       totalCustomers={kpis.totalCustomers}
+
+      
     />
+
+</>
   );
 }

@@ -9,9 +9,10 @@ export type LineItem = {
   discount: number;
   discountType: "percent" | "fixed";
   taxRate: number;
+  employeeId: string;
 };
 
-export function newLineItem(): LineItem {
+export function newLineItem(defaultEmployeeId = ""): LineItem {
   return {
     key: crypto.randomUUID(),
     itemType: "SERVICE",
@@ -23,6 +24,7 @@ export function newLineItem(): LineItem {
     discount: 0,
     discountType: "percent",
     taxRate: 0.18,
+    employeeId: defaultEmployeeId,
   };
 }
 

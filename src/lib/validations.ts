@@ -340,6 +340,7 @@ export const invoiceLineItemSchema = z.object({
   serviceId: z.string().optional(),
   stockItemId: z.string().optional(),
   itemType: z.enum(ITEM_TYPES).optional(),
+  employeeId: z.string().optional(),
 });
 
 export const specialSaleSchema = z.object({
@@ -359,7 +360,7 @@ export const invoiceSchema = z.object({
   notes: z.string().optional(),
   dueDate: z.string().optional(),
   status: z.enum(["draft", "sent", "paid", "overdue", "cancelled"]).default("draft"),
-  employeeId: z.string().min(1, "Assigned stylist is required"),
+  employeeId: z.string().optional(),
   seatId: z.string().optional(),
   lineItems: z.array(invoiceLineItemSchema).min(1, "Add at least one line item"),
 });

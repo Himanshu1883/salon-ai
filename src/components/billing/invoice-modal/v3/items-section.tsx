@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { BillingProduct, BillingService } from "../../types";
+import type { BillingEmployee, BillingProduct, BillingService } from "../../types";
 import type { LineItem } from "../utils";
 import { v3 } from "./tokens";
 import { ItemRow } from "./item-row";
@@ -14,6 +14,8 @@ type ItemsSectionProps = {
   products: BillingProduct[];
   servicesByCategory: Map<string, BillingService[]>;
   catalogOptions: CatalogOption[];
+  employees: BillingEmployee[];
+  showStaffColumn: boolean;
   gstIncluded: boolean;
   gstEnabled?: boolean;
   fieldErrors?: Record<number, string>;
@@ -29,6 +31,8 @@ export function ItemsSection({
   products,
   servicesByCategory,
   catalogOptions,
+  employees,
+  showStaffColumn,
   gstIncluded,
   gstEnabled = true,
   fieldErrors,
@@ -71,11 +75,17 @@ export function ItemsSection({
       <div className="hidden lg:block">
         <div
           className={cn(
-            v3.itemHeader,
-            !gstEnabled && v3.itemHeaderNoGst
+            showStaffColumn
+              ? gstEnabled
+                ? v3.itemHeaderWithStaff
+                : v3.itemHeaderWithStaffNoGst
+              : gstEnabled
+                ? v3.itemHeader
+                : v3.itemHeaderNoGst
           )}
         >
           <span>Product</span>
+          {showStaffColumn ? <span>Staff</span> : null}
           <span>Qty</span>
           <span>Price</span>
           <span>Discount</span>
@@ -104,6 +114,8 @@ export function ItemsSection({
                 catalogOptions={catalogOptions}
                 servicesByCategory={categoryMap}
                 products={productList}
+                employees={employees}
+                showStaffColumn={showStaffColumn}
                 gstIncluded={gstIncluded}
                 gstEnabled={gstEnabled}
                 error={fieldErrors?.[i]}

@@ -5,7 +5,6 @@ import {
   FileText,
   Users,
   ListOrdered,
-  Heart,
   Repeat,
   BarChart3,
 } from "lucide-react";
@@ -183,14 +182,6 @@ export function KpiGrid({
       />
       <KpiCard
         delay={0.4}
-        label="Satisfaction"
-        value="—"
-        sublabel="Coming soon"
-        icon={<Heart className="h-5 w-5 text-white" />}
-        iconGradient="from-pink-500 to-rose-400 text-white"
-      />
-      <KpiCard
-        delay={0.45}
         label="Total Customers"
         value={String(totalCustomers)}
         sublabel="Repeat rate —"
@@ -199,7 +190,7 @@ export function KpiGrid({
         iconGradient="from-violet-500 to-indigo-500 text-white"
       />
       <KpiCard
-        delay={0.5}
+        delay={0.45}
         label="Monthly Revenue"
         value={formatCurrency(revenueMonth)}
         sublabel="Month to date"

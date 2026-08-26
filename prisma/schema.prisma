@@ -372,6 +372,7 @@ model Employee {
   appointments Appointment[]
   seats        Seat[]
   invoices     Invoice[]
+  invoiceLineItems InvoiceLineItem[]
   shifts       Shift[]
   timesheets   Timesheet[]
   faceProfile  EmployeeFaceProfile?
@@ -766,6 +767,8 @@ model InvoiceLineItem {
   quantity    Int      @default(1)
   unitPrice   Float
   total       Float
+  employeeId  String?
+  employee    Employee? @relation(fields: [employeeId], references: [id], onDelete: SetNull)
 }
 
 model StockCategory {

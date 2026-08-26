@@ -1,5 +1,6 @@
 "use server";
 
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import {
@@ -8,7 +9,7 @@ import {
   invoiceSchemaBasic,
   markPaidSchema,
 } from "@/lib/validations";
-import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays } from "date-fns";
@@ -24,7 +25,7 @@ import {
 const TAX_RATE = 0.08;
 
 function invalidateBillingCache(salonId: string) {
-  revalidateSalonCache(
+  scheduleSalonCacheRevalidation(
     salonId,
     "billing",
     "customers",
@@ -409,12 +410,19 @@ export async function getInvoice(id: string) {
 
 export async function createInvoice(formData: FormData) {
   const session = await requireSession();
-  const plan = await getSalonPlan(session.user.salonId);
-  const basicBilling = isBasicPlan(plan);
+  const salonId = session.user.salonId!;
 
   const lineItemsRaw = JSON.parse(
     (formData.get("lineItems") as string) || "[]"
-  ) as { description: string; quantity: number; unitPrice: number; serviceId?: string }[];
+  ) as {
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    serviceId?: string;
+    stockItemId?: string;
+    itemType?: string;
+    employeeId?: string;
+  }[];
 
   const raw = {
     customerName: formData.get("customerName") as string,
@@ -423,31 +431,47 @@ export async function createInvoice(formData: FormData) {
     dueDate: (formData.get("dueDate") as string) || undefined,
     status: (formData.get("status") as string) || "draft",
     employeeId: (formData.get("employeeId") as string) || undefined,
-    seatId: basicBilling ? undefined : (formData.get("seatId") as string) || undefined,
+    seatId: (formData.get("seatId") as string) || undefined,
     lineItems: lineItemsRaw,
   };
 
+  const [plan, activeEmployeeCount] = await Promise.all([
+    getSalonPlan(salonId),
+    prisma.employee.count({ where: { salonId, status: "active" } }),
+  ]);
+  const basicBilling = isBasicPlan(plan);
+  if (basicBilling) {
+    raw.seatId = undefined;
+  }
+
   const schema = basicBilling ? invoiceSchemaBasic : invoiceSchema;
-  const activeEmployeeCount = basicBilling
-    ? 0
-    : await prisma.employee.count({
-        where: { salonId: session.user.salonId, status: "active" },
-      });
   const parsed = (activeEmployeeCount === 0 ? invoiceSchemaBasic : schema).safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const validation = await validateEmployeeAndSeat(
-    session.user.salonId,
-    parsed.data.employeeId,
-    parsed.data.seatId
-  );
-  if ("error" in validation) return validation;
+  if (!basicBilling && activeEmployeeCount > 0) {
+    for (const item of parsed.data.lineItems) {
+      const isService =
+        item.itemType === "SERVICE" || Boolean(item.serviceId);
+      if (isService && !item.employeeId) {
+        return { error: "Assign staff for each service line item" };
+      }
+    }
+  }
 
-  const gstEnabled = await getSalonGstEnabled(session.user.salonId);
-  let totals = calcTotals(parsed.data.lineItems, gstEnabled);
-  let invoiceNotes = parsed.data.notes ?? "";
+  const invoiceEmployeeId =
+    parsed.data.employeeId ??
+    parsed.data.lineItems.find((item) => item.employeeId)?.employeeId ??
+    null;
+
+  const lineEmployeeIds = [
+    ...new Set(
+      parsed.data.lineItems
+        .map((item) => item.employeeId)
+        .filter(Boolean) as string[]
+    ),
+  ];
 
   const serviceIds = [
     ...new Set(
@@ -460,20 +484,54 @@ export async function createInvoice(formData: FormData) {
     ),
   ];
 
-  const [serviceRecords, stockRecords] = await Promise.all([
+  const [
+    validation,
+    gstEnabled,
+    serviceRecords,
+    stockRecords,
+    customer,
+    validLineEmployeeCount,
+  ] = await Promise.all([
+    validateEmployeeAndSeat(salonId, invoiceEmployeeId, parsed.data.seatId),
+    getSalonGstEnabled(salonId),
     serviceIds.length
       ? prisma.service.findMany({
-          where: { salonId: session.user.salonId, id: { in: serviceIds } },
+          where: { salonId, id: { in: serviceIds } },
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
     stockIds.length
       ? prisma.stockItem.findMany({
-          where: { salonId: session.user.salonId, id: { in: stockIds } },
+          where: { salonId, id: { in: stockIds } },
           select: { id: true, name: true },
         })
       : Promise.resolve([]),
+    upsertCustomer(salonId, {
+      name: parsed.data.customerName,
+      phone: parsed.data.customerPhone,
+    }),
+    lineEmployeeIds.length > 0
+      ? prisma.employee.count({
+          where: {
+            salonId,
+            status: "active",
+            id: { in: lineEmployeeIds },
+          },
+        })
+      : Promise.resolve(0),
   ]);
+
+  if ("error" in validation) return validation;
+
+  if (
+    lineEmployeeIds.length > 0 &&
+    validLineEmployeeCount !== lineEmployeeIds.length
+  ) {
+    return { error: "Invalid or inactive employee on a line item" };
+  }
+
+  let totals = calcTotals(parsed.data.lineItems, gstEnabled);
+  let invoiceNotes = parsed.data.notes ?? "";
 
   const serviceNameById = Object.fromEntries(
     serviceRecords.map((s) => [s.id, s.name])
@@ -489,13 +547,8 @@ export async function createInvoice(formData: FormData) {
     }),
   }));
 
-  const customer = await upsertCustomer(session.user.salonId, {
-    name: parsed.data.customerName,
-    phone: parsed.data.customerPhone,
-  });
-
   const membershipDiscount = await getActiveMembershipDiscount(
-    session.user.salonId,
+    salonId,
     customer.id
   );
   if (membershipDiscount && membershipDiscount.discountPercent > 0) {
@@ -516,37 +569,52 @@ export async function createInvoice(formData: FormData) {
       .join("\n");
   }
 
-  const invoice = await prisma.invoice.create({
-    data: {
-      salonId: session.user.salonId,
-      customerId: customer.id,
-      customerName: parsed.data.customerName,
-      customerPhone: parsed.data.customerPhone,
-      notes: invoiceNotes || null,
-      dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
-      status: parsed.data.status,
-      employeeId: parsed.data.employeeId || null,
-      seatId: parsed.data.seatId || null,
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      total: totals.total,
-      lineItems: {
-        create: resolvedLineItems.map((item) => ({
-          description: item.description,
-          quantity: item.quantity,
-          unitPrice: item.unitPrice,
-          total: item.quantity * item.unitPrice,
-          serviceId: item.serviceId || null,
-          stockItemId: item.stockItemId || null,
-          itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
-        })),
+  let invoice;
+  try {
+    invoice = await prisma.invoice.create({
+      data: {
+        salonId,
+        customerId: customer.id,
+        customerName: parsed.data.customerName,
+        customerPhone: parsed.data.customerPhone,
+        notes: invoiceNotes || null,
+        dueDate: parsed.data.dueDate ? new Date(parsed.data.dueDate) : null,
+        status: parsed.data.status,
+        employeeId: invoiceEmployeeId,
+        seatId: parsed.data.seatId || null,
+        subtotal: totals.subtotal,
+        tax: totals.tax,
+        total: totals.total,
+        lineItems: {
+          create: resolvedLineItems.map((item) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            total: item.quantity * item.unitPrice,
+            serviceId: item.serviceId || null,
+            stockItemId: item.stockItemId || null,
+            itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
+            employeeId: item.employeeId || null,
+          })),
+        },
       },
-    },
-  });
+    });
+  } catch (error) {
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2022"
+    ) {
+      return {
+        error:
+          "Database is updating. Please retry in a moment or contact support.",
+      };
+    }
+    throw error;
+  }
 
   if (parsed.data.status === "paid") {
     await deductProductLineItems(
-      session.user.salonId,
+      salonId,
       invoice.id,
       parsed.data.lineItems.map((item) => ({
         itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
@@ -554,12 +622,12 @@ export async function createInvoice(formData: FormData) {
         quantity: item.quantity,
       })),
       customer.id,
-      parsed.data.employeeId,
+      invoiceEmployeeId,
       session.user.id
     );
   }
 
-  invalidateBillingCache(session.user.salonId);
+  invalidateBillingCache(salonId);
   return { success: true, id: invoice.id };
 }
 

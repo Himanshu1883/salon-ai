@@ -32,7 +32,7 @@ export async function DashboardWidgetsSection() {
 
   return (
     <>
-      <QuickActionsWidget delay={0.05} />
+      {/* <QuickActionsWidget delay={0.05} /> */}
 
       <QueueAlertWidget
         waitingCount={widgets.waitingCount}
