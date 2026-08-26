@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { format, parseISO } from "date-fns";
 import {
   ArrowLeft,
@@ -86,6 +86,22 @@ export function StaffAnalyticsClient({
   const [from, setFrom] = useState(searchParams.from ?? "");
   const [to, setTo] = useState(searchParams.to ?? "");
   const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    setPeriod(searchParams.period ?? "this_month");
+    setEmployeeId(searchParams.employeeId ?? "all");
+    setFrom(searchParams.from ?? "");
+    setTo(searchParams.to ?? "");
+  }, [searchParams]);
+
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("period", period);
+    for (const employee of data.employees) {
+      params.set("employeeId", employee.id);
+      router.prefetch(`/team/analytics?${params.toString()}`);
+    }
+  }, [data.employees, period, router]);
 
   const serviceMix = useMemo(() => {
     const total = data.services.reduce((sum, service) => sum + service.revenue, 0);

@@ -1,7 +1,7 @@
 "use server";
 
 import { unstable_cache } from "next/cache";
-import { requireSession } from "@/lib/auth";
+import { cachedRead } from "@/lib/memory-cache";
 import {
   PermissionDeniedError,
   hasPermission,
@@ -17,6 +17,8 @@ import {
   resolveAnalyticsDateRange,
   type AnalyticsPeriod,
 } from "@/lib/analytics/date-range";
+
+type AuthSession = Awaited<ReturnType<typeof requirePermission>>;
 
 export type StaffAnalyticsSearchParams = {
   employeeId?: string;
@@ -44,10 +46,10 @@ async function getSessionEmployeeId(userId: string, salonId: string) {
   return employee?.id ?? null;
 }
 
-async function resolveEmployeeScope(
+async function resolveEmployeeScopeFromSession(
+  session: AuthSession,
   requestedEmployeeId?: string
 ): Promise<string | null> {
-  const session = await requirePermission("team.analytics.view");
   const salonId = session.user.salonId!;
 
   if (session.user.role === "owner") {
@@ -63,18 +65,6 @@ async function resolveEmployeeScope(
   ]);
 
   if (canViewAll) {
-    if (requestedEmployeeId && requestedEmployeeId !== "all") {
-      const employee = await prisma.employee.findFirst({
-        where: {
-          id: requestedEmployeeId,
-          salonId,
-        },
-        select: { id: true },
-      });
-      if (!employee) {
-        throw new PermissionDeniedError("team.analytics.view");
-      }
-    }
     return requestedEmployeeId && requestedEmployeeId !== "all"
       ? requestedEmployeeId
       : null;
@@ -95,15 +85,14 @@ async function resolveEmployeeScope(
 }
 
 export async function getStaffAnalytics(params: StaffAnalyticsSearchParams) {
-  const session = await requireSession();
+  const session = await requirePermission("team.analytics.view");
   const salonId = session.user.salonId!;
-  const employeeId = await resolveEmployeeScope(params.employeeId);
-  const period = (params.period as AnalyticsPeriod) || "this_month";
-  const range = resolveAnalyticsDateRange(
-    period,
-    params.from,
-    params.to
+  const employeeId = await resolveEmployeeScopeFromSession(
+    session,
+    params.employeeId
   );
+  const period = (params.period as AnalyticsPeriod) || "this_month";
+  const range = resolveAnalyticsDateRange(period, params.from, params.to);
   const cacheKey = [
     employeeId ?? "all",
     period,
@@ -111,14 +100,16 @@ export async function getStaffAnalytics(params: StaffAnalyticsSearchParams) {
     params.to ?? "",
   ].join(":");
 
-  return unstable_cache(
-    () => fetchStaffAnalytics({ salonId, employeeId, range }),
-    ["staff-analytics", salonId, cacheKey],
-    {
-      revalidate: 120,
-      tags: [salonCacheTag(salonId, "staff-analytics")],
-    }
-  )();
+  return cachedRead(`staff-analytics:${salonId}:${cacheKey}`, 120, () =>
+    unstable_cache(
+      () => fetchStaffAnalytics({ salonId, employeeId, range }),
+      ["staff-analytics", salonId, cacheKey],
+      {
+        revalidate: 120,
+        tags: [salonCacheTag(salonId, "staff-analytics")],
+      }
+    )()
+  );
 }
 
 export async function exportStaffAnalyticsCsv(

@@ -56,6 +56,61 @@ function shiftMinutes(startTime?: string | null, endTime?: string | null) {
   return Math.max(0, end - start);
 }
 
+async function getAttributedRevenueBothPeriods(
+  salonId: string,
+  from: Date,
+  to: Date,
+  prevFrom: Date,
+  prevTo: Date,
+  employeeId: string | null
+): Promise<{ current: RevenueRow[]; previous: RevenueRow[] }> {
+  const employeeFilter = employeeId
+    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
+    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
+
+  const rangeStart =
+    prevFrom.getTime() < from.getTime() ? prevFrom : from;
+  const rangeEnd = prevTo.getTime() > to.getTime() ? prevTo : to;
+
+  const rows = await prisma.$queryRaw<
+    {
+      employeeId: string;
+      currentRevenue: number;
+      currentInvoiceCount: bigint;
+      previousRevenue: number;
+      previousInvoiceCount: bigint;
+    }[]
+  >(Prisma.sql`
+    SELECT
+      COALESCE(li."employeeId", i."employeeId") AS "employeeId",
+      SUM(CASE WHEN i."paidAt" >= ${from} AND i."paidAt" <= ${to} THEN li.total ELSE 0 END)::float AS "currentRevenue",
+      COUNT(DISTINCT CASE WHEN i."paidAt" >= ${from} AND i."paidAt" <= ${to} THEN i.id END)::bigint AS "currentInvoiceCount",
+      SUM(CASE WHEN i."paidAt" >= ${prevFrom} AND i."paidAt" <= ${prevTo} THEN li.total ELSE 0 END)::float AS "previousRevenue",
+      COUNT(DISTINCT CASE WHEN i."paidAt" >= ${prevFrom} AND i."paidAt" <= ${prevTo} THEN i.id END)::bigint AS "previousInvoiceCount"
+    FROM "Invoice" i
+    INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
+    WHERE i."salonId" = ${salonId}
+      AND i.status = 'paid'
+      AND i."paidAt" >= ${rangeStart}
+      AND i."paidAt" <= ${rangeEnd}
+      ${employeeFilter}
+    GROUP BY COALESCE(li."employeeId", i."employeeId")
+  `);
+
+  return {
+    current: rows.map((row) => ({
+      employeeId: row.employeeId,
+      revenue: row.currentRevenue ?? 0,
+      invoiceCount: Number(row.currentInvoiceCount),
+    })),
+    previous: rows.map((row) => ({
+      employeeId: row.employeeId,
+      revenue: row.previousRevenue ?? 0,
+      invoiceCount: Number(row.previousInvoiceCount),
+    })),
+  };
+}
+
 async function getAttributedRevenue(
   salonId: string,
   from: Date,
@@ -128,40 +183,41 @@ async function getServicePerformance(
     ? Prisma.sql`AND a."employeeId" = ${employeeId}`
     : Prisma.sql`AND a."employeeId" IS NOT NULL`;
 
-  const apptRows = await prisma.$queryRaw<
-    { serviceId: string; serviceName: string; appointments: bigint }[]
-  >(Prisma.sql`
-    SELECT s.id AS "serviceId", s.name AS "serviceName", COUNT(*)::bigint AS appointments
-    FROM "Appointment" a
-    INNER JOIN "Service" s ON s.id = a."serviceId"
-    WHERE a."salonId" = ${salonId}
-      AND a."scheduledAt" >= ${from}
-      AND a."scheduledAt" <= ${to}
-      AND a.status NOT IN ('cancelled')
-      ${employeeFilter}
-    GROUP BY s.id, s.name
-    ORDER BY appointments DESC
-    LIMIT 10
-  `);
-
-  const revenueFilter = employeeId
-    ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
-    : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`;
-
-  const revenueRows = await prisma.$queryRaw<
-    { serviceId: string | null; revenue: number }[]
-  >(Prisma.sql`
-    SELECT li."serviceId" AS "serviceId", SUM(li.total)::float AS revenue
-    FROM "Invoice" i
-    INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
-    WHERE i."salonId" = ${salonId}
-      AND i.status = 'paid'
-      AND i."paidAt" >= ${from}
-      AND i."paidAt" <= ${to}
-      AND li."itemType" = 'SERVICE'
-      ${revenueFilter}
-    GROUP BY li."serviceId"
-  `);
+  const [apptRows, revenueRows] = await Promise.all([
+    prisma.$queryRaw<
+      { serviceId: string; serviceName: string; appointments: bigint }[]
+    >(Prisma.sql`
+      SELECT s.id AS "serviceId", s.name AS "serviceName", COUNT(*)::bigint AS appointments
+      FROM "Appointment" a
+      INNER JOIN "Service" s ON s.id = a."serviceId"
+      WHERE a."salonId" = ${salonId}
+        AND a."scheduledAt" >= ${from}
+        AND a."scheduledAt" <= ${to}
+        AND a.status NOT IN ('cancelled')
+        ${employeeFilter}
+      GROUP BY s.id, s.name
+      ORDER BY appointments DESC
+      LIMIT 10
+    `),
+    prisma.$queryRaw<{ serviceId: string | null; revenue: number }[]>(
+      Prisma.sql`
+        SELECT li."serviceId" AS "serviceId", SUM(li.total)::float AS revenue
+        FROM "Invoice" i
+        INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
+        WHERE i."salonId" = ${salonId}
+          AND i.status = 'paid'
+          AND i."paidAt" >= ${from}
+          AND i."paidAt" <= ${to}
+          AND li."itemType" = 'SERVICE'
+          ${
+            employeeId
+              ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
+              : Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") IS NOT NULL`
+          }
+        GROUP BY li."serviceId"
+      `
+    ),
+  ]);
 
   const revenueByService = new Map(
     revenueRows.map((row) => [row.serviceId, row.revenue ?? 0])
@@ -186,84 +242,84 @@ async function getCustomerPerformance(
     ? Prisma.sql`AND a."employeeId" = ${employeeId}`
     : Prisma.sql`AND a."employeeId" IS NOT NULL`;
 
-  const customerRows = await prisma.$queryRaw<
-    {
-      customerId: string;
-      customerName: string;
-      visits: bigint;
-      lastVisit: Date;
-    }[]
-  >(Prisma.sql`
-    SELECT
-      c.id AS "customerId",
-      c.name AS "customerName",
-      COUNT(*)::bigint AS visits,
-      MAX(a."scheduledAt") AS "lastVisit"
-    FROM "Appointment" a
-    INNER JOIN "Customer" c ON c.id = a."customerId"
-    WHERE a."salonId" = ${salonId}
-      AND a."scheduledAt" >= ${from}
-      AND a."scheduledAt" <= ${to}
-      AND a.status IN ('completed', 'checked_in', 'scheduled')
-      ${employeeFilter}
-    GROUP BY c.id, c.name
-    ORDER BY visits DESC, "lastVisit" DESC
-    LIMIT ${limit}
-  `);
-
   const revenueFilter = employeeId
     ? Prisma.sql`AND COALESCE(li."employeeId", i."employeeId") = ${employeeId}`
     : Prisma.sql``;
 
-  const revenueByCustomer = employeeId
-    ? await prisma.$queryRaw<{ customerId: string; revenue: number }[]>(
+  const [customerRows, revenueByCustomer, allCustomers, newCustomers] =
+    await Promise.all([
+      prisma.$queryRaw<
+        {
+          customerId: string;
+          customerName: string;
+          visits: bigint;
+          lastVisit: Date;
+        }[]
+      >(Prisma.sql`
+        SELECT
+          c.id AS "customerId",
+          c.name AS "customerName",
+          COUNT(*)::bigint AS visits,
+          MAX(a."scheduledAt") AS "lastVisit"
+        FROM "Appointment" a
+        INNER JOIN "Customer" c ON c.id = a."customerId"
+        WHERE a."salonId" = ${salonId}
+          AND a."scheduledAt" >= ${from}
+          AND a."scheduledAt" <= ${to}
+          AND a.status IN ('completed', 'checked_in', 'scheduled')
+          ${employeeFilter}
+        GROUP BY c.id, c.name
+        ORDER BY visits DESC, "lastVisit" DESC
+        LIMIT ${limit}
+      `),
+      employeeId
+        ? prisma.$queryRaw<{ customerId: string; revenue: number }[]>(
+            Prisma.sql`
+              SELECT i."customerId" AS "customerId", SUM(li.total)::float AS revenue
+              FROM "Invoice" i
+              INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
+              WHERE i."salonId" = ${salonId}
+                AND i.status = 'paid'
+                AND i."paidAt" >= ${from}
+                AND i."paidAt" <= ${to}
+                AND i."customerId" IS NOT NULL
+                ${revenueFilter}
+              GROUP BY i."customerId"
+            `
+          )
+        : Promise.resolve([]),
+      prisma.$queryRaw<{ count: bigint }[]>(
         Prisma.sql`
-          SELECT i."customerId" AS "customerId", SUM(li.total)::float AS revenue
-          FROM "Invoice" i
-          INNER JOIN "InvoiceLineItem" li ON li."invoiceId" = i.id
-          WHERE i."salonId" = ${salonId}
-            AND i.status = 'paid'
-            AND i."paidAt" >= ${from}
-            AND i."paidAt" <= ${to}
-            AND i."customerId" IS NOT NULL
-            ${revenueFilter}
-          GROUP BY i."customerId"
+          SELECT COUNT(DISTINCT a."customerId")::bigint AS count
+          FROM "Appointment" a
+          WHERE a."salonId" = ${salonId}
+            AND a."scheduledAt" >= ${from}
+            AND a."scheduledAt" <= ${to}
+            AND a.status NOT IN ('cancelled', 'no_show')
+            ${employeeFilter}
         `
-      )
-    : [];
+      ),
+      prisma.$queryRaw<{ count: bigint }[]>(
+        Prisma.sql`
+          SELECT COUNT(*)::bigint AS count
+          FROM "Customer" c
+          WHERE c."salonId" = ${salonId}
+            AND c."createdAt" >= ${from}
+            AND c."createdAt" <= ${to}
+            AND EXISTS (
+              SELECT 1 FROM "Appointment" a
+              WHERE a."customerId" = c.id
+                AND a."salonId" = ${salonId}
+                AND a."scheduledAt" >= ${from}
+                AND a."scheduledAt" <= ${to}
+                ${employeeFilter}
+            )
+        `
+      ),
+    ]);
 
   const revenueMap = new Map(
     revenueByCustomer.map((row) => [row.customerId, row.revenue ?? 0])
-  );
-
-  const allCustomers = await prisma.$queryRaw<{ count: bigint }[]>(
-    Prisma.sql`
-      SELECT COUNT(DISTINCT a."customerId")::bigint AS count
-      FROM "Appointment" a
-      WHERE a."salonId" = ${salonId}
-        AND a."scheduledAt" >= ${from}
-        AND a."scheduledAt" <= ${to}
-        AND a.status NOT IN ('cancelled', 'no_show')
-        ${employeeFilter}
-    `
-  );
-
-  const newCustomers = await prisma.$queryRaw<{ count: bigint }[]>(
-    Prisma.sql`
-      SELECT COUNT(*)::bigint AS count
-      FROM "Customer" c
-      WHERE c."salonId" = ${salonId}
-        AND c."createdAt" >= ${from}
-        AND c."createdAt" <= ${to}
-        AND EXISTS (
-          SELECT 1 FROM "Appointment" a
-          WHERE a."customerId" = c.id
-            AND a."salonId" = ${salonId}
-            AND a."scheduledAt" >= ${from}
-            AND a."scheduledAt" <= ${to}
-            ${employeeFilter}
-        )
-    `
   );
 
   return {
@@ -312,37 +368,37 @@ async function getUtilization(
   to: Date,
   employeeId: string | null
 ) {
-  const shifts = await prisma.shift.findMany({
-    where: {
-      salonId,
-      date: { gte: from, lte: to },
-      isWorking: true,
-      ...(employeeId ? { employeeId } : {}),
-    },
-    select: { startTime: true, endTime: true, employeeId: true },
-  });
+  const employeeFilter = employeeId
+    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
+    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
 
-  const appointments = await prisma.appointment.findMany({
-    where: {
-      salonId,
-      scheduledAt: { gte: from, lte: to },
-      status: { in: ["scheduled", "checked_in", "completed"] },
-      ...(employeeId ? { employeeId } : { employeeId: { not: null } }),
-    },
-    select: {
-      employeeId: true,
-      service: { select: { duration: true } },
-    },
-  });
+  const [shifts, bookedRows] = await Promise.all([
+    prisma.shift.findMany({
+      where: {
+        salonId,
+        date: { gte: from, lte: to },
+        isWorking: true,
+        ...(employeeId ? { employeeId } : {}),
+      },
+      select: { startTime: true, endTime: true },
+    }),
+    prisma.$queryRaw<{ bookedMinutes: number }[]>(Prisma.sql`
+      SELECT COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
+      FROM "Appointment" a
+      INNER JOIN "Service" s ON s.id = a."serviceId"
+      WHERE a."salonId" = ${salonId}
+        AND a."scheduledAt" >= ${from}
+        AND a."scheduledAt" <= ${to}
+        AND a.status IN ('scheduled', 'checked_in', 'completed')
+        ${employeeFilter}
+    `),
+  ]);
 
   const availableMinutes = shifts.reduce(
     (sum, shift) => sum + shiftMinutes(shift.startTime, shift.endTime),
     0
   );
-  const bookedMinutes = appointments.reduce(
-    (sum, apt) => sum + apt.service.duration,
-    0
-  );
+  const bookedMinutes = bookedRows[0]?.bookedMinutes ?? 0;
 
   return {
     bookedMinutes,
@@ -361,14 +417,25 @@ async function getAttendanceSummary(
   to: Date,
   employeeId: string | null
 ) {
-  const records = await prisma.attendanceRecord.findMany({
-    where: {
-      salonId,
-      date: { gte: from, lte: to },
-      ...(employeeId ? { employeeId } : {}),
-    },
-    select: { checkInAt: true, checkOutAt: true, employeeId: true },
-  });
+  const [records, shifts] = await Promise.all([
+    prisma.attendanceRecord.findMany({
+      where: {
+        salonId,
+        date: { gte: from, lte: to },
+        ...(employeeId ? { employeeId } : {}),
+      },
+      select: { checkInAt: true, checkOutAt: true },
+    }),
+    prisma.shift.findMany({
+      where: {
+        salonId,
+        date: { gte: from, lte: to },
+        isWorking: true,
+        ...(employeeId ? { employeeId } : {}),
+      },
+      select: { date: true, startTime: true },
+    }),
+  ]);
 
   let daysPresent = records.length;
   let hoursWorked = 0;
@@ -378,16 +445,6 @@ async function getAttendanceSummary(
         (record.checkOutAt.getTime() - record.checkInAt.getTime()) / 3600000;
     }
   }
-
-  const shifts = await prisma.shift.findMany({
-    where: {
-      salonId,
-      date: { gte: from, lte: to },
-      isWorking: true,
-      ...(employeeId ? { employeeId } : {}),
-    },
-    select: { employeeId: true, date: true, startTime: true },
-  });
 
   let lateArrivals = 0;
   for (const record of records) {
@@ -455,6 +512,64 @@ async function getProductSales(
   };
 }
 
+async function getCompletedCountsBothPeriods(
+  salonId: string,
+  from: Date,
+  to: Date,
+  prevFrom: Date,
+  prevTo: Date,
+  employeeId: string | null
+) {
+  const employeeFilter = employeeId
+    ? Prisma.sql`AND a."employeeId" = ${employeeId}`
+    : Prisma.sql`AND a."employeeId" IS NOT NULL`;
+
+  const rows = await prisma.$queryRaw<
+    { currentCompleted: bigint; previousCompleted: bigint }[]
+  >(Prisma.sql`
+    SELECT
+      COUNT(*) FILTER (
+        WHERE a."scheduledAt" >= ${from}
+          AND a."scheduledAt" <= ${to}
+          AND a.status = 'completed'
+      )::bigint AS "currentCompleted",
+      COUNT(*) FILTER (
+        WHERE a."scheduledAt" >= ${prevFrom}
+          AND a."scheduledAt" <= ${prevTo}
+          AND a.status = 'completed'
+      )::bigint AS "previousCompleted"
+    FROM "Appointment" a
+    WHERE a."salonId" = ${salonId}
+      AND a."scheduledAt" >= ${prevFrom}
+      AND a."scheduledAt" <= ${to}
+      ${employeeFilter}
+  `);
+
+  return {
+    currentCompleted: Number(rows[0]?.currentCompleted ?? 0),
+    previousCompleted: Number(rows[0]?.previousCompleted ?? 0),
+  };
+}
+
+async function getDayOfWeekBuckets(
+  salonId: string,
+  from: Date,
+  to: Date,
+  employeeId: string | null
+) {
+  return prisma.$queryRaw<{ day: number; count: bigint }[]>(Prisma.sql`
+    SELECT EXTRACT(DOW FROM a."scheduledAt")::int AS day, COUNT(*)::bigint AS count
+    FROM "Appointment" a
+    WHERE a."salonId" = ${salonId}
+      AND a."scheduledAt" >= ${from}
+      AND a."scheduledAt" <= ${to}
+      AND a.status NOT IN ('cancelled')
+      ${employeeId ? Prisma.sql`AND a."employeeId" = ${employeeId}` : Prisma.sql`AND a."employeeId" IS NOT NULL`}
+    GROUP BY day
+    ORDER BY count DESC
+  `);
+}
+
 export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
   const { salonId, employeeId, range } = filters;
   const { from, to, prevFrom, prevTo } = range;
@@ -466,8 +581,7 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
   } as const;
 
   const [
-    currentRevenueRows,
-    previousRevenueRows,
+    revenueByPeriod,
     statusGroups,
     dailyRevenue,
     services,
@@ -478,12 +592,17 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
     productSales,
     employees,
     upcomingAppointments,
-    nextAppointment,
-    completedCount,
-    prevCompletedCount,
+    completedCounts,
+    dayBuckets,
   ] = await Promise.all([
-    getAttributedRevenue(salonId, from, to, employeeId),
-    getAttributedRevenue(salonId, prevFrom, prevTo, employeeId),
+    getAttributedRevenueBothPeriods(
+      salonId,
+      from,
+      to,
+      prevFrom,
+      prevTo,
+      employeeId
+    ),
     prisma.appointment.groupBy({
       by: ["status"],
       where: appointmentWhere,
@@ -516,42 +635,29 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
         ...(employeeId ? { employeeId } : {}),
       },
       include: {
-        customer: { select: { name: true } },
-        service: { select: { name: true, duration: true, price: true } },
-        employee: { select: { name: true } },
-      },
-      orderBy: { scheduledAt: "asc" },
-      take: 8,
-    }),
-    prisma.appointment.findFirst({
-      where: {
-        salonId,
-        scheduledAt: { gte: new Date() },
-        status: { in: ["scheduled", "checked_in"] },
-        ...(employeeId ? { employeeId } : {}),
-      },
-      include: {
         customer: { select: { name: true, phone: true } },
         service: { select: { name: true, duration: true, price: true } },
         employee: { select: { id: true, name: true } },
       },
       orderBy: { scheduledAt: "asc" },
+      take: 8,
     }),
-    prisma.appointment.count({
-      where: {
-        ...appointmentWhere,
-        status: "completed",
-      },
-    }),
-    prisma.appointment.count({
-      where: {
-        salonId,
-        scheduledAt: { gte: prevFrom, lte: prevTo },
-        status: "completed",
-        ...(employeeId ? { employeeId } : { employeeId: { not: null } }),
-      },
-    }),
+    getCompletedCountsBothPeriods(
+      salonId,
+      from,
+      to,
+      prevFrom,
+      prevTo,
+      employeeId
+    ),
+    getDayOfWeekBuckets(salonId, from, to, employeeId),
   ]);
+
+  const currentRevenueRows = revenueByPeriod.current;
+  const previousRevenueRows = revenueByPeriod.previous;
+  const completedCount = completedCounts.currentCompleted;
+  const prevCompletedCount = completedCounts.previousCompleted;
+  const nextAppointment = upcomingAppointments[0] ?? null;
 
   const revenue = currentRevenueRows.reduce((sum, row) => sum + row.revenue, 0);
   const previousRevenue = previousRevenueRows.reduce(
@@ -598,20 +704,6 @@ export async function fetchStaffAnalytics(filters: StaffAnalyticsFilters) {
   const leastBusyHourBucket = [...busyHours]
     .filter((bucket) => bucket.count > 0)
     .sort((a, b) => a.count - b.count)[0];
-
-  const dayBuckets = await prisma.$queryRaw<
-    { day: number; count: bigint }[]
-  >(Prisma.sql`
-    SELECT EXTRACT(DOW FROM a."scheduledAt")::int AS day, COUNT(*)::bigint AS count
-    FROM "Appointment" a
-    WHERE a."salonId" = ${salonId}
-      AND a."scheduledAt" >= ${from}
-      AND a."scheduledAt" <= ${to}
-      AND a.status NOT IN ('cancelled')
-      ${employeeId ? Prisma.sql`AND a."employeeId" = ${employeeId}` : Prisma.sql`AND a."employeeId" IS NOT NULL`}
-    GROUP BY day
-    ORDER BY count DESC
-  `);
 
   const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const peakDay = dayBuckets[0]
