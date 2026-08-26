@@ -188,7 +188,8 @@ export async function getBillingStatsForSalon(salonId: string) {
   const monthStart = startOfMonth(now);
   const monthEnd = endOfMonth(now);
 
-  const [todayPaid, monthPaid, unpaidCount] = await Promise.all([
+  const [todayPaid, todayPartial, monthPaid, monthPartial, unpaidCount] =
+    await Promise.all([
     prisma.invoice.aggregate({
       where: {
         salonId,
@@ -200,10 +201,26 @@ export async function getBillingStatsForSalon(salonId: string) {
     prisma.invoice.aggregate({
       where: {
         salonId,
+        status: "partial",
+        createdAt: { gte: todayStart, lte: todayEnd },
+      },
+      _sum: { amountPaid: true },
+    }),
+    prisma.invoice.aggregate({
+      where: {
+        salonId,
         status: "paid",
         paidAt: { gte: monthStart, lte: monthEnd },
       },
       _sum: { total: true },
+    }),
+    prisma.invoice.aggregate({
+      where: {
+        salonId,
+        status: "partial",
+        createdAt: { gte: monthStart, lte: monthEnd },
+      },
+      _sum: { amountPaid: true },
     }),
     prisma.invoice.count({
       where: {
@@ -214,8 +231,10 @@ export async function getBillingStatsForSalon(salonId: string) {
   ]);
 
   return {
-    revenueToday: todayPaid._sum.total ?? 0,
-    revenueMonth: monthPaid._sum.total ?? 0,
+    revenueToday:
+      (todayPaid._sum.total ?? 0) + (todayPartial._sum.amountPaid ?? 0),
+    revenueMonth:
+      (monthPaid._sum.total ?? 0) + (monthPartial._sum.amountPaid ?? 0),
     unpaidCount,
   };
 }
@@ -516,9 +535,13 @@ export async function createInvoice(formData: FormData) {
   const clientEmployeeCount = formData.get("activeEmployeeCount");
   const immediatePaymentMethod = formData.get("paymentMethod") as string | null;
   const immediatePaymentAmountRaw = formData.get("amount");
-  const immediatePaymentAmount =
+  const parsedImmediateAmount =
     immediatePaymentAmountRaw != null && immediatePaymentAmountRaw !== ""
       ? Number(immediatePaymentAmountRaw)
+      : undefined;
+  const immediatePaymentAmount =
+    parsedImmediateAmount != null && Number.isFinite(parsedImmediateAmount)
+      ? parsedImmediateAmount
       : undefined;
 
   const [plan, activeEmployeeCount] = await Promise.all([

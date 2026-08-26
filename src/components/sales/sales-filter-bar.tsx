@@ -85,11 +85,12 @@ export function SalesFilterBar({
             Payment
           </label>
           <Select value={paymentMethod} onValueChange={onPaymentMethodChange}>
-            <SelectTrigger className="h-10 w-[130px] rounded-xl border-[#ECECEC]">
+            <SelectTrigger className="h-10 w-[160px] rounded-xl border-[#ECECEC]">
               <SelectValue placeholder="All" />
             </SelectTrigger>
             <SelectContent className="rounded-xl">
               <SelectItem value="all">All methods</SelectItem>
+              <SelectItem value="partial">Partial payment</SelectItem>
               {Object.entries(PAYMENT_LABELS).map(([key, label]) => (
                 <SelectItem key={key} value={key}>
                   {label}

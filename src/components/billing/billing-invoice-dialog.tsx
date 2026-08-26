@@ -20,7 +20,7 @@ type BillingInvoiceDialogProps = {
   isBasicPlan?: boolean;
   salonName?: string;
   gstEnabled?: boolean;
-  onSuccess: (invoice: BillingInvoice) => void;
+  onSuccess: (invoice: BillingInvoice, options?: { close?: boolean }) => void;
   services?: BillingService[];
   employees?: BillingEmployee[];
   seats?: BillingSeat[];

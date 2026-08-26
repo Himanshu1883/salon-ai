@@ -26,12 +26,43 @@ import { Button } from "@/components/ui/button";
 import {
   PAYMENT_BADGE_STYLES,
   PAYMENT_LABELS,
+  STATUS_STYLES,
   type Sale,
 } from "./types";
+import { collectedAmount, saleActivityDate } from "./sales-utils";
 
 type SalesTransactionTableProps = {
   sales: Sale[];
 };
+
+function SalePaymentPills({ sale }: { sale: Sale }) {
+  const method = sale.paymentMethod ?? "other";
+  const paymentBadge =
+    PAYMENT_BADGE_STYLES[method] ?? PAYMENT_BADGE_STYLES.other;
+
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {sale.status === "partial" && (
+        <span
+          className={cn(
+            "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
+            STATUS_STYLES.partial.className
+          )}
+        >
+          {STATUS_STYLES.partial.label}
+        </span>
+      )}
+      <span
+        className={cn(
+          "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium",
+          paymentBadge
+        )}
+      >
+        {PAYMENT_LABELS[method] ?? "Other"}
+      </span>
+    </div>
+  );
+}
 
 function SaleRowActions({
   sale,
@@ -91,10 +122,6 @@ function SalesMobileCards({
   return (
     <div className="divide-y divide-[#ECECEC]">
       {sales.map((sale) => {
-        const method = sale.paymentMethod ?? "other";
-        const badgeStyle =
-          PAYMENT_BADGE_STYLES[method] ?? PAYMENT_BADGE_STYLES.other;
-
         return (
           <div key={sale.id} className="space-y-3 p-4">
             <div className="flex items-start justify-between gap-3">
@@ -107,18 +134,35 @@ function SalesMobileCards({
                     {sale.customerName}
                   </p>
                   <p className="text-xs text-[#9CA3AF]">
-                    {sale.paidAt
-                      ? format(new Date(sale.paidAt), "d MMM yyyy, h:mm a")
-                      : "—"}
+                    {(() => {
+                      const activityAt = saleActivityDate(sale);
+                      return activityAt
+                        ? format(new Date(activityAt), "d MMM yyyy, h:mm a")
+                        : "—";
+                    })()}
                   </p>
                 </div>
               </div>
-              <Link
-                href={`/billing/${sale.id}`}
-                className="shrink-0 text-base font-bold tabular-nums text-[#EF4444]"
-              >
-                {formatCurrency(sale.total)}
-              </Link>
+                {sale.status === "partial" ? (
+                  <Link
+                    href={`/billing/${sale.id}`}
+                    className="shrink-0 text-right"
+                  >
+                    <span className="block text-base font-bold tabular-nums text-amber-700">
+                      {formatCurrency(collectedAmount(sale))}
+                    </span>
+                    <span className="text-xs text-[#9CA3AF]">
+                      of {formatCurrency(sale.total)}
+                    </span>
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/billing/${sale.id}`}
+                    className="shrink-0 text-base font-bold tabular-nums text-[#EF4444]"
+                  >
+                    {formatCurrency(sale.total)}
+                  </Link>
+                )}
             </div>
 
             <p className="line-clamp-2 text-sm text-[#6B7280]">
@@ -135,14 +179,7 @@ function SalesMobileCards({
               </div>
             )}
 
-            <span
-              className={cn(
-                "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                badgeStyle
-              )}
-            >
-              {PAYMENT_LABELS[method] ?? "Other"}
-            </span>
+            <SalePaymentPills sale={sale} />
 
             <div className="flex justify-end border-t border-[#ECECEC] pt-2">
               <SaleRowActions sale={sale} onDelete={onDelete} />
@@ -198,10 +235,6 @@ export function SalesTransactionTable({ sales }: SalesTransactionTableProps) {
           </thead>
           <tbody>
             {sales.map((sale, index) => {
-              const method = sale.paymentMethod ?? "other";
-              const badgeStyle =
-                PAYMENT_BADGE_STYLES[method] ?? PAYMENT_BADGE_STYLES.other;
-
               return (
                 <tr
                   key={sale.id}
@@ -211,9 +244,12 @@ export function SalesTransactionTable({ sales }: SalesTransactionTableProps) {
                   )}
                 >
                   <td className="whitespace-nowrap px-5 py-3.5 text-[#6B7280]">
-                    {sale.paidAt
-                      ? format(new Date(sale.paidAt), "d MMM yyyy, h:mm a")
-                      : "—"}
+                    {(() => {
+                      const activityAt = saleActivityDate(sale);
+                      return activityAt
+                        ? format(new Date(activityAt), "d MMM yyyy, h:mm a")
+                        : "—";
+                    })()}
                   </td>
                   <td className="px-5 py-3.5">
                     <div className="flex items-center gap-2.5">
@@ -252,21 +288,23 @@ export function SalesTransactionTable({ sales }: SalesTransactionTableProps) {
                     )}
                   </td>
                   <td className="px-5 py-3.5">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium",
-                        badgeStyle
-                      )}
-                    >
-                      {PAYMENT_LABELS[method] ?? "Other"}
-                    </span>
+                    <SalePaymentPills sale={sale} />
                   </td>
                   <td className="px-5 py-3.5 text-right">
                     <Link
                       href={`/billing/${sale.id}`}
                       className="font-bold tabular-nums text-[#EF4444] transition-colors duration-150 hover:text-[#DC2626]"
                     >
-                      {formatCurrency(sale.total)}
+                      {sale.status === "partial" ? (
+                        <span className="block text-amber-700">
+                          {formatCurrency(collectedAmount(sale))}
+                          <span className="block text-xs font-normal text-[#9CA3AF]">
+                            of {formatCurrency(sale.total)}
+                          </span>
+                        </span>
+                      ) : (
+                        formatCurrency(sale.total)
+                      )}
                     </Link>
                   </td>
                   <td className="px-5 py-3.5 text-center">

@@ -2,8 +2,11 @@ export type Sale = {
   id: string;
   customerName: string;
   customerPhone: string | null;
+  status: string;
   total: number;
+  amountPaid: number | null;
   paidAt: Date | null;
+  createdAt: Date;
   paymentMethod: string | null;
   lineItems: { description: string }[];
   employee: { name: string } | null;
@@ -44,6 +47,16 @@ export const PAYMENT_BADGE_STYLES: Record<string, string> = {
   upi: "bg-violet-50 text-violet-700 border-violet-200",
   wallet: "bg-amber-50 text-amber-700 border-amber-200",
   other: "bg-stone-50 text-stone-600 border-stone-200",
+};
+
+export const STATUS_STYLES: Record<
+  string,
+  { label: string; className: string }
+> = {
+  partial: {
+    label: "Partial",
+    className: "bg-orange-50 text-orange-700",
+  },
 };
 
 export const PAGE_SIZE = 10;

@@ -51,23 +51,36 @@ export async function getPaidSales(filters?: {
 
   const invoices = await prisma.invoice.findMany({
     where: {
-      salonId,
-      status: "paid",
-      ...(paidAt ? { paidAt } : {}),
-      ...(filters?.search
-        ? {
-            OR: [
-              { customerName: { contains: filters.search } },
-              { customerPhone: { contains: filters.search } },
-            ],
-          }
-        : {}),
+      AND: [
+        { salonId },
+        { status: { in: ["paid", "partial"] } },
+        ...(paidAt
+          ? [
+              {
+                OR: [
+                  { status: "paid" as const, paidAt },
+                  { status: "partial" as const, createdAt: paidAt },
+                ],
+              },
+            ]
+          : []),
+        ...(filters?.search
+          ? [
+              {
+                OR: [
+                  { customerName: { contains: filters.search } },
+                  { customerPhone: { contains: filters.search } },
+                ],
+              },
+            ]
+          : []),
+      ],
     },
     include: {
       lineItems: { include: { service: true } },
       employee: true,
     },
-    orderBy: { paidAt: "desc" },
+    orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
   });
 
   return invoices;

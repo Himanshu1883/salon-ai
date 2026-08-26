@@ -78,7 +78,7 @@ type BillingInvoiceFormProps = {
     billingMessageTemplate: string;
     autoOpenAfterPayment: boolean;
   };
-  onSuccess: (invoice: BillingInvoice) => void;
+  onSuccess: (invoice: BillingInvoice, options?: { close?: boolean }) => void;
   onCancel?: () => void;
 };
 
@@ -590,7 +590,7 @@ export function BillingInvoiceForm({
 
     setLoading(false);
     clearInvoiceDraft();
-    onSuccess(buildInvoiceForCallback(result.id, "draft", null));
+    onSuccess(buildInvoiceForCallback(result.id, "draft", null), { close: true });
   }
 
   async function handleReceivePayment() {
@@ -642,6 +642,7 @@ export function BillingInvoiceForm({
       });
       clearInvoiceDraft();
       setStep(3);
+      notifyPaymentSuccess(invoice, { close: false });
       return;
     }
 
@@ -685,6 +686,7 @@ export function BillingInvoiceForm({
     });
     clearInvoiceDraft();
     setStep(3);
+    notifyPaymentSuccess(invoice, { close: false });
   }
 
   function openWhatsAppDrawerFromStep2() {
@@ -695,9 +697,16 @@ export function BillingInvoiceForm({
     setWhatsappOpen(true);
   }
 
+  function notifyPaymentSuccess(
+    invoice: BillingInvoice,
+    options?: { close?: boolean }
+  ) {
+    onSuccess(invoice, options);
+  }
+
   function handleFinishNewInvoice() {
     if (completedInvoice) {
-      onSuccess(completedInvoice);
+      notifyPaymentSuccess(completedInvoice, { close: true });
     }
   }
 
@@ -723,7 +732,7 @@ export function BillingInvoiceForm({
         <div className="relative flex h-full min-h-0 flex-col overflow-hidden rounded-none bg-white sm:rounded-[20px]">
           <button
             type="button"
-            onClick={() => onCancel?.()}
+            onClick={() => handleFinishNewInvoice()}
             className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-xl text-[#6B7280] hover:bg-[#FAFBFF] sm:right-4 sm:top-4 sm:h-auto sm:w-auto sm:p-2"
             aria-label="Close"
           >

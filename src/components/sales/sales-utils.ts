@@ -11,7 +11,21 @@ import type { Sale, SalesStats } from "./types";
 import { PAYMENT_LABELS } from "./types";
 
 function sumTotals(sales: Sale[]) {
-  return sales.reduce((sum, s) => sum + s.total, 0);
+  return sales.reduce((sum, sale) => sum + collectedAmount(sale), 0);
+}
+
+export function collectedAmount(sale: Sale): number {
+  if (sale.status === "partial") {
+    return sale.amountPaid ?? 0;
+  }
+  return sale.total;
+}
+
+export function saleActivityDate(sale: Sale): Date | null {
+  if (sale.status === "partial") {
+    return sale.createdAt;
+  }
+  return sale.paidAt;
 }
 
 function pctChange(current: number, previous: number): number {
@@ -30,35 +44,44 @@ export function computeSalesStats(sales: Sale[]): SalesStats {
   const prevWeekStart = startOfDay(subDays(now, 13));
   const prevWeekEnd = endOfDay(subDays(now, 7));
 
-  const todaySales = sales.filter(
-    (s) =>
-      s.paidAt &&
-      isWithinInterval(new Date(s.paidAt), { start: todayStart, end: todayEnd })
-  );
-  const monthSales = sales.filter(
-    (s) => s.paidAt && new Date(s.paidAt) >= monthStart
-  );
-  const lastMonthSales = sales.filter(
-    (s) =>
-      s.paidAt &&
-      isWithinInterval(new Date(s.paidAt), {
+  const todaySales = sales.filter((sale) => {
+    const activityAt = saleActivityDate(sale);
+    return (
+      activityAt &&
+      isWithinInterval(new Date(activityAt), { start: todayStart, end: todayEnd })
+    );
+  });
+  const monthSales = sales.filter((sale) => {
+    const activityAt = saleActivityDate(sale);
+    return activityAt && new Date(activityAt) >= monthStart;
+  });
+  const lastMonthSales = sales.filter((sale) => {
+    const activityAt = saleActivityDate(sale);
+    return (
+      activityAt &&
+      isWithinInterval(new Date(activityAt), {
         start: lastMonthStart,
         end: endOfDay(lastMonthSameDay),
       })
-  );
-  const thisWeekSales = sales.filter(
-    (s) =>
-      s.paidAt &&
-      isWithinInterval(new Date(s.paidAt), { start: weekStart, end: todayEnd })
-  );
-  const prevWeekSales = sales.filter(
-    (s) =>
-      s.paidAt &&
-      isWithinInterval(new Date(s.paidAt), {
+    );
+  });
+  const thisWeekSales = sales.filter((sale) => {
+    const activityAt = saleActivityDate(sale);
+    return (
+      activityAt &&
+      isWithinInterval(new Date(activityAt), { start: weekStart, end: todayEnd })
+    );
+  });
+  const prevWeekSales = sales.filter((sale) => {
+    const activityAt = saleActivityDate(sale);
+    return (
+      activityAt &&
+      isWithinInterval(new Date(activityAt), {
         start: prevWeekStart,
         end: prevWeekEnd,
       })
-  );
+    );
+  });
 
   const totalRevenue = sumTotals(sales);
   const transactionCount = sales.length;
@@ -85,10 +108,14 @@ export function computeSalesStats(sales: Sale[]): SalesStats {
     revenueByDayMap.set(format(day, "yyyy-MM-dd"), 0);
   }
   for (const sale of sales) {
-    if (!sale.paidAt) continue;
-    const key = format(startOfDay(new Date(sale.paidAt)), "yyyy-MM-dd");
+    const activityAt = saleActivityDate(sale);
+    if (!activityAt) continue;
+    const key = format(startOfDay(new Date(activityAt)), "yyyy-MM-dd");
     if (revenueByDayMap.has(key)) {
-      revenueByDayMap.set(key, (revenueByDayMap.get(key) ?? 0) + sale.total);
+      revenueByDayMap.set(
+        key,
+        (revenueByDayMap.get(key) ?? 0) + collectedAmount(sale)
+      );
     }
   }
   const revenueByDay = Array.from(revenueByDayMap.entries()).map(
@@ -111,7 +138,7 @@ export function computeSalesStats(sales: Sale[]): SalesStats {
       total: 0,
     };
     existing.count += 1;
-    existing.total += sale.total;
+    existing.total += collectedAmount(sale);
     paymentMap.set(method, existing);
   }
   const paymentBreakdown = Array.from(paymentMap.values()).sort(
@@ -123,7 +150,7 @@ export function computeSalesStats(sales: Sale[]): SalesStats {
     const name = sale.employee?.name;
     if (!name) continue;
     const existing = stylistMap.get(name) ?? { revenue: 0, count: 0 };
-    existing.revenue += sale.total;
+    existing.revenue += collectedAmount(sale);
     existing.count += 1;
     stylistMap.set(name, existing);
   }
@@ -140,7 +167,8 @@ export function computeSalesStats(sales: Sale[]): SalesStats {
       const name = item.description;
       const existing = serviceMap.get(name) ?? { count: 0, revenue: 0 };
       existing.count += 1;
-      existing.revenue += sale.total / Math.max(sale.lineItems.length, 1);
+      existing.revenue +=
+        collectedAmount(sale) / Math.max(sale.lineItems.length, 1);
       serviceMap.set(name, existing);
     }
   }
@@ -174,8 +202,12 @@ export function filterSalesClientSide(
 ): Sale[] {
   return sales.filter((sale) => {
     if (paymentMethod && paymentMethod !== "all") {
-      const method = sale.paymentMethod ?? "other";
-      if (method !== paymentMethod) return false;
+      if (paymentMethod === "partial") {
+        if (sale.status !== "partial") return false;
+      } else {
+        const method = sale.paymentMethod ?? "other";
+        if (method !== paymentMethod) return false;
+      }
     }
     if (stylist && stylist !== "all") {
       if (sale.employee?.name !== stylist) return false;

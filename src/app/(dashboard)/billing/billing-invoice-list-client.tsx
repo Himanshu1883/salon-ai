@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { deleteInvoice, updateInvoiceStatus } from "@/actions/billing";
 import { BillingInvoiceTable } from "@/components/billing/billing-invoice-table";
@@ -25,10 +25,23 @@ export function BillingInvoiceListClient({
   isBasicPlan = false,
 }: BillingInvoiceListClientProps) {
   const router = useRouter();
-  const { updateStats, openNewInvoice } = useBillingStatsContext();
+  const { updateStats, openNewInvoice, registerPrependInvoice } =
+    useBillingStatsContext();
   const [isPending, startTransition] = useTransition();
   const [invoices, setInvoices] = useState(initialInvoices);
   const [loading, setLoading] = useState(false);
+
+  const prependInvoice = useCallback((invoice: BillingInvoice) => {
+    setInvoices((prev) => [
+      invoice,
+      ...prev.filter((item) => item.id !== invoice.id),
+    ]);
+  }, []);
+
+  useEffect(() => {
+    registerPrependInvoice(prependInvoice);
+    return () => registerPrependInvoice(null);
+  }, [prependInvoice, registerPrependInvoice]);
 
   useEffect(() => {
     setInvoices(initialInvoices);

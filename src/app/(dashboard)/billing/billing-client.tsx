@@ -44,6 +44,8 @@ export function BillingClient({
   invoicesContent: React.ReactNode;
 }) {
   const router = useRouter();
+  const listPrependRef = useRef<((invoice: BillingInvoice) => void) | null>(null);
+  const recordedInvoiceIdsRef = useRef(new Set<string>());
   const [stats, setStats] = useState(initialStats);
   const [open, setOpen] = useState(autoOpenCreate);
   const [activeTab, setActiveTab] = useState(initialTab);
@@ -108,25 +110,36 @@ export function BillingClient({
     router.replace(query ? `/billing?${query}` : "/billing", { scroll: false });
   }
 
-  function handleInvoiceCreated(invoice: BillingInvoice) {
-    setOpen(false);
-    if (invoice.status === "paid") {
-      setStats((stats) => ({
-        ...stats,
-        revenueToday: stats.revenueToday + invoice.total,
-        revenueMonth: stats.revenueMonth + invoice.total,
-      }));
-    } else if (invoice.status === "partial") {
-      setStats((stats) => ({
-        ...stats,
-        revenueToday: stats.revenueToday + (invoice.amountPaid ?? 0),
-        revenueMonth: stats.revenueMonth + (invoice.amountPaid ?? 0),
-        unpaidCount: stats.unpaidCount + 1,
-      }));
-    } else {
-      setStats((stats) => ({ ...stats, unpaidCount: stats.unpaidCount + 1 }));
+  function handleInvoiceCreated(
+    invoice: BillingInvoice,
+    options?: { close?: boolean }
+  ) {
+    const alreadyRecorded = recordedInvoiceIdsRef.current.has(invoice.id);
+    if (!alreadyRecorded) {
+      recordedInvoiceIdsRef.current.add(invoice.id);
+      if (invoice.status === "paid") {
+        setStats((stats) => ({
+          ...stats,
+          revenueToday: stats.revenueToday + invoice.total,
+          revenueMonth: stats.revenueMonth + invoice.total,
+        }));
+      } else if (invoice.status === "partial") {
+        setStats((stats) => ({
+          ...stats,
+          revenueToday: stats.revenueToday + (invoice.amountPaid ?? 0),
+          revenueMonth: stats.revenueMonth + (invoice.amountPaid ?? 0),
+          unpaidCount: stats.unpaidCount + 1,
+        }));
+      } else if (invoice.status !== "paid") {
+        setStats((stats) => ({ ...stats, unpaidCount: stats.unpaidCount + 1 }));
+      }
+      listPrependRef.current?.(invoice);
+      router.refresh();
     }
-    router.refresh();
+
+    if (options?.close !== false) {
+      setOpen(false);
+    }
   }
 
   function applyFilters() {
@@ -151,6 +164,7 @@ export function BillingClient({
 
   return (
     <BillingStatsProvider
+      listPrependRef={listPrependRef}
       updateStats={(updater) => setStats((current) => updater(current))}
       openNewInvoice={() => setOpen(true)}
     >
