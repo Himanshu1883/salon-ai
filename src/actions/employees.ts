@@ -33,6 +33,31 @@ export async function getEmployeeOptions() {
   return getCachedEmployeeOptions(session.user.salonId!);
 }
 
+const getCachedActiveEmployees = cachedBySalon(
+  "team",
+  async (salonId: string) =>
+    prisma.employee.findMany({
+      where: { salonId, status: "active" },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        specialties: true,
+        avatarUrl: true,
+        email: true,
+        phone: true,
+        status: true,
+      },
+      orderBy: { name: "asc" },
+    }),
+  { revalidate: 60, key: "active-employees" }
+);
+
+export async function getActiveEmployees() {
+  const session = await requireSession();
+  return getCachedActiveEmployees(session.user.salonId!);
+}
+
 export async function getEmployees(search?: string) {
   const session = await requireSession();
   return prisma.employee.findMany({
@@ -157,12 +182,4 @@ export async function deleteEmployee(id: string) {
   await prisma.employee.delete({ where: { id } });
   revalidateEmployeePages(session.user.salonId!);
   return { success: true };
-}
-
-export async function getActiveEmployees() {
-  const session = await requireSession();
-  return prisma.employee.findMany({
-    where: { salonId: session.user.salonId, status: "active" },
-    orderBy: { name: "asc" },
-  });
 }

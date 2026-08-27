@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
   BarChart3,
@@ -239,6 +239,7 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
 }
 
 export default function LoginForm({ salon }: LoginFormProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const defaultCallback = salonDashboardPath(salon.slug);
   const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
@@ -255,6 +256,11 @@ export default function LoginForm({ salon }: LoginFormProps) {
     const saved = localStorage.getItem(`salon-login-email-${salon.slug}`);
     if (saved) setEmail(saved);
   }, [salon.slug]);
+
+  useEffect(() => {
+    router.prefetch(callbackUrl);
+    void fetch("/api/warm").catch(() => {});
+  }, [router, callbackUrl]);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -277,17 +283,26 @@ export default function LoginForm({ salon }: LoginFormProps) {
       localStorage.removeItem(`salon-login-email-${salon.slug}`);
     }
 
-    const result = await signIn("credentials", {
-      email: emailValue,
-      password: passwordValue,
-      salonSlug: salon.slug,
-      redirect: false,
-    });
+    let result;
+    try {
+      result = await signIn("credentials", {
+        email: emailValue,
+        password: passwordValue,
+        salonSlug: salon.slug,
+        redirect: false,
+      });
+    } catch {
+      setLoading(false);
+      setError(
+        "Sign-in service is unavailable. Stop the dev server, run npm run dev again, then retry."
+      );
+      return;
+    }
 
     if (!result) {
       setLoading(false);
       setError(
-        "Sign-in is temporarily unavailable. Check that AUTH_SECRET is set in .env and restart the dev server."
+        "Sign-in service is unavailable. Stop the dev server, run npm run dev again, then retry."
       );
       return;
     }
@@ -300,8 +315,9 @@ export default function LoginForm({ salon }: LoginFormProps) {
       return;
     }
 
-    // Session cookie is set by signIn — skip extra /api/auth/session round-trip.
-    window.location.assign(callbackUrl);
+    // Client navigation avoids full document reload; refresh loads the new session.
+    router.push(callbackUrl);
+    router.refresh();
   }
 
   return (

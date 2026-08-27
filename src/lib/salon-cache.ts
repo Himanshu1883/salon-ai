@@ -16,7 +16,8 @@ export type SalonCacheScope =
   | "billing"
   | "check-in"
   | "layout-alerts"
-  | "layout-context";
+  | "layout-context"
+  | "appointments";
 
 export function salonCacheTag(salonId: string, scope: SalonCacheScope): string {
   return `${scope}:${salonId}`;

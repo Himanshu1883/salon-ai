@@ -291,17 +291,34 @@ export async function cancelQueueEntry(queueEntryId: string) {
 
 export async function getRecentCompletedCheckIns() {
   const session = await requireSession();
-  return prisma.queueEntry.findMany({
-    where: { salonId: session.user.salonId, status: "completed" },
-    include: {
-      customer: true,
-      services: { include: { service: true } },
-      invoices: { select: { id: true, status: true, paymentMethod: true, total: true } },
-    },
-    orderBy: { completedAt: "desc" },
-    take: 10,
-  });
+  return getCachedRecentCompletedCheckIns(session.user.salonId!);
 }
+
+const getCachedRecentCompletedCheckIns = cachedBySalon(
+  "check-in",
+  async (salonId: string) =>
+    prisma.queueEntry.findMany({
+      where: { salonId, status: "completed" },
+      select: {
+        id: true,
+        completedAt: true,
+        employeeId: true,
+        seatId: true,
+        customer: { select: { name: true, phone: true } },
+        services: {
+          select: {
+            service: { select: { id: true, name: true, price: true } },
+          },
+        },
+        invoices: {
+          select: { id: true, status: true, paymentMethod: true, total: true },
+        },
+      },
+      orderBy: { completedAt: "desc" },
+      take: 10,
+    }),
+  { revalidate: 30, key: "recent-completed" }
+);
 
 export async function getEstimatedWaitMinutes() {
   const session = await requireSession();

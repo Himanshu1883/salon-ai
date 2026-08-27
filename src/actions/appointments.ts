@@ -6,7 +6,9 @@ import { appointmentSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, addDays, startOfWeek, endOfWeek, max } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
-import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { scheduleSalonCacheRevalidation, cachedBySalon, salonCacheTag } from "@/lib/salon-cache";
+import { cachedRead } from "@/lib/memory-cache";
+import { unstable_cache } from "next/cache";
 import { assertEmployeeAvailableForSlot } from "@/lib/appointments/availability";
 import {
   parseOpeningHours,
@@ -15,11 +17,66 @@ import {
 
 export async function getSalonOpeningHours() {
   const session = await requireSession();
-  const salon = await prisma.salon.findUnique({
-    where: { id: session.user.salonId },
-    select: { openingHours: true },
+  return getCachedSalonOpeningHours(session.user.salonId!);
+}
+
+const getCachedSalonOpeningHours = cachedBySalon(
+  "appointments",
+  async (salonId: string) => {
+    const salon = await prisma.salon.findUnique({
+      where: { id: salonId },
+      select: { openingHours: true },
+    });
+    return parseOpeningHours(salon?.openingHours);
+  },
+  { revalidate: 300, key: "opening-hours" }
+);
+
+async function fetchAppointmentsInRange(
+  salonId: string,
+  start: Date,
+  end: Date
+) {
+  return prisma.appointment.findMany({
+    where: {
+      salonId,
+      scheduledAt: { gte: start, lte: end },
+      status: { not: "cancelled" },
+    },
+    select: {
+      id: true,
+      scheduledAt: true,
+      status: true,
+      notes: true,
+      customer: { select: { name: true, phone: true } },
+      service: {
+        select: {
+          name: true,
+          duration: true,
+          category: { select: { id: true, name: true } },
+        },
+      },
+      employee: { select: { id: true, name: true } },
+    },
+    orderBy: { scheduledAt: "asc" },
   });
-  return parseOpeningHours(salon?.openingHours);
+}
+
+export async function getAppointmentsInRange(start: Date, end: Date) {
+  const session = await requireSession();
+  const salonId = session.user.salonId!;
+  const rangeKey = `${start.toISOString().slice(0, 10)}:${end.toISOString().slice(0, 10)}`;
+
+  return cachedRead(
+    `salon-cache:appointments:range:${salonId}:${rangeKey}`,
+    60,
+    () =>
+      unstable_cache(
+        () => fetchAppointmentsInRange(salonId, start, end),
+        ["appointments", "range", salonId, rangeKey],
+        { revalidate: 60, tags: [salonCacheTag(salonId, "appointments")] }
+      )()
+  );
 }
 
 export async function getAppointments(filter: "today" | "upcoming" = "upcoming") {
@@ -41,34 +98,6 @@ export async function getAppointments(filter: "today" | "upcoming" = "upcoming")
       customer: true,
       service: true,
       employee: true,
-    },
-    orderBy: { scheduledAt: "asc" },
-  });
-}
-
-export async function getAppointmentsInRange(start: Date, end: Date) {
-  const session = await requireSession();
-
-  return prisma.appointment.findMany({
-    where: {
-      salonId: session.user.salonId,
-      scheduledAt: { gte: start, lte: end },
-      status: { not: "cancelled" },
-    },
-    select: {
-      id: true,
-      scheduledAt: true,
-      status: true,
-      notes: true,
-      customer: { select: { name: true, phone: true } },
-      service: {
-        select: {
-          name: true,
-          duration: true,
-          category: { select: { id: true, name: true } },
-        },
-      },
-      employee: { select: { id: true, name: true } },
     },
     orderBy: { scheduledAt: "asc" },
   });
@@ -161,7 +190,7 @@ export async function createAppointment(formData: FormData) {
   revalidatePath("/dashboard");
   revalidatePath("/customers");
   revalidatePath("/team/analytics");
-  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics", "appointments");
   return { success: true };
 }
 
@@ -206,7 +235,7 @@ export async function updateAppointmentStatus(
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
   revalidatePath("/team/analytics");
-  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics", "appointments");
   return { success: true };
 }
 
@@ -222,6 +251,6 @@ export async function deleteAppointment(id: string) {
   revalidatePath("/appointments");
   revalidatePath("/dashboard");
   revalidatePath("/team/analytics");
-  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics");
+  scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics", "appointments");
   return { success: true };
 }

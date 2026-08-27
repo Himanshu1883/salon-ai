@@ -63,13 +63,50 @@ async function loadSalonLayoutContext(salonId: string): Promise<SalonLayoutConte
   };
 }
 
+async function loadSalonAccessBlocked(salonId: string): Promise<boolean> {
+  const now = new Date();
+  const salon = await prisma.salon.findUnique({
+    where: { id: salonId },
+    select: {
+      subscription: {
+        select: { status: true, trialEndsAt: true },
+      },
+      platformInvoices: {
+        where: {
+          status: { in: ["sent", "overdue"] },
+          paidAt: null,
+          dueDate: { lt: now },
+        },
+        take: 1,
+        select: { id: true },
+      },
+    },
+  });
+
+  return computeAccessBlocked(
+    salon?.subscription ?? null,
+    (salon?.platformInvoices.length ?? 0) > 0
+  );
+}
+
 const getSalonLayoutContextCached = cachedBySalon(
   "layout-context",
   loadSalonLayoutContext,
-  { revalidate: 45 }
+  { revalidate: 120 }
 );
 
-/** Plan + subscription gate in one DB round-trip (cached ~45s in-process). */
+const getSalonAccessBlockedCached = cachedBySalon(
+  "layout-context",
+  loadSalonAccessBlocked,
+  { revalidate: 120, key: "access-blocked" }
+);
+
+/** Plan + subscription gate in one DB round-trip (cached ~120s). */
 export const getSalonLayoutContext = cache(async (salonId: string) =>
   getSalonLayoutContextCached(salonId)
+);
+
+/** Subscription gate only — skips plan read when JWT already carries plan. */
+export const getSalonAccessBlocked = cache(async (salonId: string) =>
+  getSalonAccessBlockedCached(salonId)
 );

@@ -24,8 +24,6 @@ export async function DashboardKpiSection() {
       lowStockCount={kpis.lowStockCount}
       unpaidInvoices={kpis.unpaidInvoices}
       totalCustomers={kpis.totalCustomers}
-
-      
     />
 
 </>

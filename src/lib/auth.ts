@@ -68,8 +68,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         let user;
         try {
-          user = await prisma.user.findUnique({
-            where: { email: parsed.data.email },
+          user = await prisma.user.findFirst({
+            where: {
+              email: parsed.data.email,
+              ...(salonSlug ? { salon: { slug: salonSlug } } : {}),
+            },
             select: {
               id: true,
               email: true,

@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, cache } from "react";
 import { cookies, headers } from "next/headers";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
@@ -19,7 +19,7 @@ const salonSelect = {
   phone: true,
 } as const;
 
-async function findSalonBySlug(salonSlug: string) {
+const findSalonBySlug = cache(async (salonSlug: string) => {
   try {
     return await prisma.salon.findUnique({
       where: { slug: salonSlug },
@@ -29,7 +29,7 @@ async function findSalonBySlug(salonSlug: string) {
     console.error("[login] failed to load salon by slug:", error);
     return null;
   }
-}
+});
 
 async function resolveSalonSlug() {
   const headerStore = await headers();
@@ -41,16 +41,7 @@ async function resolveSalonSlug() {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const salonSlug = await resolveSalonSlug();
-  if (!salonSlug) {
-    return { title: "Login" };
-  }
-
-  const salon = await findSalonBySlug(salonSlug);
-
-  return {
-    title: salon ? `Login — ${salon.name}` : "Login",
-  };
+  return { title: "Login" };
 }
 
 export default async function LoginPage() {

@@ -3,7 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { specialSaleSchema, type ItemType } from "@/lib/validations";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
+import { cachedRead } from "@/lib/memory-cache";
+import { salonCacheTag } from "@/lib/salon-cache";
 import {
   startOfDay,
   endOfDay,
@@ -39,17 +41,19 @@ function paidAtFilter(dateFrom?: string, dateTo?: string) {
   return Object.keys(filter).length > 0 ? filter : undefined;
 }
 
-export async function getPaidSales(filters?: {
-  dateFrom?: string;
-  dateTo?: string;
-  search?: string;
-}) {
-  const session = await requireSession();
-  const salonId = session.user.salonId;
+const PAID_SALES_LIMIT = 500;
 
+async function fetchPaidSales(
+  salonId: string,
+  filters?: {
+    dateFrom?: string;
+    dateTo?: string;
+    search?: string;
+  }
+) {
   const paidAt = paidAtFilter(filters?.dateFrom, filters?.dateTo);
 
-  const invoices = await prisma.invoice.findMany({
+  return prisma.invoice.findMany({
     where: {
       AND: [
         { salonId },
@@ -76,14 +80,43 @@ export async function getPaidSales(filters?: {
           : []),
       ],
     },
-    include: {
-      lineItems: { include: { service: true } },
-      employee: true,
+    select: {
+      id: true,
+      customerName: true,
+      customerPhone: true,
+      status: true,
+      total: true,
+      amountPaid: true,
+      paidAt: true,
+      createdAt: true,
+      paymentMethod: true,
+      lineItems: { select: { description: true } },
+      employee: { select: { name: true } },
     },
     orderBy: [{ paidAt: "desc" }, { createdAt: "desc" }],
+    take: PAID_SALES_LIMIT,
   });
+}
 
-  return invoices;
+export async function getPaidSales(filters?: {
+  dateFrom?: string;
+  dateTo?: string;
+  search?: string;
+}) {
+  const session = await requireSession();
+  const salonId = session.user.salonId!;
+  const cacheKey = JSON.stringify(filters ?? {});
+
+  return cachedRead(
+    `salon-cache:billing:paid-sales:${salonId}:${cacheKey}`,
+    30,
+    () =>
+      unstable_cache(
+        () => fetchPaidSales(salonId, filters),
+        ["billing", "paid-sales", salonId, cacheKey],
+        { revalidate: 30, tags: [salonCacheTag(salonId, "billing")] }
+      )()
+  );
 }
 
 export type PaymentMethodBreakdown = {

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:clean": "node scripts/clean-dev-cache.mjs && next dev --webpack",
     "dev:generate": "prisma generate && next dev",
     "build": "prisma generate && npx tsx scripts/migrate-if-postgres.ts && next build",
     "start": "next start",

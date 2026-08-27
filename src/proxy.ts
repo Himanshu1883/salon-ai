@@ -38,7 +38,7 @@ function rewriteWithSalonSlug(
   return response;
 }
 
-export default auth((req) => {
+export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth?.user;
   const isSuperAdmin = !!req.auth?.user?.isSuperAdmin;
@@ -81,38 +81,28 @@ export default auth((req) => {
     const { salonSlug, innerPath } = salonPath;
 
     if (innerPath === "/appointments" || innerPath.startsWith("/appointments/")) {
-      const url = req.nextUrl.clone();
       const suffix = innerPath.slice("/appointments".length);
-      url.pathname = `/${salonSlug}/sales/appointments${suffix}`;
-      return NextResponse.redirect(url);
+      return rewriteWithSalonSlug(req, `/sales/appointments${suffix}`, salonSlug);
     }
 
     if (innerPath === "/services" || innerPath.startsWith("/services/")) {
-      const url = req.nextUrl.clone();
       const suffix = innerPath.slice("/services".length);
-      url.pathname = `/${salonSlug}/catalog/services${suffix}`;
-      return NextResponse.redirect(url);
+      return rewriteWithSalonSlug(req, `/catalog/services${suffix}`, salonSlug);
     }
 
     if (innerPath === "/employees" || innerPath.startsWith("/employees/")) {
-      const url = req.nextUrl.clone();
       const suffix = innerPath.slice("/employees".length);
-      url.pathname = `/${salonSlug}/team/members${suffix}`;
-      return NextResponse.redirect(url);
+      return rewriteWithSalonSlug(req, `/team/members${suffix}`, salonSlug);
     }
 
     if (innerPath === "/customers" || innerPath.startsWith("/customers/")) {
-      const url = req.nextUrl.clone();
       const suffix = innerPath.slice("/customers".length);
-      url.pathname = `/${salonSlug}/clients${suffix}`;
-      return NextResponse.redirect(url);
+      return rewriteWithSalonSlug(req, `/clients${suffix}`, salonSlug);
     }
 
     if (innerPath === "/stock" || innerPath.startsWith("/stock/")) {
-      const url = req.nextUrl.clone();
       const suffix = innerPath.slice("/stock".length);
-      url.pathname = `/${salonSlug}/inventory/stock${suffix}`;
-      return NextResponse.redirect(url);
+      return rewriteWithSalonSlug(req, `/inventory/stock${suffix}`, salonSlug);
     }
 
     if (innerPath === "/login") {
@@ -158,8 +148,6 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Marketing "Login" links to /login. Allow it (workspace picker or
-  // cookie/header-scoped form). Do not bounce back to home.
   if (pathname === "/login") {
     if (isLoggedIn && !isSuperAdmin && sessionSalonSlug) {
       return NextResponse.redirect(

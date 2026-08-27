@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { upsertCustomer, linkInvoiceToCustomer } from "@/lib/customers";
 import { customerSchema } from "@/lib/validations";
-import { revalidateSalonCache } from "@/lib/salon-cache";
+import { revalidateSalonCache, cachedBySalon } from "@/lib/salon-cache";
 
 function invalidateCustomersCache(salonId: string) {
   revalidateSalonCache(
@@ -458,7 +458,21 @@ export async function getCustomerCount() {
   return getCustomerCountForSalon(session.user.salonId);
 }
 
+const getCachedRecentCustomers = cachedBySalon(
+  "customers",
+  async (salonId: string) =>
+    prisma.customer.findMany({
+      where: { salonId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+    }),
+  { revalidate: 60, key: "recent" }
+);
+
 export async function getRecentCustomersForSalon(salonId: string, limit = 5) {
+  if (limit === 5) {
+    return getCachedRecentCustomers(salonId);
+  }
   return prisma.customer.findMany({
     where: { salonId },
     orderBy: { createdAt: "desc" },

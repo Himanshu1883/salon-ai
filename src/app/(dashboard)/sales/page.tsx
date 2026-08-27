@@ -1,5 +1,4 @@
-import { getPaidSales } from "@/actions/sales";
-import { SalesListClient } from "@/components/sales/sales-list-client";
+import { SalesPageContent } from "./sales-page-content";
 
 export default async function SalesPage({
   searchParams,
@@ -11,15 +10,9 @@ export default async function SalesPage({
   }>;
 }) {
   const params = await searchParams;
-  const sales = await getPaidSales({
-    dateFrom: params.dateFrom,
-    dateTo: params.dateTo,
-    search: params.search,
-  });
 
   return (
-    <SalesListClient
-      sales={sales}
+    <SalesPageContent
       filters={{
         dateFrom: params.dateFrom ?? "",
         dateTo: params.dateTo ?? "",

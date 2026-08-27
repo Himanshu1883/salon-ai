@@ -199,7 +199,7 @@ function resolveFromContext(
 
 export const getResolvedPermissions = cache(
   async (userId: string, salonId: string): Promise<ResolvedPermissions> => {
-    return cachedRead(`perms:${salonId}:${userId}`, 90, async () => {
+    return cachedRead(`perms:${salonId}:${userId}`, 300, async () => {
       const user = await loadUserPermissionContext(userId, salonId);
       if (!user) {
         return {
