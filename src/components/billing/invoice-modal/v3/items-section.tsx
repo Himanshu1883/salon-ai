@@ -84,7 +84,7 @@ export function ItemsSection({
                 : v3.itemHeaderNoGst
           )}
         >
-          <span>Product</span>
+          <span>Services</span>
           {showStaffColumn ? <span>Staff</span> : null}
           <span>Qty</span>
           <span>Service charge</span>
