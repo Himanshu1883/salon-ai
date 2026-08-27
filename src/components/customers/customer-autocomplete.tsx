@@ -17,12 +17,16 @@ export function CustomerAutocomplete({
   defaultName = "",
   defaultPhone = "",
   defaultCustomerId = "",
+  phoneRequired = false,
   onSelect,
+  onPhoneChange,
 }: {
   defaultName?: string;
   defaultPhone?: string;
   defaultCustomerId?: string;
+  phoneRequired?: boolean;
   onSelect?: (customer: CustomerOption | null) => void;
+  onPhoneChange?: (phone: string) => void;
 }) {
   const [name, setName] = useState(defaultName);
   const [phone, setPhone] = useState(defaultPhone);
@@ -72,7 +76,9 @@ export function CustomerAutocomplete({
   function selectCustomer(customer: CustomerOption) {
     setCustomerId(customer.id);
     setName(customer.name);
-    setPhone(customer.phone ?? "");
+    const nextPhone = customer.phone ?? "";
+    setPhone(nextPhone);
+    onPhoneChange?.(nextPhone);
     setQuery("");
     setOpen(false);
     onSelect?.(customer);
@@ -93,6 +99,7 @@ export function CustomerAutocomplete({
 
   function handlePhoneChange(value: string) {
     setPhone(value);
+    onPhoneChange?.(value);
     if (customerId) {
       clearSelection();
     }
@@ -141,12 +148,16 @@ export function CustomerAutocomplete({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="customerPhone">Phone (optional)</Label>
+        <Label htmlFor="customerPhone">
+          Phone{phoneRequired ? "" : " (optional)"}
+        </Label>
         <Input
           id="customerPhone"
           name="customerPhone"
           type="tel"
           value={phone}
+          required={phoneRequired}
+          minLength={phoneRequired ? 10 : undefined}
           onChange={(e) => handlePhoneChange(e.target.value)}
         />
       </div>

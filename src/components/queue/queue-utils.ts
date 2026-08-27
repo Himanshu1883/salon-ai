@@ -1,11 +1,33 @@
 import { differenceInMinutes, isToday, isYesterday } from "date-fns";
+import type { InvoicePrefill } from "@/components/billing/types";
 import type {
   AppointmentSnapshot,
   CompletedEntry,
   QueueDashboardStats,
   QueueEntry,
+  QueueInvoiceEntry,
   QueueTab,
 } from "./types";
+
+export function queueEntryToInvoicePrefill(entry: QueueInvoiceEntry): InvoicePrefill {
+  const employeeId = entry.employeeId ?? undefined;
+  return {
+    customer: {
+      name: entry.customer.name,
+      phone: entry.customer.phone ?? "",
+    },
+    employeeId,
+    seatId: entry.seatId ?? undefined,
+    queueEntryId: entry.id,
+    lineItems: entry.services.map((qs) => ({
+      serviceId: qs.service.id,
+      description: qs.service.name,
+      quantity: 1,
+      unitPrice: qs.service.price,
+      employeeId,
+    })),
+  };
+}
 
 export function getInitials(name: string): string {
   return name

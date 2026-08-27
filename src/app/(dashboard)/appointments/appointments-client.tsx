@@ -297,6 +297,7 @@ export function AppointmentsClient({
 
       <AppointmentDetailDialog
         appointment={detailAppointment}
+        allAppointments={existingAppointments}
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onRefresh={() => router.refresh()}

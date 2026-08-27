@@ -218,7 +218,11 @@ export const employeeSchema = z.object({
   name: z.string().min(2, "Name is required"),
   phone: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
-  role: z.enum(["owner", "stylist", "receptionist", "manager"]),
+  role: z
+    .string()
+    .trim()
+    .min(1, "Role is required")
+    .max(50, "Role must be 50 characters or fewer"),
   specialties: z.string().optional(),
   status: z.enum(["active", "inactive", "on_break"]),
   serviceIds: z.array(z.string()).optional(),
@@ -350,12 +354,22 @@ export const checkInSchema = z.object({
   serviceIds: z.array(z.string()).min(1, "Select at least one service"),
 });
 
+export const appointmentServiceLineSchema = z.object({
+  serviceId: z.string().min(1, "Service is required"),
+  employeeId: z.string().optional(),
+});
+
 export const appointmentSchema = z.object({
   customerId: z.string().optional(),
   customerName: z.string().min(2, "Customer name is required"),
-  customerPhone: z.string().optional(),
-  serviceId: z.string().min(1, "Service is required"),
-  employeeId: z.string().optional(),
+  customerPhone: z
+    .string()
+    .trim()
+    .min(10, "Phone number is required")
+    .regex(/^[0-9+\s()-]{10,15}$/, "Enter a valid phone number"),
+  serviceLines: z
+    .array(appointmentServiceLineSchema)
+    .min(1, "Add at least one service"),
   scheduledAt: z.string().min(1, "Date and time required"),
   notes: z.string().optional(),
 });

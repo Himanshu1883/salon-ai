@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "crypto";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { appointmentSchema } from "@/lib/validations";
@@ -14,6 +15,11 @@ import {
   parseOpeningHours,
   validateAppointmentAgainstSalonHours,
 } from "@/lib/appointments/salon-hours";
+import {
+  createVisitGroupMarker,
+  getSequentialSlotStart,
+  getTotalDuration,
+} from "@/lib/appointments/visit-group";
 
 export async function getSalonOpeningHours() {
   const session = await requireSession();
@@ -45,12 +51,15 @@ async function fetchAppointmentsInRange(
     },
     select: {
       id: true,
+      customerId: true,
+      serviceId: true,
       scheduledAt: true,
       status: true,
       notes: true,
-      customer: { select: { name: true, phone: true } },
+      customer: { select: { id: true, name: true, phone: true } },
       service: {
         select: {
+          id: true,
           name: true,
           duration: true,
           category: { select: { id: true, name: true } },
@@ -112,12 +121,24 @@ export async function getAppointmentsForWeek(weekStart: Date) {
 export async function createAppointment(formData: FormData) {
   const session = await requireSession();
 
+  let serviceLines: { serviceId: string; employeeId?: string }[] = [];
+  const serviceLinesRaw = formData.get("serviceLines") as string | null;
+  if (serviceLinesRaw) {
+    try {
+      const parsedLines = JSON.parse(serviceLinesRaw);
+      if (Array.isArray(parsedLines)) {
+        serviceLines = parsedLines;
+      }
+    } catch {
+      return { error: "Invalid service selection" };
+    }
+  }
+
   const raw = {
     customerId: (formData.get("customerId") as string) || undefined,
     customerName: formData.get("customerName") as string,
-    customerPhone: (formData.get("customerPhone") as string) || undefined,
-    serviceId: formData.get("serviceId") as string,
-    employeeId: (formData.get("employeeId") as string) || undefined,
+    customerPhone: formData.get("customerPhone") as string,
+    serviceLines,
     scheduledAt: formData.get("scheduledAt") as string,
     notes: (formData.get("notes") as string) || undefined,
   };
@@ -133,14 +154,25 @@ export async function createAppointment(formData: FormData) {
     phone: parsed.data.customerPhone,
   });
 
-  const service = await prisma.service.findFirst({
-    where: { id: parsed.data.serviceId, salonId: session.user.salonId },
-    select: { duration: true },
+  const serviceRecords = await prisma.service.findMany({
+    where: {
+      salonId: session.user.salonId,
+      id: { in: parsed.data.serviceLines.map((line) => line.serviceId) },
+    },
+    select: { id: true, duration: true },
   });
-  if (!service) {
-    return { error: "Service not found" };
+
+  if (serviceRecords.length !== parsed.data.serviceLines.length) {
+    return { error: "One or more selected services were not found" };
   }
 
+  const durationByServiceId = new Map(
+    serviceRecords.map((service) => [service.id, service.duration])
+  );
+  const lineDurations = parsed.data.serviceLines.map(
+    (line) => durationByServiceId.get(line.serviceId) ?? 0
+  );
+  const totalDuration = getTotalDuration(lineDurations);
   const scheduledAt = new Date(parsed.data.scheduledAt);
 
   const salon = await prisma.salon.findUnique({
@@ -151,38 +183,67 @@ export async function createAppointment(formData: FormData) {
   const hoursCheck = validateAppointmentAgainstSalonHours(
     openingHours,
     scheduledAt,
-    service.duration
+    totalDuration
   );
   if (!hoursCheck.ok) {
     return { error: hoursCheck.error };
   }
 
-  if (parsed.data.employeeId) {
-    const availability = await assertEmployeeAvailableForSlot(
-      session.user.salonId,
-      parsed.data.employeeId,
-      scheduledAt,
-      service.duration
-    );
-    if (availability.error) {
-      return { error: availability.error };
+  let priorDurations: number[] = [];
+  for (const line of parsed.data.serviceLines) {
+    const duration = durationByServiceId.get(line.serviceId) ?? 0;
+    const slotStart = getSequentialSlotStart(scheduledAt, priorDurations);
+
+    if (line.employeeId) {
+      const availability = await assertEmployeeAvailableForSlot(
+        session.user.salonId,
+        line.employeeId,
+        slotStart,
+        duration
+      );
+      if (availability.error) {
+        return { error: availability.error };
+      }
     }
+
+    priorDurations = [...priorDurations, duration];
   }
 
-  const appointment = await prisma.appointment.create({
-    data: {
-      salonId: session.user.salonId,
-      customerId: customer.id,
-      serviceId: parsed.data.serviceId,
-      employeeId: parsed.data.employeeId || null,
-      scheduledAt,
-      notes: parsed.data.notes,
-    },
+  const visitGroupId = randomUUID();
+  const visitNotes = createVisitGroupMarker(visitGroupId, parsed.data.notes);
+
+  const createdAppointments = await prisma.$transaction(async (tx) => {
+    priorDurations = [];
+    const appointments = [];
+
+    for (const [index, line] of parsed.data.serviceLines.entries()) {
+      const duration = durationByServiceId.get(line.serviceId) ?? 0;
+      const slotStart = getSequentialSlotStart(scheduledAt, priorDurations);
+
+      const appointment = await tx.appointment.create({
+        data: {
+          salonId: session.user.salonId,
+          customerId: customer.id,
+          serviceId: line.serviceId,
+          employeeId: line.employeeId || null,
+          scheduledAt: slotStart,
+          notes: index === 0 ? visitNotes : createVisitGroupMarker(visitGroupId),
+        },
+      });
+
+      appointments.push(appointment);
+      priorDurations = [...priorDurations, duration];
+    }
+
+    return appointments;
   });
 
-  if (salon) {
+  if (salon && createdAppointments[0]) {
     const { scheduleAppointmentReminder } = await import("@/actions/sms");
-    await scheduleAppointmentReminder(appointment.id, salon.name ?? "Salon");
+    await scheduleAppointmentReminder(
+      createdAppointments[0].id,
+      salon.name ?? "Salon"
+    );
   }
 
   revalidatePath("/sales/appointments");
@@ -191,7 +252,7 @@ export async function createAppointment(formData: FormData) {
   revalidatePath("/customers");
   revalidatePath("/team/analytics");
   scheduleSalonCacheRevalidation(session.user.salonId!, "staff-analytics", "appointments");
-  return { success: true };
+  return { success: true, id: createdAppointments[0]?.id };
 }
 
 export async function updateAppointmentStatus(

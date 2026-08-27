@@ -225,7 +225,7 @@ export function ItemRow({
             />
           </div>
           <div>
-            <span className={v3.label}>Price</span>
+            <span className={v3.label}>Service charge</span>
             <div className="relative">
               <span className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[#6B7280]">
                 ₹
@@ -233,7 +233,7 @@ export function ItemRow({
               <Input
                 type="number"
                 min={0}
-                aria-label="Price"
+                aria-label="Service charge"
                 value={item.unitPrice || ""}
                 onChange={(e) =>
                   onUpdate({ unitPrice: Number(e.target.value) || 0 })
@@ -253,7 +253,7 @@ export function ItemRow({
             </div>
           ) : null}
           <div className={cn(gstEnabled ? "" : "col-span-2", "flex flex-col justify-end")}>
-            <span className={v3.label}>Amount</span>
+            <span className={v3.label}>Total (incl. GST)</span>
             <p className="text-right text-[15px] font-semibold tabular-nums text-[#111827]">
               {formatCurrency(Math.round(amount))}
             </p>
@@ -315,7 +315,7 @@ export function ItemRow({
           <Input
             type="number"
             min={0}
-            aria-label="Price"
+            aria-label="Service charge"
             value={item.unitPrice || ""}
             onChange={(e) =>
               onUpdate({ unitPrice: Number(e.target.value) || 0 })

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { EmployeeRoleSelect } from "@/components/team/employee-role-select";
 import {
   Card,
   CardContent,
@@ -119,16 +120,11 @@ function EmployeeForm({
         <div className="space-y-2">
           <Label htmlFor="role">Role</Label>
           <input type="hidden" name="role" value={role} />
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="stylist">Stylist</SelectItem>
-              <SelectItem value="receptionist">Receptionist</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-            </SelectContent>
-          </Select>
+          <EmployeeRoleSelect
+            value={role}
+            onChange={setRole}
+            includeOwner={false}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>

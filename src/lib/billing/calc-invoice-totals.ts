@@ -14,7 +14,7 @@ export type InvoiceTotals = {
 
 type CalcInvoiceTotalsOptions = {
   gstEnabled?: boolean;
-  /** Salon catalog prices include GST (matches billing UI). */
+  /** When false, GST is added on top of the service/product price (exclusive). */
   gstIncluded?: boolean;
   defaultTaxRate?: number;
 };
@@ -59,7 +59,13 @@ export function calcInvoiceTotals(
   }
 
   const subtotal = roundMoney(grossTotal);
-  const tax = roundMoney(subtotal * defaultTaxRate);
+  const tax = roundMoney(
+    lineItems.reduce((sum, item) => {
+      const net = item.quantity * item.unitPrice;
+      const rate = item.taxRate ?? defaultTaxRate;
+      return sum + net * rate;
+    }, 0)
+  );
   const total = roundMoney(subtotal + tax);
   return { subtotal, tax, total };
 }

@@ -44,6 +44,12 @@ export type PrefilledCustomer = {
   phone: string;
 };
 
+export type CheckInPrefill = PrefilledCustomer & {
+  serviceIds?: string[];
+  employeeId?: string;
+  fromAppointmentId?: string;
+};
+
 export type CustomerStats = {
   visitCount: number;
   totalPaid: number;

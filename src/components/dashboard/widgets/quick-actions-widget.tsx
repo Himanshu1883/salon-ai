@@ -148,7 +148,7 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
               <button
                 key={action.id}
                 type="button"
-                onClick={openRecordSale}
+                onClick={() => openRecordSale()}
                 className={cardClassName}
               >
                 <ActionCardContent action={action} />

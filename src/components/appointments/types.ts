@@ -1,10 +1,13 @@
 export type Appointment = {
   id: string;
+  customerId?: string;
+  serviceId?: string;
   scheduledAt: Date | string;
   status: string;
   notes: string | null;
   customer: { name: string; phone: string | null };
   service: {
+    id?: string;
     name: string;
     duration: number;
     category?: { id: string; name: string } | null;
@@ -18,6 +21,7 @@ export type Employee = {
   name: string;
   role?: string;
   specialties?: string | null;
+  serviceIds?: string[];
 };
 
 export type PrefilledCustomer = {

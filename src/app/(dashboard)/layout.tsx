@@ -10,6 +10,8 @@ import { LayoutHeaderAlerts } from "@/components/dashboard/layout-header-alerts"
 import { getSalonLayoutContext, getSalonAccessBlocked, getSalonLogoPath } from "@/lib/salon-layout-context";
 import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
+import { getCachedDuePaymentsSummary } from "@/lib/billing/stats-cache";
+import { canViewModule } from "@/lib/permissions/nav";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import { DEFAULT_ROLE_PERMISSIONS } from "@/lib/permissions/defaults";
 import { normalizeSalonPlan } from "@/lib/plans";
@@ -69,6 +71,11 @@ export default async function DashboardLayout({
     ? (DEFAULT_ROLE_PERMISSIONS.OWNER as PermissionKey[])
     : (Array.from(resolved.permissions) as PermissionKey[]);
 
+  const permissionSet = new Set(permissionKeys);
+  const duePayments = canViewModule(permissionSet, "billing", isOwner)
+    ? await getCachedDuePaymentsSummary(salonId)
+    : null;
+
   return (
     <PlanProvider plan={plan}>
       <DashboardShell
@@ -82,6 +89,7 @@ export default async function DashboardLayout({
         plan={plan}
         permissionKeys={permissionKeys}
         isOwner={resolved.isOwner}
+        duePayments={duePayments}
         headerAlerts={
           <Suspense fallback={null}>
             <LayoutHeaderAlerts salonId={salonId} />

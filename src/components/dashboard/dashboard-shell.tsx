@@ -23,6 +23,7 @@ type DashboardShellProps = {
   permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
   isOwner?: boolean;
   headerAlerts?: React.ReactNode;
+  duePayments?: { totalDue: number; invoiceCount: number } | null;
   recordSaleFormData?: RecordSaleFormData | null;
   children: React.ReactNode;
 };
@@ -52,6 +53,7 @@ function DashboardShellInner({
   permissionKeys = [],
   isOwner = false,
   headerAlerts = null,
+  duePayments = null,
   children,
 }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -121,6 +123,7 @@ function DashboardShellInner({
           plan={plan}
           permissionKeys={permissionKeys}
           isOwner={isOwner}
+          duePayments={duePayments}
           onNavigate={() => setMobileOpen(false)}
           onToggleCollapse={() => setCollapsed((c) => !c)}
         />
@@ -158,7 +161,7 @@ function DashboardShellInner({
                 size="icon"
                 className="h-11 w-11 shrink-0 rounded-2xl bg-dashboard-primary hover:bg-dashboard-primary-hover"
                 aria-label="Record sale"
-                onClick={openRecordSale}
+                onClick={() => openRecordSale()}
               >
                 <Plus className="h-5 w-5" />
               </Button>

@@ -11,12 +11,14 @@ import type {
   BillingInvoice,
   BillingSeat,
   BillingService,
+  InvoicePrefill,
 } from "@/components/billing/types";
 
 type BillingInvoiceDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   prefilledCustomer?: { name: string; phone: string };
+  invoicePrefill?: InvoicePrefill;
   isBasicPlan?: boolean;
   salonName?: string;
   gstEnabled?: boolean;
@@ -47,6 +49,7 @@ export function BillingInvoiceDialog({
   open,
   onOpenChange,
   prefilledCustomer,
+  invoicePrefill,
   isBasicPlan: isBasicPlanProp,
   salonName: salonNameProp = "Salon",
   gstEnabled: gstEnabledProp = true,
@@ -140,10 +143,19 @@ export function BillingInvoiceDialog({
           </div>
         ) : (
           <BillingInvoiceForm
+            key={invoicePrefill?.queueEntryId ?? "new-invoice"}
             services={formData.services}
             employees={formData.employees}
             seats={formData.seats}
-            prefilledCustomer={prefilledCustomer}
+            prefilledCustomer={
+              invoicePrefill?.customer
+                ? {
+                    name: invoicePrefill.customer.name,
+                    phone: invoicePrefill.customer.phone,
+                  }
+                : prefilledCustomer
+            }
+            invoicePrefill={invoicePrefill}
             isBasicPlan={resolvedBasicPlan}
             salonName={salonName}
             gstEnabled={gstEnabled}

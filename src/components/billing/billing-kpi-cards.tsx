@@ -13,6 +13,8 @@ type KpiCardProps = {
   icon: React.ReactNode;
   iconBg: string;
   delay?: number;
+  active?: boolean;
+  onClick?: () => void;
 };
 
 function KpiCard({
@@ -22,14 +24,38 @@ function KpiCard({
   icon,
   iconBg,
   delay = 0,
+  active = false,
+  onClick,
 }: KpiCardProps) {
+  const clickable = Boolean(onClick);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className="rounded-2xl border border-[#ECECEC] bg-white p-5 shadow-[0_4px_24px_rgba(28,16,61,0.05)] transition-shadow duration-150 hover:shadow-[0_8px_32px_rgba(28,16,61,0.08)]"
+      whileHover={clickable ? { y: -2, transition: { duration: 0.15 } } : undefined}
+      onClick={onClick}
+      onKeyDown={
+        clickable
+          ? (event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                onClick?.();
+              }
+            }
+          : undefined
+      }
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      className={cn(
+        "rounded-2xl border bg-white p-5 shadow-[0_4px_24px_rgba(28,16,61,0.05)] transition-shadow duration-150",
+        clickable &&
+          "cursor-pointer hover:shadow-[0_8px_32px_rgba(28,16,61,0.08)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#6C3CF0]/40",
+        active
+          ? "border-[#6C3CF0] ring-2 ring-[#6C3CF0]/20"
+          : "border-[#ECECEC]"
+      )}
     >
       <div className="flex items-start justify-between gap-3">
         <div
@@ -54,9 +80,15 @@ function KpiCard({
 
 type BillingKpiCardsProps = {
   stats: BillingStats;
+  activeStatusFilter?: string;
+  onUnpaidClick?: () => void;
 };
 
-export function BillingKpiCards({ stats }: BillingKpiCardsProps) {
+export function BillingKpiCards({
+  stats,
+  activeStatusFilter = "all",
+  onUnpaidClick,
+}: BillingKpiCardsProps) {
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       <KpiCard
@@ -82,6 +114,8 @@ export function BillingKpiCards({ stats }: BillingKpiCardsProps) {
         sublabel={stats.unpaidCount > 0 ? "Awaiting payment" : "All clear"}
         icon={<FileText className="h-5 w-5 text-amber-600" />}
         iconBg="bg-amber-50"
+        active={activeStatusFilter === "unpaid"}
+        onClick={onUnpaidClick}
       />
     </div>
   );

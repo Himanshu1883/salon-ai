@@ -24,7 +24,37 @@ export type DashboardBillingMetrics = {
   }[];
 };
 
-/** One round-trip for billing KPIs, trend, chart data, and recent sales. */
+const UNPAID_STATUSES = ["draft", "sent", "overdue", "partial"] as const;
+
+/** Collected revenue = paid invoice totals + partial invoice amounts received. */
+async function getRevenueCollectedInRange(
+  salonId: string,
+  rangeStart: Date,
+  rangeEnd: Date
+) {
+  const [paid, partial] = await Promise.all([
+    prisma.invoice.aggregate({
+      where: {
+        salonId,
+        status: "paid",
+        paidAt: { gte: rangeStart, lte: rangeEnd },
+      },
+      _sum: { total: true },
+    }),
+    prisma.invoice.aggregate({
+      where: {
+        salonId,
+        status: "partial",
+        createdAt: { gte: rangeStart, lte: rangeEnd },
+      },
+      _sum: { amountPaid: true },
+    }),
+  ]);
+
+  return (paid._sum.total ?? 0) + (partial._sum.amountPaid ?? 0);
+}
+
+/** One round-trip bundle for billing KPIs, trend, chart data, and recent sales. */
 export async function fetchDashboardBillingMetrics(
   salonId: string,
   now = new Date()
@@ -38,30 +68,25 @@ export async function fetchDashboardBillingMetrics(
   const weekStart = startOfDay(subDays(now, 6));
   const recentSalesSince = subDays(now, 7);
 
-  const [rollup, dailyRows, recentSales] = await Promise.all([
-    prisma.$queryRaw<
-      {
-        revenue_today: number | null;
-        revenue_month: number | null;
-        revenue_yesterday: number | null;
-        unpaid_count: bigint;
-      }[]
-    >`
-      SELECT
-        COALESCE(SUM(CASE
-          WHEN status = 'paid' AND "paidAt" >= ${todayStart} AND "paidAt" <= ${todayEnd}
-          THEN total END), 0)::float AS revenue_today,
-        COALESCE(SUM(CASE
-          WHEN status = 'paid' AND "paidAt" >= ${monthStart} AND "paidAt" <= ${monthEnd}
-          THEN total END), 0)::float AS revenue_month,
-        COALESCE(SUM(CASE
-          WHEN status = 'paid' AND "paidAt" >= ${yesterdayStart} AND "paidAt" <= ${yesterdayEnd}
-          THEN total END), 0)::float AS revenue_yesterday,
-        COUNT(CASE
-          WHEN status IN ('draft', 'sent', 'overdue', 'partial') THEN 1 END)::bigint AS unpaid_count
-      FROM "Invoice"
-      WHERE "salonId" = ${salonId}
-    `,
+  const [
+    revenueToday,
+    revenueMonth,
+    revenueYesterday,
+    unpaidCount,
+    paidDailyRows,
+    partialDailyRows,
+    recentPaid,
+    recentPartial,
+  ] = await Promise.all([
+    getRevenueCollectedInRange(salonId, todayStart, todayEnd),
+    getRevenueCollectedInRange(salonId, monthStart, monthEnd),
+    getRevenueCollectedInRange(salonId, yesterdayStart, yesterdayEnd),
+    prisma.invoice.count({
+      where: {
+        salonId,
+        status: { in: [...UNPAID_STATUSES] },
+      },
+    }),
     prisma.$queryRaw<{ day: Date; revenue: number | null }[]>`
       SELECT
         date_trunc('day', "paidAt")::date AS day,
@@ -69,8 +94,22 @@ export async function fetchDashboardBillingMetrics(
       FROM "Invoice"
       WHERE "salonId" = ${salonId}
         AND status = 'paid'
+        AND "paidAt" IS NOT NULL
         AND "paidAt" >= ${weekStart}
         AND "paidAt" <= ${todayEnd}
+      GROUP BY 1
+      ORDER BY 1
+    `,
+    prisma.$queryRaw<{ day: Date; revenue: number | null }[]>`
+      SELECT
+        date_trunc('day', "createdAt")::date AS day,
+        COALESCE(SUM("amountPaid"), 0)::float AS revenue
+      FROM "Invoice"
+      WHERE "salonId" = ${salonId}
+        AND status = 'partial'
+        AND "amountPaid" > 0
+        AND "createdAt" >= ${weekStart}
+        AND "createdAt" <= ${todayEnd}
       GROUP BY 1
       ORDER BY 1
     `,
@@ -89,13 +128,23 @@ export async function fetchDashboardBillingMetrics(
         paidAt: true,
       },
     }),
+    prisma.invoice.findMany({
+      where: {
+        salonId,
+        status: "partial",
+        amountPaid: { gt: 0 },
+        createdAt: { gte: recentSalesSince },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        customerName: true,
+        amountPaid: true,
+        createdAt: true,
+      },
+    }),
   ]);
-
-  const row = rollup[0];
-  const revenueToday = row?.revenue_today ?? 0;
-  const revenueMonth = row?.revenue_month ?? 0;
-  const revenueYesterday = row?.revenue_yesterday ?? 0;
-  const unpaidCount = Number(row?.unpaid_count ?? 0);
 
   const revenueTrend =
     revenueYesterday > 0
@@ -104,12 +153,11 @@ export async function fetchDashboardBillingMetrics(
         ? 100
         : 0;
 
-  const dailyMap = new Map(
-    dailyRows.map((r) => [
-      format(startOfDay(r.day), "yyyy-MM-dd"),
-      r.revenue ?? 0,
-    ])
-  );
+  const dailyMap = new Map<string, number>();
+  for (const row of [...paidDailyRows, ...partialDailyRows]) {
+    const key = format(startOfDay(row.day), "yyyy-MM-dd");
+    dailyMap.set(key, (dailyMap.get(key) ?? 0) + (row.revenue ?? 0));
+  }
 
   const revenueByDay: RevenueDay[] = [];
   for (let i = 6; i >= 0; i--) {
@@ -122,6 +170,25 @@ export async function fetchDashboardBillingMetrics(
     });
   }
 
+  const recentSales = [
+    ...recentPaid
+      .filter((sale) => sale.paidAt)
+      .map((sale) => ({
+        id: sale.id,
+        customerName: sale.customerName,
+        total: sale.total,
+        paidAt: sale.paidAt!,
+      })),
+    ...recentPartial.map((sale) => ({
+      id: sale.id,
+      customerName: sale.customerName,
+      total: sale.amountPaid,
+      paidAt: sale.createdAt,
+    })),
+  ]
+    .sort((a, b) => b.paidAt.getTime() - a.paidAt.getTime())
+    .slice(0, 5);
+
   return {
     revenueToday,
     revenueMonth,
@@ -129,13 +196,6 @@ export async function fetchDashboardBillingMetrics(
     revenueYesterday,
     revenueTrend,
     revenueByDay,
-    recentSales: recentSales
-      .filter((s) => s.paidAt)
-      .map((s) => ({
-        id: s.id,
-        customerName: s.customerName,
-        total: s.total,
-        paidAt: s.paidAt!,
-      })),
+    recentSales,
   };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getBillingSubscriptionTabData } from "@/actions/subscription";
 import { BillingInvoiceDialog } from "@/components/billing/billing-invoice-dialog";
@@ -19,6 +19,7 @@ import type {
   BillingStats,
 } from "@/components/billing/types";
 import { BillingStatsProvider } from "./billing-stats-context";
+import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
 
 export function BillingClient({
   stats: initialStats,
@@ -134,6 +135,7 @@ export function BillingClient({
         setStats((stats) => ({ ...stats, unpaidCount: stats.unpaidCount + 1 }));
       }
       listPrependRef.current?.(invoice);
+      markDashboardStale();
       router.refresh();
     }
 
@@ -142,16 +144,87 @@ export function BillingClient({
     }
   }
 
-  function applyFilters() {
-    const params = new URLSearchParams();
-    if (status && status !== "all") params.set("status", status);
-    if (dateFrom) params.set("dateFrom", dateFrom);
-    if (dateTo) params.set("dateTo", dateTo);
-    if (employeeId && employeeId !== "all") params.set("employeeId", employeeId);
-    if (activeTab === "subscription") params.set("tab", "subscription");
-    params.delete("page");
-    router.push(params.size > 0 ? `/billing?${params.toString()}` : "/billing");
-  }
+  const pushFilters = useCallback(
+    (next: BillingFilters) => {
+      const params = new URLSearchParams();
+      if (next.status && next.status !== "all") params.set("status", next.status);
+      if (next.dateFrom) params.set("dateFrom", next.dateFrom);
+      if (next.dateTo) params.set("dateTo", next.dateTo);
+      if (next.employeeId && next.employeeId !== "all") {
+        params.set("employeeId", next.employeeId);
+      }
+      if (activeTab === "subscription") params.set("tab", "subscription");
+      router.replace(
+        params.size > 0 ? `/billing?${params.toString()}` : "/billing",
+        { scroll: false }
+      );
+    },
+    [activeTab, router]
+  );
+
+  const handleStatusChange = useCallback(
+    (value: string) => {
+      setStatus(value);
+      pushFilters({
+        status: value,
+        dateFrom,
+        dateTo,
+        employeeId,
+      });
+    },
+    [dateFrom, dateTo, employeeId, pushFilters]
+  );
+
+  const handleDateFromChange = useCallback(
+    (value: string) => {
+      setDateFrom(value);
+      pushFilters({
+        status,
+        dateFrom: value,
+        dateTo,
+        employeeId,
+      });
+    },
+    [status, dateTo, employeeId, pushFilters]
+  );
+
+  const handleDateToChange = useCallback(
+    (value: string) => {
+      setDateTo(value);
+      pushFilters({
+        status,
+        dateFrom,
+        dateTo: value,
+        employeeId,
+      });
+    },
+    [status, dateFrom, employeeId, pushFilters]
+  );
+
+  const handleEmployeeIdChange = useCallback(
+    (value: string) => {
+      setEmployeeId(value);
+      pushFilters({
+        status,
+        dateFrom,
+        dateTo,
+        employeeId: value,
+      });
+    },
+    [status, dateFrom, dateTo, pushFilters]
+  );
+
+  const handleUnpaidCardClick = useCallback(() => {
+    setStatus("unpaid");
+    setDateFrom("");
+    setDateTo("");
+    pushFilters({
+      status: "unpaid",
+      dateFrom: "",
+      dateTo: "",
+      employeeId,
+    });
+  }, [employeeId, pushFilters]);
 
   function resetFilters() {
     setStatus("all");
@@ -159,7 +232,7 @@ export function BillingClient({
     setDateTo("");
     setEmployeeId("all");
     const params = activeTab === "subscription" ? "?tab=subscription" : "";
-    router.push(`/billing${params}`);
+    router.replace(`/billing${params}`, { scroll: false });
   }
 
   return (
@@ -191,7 +264,11 @@ export function BillingClient({
           </TabsList>
 
           <TabsContent value="customers" className="mt-0 space-y-6">
-            <BillingKpiCards stats={stats} />
+            <BillingKpiCards
+              stats={stats}
+              activeStatusFilter={status}
+              onUnpaidClick={handleUnpaidCardClick}
+            />
 
             <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
               <div className="flex flex-col gap-3 border-b border-[#ECECEC] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
@@ -210,11 +287,10 @@ export function BillingClient({
                   employeeId={employeeId}
                   employees={employees}
                   isBasicPlan={isBasicPlan}
-                  onStatusChange={setStatus}
-                  onDateFromChange={setDateFrom}
-                  onDateToChange={setDateTo}
-                  onEmployeeIdChange={setEmployeeId}
-                  onApply={applyFilters}
+                  onStatusChange={handleStatusChange}
+                  onDateFromChange={handleDateFromChange}
+                  onDateToChange={handleDateToChange}
+                  onEmployeeIdChange={handleEmployeeIdChange}
                   onReset={resetFilters}
                 />
               </div>

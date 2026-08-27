@@ -117,7 +117,7 @@ export function DashboardQuickActions() {
                   <button
                     key={action.label}
                     type="button"
-                    onClick={openRecordSale}
+                    onClick={() => openRecordSale()}
                     className={cardClassName}
                   >
                     {cardContent}

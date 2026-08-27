@@ -15,11 +15,11 @@ import { QueueTabs } from "@/components/queue/queue-tabs";
 import { QueueTable } from "@/components/queue/queue-table";
 import { QueueMobileCards } from "@/components/queue/queue-mobile-cards";
 import { QueueAssignDialog } from "@/components/queue/queue-assign-dialog";
-import { QueueInvoiceDialog } from "@/components/queue/queue-invoice-dialog";
 import { QueueDetailsDrawer } from "@/components/queue/queue-details-drawer";
 import { QueueSidebar } from "@/components/queue/queue-sidebar";
 import { QueueRecentlyCompleted } from "@/components/queue/queue-recently-completed";
 import { QueueAiInsights, QueueTipBanner } from "@/components/queue/queue-ai-insights";
+import { useRecordSale } from "@/components/dashboard/record-sale-provider";
 import type {
   AppointmentSnapshot,
   CompletedEntry,
@@ -35,10 +35,10 @@ import {
   DEFAULT_FILTERS,
   filterActiveEntries,
   getTabEntries,
+  queueEntryToInvoicePrefill,
   type QueueFilters,
 } from "@/components/queue/queue-utils";
 import { useLiveWaitTime } from "@/components/queue/use-live-wait-time";
-import { usePlan } from "@/components/plans/plan-provider";
 
 export type QueueClientProps = {
   entries: QueueEntry[];
@@ -62,7 +62,7 @@ export function QueueClient({
   revenueToday,
 }: QueueClientProps) {
   const now = useLiveWaitTime();
-  const { isBasic } = usePlan();
+  const { openRecordSale } = useRecordSale();
 
   const [entries, setEntries] = useState(initialEntries);
   const [completedEntries, setCompletedEntries] = useState(initialCompletedEntries);
@@ -83,7 +83,6 @@ export function QueueClient({
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-  const [invoiceEntry, setInvoiceEntry] = useState<QueueInvoiceEntry | null>(null);
 
   const syncFromServer = useCallback(async () => {
     setRefreshing(true);
@@ -235,22 +234,21 @@ export function QueueClient({
 
   function openInvoiceDialog(entry: QueueInvoiceEntry) {
     if (entry.invoices.length > 0) return;
-    setInvoiceEntry(entry);
-  }
-
-  function handleInvoiceSuccess(invoiceId: string) {
-    if (!invoiceEntry) return;
-    setCompletedEntries((prev) =>
-      prev.map((e) =>
-        e.id === invoiceEntry.id
-          ? {
-              ...e,
-              invoices: [{ id: invoiceId, status: "sent" }],
-            }
-          : e
-      )
-    );
-    setInvoiceEntry(null);
+    openRecordSale({
+      prefill: queueEntryToInvoicePrefill(entry),
+      onSuccess: (invoice) => {
+        setCompletedEntries((prev) =>
+          prev.map((e) =>
+            e.id === entry.id
+              ? {
+                  ...e,
+                  invoices: [{ id: invoice.id, status: invoice.status }],
+                }
+              : e
+          )
+        );
+      },
+    });
   }
 
   function openAssign(entry: QueueEntry) {
@@ -376,14 +374,6 @@ export function QueueClient({
         onComplete={(id) => handleAction("complete", id)}
         onCancel={(id) => handleAction("cancel", id)}
         onCreateInvoice={openInvoiceDialog}
-      />
-
-      <QueueInvoiceDialog
-        entry={invoiceEntry}
-        services={services}
-        isBasicPlan={isBasic}
-        onClose={() => setInvoiceEntry(null)}
-        onSuccess={handleInvoiceSuccess}
       />
     </div>
   );

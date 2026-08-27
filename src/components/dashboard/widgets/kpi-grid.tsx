@@ -167,7 +167,7 @@ export function KpiGrid({
         label="Pending Payments"
         value={String(unpaidInvoices)}
         sublabel="Awaiting payment"
-        href="/billing"
+        href="/billing?status=unpaid"
         icon={<FileText className="h-5 w-5 text-white" />}
         iconGradient="from-emerald-500 to-teal-500 text-white"
       />

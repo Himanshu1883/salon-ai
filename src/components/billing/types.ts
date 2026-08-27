@@ -46,6 +46,27 @@ export type BillingProduct = {
 export type BillingEmployee = { id: string; name: string };
 export type BillingSeat = { id: string; number: number };
 
+export type InvoicePrefillLineItem = {
+  serviceId: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  employeeId?: string;
+};
+
+export type InvoicePrefill = {
+  customer: { id?: string; name: string; phone: string };
+  employeeId?: string;
+  seatId?: string;
+  queueEntryId?: string;
+  lineItems?: InvoicePrefillLineItem[];
+};
+
+export type OpenRecordSaleOptions = {
+  prefill?: InvoicePrefill;
+  onSuccess?: (invoice: BillingInvoice) => void;
+};
+
 export type BillingStats = {
   revenueToday: number;
   revenueMonth: number;

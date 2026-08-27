@@ -18,6 +18,7 @@ import {
 import { ArrowLeft, Calendar, ScanFace, BarChart3 } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { getRoleLabel } from "@/lib/team";
+import { EmployeeRoleSelect } from "@/components/team/employee-role-select";
 import { MemberAddressSection } from "./member-address-section";
 import { MemberDocumentsSection } from "./member-documents-section";
 import { EmployeeOtherDocument } from "@/lib/employee";
@@ -216,17 +217,12 @@ export function MemberDetailClient({
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
             <input type="hidden" name="role" value={role} />
-            <Select value={role} onValueChange={setRole} disabled={!canUpdate}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="owner">Workspace owner</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="stylist">Stylist</SelectItem>
-                <SelectItem value="receptionist">Receptionist</SelectItem>
-              </SelectContent>
-            </Select>
+            <EmployeeRoleSelect
+              value={role}
+              onChange={setRole}
+              disabled={!canUpdate}
+              customInputId="member-custom-role"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="phone">Phone</Label>

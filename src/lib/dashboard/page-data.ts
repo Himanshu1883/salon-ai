@@ -265,12 +265,12 @@ export async function fetchDashboardPageData(salonId: string) {
 }
 
 export function getCachedDashboardPageData(salonId: string) {
-  return cachedRead(`salon-cache:dashboard-page:${salonId}`, 30, () =>
+  return cachedRead(`salon-cache:dashboard-page:${salonId}`, 15, () =>
     unstable_cache(
       () => fetchDashboardPageData(salonId),
       ["dashboard-page", salonId],
       {
-        revalidate: 30,
+        revalidate: 15,
         tags: [
           salonCacheTag(salonId, "dashboard-kpis"),
           salonCacheTag(salonId, "dashboard-widgets"),

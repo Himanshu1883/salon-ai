@@ -15,7 +15,10 @@ import type {
   BillingInvoice,
   BillingSeat,
   BillingService,
+  InvoicePrefill,
+  OpenRecordSaleOptions,
 } from "@/components/billing/types";
+import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
 
 type BillingFormData = {
   services: BillingService[];
@@ -31,7 +34,7 @@ type BillingFormData = {
 };
 
 type RecordSaleContextValue = {
-  openRecordSale: () => void;
+  openRecordSale: (options?: OpenRecordSaleOptions) => void;
 };
 
 const RecordSaleContext = createContext<RecordSaleContextValue | null>(null);
@@ -57,6 +60,12 @@ export function RecordSaleProvider({
   const [formData, setFormData] = useState<BillingFormData | null>(
     initialFormData
   );
+  const [invoicePrefill, setInvoicePrefill] = useState<InvoicePrefill | null>(
+    null
+  );
+  const successCallbackRef = useRef<
+    ((invoice: BillingInvoice) => void) | null
+  >(null);
   const prefetchStarted = useRef(Boolean(initialFormData));
 
   const loadFormData = useCallback(async () => {
@@ -82,24 +91,42 @@ export function RecordSaleProvider({
     }
   }, [initialFormData]);
 
-  const openRecordSale = useCallback(() => {
-    setOpen(true);
-    setError("");
-    if (!formData) {
-      void loadFormData();
-    }
-  }, [formData, loadFormData]);
+  const openRecordSale = useCallback(
+    (options?: OpenRecordSaleOptions) => {
+      setInvoicePrefill(options?.prefill ?? null);
+      successCallbackRef.current = options?.onSuccess ?? null;
+      setOpen(true);
+      setError("");
+      if (!formData) {
+        void loadFormData();
+      }
+    },
+    [formData, loadFormData]
+  );
 
-  function handleSuccess(_invoice: BillingInvoice) {
+  function handleSuccess(invoice: BillingInvoice) {
+    markDashboardStale();
+    successCallbackRef.current?.(invoice);
+    successCallbackRef.current = null;
+    setInvoicePrefill(null);
     setOpen(false);
+  }
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      setInvoicePrefill(null);
+      successCallbackRef.current = null;
+    }
   }
 
   return (
     <RecordSaleContext.Provider value={{ openRecordSale }}>
       {children}
       <BillingInvoiceDialog
+        key={invoicePrefill?.queueEntryId ?? "record-sale"}
         open={open && Boolean(formData) && !loading}
-        onOpenChange={setOpen}
+        onOpenChange={handleOpenChange}
         services={formData?.services ?? []}
         employees={formData?.employees ?? []}
         seats={formData?.seats ?? []}
@@ -107,6 +134,7 @@ export function RecordSaleProvider({
         salonName={formData?.salonName}
         gstEnabled={formData?.gstEnabled ?? true}
         whatsappSettings={formData?.whatsappSettings}
+        invoicePrefill={invoicePrefill ?? undefined}
         onSuccess={handleSuccess}
       />
       {(loading || error) && open && !formData ? (
@@ -114,7 +142,7 @@ export function RecordSaleProvider({
           role="status"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
           onClick={() => {
-            if (!loading) setOpen(false);
+            if (!loading) handleOpenChange(false);
           }}
         >
           <div
@@ -129,7 +157,7 @@ export function RecordSaleProvider({
                 <button
                   type="button"
                   className="mt-3 text-sm font-medium text-dashboard-primary"
-                  onClick={() => setOpen(false)}
+                  onClick={() => handleOpenChange(false)}
                 >
                   Close
                 </button>

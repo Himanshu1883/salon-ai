@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { DashboardKpiSection } from "@/components/dashboard/dashboard-kpi-section";
 import { DashboardWidgetsSection } from "@/components/dashboard/dashboard-widgets-section";
+import { DashboardStaleRefresh } from "@/components/dashboard/dashboard-stale-refresh";
 import {
   DashboardLoadingSkeleton,
   ChartLoadingSkeleton,
@@ -43,6 +44,7 @@ function WidgetsSkeleton() {
 export default function DashboardPage() {
   return (
     <div className="space-y-4 xl:space-y-6">
+      <DashboardStaleRefresh />
       <Suspense fallback={null}>
         <WelcomeBanner />
       </Suspense>

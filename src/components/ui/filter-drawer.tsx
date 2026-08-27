@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 type FilterDrawerProps = {
   /** Form or filter controls rendered inside the drawer / inline panel */
   children: React.ReactNode;
-  onApply: () => void;
+  onApply?: () => void;
   onReset?: () => void;
   /** Label for the mobile trigger button */
   triggerLabel?: string;
@@ -41,7 +41,7 @@ export function FilterDrawer({
   }, [open]);
 
   function handleApply() {
-    onApply();
+    onApply?.();
     setOpen(false);
   }
 
@@ -109,13 +109,23 @@ export function FilterDrawer({
                     Reset
                   </Button>
                 )}
-                <Button
-                  type="button"
-                  className="h-12 min-h-[48px] flex-1 rounded-xl bg-[#6C3CF0] hover:bg-[#5B2FE0]"
-                  onClick={handleApply}
-                >
-                  Apply filters
-                </Button>
+                {onApply ? (
+                  <Button
+                    type="button"
+                    className="h-12 min-h-[48px] flex-1 rounded-xl bg-[#6C3CF0] hover:bg-[#5B2FE0]"
+                    onClick={handleApply}
+                  >
+                    Apply filters
+                  </Button>
+                ) : (
+                  <Button
+                    type="button"
+                    className="h-12 min-h-[48px] flex-1 rounded-xl bg-[#6C3CF0] hover:bg-[#5B2FE0]"
+                    onClick={() => setOpen(false)}
+                  >
+                    Done
+                  </Button>
+                )}
               </div>
             </div>
           </>

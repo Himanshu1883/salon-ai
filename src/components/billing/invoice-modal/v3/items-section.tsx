@@ -87,10 +87,10 @@ export function ItemsSection({
           <span>Product</span>
           {showStaffColumn ? <span>Staff</span> : null}
           <span>Qty</span>
-          <span>Price</span>
+          <span>Service charge</span>
           <span>Discount</span>
           {gstEnabled ? <span>GST</span> : null}
-          <span className="text-right">Amount</span>
+          <span className="text-right">Total</span>
           <span aria-hidden />
         </div>
       </div>

@@ -53,7 +53,8 @@ import {
   BarChart3,
 } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
-import { getRoleLabel } from "@/lib/team";
+import { getRoleLabel, isPresetEmployeeRole } from "@/lib/team";
+import { EmployeeRoleSelect } from "@/components/team/employee-role-select";
 import { ResponsiveTableWrapper } from "@/components/ui/responsive-table-wrapper";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
 import type { EmployeeLoginInfo } from "@/lib/employee-login-link";
@@ -150,17 +151,7 @@ function MemberForm({
         <div className="space-y-2">
           <Label htmlFor="role">Role</Label>
           <input type="hidden" name="role" value={role} />
-          <Select value={role} onValueChange={setRole}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="owner">Workspace owner</SelectItem>
-              <SelectItem value="manager">Manager</SelectItem>
-              <SelectItem value="stylist">Stylist</SelectItem>
-              <SelectItem value="receptionist">Receptionist</SelectItem>
-            </SelectContent>
-          </Select>
+          <EmployeeRoleSelect value={role} onChange={setRole} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="phone">Phone</Label>
@@ -292,6 +283,33 @@ export function TeamMembersClient({
     }
     return list;
   }, [members, search, roleFilter, statusFilter]);
+
+  const customRoleFilterOptions = useMemo(() => {
+    return [
+      ...new Set(
+        members
+          .map((member) => member.role)
+          .filter((role) => !isPresetEmployeeRole(role))
+      ),
+    ].sort((a, b) => getRoleLabel(a).localeCompare(getRoleLabel(b)));
+  }, [members]);
+
+  function renderRoleFilterOptions() {
+    return (
+      <>
+        <SelectItem value="all">All roles</SelectItem>
+        <SelectItem value="owner">Workspace owner</SelectItem>
+        <SelectItem value="manager">Manager</SelectItem>
+        <SelectItem value="stylist">Stylist</SelectItem>
+        <SelectItem value="receptionist">Receptionist</SelectItem>
+        {customRoleFilterOptions.map((role) => (
+          <SelectItem key={role} value={role}>
+            {getRoleLabel(role)}
+          </SelectItem>
+        ))}
+      </>
+    );
+  }
 
   function handleSuccess(member: TeamMember) {
     setOpen(false);
@@ -576,13 +594,7 @@ export function TeamMembersClient({
                 <SelectTrigger className="h-11 w-full rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All roles</SelectItem>
-                  <SelectItem value="owner">Workspace owner</SelectItem>
-                  <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="stylist">Stylist</SelectItem>
-                  <SelectItem value="receptionist">Receptionist</SelectItem>
-                </SelectContent>
+                <SelectContent>{renderRoleFilterOptions()}</SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -611,13 +623,7 @@ export function TeamMembersClient({
               <SelectTrigger className="w-[160px]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All roles</SelectItem>
-                <SelectItem value="owner">Workspace owner</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="stylist">Stylist</SelectItem>
-                <SelectItem value="receptionist">Receptionist</SelectItem>
-              </SelectContent>
+              <SelectContent>{renderRoleFilterOptions()}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1">

@@ -12,8 +12,10 @@ import {
   LogOut,
   HeadphonesIcon,
   Shield,
+  Wallet,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/currency";
 import { signOut } from "next-auth/react";
 import { signOutCallbackUrl } from "@/lib/salon-paths";
 import {
@@ -35,6 +37,89 @@ import type { PermissionKey } from "@/lib/permissions/catalog";
 import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 
 type NavLink = NavItem;
+
+type DuePaymentsSummary = {
+  totalDue: number;
+  invoiceCount: number;
+};
+
+function SidebarDuePayments({
+  duePayments,
+  collapsed,
+  onNavigate,
+}: {
+  duePayments: DuePaymentsSummary;
+  collapsed?: boolean;
+  onNavigate?: () => void;
+}) {
+  const hasDue = duePayments.invoiceCount > 0 && duePayments.totalDue > 0;
+
+  if (collapsed) {
+    return (
+      <Link
+        href="/billing?status=unpaid"
+        prefetch={false}
+        onClick={onNavigate}
+        title={
+          hasDue
+            ? `Due payments: ${formatCurrency(duePayments.totalDue)}`
+            : "Due payments: all clear"
+        }
+        className={cn(
+          "mx-auto flex h-10 w-10 items-center justify-center rounded-2xl transition-colors",
+          hasDue
+            ? "bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/30 hover:bg-amber-500/30"
+            : "bg-white/5 text-violet-300/70 hover:bg-white/10 hover:text-white"
+        )}
+      >
+        <Wallet className="h-4 w-4" />
+      </Link>
+    );
+  }
+
+  return (
+    <Link
+      href="/billing?status=unpaid"
+      prefetch={false}
+      onClick={onNavigate}
+      className={cn(
+        "block rounded-2xl border px-3 py-3 transition-colors",
+        hasDue
+          ? "border-amber-400/25 bg-gradient-to-br from-amber-500/15 to-orange-500/10 hover:from-amber-500/25 hover:to-orange-500/15"
+          : "border-white/10 bg-white/5 hover:bg-white/10"
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-amber-200/80">
+            Due payments
+          </p>
+          <p
+            className={cn(
+              "mt-1 truncate text-lg font-bold tabular-nums",
+              hasDue ? "text-white" : "text-violet-100"
+            )}
+          >
+            {formatCurrency(duePayments.totalDue)}
+          </p>
+          <p className="mt-0.5 text-xs text-violet-200/70">
+            {hasDue
+              ? `${duePayments.invoiceCount} unpaid invoice${duePayments.invoiceCount !== 1 ? "s" : ""}`
+              : "All payments collected"}
+          </p>
+        </div>
+        <div
+          className={cn(
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl",
+            hasDue ? "bg-amber-500/20 text-amber-100" : "bg-white/10 text-violet-200"
+          )}
+        >
+          <Wallet className="h-4 w-4" />
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 function isActive(pathname: string, href: string, label: string) {
   if (href === "/dashboard") return pathname === "/dashboard";
@@ -98,11 +183,13 @@ function NavLinkItem({
   pathname,
   collapsed,
   onNavigate,
+  badge,
 }: {
   item: NavLink;
   pathname: string;
   collapsed?: boolean;
   onNavigate?: () => void;
+  badge?: string;
 }) {
   const Icon = item.icon;
   const active = isActive(pathname, item.href, item.label);
@@ -127,7 +214,16 @@ function NavLinkItem({
           active ? "text-violet-100" : "text-violet-300/80 group-hover:text-violet-100"
         )}
       />
-      {!collapsed && item.label}
+      {!collapsed && (
+        <span className="flex min-w-0 flex-1 items-center justify-between gap-2">
+          <span className="truncate">{item.label}</span>
+          {badge ? (
+            <span className="shrink-0 rounded-full bg-amber-500/25 px-2 py-0.5 text-[10px] font-semibold text-amber-100 ring-1 ring-amber-400/30">
+              {badge}
+            </span>
+          ) : null}
+        </span>
+      )}
     </Link>
   );
 }
@@ -241,6 +337,7 @@ export function Sidebar({
   plan = "ENTERPRISE",
   permissionKeys = [],
   isOwner = false,
+  duePayments = null,
   onNavigate,
   onToggleCollapse,
 }: {
@@ -255,11 +352,17 @@ export function Sidebar({
   plan?: SalonPlan;
   permissionKeys?: PermissionKey[];
   isOwner?: boolean;
+  duePayments?: DuePaymentsSummary | null;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
   const permissionSet = new Set(permissionKeys);
+  const canViewBilling = canViewModule(permissionSet, "billing", isOwner);
+  const duePaymentsBadge =
+    duePayments && duePayments.invoiceCount > 0
+      ? String(duePayments.invoiceCount)
+      : undefined;
 
   const planNavItems = getSidebarItems(plan);
   const visibleNavItems: NavLink[] = accessBlocked
@@ -324,6 +427,16 @@ export function Sidebar({
         </div>
       )}
 
+      {canViewBilling && duePayments && !accessBlocked && (
+        <div className={cn("border-b border-white/10 px-3 py-3", collapsed && "px-2")}>
+          <SidebarDuePayments
+            duePayments={duePayments}
+            collapsed={collapsed}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
+
       <nav className="scrollbar-dark flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {visibleNavItems.map((item) => (
           <NavLinkItem
@@ -332,6 +445,7 @@ export function Sidebar({
             pathname={pathname}
             collapsed={collapsed}
             onNavigate={onNavigate}
+            badge={item.label === "Billing" ? duePaymentsBadge : undefined}
           />
         ))}
         {canManageRoles && !accessBlocked && (

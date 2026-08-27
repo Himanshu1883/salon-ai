@@ -9,7 +9,8 @@ import {
   invoiceSchemaBasic,
   markPaidSchema,
 } from "@/lib/validations";
-import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { revalidatePath } from "next/cache";
+import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { getCachedBillingStats } from "@/lib/billing/stats-cache";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
@@ -31,10 +32,10 @@ import {
 } from "@/lib/billing/calc-invoice-totals";
 
 const TAX_RATE = 0.08;
-const GST_INCLUDED = true;
+const GST_INCLUDED = false;
 
 function invalidateBillingCache(salonId: string) {
-  scheduleSalonCacheRevalidation(
+  revalidateSalonCache(
     salonId,
     "billing",
     "customers",
@@ -44,6 +45,12 @@ function invalidateBillingCache(salonId: string) {
     "queue",
     "staff-analytics"
   );
+  revalidatePath("/dashboard");
+  revalidatePath("/billing");
+  revalidatePath("/reports");
+  revalidatePath("/sales/daily");
+  revalidatePath("/billing", "layout");
+  revalidatePath("/dashboard", "layout");
 }
 
 async function deductProductLineItems(
@@ -239,6 +246,41 @@ export async function getBillingStatsForSalon(salonId: string) {
   };
 }
 
+export type DuePaymentsSummary = {
+  totalDue: number;
+  invoiceCount: number;
+};
+
+export async function getDuePaymentsSummaryForSalon(
+  salonId: string
+): Promise<DuePaymentsSummary> {
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      salonId,
+      status: { in: ["draft", "sent", "overdue", "partial"] },
+    },
+    select: {
+      total: true,
+      amountPaid: true,
+    },
+  });
+
+  let totalDue = 0;
+  let invoiceCount = 0;
+
+  for (const invoice of invoices) {
+    const balance = getInvoiceBalanceDue(invoice);
+    if (balance <= 0.009) continue;
+    totalDue += balance;
+    invoiceCount += 1;
+  }
+
+  return {
+    totalDue: Math.round(totalDue * 100) / 100,
+    invoiceCount,
+  };
+}
+
 export async function getBillingStats() {
   const session = await requireSession();
   return getCachedBillingStats(session.user.salonId!);
@@ -423,7 +465,9 @@ function buildInvoiceListWhere(
 ) {
   const where: Record<string, unknown> = { salonId };
 
-  if (filters?.status && filters.status !== "all") {
+  if (filters?.status === "unpaid") {
+    where.status = { in: ["draft", "sent", "overdue", "partial"] };
+  } else if (filters?.status && filters.status !== "all") {
     where.status = filters.status;
   }
 
@@ -443,7 +487,7 @@ function buildInvoiceListWhere(
         new Date(filters.dateTo)
       );
     }
-  } else {
+  } else if (filters?.status !== "unpaid") {
     where.createdAt = { gte: subDays(new Date(), 90) };
   }
 

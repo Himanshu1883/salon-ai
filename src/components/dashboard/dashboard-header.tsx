@@ -225,7 +225,7 @@ export function DashboardHeader({
                         <Link href="/check-in">Walk-in check-in</Link>
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onSelect={openRecordSale}>
+                    <DropdownMenuItem onSelect={() => openRecordSale()}>
                       <Receipt className="h-4 w-4" />
                       Record sale
                     </DropdownMenuItem>

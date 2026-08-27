@@ -65,9 +65,14 @@ export function AppointmentsHeader({
               New Appointment
             </Button>
           </DialogTrigger>
-          <DialogContent className="rounded-[20px] border-0 shadow-2xl">
-            <DialogHeader>
-              <DialogTitle>Schedule appointment</DialogTitle>
+          <DialogContent className="!flex max-h-[min(92vh,820px)] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-[24px] border-0 p-0 shadow-2xl shadow-violet-500/10">
+            <DialogHeader className="shrink-0 space-y-1 border-b border-violet-100/80 bg-gradient-to-r from-violet-50/90 via-white to-purple-50/50 px-6 pb-4 pt-6 text-left">
+              <DialogTitle className="text-xl font-bold tracking-tight text-[#1C103D]">
+                Schedule appointment
+              </DialogTitle>
+              <p className="text-sm text-[#6B7280]">
+                Book one or more services for your client
+              </p>
             </DialogHeader>
             <AppointmentForm
               services={services}

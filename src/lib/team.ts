@@ -7,15 +7,39 @@ import {
   isSameDay,
 } from "date-fns";
 
-export const EMPLOYEE_ROLE_LABELS: Record<string, string> = {
+export const PRESET_EMPLOYEE_ROLES = [
+  "owner",
+  "manager",
+  "stylist",
+  "receptionist",
+] as const;
+
+export type PresetEmployeeRole = (typeof PRESET_EMPLOYEE_ROLES)[number];
+
+export const CUSTOM_EMPLOYEE_ROLE_SELECT_VALUE = "__custom__";
+
+export const EMPLOYEE_ROLE_LABELS: Record<PresetEmployeeRole, string> = {
   owner: "Workspace owner",
   manager: "Manager",
   stylist: "Stylist",
   receptionist: "Receptionist",
 };
 
+export function isPresetEmployeeRole(role: string): role is PresetEmployeeRole {
+  return (PRESET_EMPLOYEE_ROLES as readonly string[]).includes(role);
+}
+
 export function getRoleLabel(role: string): string {
-  return EMPLOYEE_ROLE_LABELS[role] ?? role.charAt(0).toUpperCase() + role.slice(1);
+  if (isPresetEmployeeRole(role)) {
+    return EMPLOYEE_ROLE_LABELS[role];
+  }
+  if (/^[a-z][a-z0-9_-]*$/.test(role)) {
+    return role
+      .split(/[_-]+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+  return role;
 }
 
 export function parseTimeToMinutes(time: string): number {

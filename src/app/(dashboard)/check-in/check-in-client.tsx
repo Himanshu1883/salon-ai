@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2,
@@ -24,6 +24,7 @@ import type {
   CheckInService,
   CompletedEntryItem,
   PrefilledCustomer,
+  CheckInPrefill,
   QueueEntryItem,
   RecentCustomerItem,
 } from "@/components/check-in/types";
@@ -46,9 +47,21 @@ export function CheckInClient({
   employees: CheckInEmployee[];
   recentCustomers: RecentCustomerItem[];
   billingStats: BillingStatsSnapshot;
-  prefilledCustomer?: PrefilledCustomer;
+  prefilledCustomer?: CheckInPrefill;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const validPrefillServiceIds = useMemo(
+    () =>
+      (prefilledCustomer?.serviceIds ?? []).filter((id) =>
+        services.some((service) => service.id === id)
+      ),
+    [prefilledCustomer?.serviceIds, services]
+  );
+  const prefillEmployeeId =
+    prefilledCustomer?.employeeId &&
+    employees.some((employee) => employee.id === prefilledCustomer.employeeId)
+      ? prefilledCustomer.employeeId
+      : "";
   const [queueEntries, setQueueEntries] = useState(queueEntriesProp);
   const [completedEntries, setCompletedEntries] = useState(completedEntriesProp);
   const [localEstimatedWait, setLocalEstimatedWait] = useState(estimatedWait);
@@ -59,9 +72,11 @@ export function CheckInClient({
     setLocalEstimatedWait(estimatedWait);
   }, [queueEntriesProp, completedEntriesProp, estimatedWait]);
 
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [preferredStylist, setPreferredStylist] = useState("");
-  const [selectedStylist, setSelectedStylist] = useState("");
+  const [selectedServices, setSelectedServices] = useState<string[]>(
+    validPrefillServiceIds
+  );
+  const [preferredStylist, setPreferredStylist] = useState(prefillEmployeeId);
+  const [selectedStylist, setSelectedStylist] = useState(prefillEmployeeId);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ position: number } | null>(null);
@@ -147,7 +162,25 @@ export function CheckInClient({
   }, [selectedServices, loading]);
 
   useEffect(() => {
+    setSelectedServices(validPrefillServiceIds);
+    setPreferredStylist(prefillEmployeeId);
+    setSelectedStylist(prefillEmployeeId);
+    setPrefill(prefilledCustomer);
+  }, [
+    prefilledCustomer?.customerId,
+    prefilledCustomer?.name,
+    prefilledCustomer?.phone,
+    prefilledCustomer?.fromAppointmentId,
+    validPrefillServiceIds.join(","),
+    prefillEmployeeId,
+    prefilledCustomer,
+  ]);
+
+  useEffect(() => {
     try {
+      if (validPrefillServiceIds.length > 0 || prefilledCustomer?.customerId) {
+        return;
+      }
       const draft = localStorage.getItem(DRAFT_STORAGE_KEY);
       if (draft && !prefilledCustomer?.customerId) {
         const parsed = JSON.parse(draft) as {
@@ -164,7 +197,7 @@ export function CheckInClient({
     } catch {
       /* ignore corrupt draft */
     }
-  }, [prefilledCustomer?.customerId]);
+  }, [prefilledCustomer?.customerId, validPrefillServiceIds.length]);
 
   function handleSaveDraft() {
     localStorage.setItem(

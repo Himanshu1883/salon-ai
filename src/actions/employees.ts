@@ -47,6 +47,7 @@ const getCachedActiveEmployees = cachedBySalon(
         email: true,
         phone: true,
         status: true,
+        services: { select: { serviceId: true } },
       },
       orderBy: { name: "asc" },
     }),

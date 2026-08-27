@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -10,6 +11,8 @@ import {
 import { createInvoiceFromAppointment } from "@/actions/billing";
 import { sendManualSms } from "@/actions/sms";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
+import { buildCheckInHref, collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
+import { stripVisitGroupMarker } from "@/lib/appointments/visit-group";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +30,7 @@ import {
   Clock,
   User,
   Scissors,
+  LogIn,
 } from "lucide-react";
 import type { Appointment } from "./types";
 import { getStatusLabel } from "./appointments-utils";
@@ -40,11 +44,13 @@ function statusVariant(status: string) {
 
 export function AppointmentDetailDialog({
   appointment,
+  allAppointments = [],
   open,
   onOpenChange,
   onRefresh,
 }: {
   appointment: Appointment | null;
+  allAppointments?: Appointment[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
@@ -54,8 +60,23 @@ export function AppointmentDetailDialog({
 
   if (!appointment) return null;
 
+  const visitAppointments = collectVisitGroupAppointments(
+    appointment,
+    allAppointments.length > 0 ? allAppointments : [appointment]
+  );
+  const checkInHref = buildCheckInHref(
+    appointment,
+    allAppointments.length > 0 ? allAppointments : [appointment]
+  );
+  const canWalkIn =
+    appointment.status === "scheduled" || appointment.status === "checked_in";
+
   const start = new Date(appointment.scheduledAt);
-  const end = new Date(start.getTime() + appointment.service.duration * 60_000);
+  const visitEnd = visitAppointments.reduce((latest, item) => {
+    const itemEnd = new Date(item.scheduledAt).getTime() + item.service.duration * 60_000;
+    return itemEnd > latest ? itemEnd : latest;
+  }, start.getTime() + appointment.service.duration * 60_000);
+  const end = new Date(visitEnd);
 
   async function handleStatus(status: string) {
     setLoading(true);
@@ -135,21 +156,35 @@ export function AppointmentDetailDialog({
           </div>
 
           <div className="space-y-3 rounded-lg border border-stone-200 bg-stone-50/50 p-4 text-sm">
-            <div className="flex items-start gap-3">
-              <Scissors className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
-              <div>
-                <p className="font-medium text-stone-900">
-                  {appointment.service.name}
-                </p>
-                <p className="text-stone-500">
-                  {appointment.service.duration} min
-                  {appointment.service.category
-                    ? ` · ${appointment.service.category.name}`
-                    : ""}
-                </p>
+            {visitAppointments.map((visitItem, index) => (
+              <div
+                key={visitItem.id}
+                className={
+                  index > 0 ? "border-t border-stone-200 pt-3" : undefined
+                }
+              >
+                <div className="flex items-start gap-3">
+                  <Scissors className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
+                  <div>
+                    <p className="font-medium text-stone-900">
+                      {visitItem.service.name}
+                    </p>
+                    <p className="text-stone-500">
+                      {visitItem.service.duration} min
+                      {visitItem.service.category
+                        ? ` · ${visitItem.service.category.name}`
+                        : ""}
+                    </p>
+                    {visitItem.employee && (
+                      <p className="mt-1 text-stone-600">
+                        Staff: {visitItem.employee.name}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
+            ))}
+            <div className="flex items-start gap-3 border-t border-stone-200 pt-3">
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
               <div>
                 <p className="font-medium text-stone-900">
@@ -160,20 +195,31 @@ export function AppointmentDetailDialog({
                 </p>
               </div>
             </div>
-            {appointment.employee && (
-              <div className="flex items-start gap-3">
+            {appointment.customer.phone && (
+              <div className="flex items-start gap-3 border-t border-stone-200 pt-3">
                 <User className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
-                <p className="text-stone-700">{appointment.employee.name}</p>
+                <p className="text-stone-700">{appointment.customer.phone}</p>
               </div>
             )}
-            {appointment.notes && (
+            {stripVisitGroupMarker(appointment.notes) && (
               <p className="border-t border-stone-200 pt-3 text-stone-600">
-                {appointment.notes}
+                {stripVisitGroupMarker(appointment.notes)}
               </p>
             )}
           </div>
 
           <div className="flex flex-wrap gap-2">
+            {canWalkIn && (
+              <Button size="sm" asChild disabled={loading}>
+                <Link
+                  href={checkInHref}
+                  onClick={() => onOpenChange(false)}
+                >
+                  <LogIn className="h-4 w-4" />
+                  Walk-in check-in
+                </Link>
+              </Button>
+            )}
             {appointment.status === "completed" && (
               <Button
                 size="sm"

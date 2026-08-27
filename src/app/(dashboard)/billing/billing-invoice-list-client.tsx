@@ -8,6 +8,7 @@ import { BillingEmptyState } from "@/components/billing/billing-empty-state";
 import { ClientsPagination } from "@/components/clients/clients-pagination";
 import type { BillingInvoice } from "@/components/billing/types";
 import { useBillingStatsContext } from "./billing-stats-context";
+import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
 
 type BillingInvoiceListClientProps = {
   invoices: BillingInvoice[];
@@ -98,6 +99,8 @@ export function BillingInvoiceListClient({
           ? Math.max(0, stats.unpaidCount - 1)
           : stats.unpaidCount,
     }));
+    markDashboardStale();
+    router.refresh();
   }
 
   function handleStatusChange(id: string, status: string) {

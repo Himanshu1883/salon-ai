@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -11,7 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { FilterDrawer } from "@/components/ui/filter-drawer";
-import type { BillingEmployee, BillingFilters } from "./types";
+import type { BillingEmployee } from "./types";
 
 type BillingFilterBarProps = {
   status: string;
@@ -24,7 +24,6 @@ type BillingFilterBarProps = {
   onDateFromChange: (value: string) => void;
   onDateToChange: (value: string) => void;
   onEmployeeIdChange: (value: string) => void;
-  onApply: () => void;
   onReset: () => void;
 };
 
@@ -68,6 +67,7 @@ function BillingFilterFields({
         </SelectTrigger>
         <SelectContent className="rounded-xl">
           <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="unpaid">Unpaid</SelectItem>
           <SelectItem value="draft">Draft</SelectItem>
           <SelectItem value="sent">Sent</SelectItem>
           <SelectItem value="partial">Partial payment</SelectItem>
@@ -128,7 +128,6 @@ export function BillingFilterBar({
   onDateFromChange,
   onDateToChange,
   onEmployeeIdChange,
-  onApply,
   onReset,
 }: BillingFilterBarProps) {
   const fieldProps = {
@@ -150,15 +149,6 @@ export function BillingFilterBar({
         <BillingFilterFields {...fieldProps} />
         <Button
           type="button"
-          size="sm"
-          onClick={onApply}
-          className="h-9 rounded-xl bg-[#6C3CF0] px-4 hover:bg-[#5B2FE0]"
-        >
-          <Filter className="h-3.5 w-3.5" />
-          Apply
-        </Button>
-        <Button
-          type="button"
           variant="outline"
           size="sm"
           onClick={onReset}
@@ -170,11 +160,7 @@ export function BillingFilterBar({
       </div>
 
       <div className="lg:hidden">
-        <FilterDrawer
-          triggerLabel="Filter invoices"
-          onApply={onApply}
-          onReset={onReset}
-        >
+        <FilterDrawer triggerLabel="Filter invoices" onReset={onReset}>
           <BillingFilterFields {...fieldProps} stacked />
         </FilterDrawer>
       </div>

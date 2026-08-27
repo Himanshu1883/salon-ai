@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { X } from "lucide-react";
 import {
   createInvoice,
+  createInvoiceFromCheckIn,
   markInvoicePaid,
 } from "@/actions/billing";
 import { getProducts } from "@/actions/inventory/products";
@@ -44,6 +45,7 @@ import type {
   BillingProduct,
   BillingSeat,
   BillingService,
+  InvoicePrefill,
 } from "./types";
 import {
   PaymentSuccessScreen,
@@ -52,9 +54,9 @@ import {
 } from "./whatsapp-communication";
 import { buildBillingWhatsAppMessage, openWhatsApp } from "@/lib/whatsapp";
 
-const TAX_RATE = 0.08;
 const NOTES_MAX = 300;
 const PAYMENT_NOTES_MAX = 200;
+const GST_INCLUDED = false;
 
 type FieldErrors = {
   customer?: string;
@@ -71,6 +73,7 @@ type BillingInvoiceFormProps = {
   employees: BillingEmployee[];
   seats: BillingSeat[];
   prefilledCustomer?: { name: string; phone: string };
+  invoicePrefill?: InvoicePrefill;
   isBasicPlan?: boolean;
   salonName?: string;
   gstEnabled?: boolean;
@@ -84,6 +87,32 @@ type BillingInvoiceFormProps = {
 
 function todayInputValue() {
   return format(new Date(), "yyyy-MM-dd");
+}
+
+function prefillToLineItems(
+  prefill: InvoicePrefill,
+  employees: BillingEmployee[]
+): LineItem[] {
+  const defaultEmployeeId =
+    prefill.employeeId ?? employees[0]?.id ?? "";
+
+  if (prefill.lineItems?.length) {
+    return prefill.lineItems.map((item) => ({
+      key: crypto.randomUUID(),
+      itemType: "SERVICE" as const,
+      serviceId: item.serviceId,
+      stockItemId: "",
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      discount: 0,
+      discountType: "percent" as const,
+      taxRate: 0.18,
+      employeeId: item.employeeId ?? defaultEmployeeId,
+    }));
+  }
+
+  return [newLineItem(defaultEmployeeId)];
 }
 
 function statusLabel(status: string) {
@@ -102,6 +131,7 @@ export function BillingInvoiceForm({
   employees,
   seats,
   prefilledCustomer,
+  invoicePrefill,
   isBasicPlan = false,
   salonName = "Salon",
   gstEnabled = true,
@@ -116,22 +146,25 @@ export function BillingInvoiceForm({
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-  const [customer, setCustomer] = useState<InvoiceCustomer>({
-    name: prefilledCustomer?.name ?? "",
-    phone: prefilledCustomer?.phone ?? "",
+  const [customer, setCustomer] = useState<InvoiceCustomer>(() => ({
+    name: invoicePrefill?.customer.name ?? prefilledCustomer?.name ?? "",
+    phone: invoicePrefill?.customer.phone ?? prefilledCustomer?.phone ?? "",
     email: "",
     loyaltyPoints: 0,
-  });
+    id: invoicePrefill?.customer.id,
+  }));
   const [dueDate, setDueDate] = useState(todayInputValue);
   const [status, setStatus] = useState("sent");
-  const [gstIncluded] = useState(true);
+  const [gstIncluded] = useState(GST_INCLUDED);
   const [notes, setNotes] = useState("");
   const [paymentNotes, setPaymentNotes] = useState("");
-  const [employeeId, setEmployeeId] = useState("");
-  const [seatId, setSeatId] = useState("");
-  const [lineItems, setLineItems] = useState<LineItem[]>(() => [
-    newLineItem(employees[0]?.id ?? ""),
-  ]);
+  const [employeeId, setEmployeeId] = useState(invoicePrefill?.employeeId ?? "");
+  const [seatId, setSeatId] = useState(invoicePrefill?.seatId ?? "");
+  const [lineItems, setLineItems] = useState<LineItem[]>(() =>
+    invoicePrefill
+      ? prefillToLineItems(invoicePrefill, employees)
+      : [newLineItem(employees[0]?.id ?? "")]
+  );
   const [products, setProducts] = useState<BillingProduct[]>([]);
 
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
@@ -163,11 +196,11 @@ export function BillingInvoiceForm({
       seatId,
       lineItems,
     },
-    step === 1 && !createdInvoiceId
+    step === 1 && !createdInvoiceId && !invoicePrefill
   );
 
   useEffect(() => {
-    if (draftRestored.current || prefilledCustomer) return;
+    if (draftRestored.current || prefilledCustomer || invoicePrefill) return;
     const draft = loadInvoiceDraft();
     if (!draft) return;
     draftRestored.current = true;
@@ -185,7 +218,7 @@ export function BillingInvoiceForm({
         }))
       );
     }
-  }, [prefilledCustomer, employees]);
+  }, [prefilledCustomer, invoicePrefill, employees]);
 
   useEffect(() => {
     getProducts({ status: "active" })
@@ -237,31 +270,45 @@ export function BillingInvoiceForm({
     return [...serviceOpts, ...productOpts];
   }, [services, products]);
 
-  const subtotal = lineItems.reduce((sum, item) => sum + lineNet(item), 0);
-  const totalDiscount = lineItems.reduce((sum, item) => sum + lineDiscount(item), 0);
-  const totalTax = gstEnabled
-    ? lineItems.reduce((sum, item) => sum + lineTax(item, gstIncluded, gstEnabled), 0)
-    : 0;
-  const grandTotal = lineItems.reduce(
-    (sum, item) => sum + lineTotal(item, gstIncluded, gstEnabled),
-    0
-  );
+  const {
+    subtotal,
+    totalDiscount,
+    totalTax,
+    grandTotal,
+    displaySubtotal,
+    displayTax,
+    displayTotal,
+  } = useMemo(() => {
+    const netSubtotal = lineItems.reduce((sum, item) => sum + lineNet(item), 0);
+    const discountTotal = lineItems.reduce(
+      (sum, item) => sum + lineDiscount(item),
+      0
+    );
+    const taxTotal = gstEnabled
+      ? lineItems.reduce(
+          (sum, item) => sum + lineTax(item, gstIncluded, gstEnabled),
+          0
+        )
+      : 0;
+    const total = lineItems.reduce(
+      (sum, item) => sum + lineTotal(item, gstIncluded, gstEnabled),
+      0
+    );
 
-  const displaySubtotal = gstEnabled
-    ? gstIncluded
-      ? Math.round((subtotal - totalTax) * 100) / 100
-      : subtotal
-    : subtotal;
-  const displayTax = gstEnabled
-    ? gstIncluded
-      ? totalTax
-      : Math.round(subtotal * TAX_RATE * 100) / 100
-    : 0;
-  const displayTotal = gstEnabled
-    ? gstIncluded
-      ? grandTotal
-      : Math.round((subtotal + displayTax) * 100) / 100
-    : subtotal;
+    const round = (value: number) => Math.round(value * 100) / 100;
+
+    return {
+      subtotal: netSubtotal,
+      totalDiscount: discountTotal,
+      totalTax: taxTotal,
+      grandTotal: total,
+      displaySubtotal: gstEnabled && gstIncluded
+        ? round(netSubtotal - taxTotal)
+        : netSubtotal,
+      displayTax: gstEnabled ? round(taxTotal) : 0,
+      displayTotal: gstEnabled ? round(total) : netSubtotal,
+    };
+  }, [lineItems, gstEnabled, gstIncluded]);
   const requiresEmployee = !isBasicPlan && employees.length > 0;
 
   const servicesSummary = useMemo(
@@ -521,6 +568,35 @@ export function BillingInvoiceForm({
     return formData;
   }
 
+  function buildQueueCheckInLineItems() {
+    return lineItems.map((item) => ({
+      description:
+        item.description.trim() ||
+        services.find((service) => service.id === item.serviceId)?.name ||
+        "",
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      taxRate: item.taxRate,
+      serviceId: item.serviceId || undefined,
+    }));
+  }
+
+  async function submitQueueCheckInInvoice(paymentMethod?: string) {
+    if (!invoicePrefill?.queueEntryId) return null;
+
+    const result = await createInvoiceFromCheckIn(invoicePrefill.queueEntryId, {
+      lineItems: buildQueueCheckInLineItems(),
+      paymentMethod,
+    });
+
+    if (result.error && !result.id) {
+      setError(result.error);
+      return null;
+    }
+
+    return result.id ?? null;
+  }
+
   async function handleCreateInvoice() {
     await handleProceedToPayment();
   }
@@ -576,6 +652,16 @@ export function BillingInvoiceForm({
     setLoading(true);
     setError("");
 
+    if (invoicePrefill?.queueEntryId) {
+      const invoiceId = await submitQueueCheckInInvoice();
+      setLoading(false);
+      if (!invoiceId) return;
+
+      clearInvoiceDraft();
+      onSuccess(buildInvoiceForCallback(invoiceId, "sent", null), { close: true });
+      return;
+    }
+
     const formData = buildInvoiceFormData("draft");
     const result = await createInvoice(formData);
     if ("error" in result && result.error) {
@@ -603,6 +689,37 @@ export function BillingInvoiceForm({
     setError("");
 
     const backendMethod = getBackendPaymentMethod(selectedPayment);
+
+    if (invoicePrefill?.queueEntryId && !createdInvoiceId) {
+      const invoiceId = await submitQueueCheckInInvoice(backendMethod);
+      if (!invoiceId) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(false);
+      const paidAt = new Date();
+      const invoice = buildInvoiceForCallback(invoiceId, "paid", backendMethod);
+      setCreatedInvoiceId(invoiceId);
+      setInvoiceNumber(formatInvoiceNumber(invoiceId));
+      setCompletedInvoice(invoice);
+      setSuccessContext({
+        ...buildWhatsAppContext(
+          invoiceId,
+          formatInvoiceNumber(invoiceId),
+          backendMethod,
+          paidAt
+        ),
+        amount: paymentAmountNow,
+        isPartial: false,
+        balanceDue: 0,
+        invoiceTotal: displayTotal,
+      });
+      clearInvoiceDraft();
+      setStep(3);
+      notifyPaymentSuccess(invoice, { close: false });
+      return;
+    }
 
     if (createdInvoiceId) {
       const paidForm = new FormData();

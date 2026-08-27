@@ -16,9 +16,15 @@ export default async function CheckInPage({
     customerId?: string;
     name?: string;
     phone?: string;
+    serviceIds?: string;
+    employeeId?: string;
+    fromAppointment?: string;
   }>;
 }) {
   const params = await searchParams;
+  const serviceIds = params.serviceIds
+    ? params.serviceIds.split(",").map((id) => id.trim()).filter(Boolean)
+    : [];
 
   const [
     services,
@@ -99,6 +105,9 @@ export default async function CheckInPage({
         customerId: params.customerId ?? "",
         name: params.name ?? "",
         phone: params.phone ?? "",
+        serviceIds,
+        employeeId: params.employeeId ?? "",
+        fromAppointmentId: params.fromAppointment ?? "",
       }}
     />
   );

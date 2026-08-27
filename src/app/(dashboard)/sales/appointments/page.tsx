@@ -56,11 +56,14 @@ export default async function SalesAppointmentsPage({
     <AppointmentsClient
       weekAppointments={weekAppointments.map((a) => ({
         id: a.id,
+        customerId: a.customerId,
+        serviceId: a.serviceId,
         scheduledAt: a.scheduledAt,
         status: a.status,
         notes: a.notes,
         customer: { name: a.customer.name, phone: a.customer.phone },
         service: {
+          id: a.service.id,
           name: a.service.name,
           duration: a.service.duration,
           category: a.service.category,
@@ -72,22 +75,34 @@ export default async function SalesAppointmentsPage({
       weekStartIso={format(weekStart, "yyyy-MM-dd")}
       todayAppointments={todayAppointments.map((a) => ({
         id: a.id,
+        customerId: a.customerId,
+        serviceId: a.serviceId,
         scheduledAt: a.scheduledAt,
         status: a.status,
         notes: a.notes,
         customer: { name: a.customer.name, phone: a.customer.phone },
-        service: { name: a.service.name, duration: a.service.duration },
+        service: {
+          id: a.service.id,
+          name: a.service.name,
+          duration: a.service.duration,
+        },
         employee: a.employee
           ? { id: a.employee.id, name: a.employee.name }
           : null,
       }))}
       upcomingAppointments={upcomingAppointments.map((a) => ({
         id: a.id,
+        customerId: a.customerId,
+        serviceId: a.serviceId,
         scheduledAt: a.scheduledAt,
         status: a.status,
         notes: a.notes,
         customer: { name: a.customer.name, phone: a.customer.phone },
-        service: { name: a.service.name, duration: a.service.duration },
+        service: {
+          id: a.service.id,
+          name: a.service.name,
+          duration: a.service.duration,
+        },
         employee: a.employee
           ? { id: a.employee.id, name: a.employee.name }
           : null,
@@ -102,6 +117,7 @@ export default async function SalesAppointmentsPage({
         name: e.name,
         role: e.role,
         specialties: e.specialties,
+        serviceIds: e.services?.map((link) => link.serviceId) ?? [],
       }))}
       openingHours={openingHours}
       prefilledCustomer={{
