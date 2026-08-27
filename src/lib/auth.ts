@@ -12,6 +12,81 @@ import { signOutCallbackUrl } from "@/lib/salon-paths";
 import { consumeAdminImpersonationToken } from "@/lib/platform-admin-access";
 import type { PlatformRole } from "@/lib/platform-permissions";
 import { resolvePlatformRole } from "@/lib/platform-permissions";
+import { warmDatabasePool } from "@/lib/warm-database-pool";
+
+const loginUserSelect = {
+  id: true,
+  email: true,
+  name: true,
+  password: true,
+  role: true,
+  isActive: true,
+  isSuperAdmin: true,
+  platformRole: true,
+  salonId: true,
+  employeeId: true,
+  employee: { select: { status: true } },
+  salon: {
+    select: { id: true, name: true, plan: true, slug: true },
+  },
+} as const;
+
+type LoginUser = {
+  id: string;
+  email: string;
+  name: string;
+  password: string;
+  role: string;
+  isActive: boolean;
+  isSuperAdmin: boolean;
+  platformRole: PlatformRole | null;
+  salonId: string | null;
+  employeeId: string | null;
+  employee: { status: string } | null;
+  salon: {
+    id: string;
+    name: string;
+    plan: string;
+    slug: string;
+  } | null;
+};
+
+function toSalonSession(user: LoginUser) {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+    isSuperAdmin: false,
+    salonId: user.salonId!,
+    salonName: user.salon!.name,
+    salonSlug: user.salon!.slug,
+    plan: user.salon!.plan,
+    dashboardAccessVerified: true,
+  };
+}
+
+async function isStaffLoginAllowed(user: LoginUser): Promise<boolean> {
+  if (user.role === "owner") return true;
+
+  const linkedStatus = user.employee?.status ?? null;
+  if (linkedStatus === "inactive") return false;
+  if (linkedStatus) return true;
+
+  if (!user.salonId) return true;
+
+  const fallbackEmployee = await prisma.employee.findFirst({
+    where: user.employeeId
+      ? { id: user.employeeId, salonId: user.salonId }
+      : {
+          salonId: user.salonId,
+          email: { equals: user.email, mode: "insensitive" as const },
+        },
+    select: { status: true },
+  });
+
+  return fallbackEmployee?.status !== "inactive";
+}
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -26,6 +101,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         impersonationToken: {},
       },
       authorize: async (credentials) => {
+        await warmDatabasePool();
+
         const impersonationToken =
           typeof credentials?.impersonationToken === "string" &&
           credentials.impersonationToken.trim()
@@ -66,30 +143,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             ? credentials.salonSlug.trim()
             : undefined;
 
-        let user;
+        let user: LoginUser | null;
         try {
-          user = await prisma.user.findFirst({
-            where: {
-              email: parsed.data.email,
-              ...(salonSlug ? { salon: { slug: salonSlug } } : {}),
-            },
-            select: {
-              id: true,
-              email: true,
-              name: true,
-              password: true,
-              role: true,
-              isActive: true,
-              isSuperAdmin: true,
-              platformRole: true,
-              salonId: true,
-              employeeId: true,
-              employee: { select: { status: true } },
-              salon: {
-                select: { id: true, name: true, plan: true, slug: true },
-              },
-            },
-          });
+          user = (await prisma.user.findUnique({
+            where: { email: parsed.data.email },
+            select: loginUserSelect,
+          })) as LoginUser | null;
         } catch (error) {
           console.error("[auth] database unavailable during login:", error);
           const authError = new CredentialsSignin();
@@ -100,6 +159,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (!user) {
           if (process.env.NODE_ENV === "development") {
             console.warn("[auth] no user found for", parsed.data.email);
+          }
+          return null;
+        }
+
+        if (salonSlug && (!user.salon || user.salon.slug !== salonSlug)) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn(
+              "[auth] salon slug mismatch",
+              parsed.data.email,
+              salonSlug
+            );
           }
           return null;
         }
@@ -125,66 +195,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         /** Salon-branded login (`/{slug}/login`) must always open that salon workspace. */
         if (salonSlug) {
-          if (!user.salon || user.salon.slug !== salonSlug) {
+          if (!(await isStaffLoginAllowed(user))) {
             if (process.env.NODE_ENV === "development") {
-              console.warn(
-                "[auth] salon slug mismatch",
-                parsed.data.email,
-                salonSlug
-              );
+              console.warn("[auth] inactive team member", parsed.data.email);
             }
             return null;
           }
 
-          if (user.role !== "owner") {
-            let staffStatus = user.employee?.status ?? null;
-
-            if (staffStatus === "inactive") {
-              if (process.env.NODE_ENV === "development") {
-                console.warn("[auth] inactive team member", parsed.data.email);
-              }
-              return null;
-            }
-
-            if (!staffStatus && user.salonId) {
-              const linkedEmployee = await prisma.employee.findFirst({
-                where: {
-                  salonId: user.salonId,
-                  OR: [
-                    ...(user.employeeId ? [{ id: user.employeeId }] : []),
-                    {
-                      email: {
-                        equals: user.email,
-                        mode: "insensitive" as const,
-                      },
-                    },
-                  ],
-                },
-                select: { status: true },
-              });
-              staffStatus = linkedEmployee?.status ?? null;
-
-              if (staffStatus === "inactive") {
-                if (process.env.NODE_ENV === "development") {
-                  console.warn("[auth] inactive team member", parsed.data.email);
-                }
-                return null;
-              }
-            }
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            isSuperAdmin: false,
-            salonId: user.salonId!,
-            salonName: user.salon.name,
-            salonSlug: user.salon.slug,
-            plan: user.salon.plan,
-            dashboardAccessVerified: true,
-          };
+          return toSalonSession(user);
         }
 
         const platformRole: PlatformRole | null =
@@ -207,54 +225,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
         if (!user.salon) return null;
 
-        if (salonSlug && user.salon.slug !== salonSlug) {
+        if (!(await isStaffLoginAllowed(user))) {
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[auth] inactive team member", parsed.data.email);
+          }
           return null;
         }
 
-        if (user.role !== "owner") {
-          let staffStatus = user.employee?.status ?? null;
-
-          if (staffStatus === "inactive") {
-            if (process.env.NODE_ENV === "development") {
-              console.warn("[auth] inactive team member", parsed.data.email);
-            }
-            return null;
-          }
-
-          if (!staffStatus && user.salonId) {
-            const linkedEmployee = await prisma.employee.findFirst({
-              where: {
-                salonId: user.salonId,
-                OR: [
-                  ...(user.employeeId ? [{ id: user.employeeId }] : []),
-                  { email: { equals: user.email, mode: "insensitive" as const } },
-                ],
-              },
-              select: { status: true },
-            });
-            staffStatus = linkedEmployee?.status ?? null;
-
-            if (staffStatus === "inactive") {
-              if (process.env.NODE_ENV === "development") {
-                console.warn("[auth] inactive team member", parsed.data.email);
-              }
-              return null;
-            }
-          }
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          isSuperAdmin: false,
-          salonId: user.salonId!,
-          salonName: user.salon.name,
-          salonSlug: user.salon.slug,
-          plan: user.salon.plan,
-          dashboardAccessVerified: true,
-        };
+        return toSalonSession(user);
       },
     }),
   ],

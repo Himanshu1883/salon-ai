@@ -7,7 +7,6 @@ import {
   mapLegacyUserRoleToSystemKey,
   type SystemRoleKey,
 } from "@/lib/permissions/defaults";
-import { assignUserSalonRoleFromLegacy } from "@/lib/permissions/seed";
 
 export type PermissionSource = "owner" | "role" | "grant" | "deny" | "legacy";
 
@@ -82,21 +81,7 @@ async function loadUserPermissionContext(userId: string, salonId: string) {
     if (!user) return null;
 
     if (!user.salonRoleId) {
-      try {
-        await assignUserSalonRoleFromLegacy(
-          prisma,
-          userId,
-          salonId,
-          user.role
-        );
-        const refreshed = await prisma.user.findFirst({
-          where: { id: userId, salonId },
-          select: userSelect,
-        });
-        if (refreshed?.salonRoleId) return refreshed;
-      } catch {
-        return loadLegacyUserPermissionContext(userId, salonId);
-      }
+      return loadLegacyUserPermissionContext(userId, salonId);
     }
 
     return user;

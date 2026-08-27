@@ -8,7 +8,7 @@ import { PlanGate } from "@/components/plans/plan-gate";
 import { PlanProvider } from "@/components/plans/plan-provider";
 import { PermissionLayoutGate } from "@/components/permissions/permission-layout-gate";
 import { LayoutHeaderAlerts } from "@/components/dashboard/layout-header-alerts";
-import { getSalonLayoutContext, getSalonAccessBlocked, getSalonLogoPath } from "@/lib/salon-layout-context";
+import { getSalonLayoutContext } from "@/lib/salon-layout-context";
 import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
 import { getCachedDuePaymentsSummary } from "@/lib/billing/stats-cache";
@@ -39,7 +39,7 @@ export default async function DashboardLayout({
   const skipStaffAccessCheck =
     isOwner || session.user.dashboardAccessVerified === true;
 
-  const [staffAccessOk, layoutContext, blockedOnly, resolved, salonLogoUrl] = await Promise.all([
+  const [staffAccessOk, layoutContext, resolved] = await Promise.all([
     skipStaffAccessCheck
       ? Promise.resolve(true)
       : session.user.email
@@ -49,12 +49,10 @@ export default async function DashboardLayout({
             role: userRole,
           })
         : Promise.resolve(false),
-    sessionPlan ? Promise.resolve(null) : getSalonLayoutContext(salonId),
-    sessionPlan ? getSalonAccessBlocked(salonId) : Promise.resolve(null),
+    getSalonLayoutContext(salonId),
     isOwner
       ? Promise.resolve(resolveOwnerPermissions(session.user.id, salonId))
       : getResolvedPermissions(session.user.id, salonId),
-    getSalonLogoPath(salonId),
   ]);
 
   if (!staffAccessOk) {
@@ -65,8 +63,9 @@ export default async function DashboardLayout({
     );
   }
 
-  const plan = sessionPlan ?? layoutContext!.plan;
-  const blocked = blockedOnly ?? layoutContext!.accessBlocked;
+  const plan = sessionPlan ?? layoutContext.plan;
+  const blocked = layoutContext.accessBlocked;
+  const salonLogoUrl = layoutContext.logoUrl;
 
   const permissionKeys = isOwner
     ? (DEFAULT_ROLE_PERMISSIONS.OWNER as PermissionKey[])
