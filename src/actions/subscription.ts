@@ -234,7 +234,10 @@ export async function generateTrialInvoice(salonId: string) {
   });
 }
 
-export async function createTrialSubscription(salonId: string) {
+export async function createTrialSubscription(
+  salonId: string,
+  options?: { skipTrialInvoice?: boolean }
+) {
   const salon = await prisma.salon.findUnique({
     where: { id: salonId },
     select: { plan: true },
@@ -258,10 +261,12 @@ export async function createTrialSubscription(salonId: string) {
     },
   });
 
-  try {
-    await generateTrialInvoice(salonId);
-  } catch (error) {
-    console.error("[subscription] trial invoice generation failed:", error);
+  if (!options?.skipTrialInvoice) {
+    try {
+      await generateTrialInvoice(salonId);
+    } catch (error) {
+      console.error("[subscription] trial invoice generation failed:", error);
+    }
   }
 
   return subscription;

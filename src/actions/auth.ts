@@ -24,6 +24,8 @@ import {
   resetPasswordSchema,
 } from "@/lib/validations";
 import { createTrialSubscription } from "@/actions/subscription";
+import { signIn } from "@/lib/auth";
+import { assignUserSalonRoleFromLegacy } from "@/lib/permissions/seed";
 import { generateUniqueSalonSlug } from "@/lib/salon-slug";
 
 const PASSWORD_RESET_SUCCESS_MESSAGE =
@@ -197,12 +199,12 @@ export async function onboardingSignupAction(data: unknown) {
 
   const existing = await prisma.user.findUnique({
     where: { email: input.email },
+    select: { id: true },
   });
   if (existing) {
     return { error: "Email already registered" };
   }
 
-  const hashed = await bcrypt.hash(input.password, 10);
   const fullAddress = formatBusinessAddress({
     addressLine1: input.addressLine1,
     city: input.city,
@@ -223,9 +225,12 @@ export async function onboardingSignupAction(data: unknown) {
           price,
         }));
 
-  const slug = await generateUniqueSalonSlug(input.salonName, prisma);
+  const [hashed, slug] = await Promise.all([
+    bcrypt.hash(input.password, 10),
+    generateUniqueSalonSlug(input.salonName, prisma),
+  ]);
 
-  const salon = await prisma.$transaction(async (tx) => {
+  const { salon, ownerId } = await prisma.$transaction(async (tx) => {
     const createdSalon = await tx.salon.create({
       data: {
         name: input.salonName,
@@ -292,29 +297,45 @@ export async function onboardingSignupAction(data: unknown) {
       })),
     });
 
-    return createdSalon;
+    const owner = await tx.user.findFirst({
+      where: { salonId: createdSalon.id, role: "owner" },
+      select: { id: true },
+    });
+
+    return { salon: createdSalon, ownerId: owner?.id ?? null };
   });
 
-  try {
-    await createTrialSubscription(salon.id);
-  } catch (error) {
-    console.error("[signup] trial subscription setup failed:", error);
-  }
+  await Promise.all([
+    createTrialSubscription(salon.id, { skipTrialInvoice: true }).catch(
+      (error) => {
+        console.error("[signup] trial subscription setup failed:", error);
+      }
+    ),
+    ownerId
+      ? assignUserSalonRoleFromLegacy(prisma, ownerId, salon.id, "owner")
+      : Promise.resolve(),
+  ]);
 
-  const owner = await prisma.user.findFirst({
-    where: { salonId: salon.id, role: "owner" },
-    select: { id: true },
+  const signInResult = await signIn("credentials", {
+    email: input.email,
+    password: input.password,
+    salonSlug: salon.slug,
+    redirect: false,
   });
 
-  if (owner) {
-    const { assignUserSalonRoleFromLegacy, ensureSalonSystemRoles } =
-      await import("@/lib/permissions/seed");
-    await ensureSalonSystemRoles(prisma, salon.id);
-    await assignUserSalonRoleFromLegacy(prisma, owner.id, salon.id, "owner");
+  if (signInResult?.error) {
+    return {
+      success: true,
+      signedIn: false,
+      salonId: salon.id,
+      salonName: salon.name,
+      salonSlug: salon.slug,
+    };
   }
 
   return {
     success: true,
+    signedIn: true,
     salonId: salon.id,
     salonName: salon.name,
     salonSlug: salon.slug,

@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
 import { onboardingSignupAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -931,13 +930,6 @@ export default function OnboardingWizard() {
         return;
       }
 
-      const signInResult = await signIn("credentials", {
-        email: formData.email,
-        password: formData.password,
-        salonSlug: result.salonSlug,
-        redirect: false,
-      });
-
       const welcomeName = encodeURIComponent(
         result.salonName ?? formData.salonName
       );
@@ -945,14 +937,13 @@ export default function OnboardingWizard() {
         ? `/${result.salonSlug}/dashboard?welcome=1&name=${welcomeName}`
         : `/dashboard?welcome=1&name=${welcomeName}`;
 
-      if (signInResult?.error) {
+      if (result.signedIn === false) {
         window.location.assign(
           result.salonSlug ? `/${result.salonSlug}/login` : "/"
         );
         return;
       }
 
-      // Hard navigation: router.push often fails to leave /signup after credentials signIn.
       window.location.assign(dashboardPath);
     } catch {
       setSubmitError(

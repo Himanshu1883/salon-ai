@@ -130,14 +130,17 @@ function CustomTimeButton({
   openTime,
   closeTime,
   onApply,
+  onApplyToAllDays,
   disabled,
 }: {
   openTime: string;
   closeTime: string;
   onApply: (open: string, close: string) => void;
+  onApplyToAllDays: (open: string, close: string) => void;
   disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [applyToAllDays, setApplyToAllDays] = useState(false);
   const [draftOpen, setDraftOpen] = useState<Time12Hour>(() => time24To12(openTime));
   const [draftClose, setDraftClose] = useState<Time12Hour>(() => time24To12(closeTime));
   const [menuStyle, setMenuStyle] = useState({ top: 0, left: 0, width: 280 });
@@ -148,6 +151,7 @@ function CustomTimeButton({
     if (open) {
       setDraftOpen(time24To12(openTime));
       setDraftClose(time24To12(closeTime));
+      setApplyToAllDays(false);
     }
   }, [open, openTime, closeTime]);
 
@@ -190,11 +194,25 @@ function CustomTimeButton({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
-  function handleApply() {
-    onApply(
-      time12To24(draftOpen.hour, draftOpen.minute, draftOpen.period),
-      time12To24(draftClose.hour, draftClose.minute, draftClose.period)
+  function handleSubmit() {
+    const openValue = time12To24(
+      draftOpen.hour,
+      draftOpen.minute,
+      draftOpen.period
     );
+    const closeValue = time12To24(
+      draftClose.hour,
+      draftClose.minute,
+      draftClose.period
+    );
+
+    if (applyToAllDays) {
+      onApplyToAllDays(openValue, closeValue);
+    } else {
+      onApply(openValue, closeValue);
+    }
+
+    setApplyToAllDays(false);
     setOpen(false);
   }
 
@@ -224,12 +242,21 @@ function CustomTimeButton({
             onChange={setDraftClose}
           />
         </div>
+        <label className="mt-4 flex cursor-pointer items-center gap-2 text-sm text-stone-600">
+          <input
+            type="checkbox"
+            checked={applyToAllDays}
+            onChange={(e) => setApplyToAllDays(e.target.checked)}
+            className="h-4 w-4 rounded border-stone-300 text-violet-600 focus:ring-violet-500"
+          />
+          Apply to all days
+        </label>
         <button
           type="button"
-          onClick={handleApply}
-          className="mt-4 w-full rounded-lg bg-violet-600 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
+          onClick={handleSubmit}
+          className="mt-3 w-full rounded-lg bg-violet-600 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-700"
         >
-          Apply
+          {applyToAllDays ? "Apply to all" : "Apply"}
         </button>
       </div>
     ) : null;
@@ -422,10 +449,12 @@ function BusinessHoursRow({
   dayKey,
   hours,
   onHoursChange,
+  onApplyToAllDays,
 }: {
   dayKey: DayKey;
   hours: DayHours;
   onHoursChange: (hours: Partial<DayHours>) => void;
+  onApplyToAllDays: (open: string, close: string) => void;
 }) {
   const isOpen = !hours.closed;
 
@@ -503,6 +532,7 @@ function BusinessHoursRow({
           openTime={hours.open}
           closeTime={hours.close}
           onApply={(open, close) => onHoursChange({ open, close })}
+          onApplyToAllDays={onApplyToAllDays}
           disabled={!isOpen}
         />
       </div>
@@ -517,6 +547,12 @@ export function BusinessHoursSection({
   openingHours: OpeningHours;
   onHoursChange: (day: DayKey, hours: Partial<DayHours>) => void;
 }) {
+  function applyTimesToAllDays(open: string, close: string) {
+    for (const day of DAYS_OF_WEEK) {
+      onHoursChange(day.key, { open, close, closed: false });
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-stone-200 bg-white shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-stone-100 px-4 py-4 sm:px-5">
@@ -547,6 +583,7 @@ export function BusinessHoursSection({
             dayKey={day.key}
             hours={openingHours[day.key]}
             onHoursChange={(hours) => onHoursChange(day.key, hours)}
+            onApplyToAllDays={applyTimesToAllDays}
           />
         ))}
       </div>

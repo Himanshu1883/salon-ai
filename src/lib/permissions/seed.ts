@@ -25,24 +25,26 @@ async function ensureGlobalPermissions(prisma: PrismaClient) {
 }
 
 export async function seedGlobalPermissions(prisma: PrismaClient) {
-  for (const def of PERMISSION_DEFINITIONS) {
-    await prisma.permission.upsert({
-      where: { key: def.key },
-      create: {
-        key: def.key,
-        name: def.name,
-        description: undefined,
-        module: def.module,
-        action: def.action,
-      },
-      update: {
-        name: def.name,
-        description: undefined,
-        module: def.module,
-        action: def.action,
-      },
-    });
-  }
+  await Promise.all(
+    PERMISSION_DEFINITIONS.map((def) =>
+      prisma.permission.upsert({
+        where: { key: def.key },
+        create: {
+          key: def.key,
+          name: def.name,
+          description: undefined,
+          module: def.module,
+          action: def.action,
+        },
+        update: {
+          name: def.name,
+          description: undefined,
+          module: def.module,
+          action: def.action,
+        },
+      })
+    )
+  );
 }
 
 export async function ensureSalonSystemRoles(
@@ -68,45 +70,47 @@ export async function ensureSalonSystemRoles(
 
   const roleKeys = Object.keys(SYSTEM_ROLE_DEFINITIONS) as SystemRoleKey[];
 
-  for (const key of roleKeys) {
-    const meta = SYSTEM_ROLE_DEFINITIONS[key];
-    const role = await prisma.salonRole.upsert({
-      where: { salonId_key: { salonId, key } },
-      create: {
-        salonId,
-        key,
-        name: meta.name,
-        description: meta.description,
-        hierarchyLevel: meta.hierarchyLevel,
-        isSystemRole: true,
-      },
-      update: {
-        name: meta.name,
-        description: meta.description,
-        hierarchyLevel: meta.hierarchyLevel,
-        isSystemRole: true,
-      },
-    });
-
-    const desiredKeys = DEFAULT_ROLE_PERMISSIONS[key];
-    const desiredPermissionIds = desiredKeys
-      .map((k) => permissionIdByKey.get(k))
-      .filter((id): id is string => Boolean(id));
-
-    await prisma.salonRolePermission.deleteMany({
-      where: { roleId: role.id },
-    });
-
-    if (desiredPermissionIds.length > 0) {
-      await prisma.salonRolePermission.createMany({
-        data: desiredPermissionIds.map((permissionId) => ({
-          roleId: role.id,
-          permissionId,
-        })),
-        skipDuplicates: true,
+  await Promise.all(
+    roleKeys.map(async (key) => {
+      const meta = SYSTEM_ROLE_DEFINITIONS[key];
+      const role = await prisma.salonRole.upsert({
+        where: { salonId_key: { salonId, key } },
+        create: {
+          salonId,
+          key,
+          name: meta.name,
+          description: meta.description,
+          hierarchyLevel: meta.hierarchyLevel,
+          isSystemRole: true,
+        },
+        update: {
+          name: meta.name,
+          description: meta.description,
+          hierarchyLevel: meta.hierarchyLevel,
+          isSystemRole: true,
+        },
       });
-    }
-  }
+
+      const desiredKeys = DEFAULT_ROLE_PERMISSIONS[key];
+      const desiredPermissionIds = desiredKeys
+        .map((k) => permissionIdByKey.get(k))
+        .filter((id): id is string => Boolean(id));
+
+      await prisma.salonRolePermission.deleteMany({
+        where: { roleId: role.id },
+      });
+
+      if (desiredPermissionIds.length > 0) {
+        await prisma.salonRolePermission.createMany({
+          data: desiredPermissionIds.map((permissionId) => ({
+            roleId: role.id,
+            permissionId,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    })
+  );
 
   ensuredSalonIds.add(salonId);
 }
