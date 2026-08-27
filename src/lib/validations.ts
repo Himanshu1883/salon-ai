@@ -69,10 +69,65 @@ export const onboardingStep3Schema = z.object({
   currency: z.literal("INR"),
 });
 
-export const onboardingStep4Schema = z.object({
-  selectedServiceIds: z.array(z.string()),
-  skipServices: z.boolean(),
+const onboardingServiceItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  duration: z.coerce.number(),
+  price: z.coerce.number(),
+  selected: z.boolean(),
 });
+
+const onboardingStep4FieldsSchema = z.object({
+  skipServices: z.boolean(),
+  services: z.array(onboardingServiceItemSchema),
+});
+
+function validateOnboardingServices(
+  data: z.infer<typeof onboardingStep4FieldsSchema>,
+  ctx: z.RefinementCtx
+) {
+  if (data.skipServices) return;
+
+  const selected = data.services.filter((service) => service.selected);
+  if (selected.length === 0) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Select at least one service or choose to add later",
+      path: ["services"],
+    });
+    return;
+  }
+
+  for (const service of selected) {
+    if (!service.name.trim()) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Service name is required",
+        path: ["services"],
+      });
+      break;
+    }
+    if (service.duration < 5 || service.duration > 480) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Duration must be between 5 and 480 minutes",
+        path: ["services"],
+      });
+      break;
+    }
+    if (service.price < 1) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Price must be at least ₹1",
+        path: ["services"],
+      });
+      break;
+    }
+  }
+}
+
+export const onboardingStep4Schema =
+  onboardingStep4FieldsSchema.superRefine(validateOnboardingServices);
 
 export const onboardingStep5Schema = z.object({
   acceptTerms: z.literal(true, {
@@ -83,8 +138,14 @@ export const onboardingStep5Schema = z.object({
 export const onboardingSchema = onboardingStep1Schema
   .merge(onboardingStep2FieldsSchema)
   .merge(onboardingStep3Schema)
-  .merge(onboardingStep4Schema)
-  .merge(onboardingStep5Schema);
+  .merge(onboardingStep4FieldsSchema)
+  .merge(onboardingStep5Schema)
+  .superRefine((data, ctx) => {
+    validateOnboardingServices(
+      { skipServices: data.skipServices, services: data.services },
+      ctx
+    );
+  });
 
 /** @deprecated Use onboardingSchema for new signups */
 export const signupSchema = z.object({

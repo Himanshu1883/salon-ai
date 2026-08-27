@@ -9,7 +9,7 @@ import {
 } from "@/lib/email";
 import {
   formatBusinessAddress,
-  STARTER_SERVICES,
+  type OnboardingServiceItem,
 } from "@/lib/onboarding";
 import {
   generatePasswordResetToken,
@@ -210,11 +210,18 @@ export async function onboardingSignupAction(data: unknown) {
     pincode: input.pincode,
   });
 
-  const selectedServices = input.skipServices
+  const selectedServices: Pick<
+    OnboardingServiceItem,
+    "name" | "duration" | "price"
+  >[] = input.skipServices
     ? []
-    : STARTER_SERVICES.filter((service) =>
-        input.selectedServiceIds.includes(service.id)
-      );
+    : input.services
+        .filter((service) => service.selected)
+        .map(({ name, duration, price }) => ({
+          name: name.trim(),
+          duration,
+          price,
+        }));
 
   const slug = await generateUniqueSalonSlug(input.salonName, prisma);
 

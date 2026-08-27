@@ -82,6 +82,38 @@ export const STARTER_SERVICES = [
   { id: "eyebrow-shaping", name: "Eyebrow Shaping", duration: 20, price: 350 },
 ] as const;
 
+export type OnboardingServiceItem = {
+  id: string;
+  name: string;
+  duration: number;
+  price: number;
+  selected: boolean;
+};
+
+export function createInitialOnboardingServices(): OnboardingServiceItem[] {
+  return STARTER_SERVICES.map((service, index) => ({
+    id: service.id,
+    name: service.name,
+    duration: service.duration,
+    price: service.price,
+    selected: index < 3,
+  }));
+}
+
+export function createEmptyOnboardingService(): OnboardingServiceItem {
+  return {
+    id: `custom-${Date.now()}`,
+    name: "",
+    duration: 30,
+    price: 500,
+    selected: true,
+  };
+}
+
+export function isCustomOnboardingService(id: string): boolean {
+  return id.startsWith("custom-");
+}
+
 export const ONBOARDING_STEPS = [
   { id: 1, title: "Business basics" },
   { id: 2, title: "Owner account" },

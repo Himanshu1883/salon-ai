@@ -23,6 +23,37 @@ export function parseTimeToMinutes(time: string): number {
   return hours * 60 + (minutes ?? 0);
 }
 
+export type Time12Hour = {
+  hour: number;
+  minute: number;
+  period: "AM" | "PM";
+};
+
+export function time24To12(time24: string): Time12Hour {
+  const [hourStr, minuteStr] = time24.split(":");
+  const hour24 = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr ?? "0", 10);
+  const period: "AM" | "PM" = hour24 >= 12 ? "PM" : "AM";
+  let hour = hour24 % 12;
+  if (hour === 0) hour = 12;
+  return { hour, minute, period };
+}
+
+export function time12To24(hour12: number, minute: number, period: "AM" | "PM"): string {
+  let hour24: number;
+  if (period === "AM") {
+    hour24 = hour12 === 12 ? 0 : hour12;
+  } else {
+    hour24 = hour12 === 12 ? 12 : hour12 + 12;
+  }
+  return `${String(hour24).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+}
+
+export function formatIndianTimeDisplay(time24: string): string {
+  const { hour, minute, period } = time24To12(time24);
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
 export function formatShiftTime(time: string): string {
   const [hourStr, minuteStr] = time.split(":");
   let hour = parseInt(hourStr, 10);

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signIn } from "next-auth/react";
 import { onboardingSignupAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -28,22 +28,27 @@ import {
   Building2,
   Check,
   Clock,
+  Plus,
   Scissors,
   Sparkles,
+  Trash2,
   User,
 } from "lucide-react";
 import {
   BUSINESS_TYPES,
-  DAYS_OF_WEEK,
+  createEmptyOnboardingService,
+  createInitialOnboardingServices,
   DEFAULT_OPENING_HOURS,
   getBusinessTypeLabel,
   INDIAN_STATES,
+  isCustomOnboardingService,
   ONBOARDING_STEPS,
-  STARTER_SERVICES,
   type DayHours,
+  type OnboardingServiceItem,
   type OpeningHours,
 } from "@/lib/onboarding";
 import { formatCurrency } from "@/lib/currency";
+import { BusinessHoursSection } from "@/components/onboarding/business-hours-section";
 import {
   onboardingStep1Schema,
   onboardingStep2Schema,
@@ -72,7 +77,7 @@ type FormData = {
   expectedTeamSize: number;
   openingHours: OpeningHours;
   currency: "INR";
-  selectedServiceIds: string[];
+  services: OnboardingServiceItem[];
   skipServices: boolean;
   acceptTerms: boolean;
 };
@@ -96,7 +101,7 @@ const initialFormData: FormData = {
   expectedTeamSize: 3,
   openingHours: DEFAULT_OPENING_HOURS,
   currency: "INR",
-  selectedServiceIds: STARTER_SERVICES.slice(0, 3).map((s) => s.id),
+  services: createInitialOnboardingServices(),
   skipServices: false,
   acceptTerms: false,
 };
@@ -393,6 +398,89 @@ function OwnerAccountStep({
   );
 }
 
+function ManualNumericInput({
+  id,
+  value,
+  min,
+  max,
+  onChange,
+  className,
+}: {
+  id?: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  className?: string;
+}) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+
+  return (
+    <Input
+      id={id}
+      type="text"
+      inputMode="numeric"
+      autoComplete="off"
+      value={text}
+      onChange={(e) => {
+        const raw = e.target.value.replace(/\D/g, "");
+        setText(raw);
+        if (raw !== "") {
+          const parsed = parseInt(raw, 10);
+          if (!Number.isNaN(parsed)) onChange(parsed);
+        }
+      }}
+      onBlur={() => {
+        const raw = text.replace(/\D/g, "");
+        if (raw === "") {
+          setText(String(min));
+          onChange(min);
+          return;
+        }
+        let parsed = parseInt(raw, 10);
+        if (Number.isNaN(parsed) || parsed < min) parsed = min;
+        if (parsed > max) parsed = max;
+        setText(String(parsed));
+        onChange(parsed);
+      }}
+      className={className}
+    />
+  );
+}
+
+function PositiveIntegerInput({
+  id,
+  value,
+  min,
+  max,
+  onChange,
+  error,
+}: {
+  id: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+  error?: string;
+}) {
+  return (
+    <>
+      <ManualNumericInput
+        id={id}
+        value={value}
+        min={min}
+        max={max}
+        onChange={onChange}
+      />
+      {error && <p className="text-sm text-red-600">{error}</p>}
+    </>
+  );
+}
+
 function SalonSetupStep({
   data,
   errors,
@@ -409,37 +497,25 @@ function SalonSetupStep({
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="totalSeats">Number of seats / workstations *</Label>
-          <Input
+          <PositiveIntegerInput
             id="totalSeats"
-            type="number"
+            value={data.totalSeats}
             min={1}
             max={50}
-            value={data.totalSeats}
-            onChange={(e) =>
-              onChange({ totalSeats: parseInt(e.target.value, 10) || 1 })
-            }
+            onChange={(totalSeats) => onChange({ totalSeats })}
+            error={errors.totalSeats}
           />
-          {errors.totalSeats && (
-            <p className="text-sm text-red-600">{errors.totalSeats}</p>
-          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="expectedTeamSize">Expected team members *</Label>
-          <Input
+          <PositiveIntegerInput
             id="expectedTeamSize"
-            type="number"
+            value={data.expectedTeamSize}
             min={1}
             max={100}
-            value={data.expectedTeamSize}
-            onChange={(e) =>
-              onChange({
-                expectedTeamSize: parseInt(e.target.value, 10) || 1,
-              })
-            }
+            onChange={(expectedTeamSize) => onChange({ expectedTeamSize })}
+            error={errors.expectedTeamSize}
           />
-          {errors.expectedTeamSize && (
-            <p className="text-sm text-red-600">{errors.expectedTeamSize}</p>
-          )}
         </div>
       </div>
 
@@ -450,122 +526,170 @@ function SalonSetupStep({
         </p>
       </div>
 
-      <div className="space-y-3">
-        <Label>Business hours</Label>
-        <div className="space-y-2">
-          {DAYS_OF_WEEK.map((day) => {
-            const hours = data.openingHours[day.key];
-            return (
-              <div
-                key={day.key}
-                className="flex flex-wrap items-center gap-3 rounded-lg border border-stone-100 p-3"
-              >
-                <span className="w-12 text-sm font-medium text-stone-700">
-                  {day.label}
-                </span>
-                <label className="flex items-center gap-2 text-sm text-stone-600">
-                  <Checkbox
-                    checked={hours.closed}
-                    onChange={(e) =>
-                      onHoursChange(day.key, { closed: e.target.checked })
-                    }
-                  />
-                  Closed
-                </label>
-                {!hours.closed && (
-                  <>
-                    <Input
-                      type="time"
-                      value={hours.open}
-                      onChange={(e) =>
-                        onHoursChange(day.key, { open: e.target.value })
-                      }
-                      className="w-32"
-                    />
-                    <span className="text-stone-400">to</span>
-                    <Input
-                      type="time"
-                      value={hours.close}
-                      onChange={(e) =>
-                        onHoursChange(day.key, { close: e.target.value })
-                      }
-                      className="w-32"
-                    />
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <BusinessHoursSection
+        openingHours={data.openingHours}
+        onHoursChange={onHoursChange}
+      />
     </div>
   );
 }
 
 function StarterServicesStep({
   data,
+  errors,
   onChange,
 }: {
   data: FormData;
+  errors: Record<string, string>;
   onChange: (updates: Partial<FormData>) => void;
 }) {
+  function updateService(
+    serviceId: string,
+    updates: Partial<OnboardingServiceItem>
+  ) {
+    onChange({
+      skipServices: false,
+      services: data.services.map((service) =>
+        service.id === serviceId ? { ...service, ...updates } : service
+      ),
+    });
+  }
+
   function toggleService(serviceId: string) {
     if (data.skipServices) {
-      onChange({ skipServices: false, selectedServiceIds: [serviceId] });
+      onChange({
+        skipServices: false,
+        services: data.services.map((service) => ({
+          ...service,
+          selected: service.id === serviceId,
+        })),
+      });
       return;
     }
 
-    const selected = data.selectedServiceIds.includes(serviceId)
-      ? data.selectedServiceIds.filter((id) => id !== serviceId)
-      : [...data.selectedServiceIds, serviceId];
+    onChange({
+      skipServices: false,
+      services: data.services.map((service) =>
+        service.id === serviceId
+          ? { ...service, selected: !service.selected }
+          : service
+      ),
+    });
+  }
 
-    onChange({ selectedServiceIds: selected, skipServices: false });
+  function addService() {
+    onChange({
+      skipServices: false,
+      services: [...data.services, createEmptyOnboardingService()],
+    });
+  }
+
+  function removeService(serviceId: string) {
+    onChange({
+      services: data.services.filter((service) => service.id !== serviceId),
+    });
   }
 
   function skipServices() {
-    onChange({ skipServices: true, selectedServiceIds: [] });
+    onChange({
+      skipServices: true,
+      services: data.services.map((service) => ({
+        ...service,
+        selected: false,
+      })),
+    });
   }
 
   return (
     <div className="space-y-4">
       <p className="text-sm text-stone-500">
-        Pick common services to get started quickly. You can edit prices and add
-        more services later.
+        Pick common services to get started quickly. Edit names and prices, or
+        add your own services below.
       </p>
 
+      {errors.services && (
+        <p className="text-sm text-red-600">{errors.services}</p>
+      )}
+
       <div className="space-y-2">
-        {STARTER_SERVICES.map((service) => {
-          const selected =
-            !data.skipServices && data.selectedServiceIds.includes(service.id);
+        {data.services.map((service) => {
+          const selected = !data.skipServices && service.selected;
           return (
-            <label
+            <div
               key={service.id}
               className={cn(
-                "flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-colors",
+                "flex flex-wrap items-center gap-3 rounded-lg border p-4 transition-colors sm:flex-nowrap",
                 selected
                   ? "border-violet-300 bg-violet-50"
-                  : "border-stone-200 hover:border-stone-300"
+                  : "border-stone-200"
               )}
             >
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  checked={selected}
-                  onChange={() => toggleService(service.id)}
+              <Checkbox
+                checked={selected}
+                onChange={() => toggleService(service.id)}
+              />
+
+              <div className="grid min-w-0 flex-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+                <Input
+                  value={service.name}
+                  placeholder="Service name"
+                  onChange={(e) =>
+                    updateService(service.id, { name: e.target.value })
+                  }
+                  className="h-9 bg-white"
                 />
-                <div>
-                  <p className="font-medium text-stone-900">{service.name}</p>
-                  <p className="text-xs text-stone-500">
-                    {service.duration} min
-                  </p>
+
+                <div className="flex items-center gap-2">
+                  <ManualNumericInput
+                    value={service.duration}
+                    min={5}
+                    max={480}
+                    onChange={(duration) =>
+                      updateService(service.id, { duration })
+                    }
+                    className="h-9 w-20 bg-white"
+                  />
+                  <span className="text-xs text-stone-500">min</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-stone-500">₹</span>
+                  <ManualNumericInput
+                    value={service.price}
+                    min={1}
+                    max={999999}
+                    onChange={(price) => updateService(service.id, { price })}
+                    className="h-9 w-28 bg-white font-semibold text-violet-700"
+                  />
                 </div>
               </div>
-              <span className="font-semibold text-violet-700">
-                {formatCurrency(service.price)}
-              </span>
-            </label>
+
+              {isCustomOnboardingService(service.id) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0 text-stone-400 hover:text-red-600"
+                  onClick={() => removeService(service.id)}
+                  aria-label="Remove service"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           );
         })}
       </div>
+
+      <Button
+        type="button"
+        variant="outline"
+        className="w-full border-dashed"
+        onClick={addService}
+      >
+        <Plus className="mr-2 h-4 w-4" />
+        Add service
+      </Button>
 
       <Button
         type="button"
@@ -590,7 +714,7 @@ function ReviewStep({
 }) {
   const selectedServices = data.skipServices
     ? []
-    : STARTER_SERVICES.filter((s) => data.selectedServiceIds.includes(s.id));
+    : data.services.filter((service) => service.selected);
 
   return (
     <div className="space-y-6">
@@ -664,8 +788,11 @@ function ReviewStep({
           ) : (
             <ul className="mt-3 space-y-1 text-sm">
               {selectedServices.map((service) => (
-                <li key={service.id} className="flex justify-between">
-                  <span>{service.name}</span>
+                <li key={service.id} className="flex justify-between gap-4">
+                  <span>
+                    {service.name}{" "}
+                    <span className="text-stone-400">({service.duration} min)</span>
+                  </span>
                   <span className="font-medium">
                     {formatCurrency(service.price)}
                   </span>
@@ -728,7 +855,13 @@ function getStepErrors(step: number, data: FormData): Record<string, string> {
   }
 
   if (step === 4) {
-    onboardingStep4Schema.safeParse(data);
+    const result = onboardingStep4Schema.safeParse(data);
+    if (!result.success) {
+      for (const issue of result.error.issues) {
+        const key = issue.path[0]?.toString();
+        if (key && !errors[key]) errors[key] = issue.message;
+      }
+    }
   }
 
   if (step === 5) {
@@ -870,7 +1003,11 @@ export default function OnboardingWizard() {
             />
           )}
           {step === 4 && (
-            <StarterServicesStep data={formData} onChange={updateForm} />
+            <StarterServicesStep
+              data={formData}
+              errors={errors}
+              onChange={updateForm}
+            />
           )}
           {step === 5 && (
             <ReviewStep data={formData} errors={errors} onChange={updateForm} />
