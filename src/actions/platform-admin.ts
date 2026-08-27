@@ -1,15 +1,19 @@
 "use server";
 
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin, requirePlatformAdmin } from "@/lib/auth";
+import {
+  getCachedAdminStats,
+  getCachedSalonList,
+  queryAllSalons,
+} from "@/lib/admin/queries";
 import {
   addDays,
   getMonthPeriod,
   getSubscriptionBillingForPlan,
   TRIAL_DAYS,
-  type SubscriptionStatus,
 } from "@/lib/subscription";
 import { generateMonthlyInvoice } from "@/actions/subscription";
 import {
@@ -35,48 +39,9 @@ export type SalonSubscriptionAction =
   | "suspend"
   | "generate_invoice";
 
-async function fetchAdminStats() {
-  const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-  const [
-    totalSalons,
-    onTrial,
-    activeMonthly,
-    pastDueOrSuspended,
-    signedUpThisMonth,
-    basicPlan,
-    enterprisePlan,
-  ] = await Promise.all([
-    prisma.salon.count(),
-    prisma.salonSubscription.count({ where: { status: "trial" } }),
-    prisma.salonSubscription.count({ where: { status: "active" } }),
-    prisma.salonSubscription.count({
-      where: { status: { in: ["past_due", "suspended"] } },
-    }),
-    prisma.salon.count({ where: { createdAt: { gte: monthStart } } }),
-    prisma.salon.count({ where: { plan: "BASIC" } }),
-    prisma.salon.count({ where: { plan: "ENTERPRISE" } }),
-  ]);
-
-  return {
-    totalSalons,
-    onTrial,
-    activeMonthly,
-    pastDueOrSuspended,
-    signedUpThisMonth,
-    basicPlan,
-    enterprisePlan,
-  };
-}
-
-const getCachedAdminStats = unstable_cache(fetchAdminStats, ["admin-stats"], {
-  revalidate: 60,
-  tags: ["admin-stats"],
-});
-
 function revalidateAdminStats() {
   revalidateTag("admin-stats", "max");
+  revalidateTag("admin-salons", "max");
 }
 
 export async function getAdminStats() {
@@ -92,93 +57,33 @@ export async function getAllSalons(options?: {
   pageSize?: number;
 }) {
   await requirePlatformAdmin();
+  return getCachedSalonList(options);
+}
 
-  const search = options?.search?.trim() ?? "";
-  const status = options?.status ?? "all";
-  const plan = options?.plan ?? "all";
-  const page = Math.max(1, options?.page ?? 1);
-  const pageSize = Math.min(50, Math.max(1, options?.pageSize ?? 20));
-  const skip = (page - 1) * pageSize;
+/** For authenticated admin RSC pages (layout already verified access). */
+export async function getAllSalonsForPage(options?: {
+  search?: string;
+  status?: SalonStatusFilter;
+  plan?: SalonPlanFilter;
+  page?: number;
+  pageSize?: number;
+}) {
+  return getCachedSalonList(options);
+}
 
-  const where: {
-    plan?: "BASIC" | "ENTERPRISE";
-    subscription?: { status: SubscriptionStatus | { in: SubscriptionStatus[] } };
-    OR?: Array<{
-      name?: { contains: string };
-      city?: { contains: string };
-      users?: { some: { email: { contains: string } } };
-    }>;
-  } = {};
+export async function getAdminStatsForPage() {
+  return getCachedAdminStats();
+}
 
-  if (status !== "all") {
-    where.subscription = { status };
-  }
-
-  if (plan !== "all") {
-    where.plan = plan;
-  }
-
-  if (search) {
-    where.OR = [
-      { name: { contains: search } },
-      { city: { contains: search } },
-      { users: { some: { email: { contains: search } } } },
-    ];
-  }
-
-  const [salons, total] = await Promise.all([
-    prisma.salon.findMany({
-      where,
-      skip,
-      take: pageSize,
-      orderBy: { createdAt: "desc" },
-      include: {
-        subscription: {
-          select: {
-            status: true,
-            trialEndsAt: true,
-            currentPeriodEnd: true,
-          },
-        },
-        users: {
-          where: { role: "owner" },
-          take: 1,
-          select: ownerUserSelect,
-        },
-        _count: {
-          select: { employees: true, seats: true },
-        },
-      },
-    }),
-    prisma.salon.count({ where }),
-  ]);
-
-  return {
-    salons: salons.map((salon) => {
-      const owner = salon.users[0];
-      return {
-        id: salon.id,
-        name: salon.name,
-        slug: salon.slug,
-        city: salon.city,
-        phone: salon.businessPhone ?? salon.phone,
-        businessType: salon.businessType,
-        status: salon.subscription?.status ?? "trial",
-        plan: salon.plan,
-        trialEndsAt: salon.subscription?.trialEndsAt ?? null,
-        currentPeriodEnd: salon.subscription?.currentPeriodEnd ?? null,
-        createdAt: salon.createdAt,
-        ownerName: owner?.name ?? "—",
-        ownerEmail: owner?.email ?? "—",
-        seatsCount: salon.totalSeats,
-        staffCount: salon._count.employees,
-      };
-    }),
-    total,
-    page,
-    pageSize,
-    totalPages: Math.ceil(total / pageSize),
-  };
+export async function getAllSalonsUncached(options?: {
+  search?: string;
+  status?: SalonStatusFilter;
+  plan?: SalonPlanFilter;
+  page?: number;
+  pageSize?: number;
+}) {
+  await requirePlatformAdmin();
+  return queryAllSalons(options);
 }
 
 export async function getSalonDetail(salonId: string) {

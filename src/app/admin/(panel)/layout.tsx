@@ -1,15 +1,13 @@
-import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getAdminPageContext } from "@/lib/admin-page-context";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
-import { resolvePlatformRole } from "@/lib/platform-permissions";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getAuthSession();
-  const platformRole = resolvePlatformRole(session?.user ?? {});
+  const { platformRole, userName } = await getAdminPageContext();
 
   if (!platformRole) {
     redirect("/admin/login");
@@ -18,7 +16,7 @@ export default async function AdminLayout({
   return (
     <div className="flex min-h-screen bg-dashboard-bg">
       <AdminSidebar
-        userName={session!.user.name}
+        userName={userName}
         platformRole={platformRole}
         supportUnreadCount={0}
       />

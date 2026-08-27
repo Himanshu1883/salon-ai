@@ -30,17 +30,28 @@ import {
 } from "./types";
 import { BillingMarkPaidDialog } from "./billing-mark-paid-dialog";
 
-function InvoiceAmountDisplay({ inv }: { inv: BillingInvoice }) {
+function InvoiceAmountDisplay({
+  inv,
+  compact = false,
+}: {
+  inv: BillingInvoice;
+  compact?: boolean;
+}) {
   const balanceDue = getInvoiceBalanceDue(inv);
   const amountPaid = inv.amountPaid ?? 0;
 
   if (inv.status === "partial" || (amountPaid > 0 && balanceDue > 0.009)) {
     return (
-      <div className="text-right">
-        <p className="font-semibold tabular-nums text-amber-700">
+      <div className={compact ? "shrink-0 text-right leading-tight" : "text-right"}>
+        <p
+          className={cn(
+            "font-semibold tabular-nums text-amber-700",
+            compact && "text-sm"
+          )}
+        >
           {formatCurrency(balanceDue)}
         </p>
-        <p className="text-xs text-[#9CA3AF]">
+        <p className={cn("text-[#9CA3AF]", compact ? "text-[10px]" : "text-xs")}>
           paid {formatCurrency(amountPaid)} / {formatCurrency(inv.total)}
         </p>
       </div>
@@ -48,7 +59,12 @@ function InvoiceAmountDisplay({ inv }: { inv: BillingInvoice }) {
   }
 
   return (
-    <span className="font-semibold tabular-nums text-[#EF4444]">
+    <span
+      className={cn(
+        "shrink-0 font-semibold tabular-nums text-[#EF4444]",
+        compact && "text-sm"
+      )}
+    >
       {formatCurrency(inv.total)}
     </span>
   );
@@ -69,20 +85,28 @@ function InvoiceRowActions({
   onMarkPaid,
   onMarkSent,
   onDelete,
+  compact = false,
 }: {
   inv: BillingInvoice;
   loading: boolean;
   onMarkPaid: (invoiceId: string, method: string, amountPaid: number, status: string) => void;
   onMarkSent: (id: string) => void;
   onDelete: (id: string) => void;
+  compact?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-end gap-1">
+    <div
+      className={cn(
+        "flex shrink-0 items-center",
+        compact ? "justify-end gap-0.5" : "justify-end gap-1"
+      )}
+    >
       {inv.status !== "paid" && inv.status !== "cancelled" && (
         <BillingMarkPaidDialog
           invoiceId={inv.id}
           total={inv.total}
           amountPaid={inv.amountPaid ?? 0}
+          compact={compact}
           onSuccess={(method, amountPaid, status) =>
             onMarkPaid(inv.id, method, amountPaid, status)
           }
@@ -93,10 +117,15 @@ function InvoiceRowActions({
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 min-h-[var(--touch-target)] min-w-[var(--touch-target)] rounded-lg sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            className={cn(
+              "rounded-lg",
+              compact
+                ? "h-8 w-8"
+                : "h-10 w-10 min-h-[var(--touch-target)] min-w-[var(--touch-target)] sm:h-8 sm:w-8 sm:min-h-0 sm:min-w-0"
+            )}
             disabled={loading}
           >
-            <MoreHorizontal className="h-4 w-4" />
+            <MoreHorizontal className={compact ? "h-3.5 w-3.5" : "h-4 w-4"} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="rounded-xl">
@@ -153,69 +182,73 @@ function BillingInvoiceMobileCards({
           .join(", ");
 
         return (
-          <div key={inv.id} className="space-y-3 p-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EDE9FE] text-sm font-semibold text-[#6C3CF0]">
-                  {getInitials(inv.customerName)}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate font-semibold text-[#1C103D]">
-                    {inv.customerName}
-                  </p>
-                  <p className="text-xs text-[#9CA3AF]">
-                    {format(new Date(inv.createdAt), "d MMM yyyy")}
-                    {inv.dueDate &&
-                      ` · Due ${format(new Date(inv.dueDate), "d MMM")}`}
-                  </p>
-                </div>
+          <article key={inv.id} className="px-3 py-2.5 sm:px-4 sm:py-3">
+            <div className="flex gap-2.5">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EDE9FE] text-xs font-semibold text-[#6C3CF0]">
+                {getInitials(inv.customerName)}
               </div>
-              <InvoiceAmountDisplay inv={inv} />
-            </div>
 
-            {services && (
-              <p className="line-clamp-2 text-sm text-[#6B7280]">{services}</p>
-            )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold leading-tight text-[#1C103D]">
+                      {inv.customerName}
+                    </p>
+                    <p className="mt-0.5 text-[11px] leading-tight text-[#9CA3AF]">
+                      {format(new Date(inv.createdAt), "d MMM yyyy")}
+                      {inv.dueDate &&
+                        ` · Due ${format(new Date(inv.dueDate), "d MMM")}`}
+                    </p>
+                  </div>
+                  <InvoiceAmountDisplay inv={inv} compact />
+                </div>
 
-            {!isBasicPlan && inv.employee && (
-              <div className="flex items-center gap-2 text-sm text-[#374151]">
-                <MemberAvatar
-                  name={inv.employee.name}
-                  className="h-6 w-6 text-[10px]"
-                />
-                {inv.employee.name}
-              </div>
-            )}
-
-            <div className="flex flex-wrap gap-1.5">
-              <span
-                className={cn(
-                  "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium",
-                  statusStyle.className
+                {services && (
+                  <p className="mt-1 line-clamp-1 text-xs leading-snug text-[#6B7280]">
+                    {services}
+                  </p>
                 )}
-              >
-                {statusStyle.label}
-              </span>
-              {inv.status === "paid" && inv.paymentMethod && (
-                <span
-                  className={cn(
-                    "inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium capitalize",
-                    paymentBadge
-                  )}
-                >
-                  {PAYMENT_LABELS[paymentMethod] ?? paymentMethod}
-                </span>
-              )}
-            </div>
 
-            <InvoiceRowActions
-              inv={inv}
-              loading={loading}
-              onMarkPaid={onMarkPaid}
-              onMarkSent={onMarkSent}
-              onDelete={onDelete}
-            />
-          </div>
+                {!isBasicPlan && inv.employee && (
+                  <p className="mt-0.5 truncate text-[11px] text-[#9CA3AF]">
+                    {inv.employee.name}
+                  </p>
+                )}
+
+                <div className="mt-1.5 flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 flex-wrap gap-1">
+                    <span
+                      className={cn(
+                        "inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium leading-none",
+                        statusStyle.className
+                      )}
+                    >
+                      {statusStyle.label}
+                    </span>
+                    {inv.status === "paid" && inv.paymentMethod && (
+                      <span
+                        className={cn(
+                          "inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium capitalize leading-none",
+                          paymentBadge
+                        )}
+                      >
+                        {PAYMENT_LABELS[paymentMethod] ?? paymentMethod}
+                      </span>
+                    )}
+                  </div>
+
+                  <InvoiceRowActions
+                    inv={inv}
+                    loading={loading}
+                    compact
+                    onMarkPaid={onMarkPaid}
+                    onMarkSent={onMarkSent}
+                    onDelete={onDelete}
+                  />
+                </div>
+              </div>
+            </div>
+          </article>
         );
       })}
     </div>

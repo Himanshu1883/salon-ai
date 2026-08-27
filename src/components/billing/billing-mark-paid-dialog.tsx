@@ -35,6 +35,7 @@ type BillingMarkPaidDialogProps = {
   invoiceId: string;
   total: number;
   amountPaid?: number;
+  compact?: boolean;
   onSuccess: (method: string, amountPaid: number, status: string) => void;
 };
 
@@ -42,6 +43,7 @@ export function BillingMarkPaidDialog({
   invoiceId,
   total,
   amountPaid = 0,
+  compact = false,
   onSuccess,
 }: BillingMarkPaidDialogProps) {
   const [open, setOpen] = useState(false);
@@ -98,10 +100,19 @@ export function BillingMarkPaidDialog({
         <Button
           size="sm"
           variant="outline"
-          className="h-8 rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+          className={cn(
+            "rounded-lg border-emerald-200 text-emerald-700 hover:bg-emerald-50",
+            compact ? "h-7 px-2 text-[11px] font-medium" : "h-8"
+          )}
         >
-          <CreditCard className="h-3 w-3" />
-          {isPartialInvoice ? "Collect balance" : "Mark paid"}
+          <CreditCard className={compact ? "h-3 w-3" : "h-3 w-3"} />
+          {isPartialInvoice
+            ? compact
+              ? "Collect"
+              : "Collect balance"
+            : compact
+              ? "Pay"
+              : "Mark paid"}
         </Button>
       </DialogTrigger>
       <DialogContent className="rounded-2xl sm:max-w-md">

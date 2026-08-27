@@ -194,12 +194,12 @@ export function BillingClient({
             <BillingKpiCards stats={stats} />
 
             <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
-              <div className="flex flex-col gap-4 border-b border-[#ECECEC] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex flex-col gap-3 border-b border-[#ECECEC] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-[#1C103D]">
+                  <h2 className="text-base font-semibold text-[#1C103D] sm:text-lg">
                     Customer Invoices
                   </h2>
-                  <p className="text-sm text-[#9CA3AF]">
+                  <p className="text-xs text-[#9CA3AF] sm:text-sm">
                     Bills you create for salon customers
                   </p>
                 </div>
@@ -219,7 +219,7 @@ export function BillingClient({
                 />
               </div>
 
-              <div className="p-1">{invoicesContent}</div>
+              <div className="sm:p-1">{invoicesContent}</div>
             </div>
           </TabsContent>
 

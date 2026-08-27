@@ -1,22 +1,27 @@
-import { listPlatformUsers } from "@/actions/platform-users";
-import { UsersListClient } from "./users-list-client";
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { getAuthSession } from "@/lib/auth";
-import { isSuperAdminRole, resolvePlatformRole } from "@/lib/platform-permissions";
+import { getAdminPageContext } from "@/lib/admin-page-context";
+import { AdminUsersContent } from "./users-content";
+
+function UsersSkeleton() {
+  return (
+    <div className="animate-pulse space-y-4">
+      <div className="h-10 w-40 rounded-lg bg-stone-200" />
+      <div className="h-64 rounded-2xl bg-stone-100" />
+    </div>
+  );
+}
 
 export default async function AdminUsersPage() {
-  const session = await getAuthSession();
-  const platformRole = resolvePlatformRole(session?.user ?? {});
+  const { superAdmin } = await getAdminPageContext();
 
-  if (!isSuperAdminRole({ platformRole, isSuperAdmin: session?.user?.isSuperAdmin })) {
+  if (!superAdmin) {
     redirect("/admin/support");
   }
 
-  const result = await listPlatformUsers();
-
-  if ("error" in result) {
-    redirect("/admin/login");
-  }
-
-  return <UsersListClient users={result.users} />;
+  return (
+    <Suspense fallback={<UsersSkeleton />}>
+      <AdminUsersContent />
+    </Suspense>
+  );
 }

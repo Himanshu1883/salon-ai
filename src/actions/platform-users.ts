@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireSuperAdmin } from "@/lib/auth";
+import { getCachedPlatformUsers } from "@/lib/admin/queries";
 import { logPlatformAdminAction } from "@/lib/platform-admin-access";
 import type { PlatformRole } from "@/lib/platform-permissions";
 
@@ -41,41 +42,16 @@ export async function listPlatformUsers(): Promise<
 > {
   try {
     await requireSuperAdmin();
-
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [{ isSuperAdmin: true }, { platformRole: { not: null } }],
-        salonId: null,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        platformRole: true,
-        isSuperAdmin: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-      orderBy: { createdAt: "asc" },
-    });
-
-    return {
-      users: users.map((user) => ({
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        platformRole:
-          user.platformRole ??
-          (user.isSuperAdmin ? "SUPER_ADMIN" : "CUSTOMER_SUPPORT"),
-        isActive: user.isActive,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      })),
-    };
+    const users = await getCachedPlatformUsers();
+    return { users };
   } catch {
     return { error: "Unauthorized" };
   }
+}
+
+/** For authenticated admin RSC (layout already verified super admin). */
+export async function listPlatformUsersForPage(): Promise<PlatformUserRow[]> {
+  return getCachedPlatformUsers();
 }
 
 export async function createPlatformUser(input: {
@@ -125,6 +101,7 @@ export async function createPlatformUser(input: {
     });
 
     revalidatePath("/admin/users");
+    revalidateTag("admin-platform-users", "max");
     return { success: true, userId: user.id };
   } catch {
     return { error: "Unauthorized" };
@@ -205,6 +182,7 @@ export async function updatePlatformUser(input: {
     });
 
     revalidatePath("/admin/users");
+    revalidateTag("admin-platform-users", "max");
     return { success: true };
   } catch {
     return { error: "Unauthorized" };
@@ -242,6 +220,7 @@ export async function deletePlatformUser(
     });
 
     revalidatePath("/admin/users");
+    revalidateTag("admin-platform-users", "max");
     return { success: true };
   } catch {
     return { error: "Unauthorized" };

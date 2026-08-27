@@ -1,24 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 import { ChevronRight, Building2 } from "lucide-react";
 import { getSalonDetail } from "@/actions/platform-admin";
 import { SalonDetailClient } from "./salon-detail-client";
-import { getAuthSession } from "@/lib/auth";
-import { isSuperAdminRole, resolvePlatformRole } from "@/lib/platform-permissions";
+import { getAdminPageContext } from "@/lib/admin-page-context";
 
-export default async function AdminSalonDetailPage({
-  params,
+async function SalonDetailContent({
+  id,
+  readOnly,
 }: {
-  params: Promise<{ id: string }>;
+  id: string;
+  readOnly: boolean;
 }) {
-  const { id } = await params;
-  const session = await getAuthSession();
-  const platformRole = resolvePlatformRole(session?.user ?? {});
-  const readOnly = !isSuperAdminRole({
-    platformRole,
-    isSuperAdmin: session?.user?.isSuperAdmin,
-  });
-
   const salon = await getSalonDetail(id);
 
   if (!salon) {
@@ -26,7 +20,7 @@ export default async function AdminSalonDetailPage({
   }
 
   return (
-    <div className="space-y-6">
+    <>
       <nav aria-label="Breadcrumb">
         <ol className="flex flex-wrap items-center gap-1.5 text-sm">
           <li>
@@ -47,6 +41,32 @@ export default async function AdminSalonDetailPage({
         </ol>
       </nav>
       <SalonDetailClient salon={salon} readOnly={readOnly} />
+    </>
+  );
+}
+
+function DetailSkeleton() {
+  return (
+    <div className="animate-pulse space-y-6">
+      <div className="h-5 w-48 rounded bg-stone-200" />
+      <div className="h-96 rounded-2xl bg-stone-100" />
+    </div>
+  );
+}
+
+export default async function AdminSalonDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const { superAdmin } = await getAdminPageContext();
+
+  return (
+    <div className="space-y-6">
+      <Suspense fallback={<DetailSkeleton />}>
+        <SalonDetailContent id={id} readOnly={!superAdmin} />
+      </Suspense>
     </div>
   );
 }

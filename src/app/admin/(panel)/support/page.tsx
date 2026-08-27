@@ -1,11 +1,12 @@
+import { Suspense } from "react";
+import { AdminSupportClient } from "@/components/support/admin-support-client";
 import {
   getAdminSupportConversations,
   getAdminSupportMessages,
   getAdminSupportStatusCounts,
 } from "@/actions/support-chat";
-import { AdminSupportClient } from "@/components/support/admin-support-client";
 
-export default async function AdminSupportPage() {
+async function AdminSupportData() {
   const [conversations, statusCounts] = await Promise.all([
     getAdminSupportConversations(),
     getAdminSupportStatusCounts(),
@@ -21,5 +22,22 @@ export default async function AdminSupportPage() {
       initialDetail={detail}
       initialStatusCounts={statusCounts}
     />
+  );
+}
+
+function SupportSkeleton() {
+  return (
+    <div className="flex h-[min(720px,calc(100vh-8rem))] animate-pulse gap-4">
+      <div className="w-full max-w-sm rounded-2xl bg-stone-100" />
+      <div className="flex-1 rounded-2xl bg-stone-50" />
+    </div>
+  );
+}
+
+export default function AdminSupportPage() {
+  return (
+    <Suspense fallback={<SupportSkeleton />}>
+      <AdminSupportData />
+    </Suspense>
   );
 }
