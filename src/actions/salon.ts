@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireOwnerOrManager } from "@/lib/auth";
 import { saveSalonLogo } from "@/lib/salon-logo-upload";
 import { revalidatePath } from "next/cache";
+import { revalidateSalonCache } from "@/lib/salon-cache";
 import { z } from "zod";
 
 const salonProfileSchema = z.object({
@@ -43,38 +44,52 @@ export async function getSalonProfile() {
 }
 
 export async function uploadSalonLogo(formData: FormData) {
-  const session = await requireOwnerOrManager();
-  const file = formData.get("logo") as File | null;
+  try {
+    const session = await requireOwnerOrManager();
+    const file = formData.get("logo") as File | null;
 
-  if (!file || file.size === 0) {
-    return { error: "Select an image to upload" };
+    if (!file || file.size === 0) {
+      return { error: "Select an image to upload" };
+    }
+
+    const upload = await saveSalonLogo(file, session.user.salonId);
+    if (upload.error) return { error: upload.error };
+    if (!upload.path) return { error: "Upload failed" };
+
+    await prisma.salon.update({
+      where: { id: session.user.salonId },
+      data: { logoUrl: upload.path },
+    });
+
+    revalidatePath("/settings/salon");
+    revalidatePath("/login");
+    revalidateSalonCache(session.user.salonId, "layout-context");
+    return { success: true, logoUrl: upload.path };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Logo upload failed";
+    return { error: message };
   }
-
-  const upload = await saveSalonLogo(file, session.user.salonId);
-  if (upload.error) return { error: upload.error };
-  if (!upload.path) return { error: "Upload failed" };
-
-  await prisma.salon.update({
-    where: { id: session.user.salonId },
-    data: { logoUrl: upload.path },
-  });
-
-  revalidatePath("/settings/salon");
-  revalidatePath("/login");
-  return { success: true, logoUrl: upload.path };
 }
 
 export async function removeSalonLogo() {
-  const session = await requireOwnerOrManager();
+  try {
+    const session = await requireOwnerOrManager();
 
-  await prisma.salon.update({
-    where: { id: session.user.salonId },
-    data: { logoUrl: null },
-  });
+    await prisma.salon.update({
+      where: { id: session.user.salonId },
+      data: { logoUrl: null },
+    });
 
-  revalidatePath("/settings/salon");
-  revalidatePath("/login");
-  return { success: true };
+    revalidatePath("/settings/salon");
+    revalidatePath("/login");
+    revalidateSalonCache(session.user.salonId, "layout-context");
+    return { success: true };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not remove logo";
+    return { error: message };
+  }
 }
 
 export async function updateSalonProfile(data: unknown) {

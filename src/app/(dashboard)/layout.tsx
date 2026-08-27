@@ -7,7 +7,7 @@ import { PlanGate } from "@/components/plans/plan-gate";
 import { PlanProvider } from "@/components/plans/plan-provider";
 import { PermissionLayoutGate } from "@/components/permissions/permission-layout-gate";
 import { LayoutHeaderAlerts } from "@/components/dashboard/layout-header-alerts";
-import { getSalonLayoutContext, getSalonAccessBlocked } from "@/lib/salon-layout-context";
+import { getSalonLayoutContext, getSalonAccessBlocked, getSalonLogoPath } from "@/lib/salon-layout-context";
 import { isStaffDashboardAccessAllowed } from "@/lib/employee-login-link";
 import { getResolvedPermissions, resolveOwnerPermissions } from "@/lib/permissions/resolve";
 import type { PermissionKey } from "@/lib/permissions/catalog";
@@ -36,7 +36,7 @@ export default async function DashboardLayout({
   const skipStaffAccessCheck =
     isOwner || session.user.dashboardAccessVerified === true;
 
-  const [staffAccessOk, layoutContext, blockedOnly, resolved] = await Promise.all([
+  const [staffAccessOk, layoutContext, blockedOnly, resolved, salonLogoUrl] = await Promise.all([
     skipStaffAccessCheck
       ? Promise.resolve(true)
       : session.user.email
@@ -51,6 +51,7 @@ export default async function DashboardLayout({
     isOwner
       ? Promise.resolve(resolveOwnerPermissions(session.user.id, salonId))
       : getResolvedPermissions(session.user.id, salonId),
+    getSalonLogoPath(salonId),
   ]);
 
   if (!staffAccessOk) {
@@ -73,6 +74,7 @@ export default async function DashboardLayout({
       <DashboardShell
         salonName={session.user.salonName ?? "Salon"}
         salonSlug={session.user.salonSlug}
+        salonLogoUrl={salonLogoUrl}
         userName={session.user.name}
         userRole={userRole}
         showSettings={showSettings}

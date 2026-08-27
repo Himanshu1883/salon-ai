@@ -38,6 +38,8 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
   const [gstEnabled, setGstEnabled] = useState(profile?.gstEnabled ?? true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [logoSuccess, setLogoSuccess] = useState(false);
   const { fullUrl: salonLoginUrl } = useSalonLoginUrl(profile?.slug ?? "");
 
   const logoPreviewUrl = getSalonLogoUrl(profile?.logoUrl);
@@ -79,40 +81,48 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
 
   async function handleLogoUpload(file: File) {
     setLogoLoading(true);
-    setError(null);
-    setSuccess(false);
+    setLogoError(null);
+    setLogoSuccess(false);
 
-    const formData = new FormData();
-    formData.set("logo", file);
-    const result = await uploadSalonLogo(formData);
+    try {
+      const formData = new FormData();
+      formData.set("logo", file);
+      const result = await uploadSalonLogo(formData);
 
-    setLogoLoading(false);
+      if ("error" in result && typeof result.error === "string") {
+        setLogoError(result.error);
+        return;
+      }
 
-    if ("error" in result && typeof result.error === "string") {
-      setError(result.error);
-      return;
+      setLogoSuccess(true);
+      router.refresh();
+    } catch {
+      setLogoError("Logo upload failed. Please try again.");
+    } finally {
+      setLogoLoading(false);
     }
-
-    setSuccess(true);
-    router.refresh();
   }
 
   async function handleLogoRemove() {
     setLogoLoading(true);
-    setError(null);
-    setSuccess(false);
+    setLogoError(null);
+    setLogoSuccess(false);
 
-    const result = await removeSalonLogo();
+    try {
+      const result = await removeSalonLogo();
 
-    setLogoLoading(false);
+      if ("error" in result && typeof result.error === "string") {
+        setLogoError(result.error);
+        return;
+      }
 
-    if ("error" in result && typeof result.error === "string") {
-      setError(result.error);
-      return;
+      setLogoSuccess(true);
+      router.refresh();
+    } catch {
+      setLogoError("Could not remove logo. Please try again.");
+    } finally {
+      setLogoLoading(false);
     }
-
-    setSuccess(true);
-    router.refresh();
   }
 
   return (
@@ -138,6 +148,17 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
           <p className="mt-1 text-xs text-stone-500">
             Shown on your salon&apos;s login page. JPG, PNG, or WebP up to 2MB.
           </p>
+
+          {logoError && (
+            <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+              {logoError}
+            </p>
+          )}
+          {logoSuccess && (
+            <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+              Logo updated successfully.
+            </p>
+          )}
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">

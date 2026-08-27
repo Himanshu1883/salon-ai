@@ -32,6 +32,7 @@ import {
 } from "@/lib/plans";
 import { canViewModule } from "@/lib/permissions/nav";
 import type { PermissionKey } from "@/lib/permissions/catalog";
+import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 
 type NavLink = NavItem;
 
@@ -231,6 +232,7 @@ function UserProfileFooter({
 export function Sidebar({
   salonName,
   salonSlug,
+  salonLogoUrl = null,
   userName,
   userRole = "owner",
   showSettings = false,
@@ -244,6 +246,7 @@ export function Sidebar({
 }: {
   salonName: string;
   salonSlug?: string;
+  salonLogoUrl?: string | null;
   userName: string;
   userRole?: string;
   showSettings?: boolean;
@@ -256,7 +259,6 @@ export function Sidebar({
   onToggleCollapse?: () => void;
 }) {
   const pathname = usePathname();
-  const salonInitial = salonName.charAt(0).toUpperCase() || "S";
   const permissionSet = new Set(permissionKeys);
 
   const planNavItems = getSidebarItems(plan);
@@ -283,9 +285,12 @@ export function Sidebar({
     >
       <div className={cn("border-b border-white/10 px-5 py-5", collapsed && "px-3")}>
         <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 text-lg font-bold text-white shadow-lg shadow-violet-900/40">
-            {salonInitial}
-          </div>
+          <SalonLogoMark
+            logoUrl={salonLogoUrl}
+            fallbackInitial={salonName}
+            size="md"
+            alt={`${salonName} logo`}
+          />
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate text-base font-bold text-white">{salonName}</p>

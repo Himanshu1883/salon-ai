@@ -1,5 +1,8 @@
 export function getSalonLogoUrl(path: string | null | undefined): string | null {
   if (!path) return null;
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
   return `/api/public/salon-logo/${path}`;
 }
 

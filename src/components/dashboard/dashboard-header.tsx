@@ -31,6 +31,7 @@ import {
 import { getRoleLabel } from "@/lib/team";
 import { usePlan } from "@/components/plans/plan-provider";
 import { useRecordSale } from "@/components/dashboard/record-sale-provider";
+import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 
 function getGreeting(): string {
   const hour = new Date().getHours();
@@ -43,6 +44,7 @@ type DashboardHeaderProps = {
   userName: string;
   salonName: string;
   salonSlug?: string;
+  salonLogoUrl?: string | null;
   userRole?: string;
   showSettings?: boolean;
   alertBadge?: React.ReactNode;
@@ -53,6 +55,7 @@ export function DashboardHeader({
   userName,
   salonName,
   salonSlug,
+  salonLogoUrl = null,
   userRole = "owner",
   showSettings = false,
   alertBadge = null,
@@ -239,9 +242,13 @@ export function DashboardHeader({
                     type="button"
                     className="flex h-10 items-center gap-2 rounded-2xl border border-dashboard-border bg-white px-2 shadow-sm transition-colors hover:bg-dashboard-bg sm:pl-2 sm:pr-3"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-xs font-semibold text-white">
-                      {userName.charAt(0).toUpperCase()}
-                    </div>
+                    <SalonLogoMark
+                      logoUrl={salonLogoUrl}
+                      fallbackInitial={userName}
+                      size="xs"
+                      variant="dark"
+                      alt={`${salonName} logo`}
+                    />
                     <span className="hidden max-w-[100px] truncate text-sm font-medium text-dashboard-text lg:inline">
                       {firstName}
                     </span>

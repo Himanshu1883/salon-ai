@@ -7,12 +7,14 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header";
 import { RecordSaleProvider, useRecordSale } from "@/components/dashboard/record-sale-provider";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
+import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 type DashboardShellProps = {
   salonName: string;
   salonSlug?: string;
+  salonLogoUrl?: string | null;
   userName: string;
   userRole: string;
   showSettings?: boolean;
@@ -41,6 +43,7 @@ type RecordSaleFormData = {
 function DashboardShellInner({
   salonName,
   salonSlug,
+  salonLogoUrl = null,
   userName,
   userRole,
   showSettings = false,
@@ -109,6 +112,7 @@ function DashboardShellInner({
         <Sidebar
           salonName={salonName}
           salonSlug={salonSlug}
+          salonLogoUrl={salonLogoUrl}
           userName={userName}
           userRole={userRole}
           showSettings={showSettings}
@@ -134,9 +138,18 @@ function DashboardShellInner({
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
 
-            <div className="min-w-0 flex-1">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <SalonLogoMark
+                logoUrl={salonLogoUrl}
+                fallbackInitial={salonName}
+                size="xs"
+                variant="dark"
+                alt={`${salonName} logo`}
+              />
+              <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-dashboard-text">{salonName}</p>
               <p className="truncate text-xs text-dashboard-muted">Salon Management</p>
+              </div>
             </div>
 
             {!accessBlocked && (
@@ -163,6 +176,7 @@ function DashboardShellInner({
           userName={userName}
           salonName={salonName}
           salonSlug={salonSlug}
+          salonLogoUrl={salonLogoUrl}
           userRole={userRole}
           showSettings={showSettings}
           alertBadge={headerAlerts}

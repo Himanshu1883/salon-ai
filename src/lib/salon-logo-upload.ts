@@ -1,14 +1,9 @@
 import { mkdir, writeFile } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
+import { put } from "@vercel/blob";
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "image/webp",
-]);
 
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": ".jpg",
@@ -16,6 +11,74 @@ const EXTENSIONS: Record<string, string> = {
   "image/png": ".png",
   "image/webp": ".webp",
 };
+
+const MIME_FROM_EXT: Record<string, string> = {
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".png": "image/png",
+  ".webp": "image/webp",
+};
+
+function resolveImageMime(file: File): string | null {
+  const normalizedType = file.type?.toLowerCase();
+  if (normalizedType === "image/jpg") return "image/jpeg";
+  if (normalizedType && Object.hasOwn(EXTENSIONS, normalizedType)) {
+    return normalizedType;
+  }
+
+  const ext = path.extname(file.name).toLowerCase();
+  return MIME_FROM_EXT[ext] ?? null;
+}
+
+async function saveToLocalDisk(
+  buffer: Buffer,
+  salonId: string,
+  ext: string
+): Promise<{ path?: string; error?: string }> {
+  const filename = `${randomUUID()}${ext}`;
+  const relativeDir = path.join("logos", salonId);
+  const absoluteDir = path.join(process.cwd(), "uploads", relativeDir);
+
+  try {
+    await mkdir(absoluteDir, { recursive: true });
+    await writeFile(path.join(absoluteDir, filename), buffer);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not save logo file";
+    return { error: `Logo upload failed: ${message}` };
+  }
+
+  return { path: path.join(relativeDir, filename).replace(/\\/g, "/") };
+}
+
+async function saveToBlob(
+  buffer: Buffer,
+  salonId: string,
+  ext: string,
+  contentType: string
+): Promise<{ path?: string; error?: string }> {
+  const token = process.env.BLOB_READ_WRITE_TOKEN;
+  if (!token) {
+    return {
+      error:
+        "Logo uploads require Vercel Blob in production. Set BLOB_READ_WRITE_TOKEN in your environment.",
+    };
+  }
+
+  try {
+    const filename = `${randomUUID()}${ext}`;
+    const blob = await put(`logos/${salonId}/${filename}`, buffer, {
+      access: "public",
+      contentType,
+      token,
+    });
+    return { path: blob.url };
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Could not upload to storage";
+    return { error: `Logo upload failed: ${message}` };
+  }
+}
 
 export async function saveSalonLogo(
   file: File,
@@ -25,30 +88,21 @@ export async function saveSalonLogo(
     return { error: "Select an image to upload" };
   }
 
-  if (process.env.VERCEL === "1" && !process.env.BLOB_READ_WRITE_TOKEN) {
-    return {
-      error:
-        "Logo uploads require Vercel Blob in production. Set BLOB_READ_WRITE_TOKEN or upload locally.",
-    };
-  }
-
   if (file.size > MAX_FILE_SIZE) {
     return { error: "Logo must be 2MB or smaller" };
   }
 
-  if (!ALLOWED_TYPES.has(file.type)) {
+  const mime = resolveImageMime(file);
+  if (!mime) {
     return { error: "Logo must be a JPG, PNG, or WebP image" };
   }
 
-  const ext = EXTENSIONS[file.type] ?? (path.extname(file.name) || ".png");
-  const filename = `${randomUUID()}${ext}`;
-  const relativeDir = path.join("logos", salonId);
-  const absoluteDir = path.join(process.cwd(), "uploads", relativeDir);
-
-  await mkdir(absoluteDir, { recursive: true });
-
+  const ext = EXTENSIONS[mime] ?? (path.extname(file.name) || ".png");
   const buffer = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(absoluteDir, filename), buffer);
 
-  return { path: path.join(relativeDir, filename).replace(/\\/g, "/") };
+  if (process.env.VERCEL === "1") {
+    return saveToBlob(buffer, salonId, ext, mime);
+  }
+
+  return saveToLocalDisk(buffer, salonId, ext);
 }
