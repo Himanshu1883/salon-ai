@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowRight,
@@ -31,6 +31,7 @@ import {
 } from "@/lib/salon-logo";
 import { cn } from "@/lib/utils";
 import { getSignInErrorMessage } from "@/lib/sign-in-errors";
+import { resolvePlatformRole } from "@/lib/platform-permissions";
 
 type SalonBranding = {
   name: string;
@@ -285,6 +286,15 @@ export default function LoginForm({ salon }: LoginFormProps) {
       localStorage.removeItem(`salon-login-email-${salon.slug}`);
     }
 
+    const existingSession = await getSession();
+    if (
+      existingSession?.user &&
+      !existingSession.user.salonId &&
+      resolvePlatformRole(existingSession.user)
+    ) {
+      await signOut({ redirect: false });
+    }
+
     let result;
     try {
       result = await signIn("credentials", {
@@ -317,9 +327,19 @@ export default function LoginForm({ salon }: LoginFormProps) {
       return;
     }
 
-    // Client navigation avoids full document reload; refresh loads the new session.
-    router.push(callbackUrl);
-    router.refresh();
+    const session = await getSession();
+    if (
+      !session?.user?.salonId ||
+      session.user.salonSlug !== salon.slug ||
+      resolvePlatformRole(session.user)
+    ) {
+      setLoading(false);
+      setError("Could not open this salon workspace. Please try again.");
+      await signOut({ redirect: false });
+      return;
+    }
+
+    window.location.assign(callbackUrl);
   }
 
   return (

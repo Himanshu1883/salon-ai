@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getAuthSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { resolvePlatformRole } from "@/lib/platform-permissions";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { AccessGate } from "@/components/dashboard/access-gate";
 import { PlanGate } from "@/components/plans/plan-gate";
@@ -23,7 +24,7 @@ export default async function DashboardLayout({
 }) {
   const session = await getAuthSession();
   if (!session?.user) redirect("/");
-  if (session.user.isSuperAdmin && !session.user.salonId) redirect("/admin");
+  if (resolvePlatformRole(session.user)) redirect("/admin");
   const salonId = session.user.salonId;
   if (!salonId) redirect("/");
 

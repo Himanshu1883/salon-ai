@@ -8,7 +8,9 @@ export const PLATFORM_ROLE_LABELS: Record<PlatformRole, string> = {
 export function resolvePlatformRole(user: {
   isSuperAdmin?: boolean;
   platformRole?: PlatformRole | null;
+  salonId?: string | null;
 }): PlatformRole | null {
+  if (user.salonId) return null;
   if (user.platformRole) return user.platformRole;
   if (user.isSuperAdmin) return "SUPER_ADMIN";
   return null;

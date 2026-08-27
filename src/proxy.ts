@@ -43,13 +43,8 @@ export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth?.user;
   const sessionSalonSlug = req.auth?.user?.salonSlug;
   const sessionSalonId = req.auth?.user?.salonId;
-  const isSalonWorkspaceSession = Boolean(sessionSalonId && sessionSalonSlug);
-  const isSuperAdmin = isSalonWorkspaceSession
-    ? false
-    : !!req.auth?.user?.isSuperAdmin;
-  const platformRole = isSalonWorkspaceSession
-    ? null
-    : resolvePlatformRole(req.auth?.user ?? {});
+  const isSalonWorkspaceSession = Boolean(sessionSalonId);
+  const platformRole = resolvePlatformRole(req.auth?.user ?? {});
   const isPlatformAdmin = platformRole !== null;
 
   if (pathname.startsWith("/admin")) {
@@ -112,7 +107,7 @@ export const proxy = auth((req) => {
     }
 
     if (innerPath === "/login") {
-      if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
+      if (isLoggedIn && isSalonWorkspaceSession && sessionSalonSlug === salonSlug) {
         return NextResponse.redirect(
           new URL(`/${salonSlug}/dashboard`, req.url)
         );
@@ -121,7 +116,7 @@ export const proxy = auth((req) => {
     }
 
     if (innerPath === "/forgot-password" || innerPath === "/reset-password") {
-      if (isLoggedIn && !isSuperAdmin && sessionSalonSlug === salonSlug) {
+      if (isLoggedIn && isSalonWorkspaceSession && sessionSalonSlug === salonSlug) {
         return NextResponse.redirect(
           new URL(`/${salonSlug}/dashboard`, req.url)
         );
@@ -155,7 +150,7 @@ export const proxy = auth((req) => {
   }
 
   if (pathname === "/login") {
-    if (isLoggedIn && !isSuperAdmin && sessionSalonSlug) {
+    if (isLoggedIn && isSalonWorkspaceSession && sessionSalonSlug) {
       return NextResponse.redirect(
         new URL(`/${sessionSalonSlug}/dashboard`, req.url)
       );

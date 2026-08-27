@@ -18,29 +18,36 @@ export const authConfig = {
         token.salonSlug = user.salonSlug ?? undefined;
         token.plan = user.plan ?? undefined;
         token.dashboardAccessVerified = user.dashboardAccessVerified ?? undefined;
-
-        // Salon workspace sessions must not carry stale platform-admin flags.
-        if (user.salonId && user.salonSlug) {
-          token.isSuperAdmin = false;
-          token.platformRole = undefined;
-        }
       }
+
+      // Salon workspace sessions must never carry platform-admin flags.
+      if (token.salonId) {
+        token.isSuperAdmin = false;
+        token.platformRole = undefined;
+      }
+
       return token;
     },
     session: async ({ session, token }) => {
       if (session.user) {
         session.user.id = token.sub!;
         session.user.role = (token.role as string | undefined) ?? "owner";
-        session.user.isSuperAdmin = Boolean(token.isSuperAdmin);
-        session.user.platformRole = token.platformRole as
-          | import("@/lib/platform-permissions").PlatformRole
-          | undefined;
         session.user.salonId = token.salonId as string | undefined;
         session.user.salonName = token.salonName as string | undefined;
         session.user.salonSlug = token.salonSlug as string | undefined;
         session.user.plan = token.plan as string | undefined;
         session.user.dashboardAccessVerified =
           token.dashboardAccessVerified === true;
+
+        if (session.user.salonId) {
+          session.user.isSuperAdmin = false;
+          session.user.platformRole = undefined;
+        } else {
+          session.user.isSuperAdmin = Boolean(token.isSuperAdmin);
+          session.user.platformRole = token.platformRole as
+            | import("@/lib/platform-permissions").PlatformRole
+            | undefined;
+        }
       }
       return session;
     },
