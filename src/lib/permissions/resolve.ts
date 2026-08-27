@@ -186,6 +186,25 @@ function resolveFromContext(
     }
   }
 
+  const effectiveRoleKey =
+    roleKey ?? mapLegacyUserRoleToSystemKey(user.role);
+  if (effectiveRoleKey === "EMPLOYEE") {
+    const employeeAttendance: PermissionKey[] = [
+      "attendance.view_own",
+      "attendance.check_in",
+      "attendance.check_out",
+    ];
+    for (const key of employeeAttendance) {
+      const denied = details.get(key)?.source === "deny";
+      if (!denied) {
+        permissions.add(key);
+        if (!details.has(key)) {
+          details.set(key, { granted: true, source: "legacy" });
+        }
+      }
+    }
+  }
+
   return {
     userId: user.id,
     salonId,

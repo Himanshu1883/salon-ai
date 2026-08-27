@@ -7,6 +7,10 @@ const PATH_PERMISSION_OVERRIDES: Array<{
   permission: PermissionKey;
 }> = [
   {
+    match: (path) => path.startsWith("/attendance"),
+    permission: "attendance.view_own",
+  },
+  {
     match: (path) =>
       path.startsWith("/team/attendance") ||
       path.startsWith("/team/shifts") ||
@@ -64,6 +68,10 @@ export function getRequiredPermissionForPath(
   pathname: string
 ): PermissionKey | null {
   const path = normalizeDashboardPath(pathname);
+
+  if (path.startsWith("/attendance")) {
+    return "attendance.view_own";
+  }
 
   for (const rule of PATH_PERMISSION_OVERRIDES) {
     if (rule.match(path)) return rule.permission;

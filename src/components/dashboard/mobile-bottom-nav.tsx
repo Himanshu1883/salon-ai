@@ -7,9 +7,11 @@ import {
   LayoutDashboard,
   Menu,
   Receipt,
+  Timer,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isEmployeeNavUser } from "@/lib/plans";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Home", icon: LayoutDashboard, match: (p: string) => p === "/dashboard" },
@@ -34,13 +36,35 @@ const NAV_ITEMS = [
   },
 ] as const;
 
+const EMPLOYEE_MOBILE_EXTRAS = [
+  {
+    href: "/attendance",
+    label: "My Time",
+    icon: Timer,
+    match: (p: string) => p === "/attendance" || p.startsWith("/attendance/"),
+  },
+] as const;
+
 type MobileBottomNavProps = {
   onOpenMenu: () => void;
   accessBlocked?: boolean;
+  userRole?: string;
+  isOwner?: boolean;
+  roleKey?: string | null;
 };
 
-export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBottomNavProps) {
+export function MobileBottomNav({
+  onOpenMenu,
+  accessBlocked = false,
+  userRole = "owner",
+  isOwner = false,
+  roleKey = null,
+}: MobileBottomNavProps) {
   const pathname = usePathname();
+  const employeeNav = isEmployeeNavUser(userRole, isOwner, roleKey);
+  const items = employeeNav
+    ? [...EMPLOYEE_MOBILE_EXTRAS, ...NAV_ITEMS]
+    : NAV_ITEMS;
 
   if (accessBlocked) return null;
 
@@ -50,13 +74,13 @@ export function MobileBottomNav({ onOpenMenu, accessBlocked = false }: MobileBot
       aria-label="Primary navigation"
     >
       <div className="mx-auto flex h-16 min-h-[var(--touch-target)] max-w-lg items-stretch justify-around px-1">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon;
           const active = item.match(pathname);
 
           return (
             <Link
-              key={item.href}
+              key={item.label}
               href={item.href}
               prefetch={false}
               className={cn(

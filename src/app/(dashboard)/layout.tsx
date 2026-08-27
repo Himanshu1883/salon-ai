@@ -89,6 +89,7 @@ export default async function DashboardLayout({
         plan={plan}
         permissionKeys={permissionKeys}
         isOwner={resolved.isOwner}
+        roleKey={resolved.roleKey}
         duePayments={duePayments}
         headerAlerts={
           <Suspense fallback={null}>

@@ -1,3 +1,5 @@
+import { statSync } from "node:fs";
+import { join } from "node:path";
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool, type PoolConfig } from "pg";
@@ -10,7 +12,29 @@ const globalForPrisma = globalThis as unknown as {
   pgPool: Pool | undefined;
   prisma: PrismaClient | undefined;
   pgPoolConnectionString: string | undefined;
+  prismaClientVersion: string | undefined;
 };
+
+function getGeneratedPrismaVersion(): string {
+  try {
+    const modelPath = join(
+      process.cwd(),
+      "src/generated/prisma/models/AttendanceRecord.ts"
+    );
+    return String(statSync(modelPath).mtimeMs);
+  } catch {
+    return "unknown";
+  }
+}
+
+function resetCachedPrismaClient() {
+  globalForPrisma.prisma = undefined;
+  if (globalForPrisma.pgPool) {
+    void globalForPrisma.pgPool.end();
+    globalForPrisma.pgPool = undefined;
+    globalForPrisma.pgPoolConnectionString = undefined;
+  }
+}
 
 /** Prefer pooled runtime URLs; never use direct/migration-only env vars for the app. */
 function getRuntimeDatabaseUrl(): string {
@@ -134,12 +158,21 @@ function getPgPool(): Pool {
 }
 
 export function getPrismaClient(): PrismaClient {
+  const clientVersion = getGeneratedPrismaVersion();
+  if (
+    globalForPrisma.prisma &&
+    globalForPrisma.prismaClientVersion !== clientVersion
+  ) {
+    resetCachedPrismaClient();
+  }
+
   getPgPool();
 
   if (!globalForPrisma.prisma) {
     const pool = globalForPrisma.pgPool!;
     const adapter = new PrismaPg(pool);
     globalForPrisma.prisma = new PrismaClient({ adapter });
+    globalForPrisma.prismaClientVersion = clientVersion;
   }
 
   return globalForPrisma.prisma;

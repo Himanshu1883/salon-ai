@@ -17,7 +17,10 @@ import {
   Wallet,
   LineChart,
   Receipt,
+  Clock,
   Sparkles,
+  Timer,
+  CalendarDays,
 } from "lucide-react";
 
 export type SalonPlan = "BASIC" | "ENTERPRISE";
@@ -39,7 +42,8 @@ export type PlanModule =
   | "analytics"
   | "consultation"
   | "settings"
-  | "projects";
+  | "projects"
+  | "attendance";
 
 export type NavItem = {
   href: string;
@@ -104,6 +108,7 @@ const BASIC_MODULES: PlanModule[] = [
   "billing",
   "services",
   "staff",
+  "attendance",
   "inventory",
   "reports",
   "projects",
@@ -133,6 +138,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/catalog/services", label: "Services", icon: Scissors, module: "services" },
   { href: "/inventory", label: "Inventory", icon: Package, module: "inventory" },
   { href: "/team/members", label: "Staff", icon: Users, module: "staff" },
+  { href: "/attendance", label: "Attendance", icon: Clock, module: "attendance" },
   { href: "/memberships", label: "Memberships", icon: Crown, module: "membership" },
   { href: "/settings/notifications", label: "Marketing", icon: Megaphone, module: "marketing" },
   { href: "/reports", label: "Expenses", icon: Wallet, module: "expense" },
@@ -141,6 +147,49 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/hair-consultation", label: "AI Hair", icon: Sparkles, module: "consultation" },
   { href: "/settings/billing", label: "Settings", icon: Settings, module: "settings" },
 ];
+
+/** Extra nav entries prepended for staff/employee accounts (does not replace existing nav). */
+export const EMPLOYEE_NAV_EXTRAS: NavItem[] = [
+  { href: "/attendance", label: "My Time", icon: Timer, module: "attendance" },
+  { href: "/sales/appointments", label: "Calendar", icon: CalendarDays, module: "appointments" },
+];
+
+export function isEmployeeNavUser(
+  userRole: string,
+  isOwner: boolean,
+  roleKey?: string | null
+): boolean {
+  if (isOwner) return false;
+  if (roleKey === "EMPLOYEE") return true;
+  return userRole === "employee" || userRole === "staff";
+}
+
+/** Prepend employee shortcuts without removing existing sidebar items. */
+export function prependEmployeeNavItems(baseItems: NavItem[]): NavItem[] {
+  const seen = new Set(baseItems.map((item) => `${item.href}::${item.label}`));
+  const extras: NavItem[] = [];
+
+  for (const item of EMPLOYEE_NAV_EXTRAS) {
+    const key = `${item.href}::${item.label}`;
+    if (!seen.has(key)) {
+      extras.push(item);
+      seen.add(key);
+    }
+  }
+
+  // Attendance module link — only add if not already present under any label
+  const hasAttendanceLink = baseItems.some((item) => item.href === "/attendance");
+  if (!hasAttendanceLink) {
+    extras.push({
+      href: "/attendance",
+      label: "Attendance",
+      icon: UserCheck,
+      module: "attendance",
+    });
+  }
+
+  return [...extras, ...baseItems];
+}
 
 const BASIC_SETTINGS_PATHS = ["/settings/salon", "/settings/billing", "/settings/subscription"];
 
@@ -196,6 +245,9 @@ export function getModuleForPath(pathname: string): PlanModule | null {
     return "services";
   }
   if (matchPath(path, "/team/members") || matchPath(path, "/employees")) return "staff";
+  if (matchPath(path, "/attendance") || matchPath(path, "/team/attendance")) {
+    return "attendance";
+  }
   if (matchPath(path, "/memberships") || matchPath(path, "/sales/memberships")) return "membership";
   if (matchPath(path, "/settings/notifications")) return "marketing";
   if (matchPath(path, "/reports/finance")) return "expense";
@@ -237,6 +289,7 @@ export function getRestrictedModuleLabel(module: PlanModule): string {
     billing: "Billing",
     services: "Services",
     staff: "Staff",
+    attendance: "Attendance",
     reports: "Reports",
     sales: "Sales",
     inventory: "Inventory",

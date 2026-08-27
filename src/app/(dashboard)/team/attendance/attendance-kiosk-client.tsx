@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   getFaceProfiles,
   recordCheckIn,
+  recordCheckOut,
 } from "@/actions/attendance";
 import { FaceCamera } from "@/components/attendance/face-camera";
 import { Button } from "@/components/ui/button";
@@ -71,21 +72,25 @@ export function AttendanceKioskClient({
       lastScanRef.current = { employeeId, at: now };
 
       setProcessing(true);
-      const result = await recordCheckIn(employeeId, "face", confidence);
+      const checkInResult = await recordCheckIn(employeeId, "face", confidence);
+      const result =
+        "alreadyCheckedIn" in checkInResult && checkInResult.alreadyCheckedIn
+          ? await recordCheckOut(employeeId)
+          : checkInResult;
       setProcessing(false);
 
-      if (result.error) {
+      if ("error" in result && result.error) {
         setToast({ type: "error", message: result.error });
         return;
       }
 
-      if (result.action === "check_in") {
+      if ("success" in result && result.success && result.action === "check_in") {
         setToast({
           type: "success",
           message: `${employeeName} checked in`,
           sub: `Checked in at ${result.time}`,
         });
-      } else {
+      } else if ("success" in result && result.success) {
         setToast({
           type: "success",
           message: `${employeeName} checked out`,
@@ -122,21 +127,25 @@ export function AttendanceKioskClient({
     if (!employee) return;
 
     setProcessing(true);
-    const result = await recordCheckIn(manualEmployeeId, "manual");
+    const checkInResult = await recordCheckIn(manualEmployeeId, "manual");
+    const result =
+      "alreadyCheckedIn" in checkInResult && checkInResult.alreadyCheckedIn
+        ? await recordCheckOut(manualEmployeeId)
+        : checkInResult;
     setProcessing(false);
 
-    if (result.error) {
+    if ("error" in result && result.error) {
       setToast({ type: "error", message: result.error });
       return;
     }
 
-    if (result.action === "check_in") {
+    if ("success" in result && result.success && result.action === "check_in") {
       setToast({
         type: "success",
         message: `${employee.name} checked in`,
         sub: `Checked in at ${result.time} (manual)`,
       });
-    } else {
+    } else if ("success" in result && result.success) {
       setToast({
         type: "success",
         message: `${employee.name} checked out`,

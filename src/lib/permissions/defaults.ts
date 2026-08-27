@@ -73,6 +73,8 @@ const RECEPTIONIST_PERMISSIONS: PermissionKey[] = [
   "memberships.view",
   "support.view",
   "attendance.view",
+  "attendance.reports",
+  "attendance.export",
 ];
 
 const EMPLOYEE_PERMISSIONS: PermissionKey[] = [
@@ -83,7 +85,9 @@ const EMPLOYEE_PERMISSIONS: PermissionKey[] = [
   "services.view",
   "packages.view",
   "addons.view",
-  "attendance.view",
+  "attendance.view_own",
+  "attendance.check_in",
+  "attendance.check_out",
 ];
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<SystemRoleKey, PermissionKey[]> = {

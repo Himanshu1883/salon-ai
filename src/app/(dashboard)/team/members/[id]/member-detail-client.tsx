@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Calendar, ScanFace, BarChart3 } from "lucide-react";
+import { ArrowLeft, Calendar, ScanFace, BarChart3, Clock } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { getRoleLabel } from "@/lib/team";
 import { EmployeeRoleSelect } from "@/components/team/employee-role-select";
@@ -194,6 +194,12 @@ export function MemberDetailClient({
             <Link href={`/team/attendance/enroll?employee=${member.id}`}>
               <ScanFace className="h-4 w-4" />
               {faceStatus.enrolled ? "Re-enroll face" : "Enroll face"}
+            </Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/attendance?employee=${member.id}`}>
+              <Clock className="h-4 w-4" />
+              View attendance
             </Link>
           </Button>
           <Button variant="outline" size="sm" asChild>

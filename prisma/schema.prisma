@@ -403,22 +403,51 @@ model EmployeeFaceProfile {
 }
 
 model AttendanceRecord {
-  id         String    @id @default(cuid())
-  salonId    String
-  salon      Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
-  employeeId String
-  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  date       DateTime
-  checkInAt  DateTime
-  checkOutAt DateTime?
-  method     String
-  confidence Float?
-  notes      String?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id                   String    @id @default(cuid())
+  salonId              String
+  salon                Salon     @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  employeeId           String
+  employee             Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  date                 DateTime
+  checkInAt            DateTime
+  checkOutAt           DateTime?
+  status               String    @default("WORKING")
+  method               String
+  confidence           Float?
+  totalWorkedMinutes   Int?
+  lateMinutes          Int?
+  earlyCheckoutMinutes Int?
+  notes                String?
+  createdByUserId      String?
+  correctedByUserId    String?
+  correctedAt          DateTime?
+  correctionReason     String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  auditLogs AttendanceAuditLog[]
 
   @@unique([employeeId, date])
   @@index([salonId, date])
+  @@index([salonId, status, date])
+}
+
+model AttendanceAuditLog {
+  id                 String           @id @default(cuid())
+  salonId            String
+  attendanceId       String
+  attendance         AttendanceRecord @relation(fields: [attendanceId], references: [id], onDelete: Cascade)
+  changedByUserId    String
+  action             String
+  previousCheckInAt  DateTime?
+  previousCheckOutAt DateTime?
+  newCheckInAt       DateTime?
+  newCheckOutAt      DateTime?
+  reason             String?
+  createdAt          DateTime         @default(now())
+
+  @@index([salonId, attendanceId])
+  @@index([attendanceId])
 }
 
 model Shift {

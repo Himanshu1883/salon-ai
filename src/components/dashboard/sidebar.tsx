@@ -28,7 +28,9 @@ import {
 import { getRoleLabel } from "@/lib/team";
 import {
   getSidebarItems,
+  prependEmployeeNavItems,
   isBasicPlan,
+  isEmployeeNavUser,
   type NavItem,
   type SalonPlan,
 } from "@/lib/plans";
@@ -168,6 +170,15 @@ function isActive(pathname: string, href: string, label: string) {
   }
   if (href === "/memberships") {
     return pathname.startsWith("/memberships") || pathname.startsWith("/sales/memberships");
+  }
+  if (href === "/attendance") {
+    return pathname === "/attendance" || pathname.startsWith("/attendance/");
+  }
+  if (href === "/sales/appointments" && label === "Calendar") {
+    return (
+      pathname.startsWith("/sales/appointments") ||
+      pathname.startsWith("/appointments")
+    );
   }
   if (href === "/projects") {
     return pathname === "/projects" || pathname.startsWith("/projects/");
@@ -337,6 +348,7 @@ export function Sidebar({
   plan = "ENTERPRISE",
   permissionKeys = [],
   isOwner = false,
+  roleKey = null,
   duePayments = null,
   onNavigate,
   onToggleCollapse,
@@ -352,6 +364,7 @@ export function Sidebar({
   plan?: SalonPlan;
   permissionKeys?: PermissionKey[];
   isOwner?: boolean;
+  roleKey?: string | null;
   duePayments?: DuePaymentsSummary | null;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
@@ -365,14 +378,18 @@ export function Sidebar({
       : undefined;
 
   const planNavItems = getSidebarItems(plan);
+  const employeeNav = isEmployeeNavUser(userRole, isOwner, roleKey);
+  const baseNavItems = planNavItems.filter((item) =>
+    canViewModule(permissionSet, item.module, isOwner)
+  );
   const visibleNavItems: NavLink[] = accessBlocked
     ? [
         { href: "/invoice-due", label: "Invoice due", icon: CreditCard, module: "billing" },
         { href: "/support", label: "Customer Support", icon: HeadphonesIcon, module: "settings" },
       ]
-    : planNavItems.filter((item) =>
-        canViewModule(permissionSet, item.module, isOwner)
-      );
+    : employeeNav
+      ? prependEmployeeNavItems(baseNavItems)
+      : baseNavItems;
 
   const canManageRoles =
     isOwner ||

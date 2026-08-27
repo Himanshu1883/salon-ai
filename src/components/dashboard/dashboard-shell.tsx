@@ -22,6 +22,7 @@ type DashboardShellProps = {
   plan?: import("@/lib/plans").SalonPlan;
   permissionKeys?: import("@/lib/permissions/catalog").PermissionKey[];
   isOwner?: boolean;
+  roleKey?: string | null;
   headerAlerts?: React.ReactNode;
   duePayments?: { totalDue: number; invoiceCount: number } | null;
   recordSaleFormData?: RecordSaleFormData | null;
@@ -52,6 +53,7 @@ function DashboardShellInner({
   plan = "ENTERPRISE",
   permissionKeys = [],
   isOwner = false,
+  roleKey = null,
   headerAlerts = null,
   duePayments = null,
   children,
@@ -123,6 +125,7 @@ function DashboardShellInner({
           plan={plan}
           permissionKeys={permissionKeys}
           isOwner={isOwner}
+          roleKey={roleKey}
           duePayments={duePayments}
           onNavigate={() => setMobileOpen(false)}
           onToggleCollapse={() => setCollapsed((c) => !c)}
@@ -196,6 +199,9 @@ function DashboardShellInner({
       <MobileBottomNav
         onOpenMenu={() => setMobileOpen(true)}
         accessBlocked={accessBlocked}
+        userRole={userRole}
+        isOwner={isOwner}
+        roleKey={roleKey}
       />
     </>
   );

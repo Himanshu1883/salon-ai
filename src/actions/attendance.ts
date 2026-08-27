@@ -17,8 +17,28 @@ import {
   format,
   parseISO,
 } from "date-fns";
+import {
+  getAttendanceAccessContext,
+  assertEmployeeAttendanceAccess,
+  canManageAttendance,
+  canViewAllAttendance,
+  canCheckIn,
+  canCheckOut,
+  canViewOwnAttendance,
+  canExportAttendance,
+  canViewReports,
+} from "@/lib/attendance/access";
+import {
+  performCheckIn,
+  performCheckOut,
+  getMyAttendanceToday,
+  getDailyAttendanceDashboard,
+  getMyAttendanceMonthStats,
+} from "@/lib/attendance/service";
+import { getBusinessDateKey, parseBusinessDateKey } from "@/lib/attendance/business-day";
 
 const ATTENDANCE_PATHS = [
+  "/attendance",
   "/team/attendance",
   "/team/attendance/enroll",
   "/team/attendance/log",
@@ -33,11 +53,11 @@ function revalidateAttendance() {
 }
 
 function todayDate(): Date {
-  return startOfDay(new Date());
+  return parseBusinessDateKey(getBusinessDateKey());
 }
 
 function parseAttendanceDate(dateStr: string): Date {
-  return startOfDay(parseISO(dateStr));
+  return parseBusinessDateKey(dateStr);
 }
 
 async function getEmployeeForSalon(employeeId: string, salonId: string) {
@@ -91,15 +111,9 @@ export async function enrollFace(employeeId: string, descriptorJson: string) {
   const employee = await getEmployeeForSalon(employeeId, session.user.salonId);
   if (!employee) return { error: "Team member not found" };
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { role: true },
-  });
-  const isOwnerOrManager =
-    user?.role === "owner" || user?.role === "manager";
-
-  if (!isOwnerOrManager) {
-    return { error: "Only owners and managers can enroll faces" };
+  const ctx = await getAttendanceAccessContext();
+  if (!canManageAttendance(ctx)) {
+    return { error: "Only authorized users can enroll faces" };
   }
 
   await prisma.employeeFaceProfile.upsert({
@@ -164,88 +178,304 @@ export async function recordCheckIn(
   method: "face" | "manual" | "shift",
   confidence?: number
 ) {
-  const session = await requireSession();
-  const employee = await getEmployeeForSalon(employeeId, session.user.salonId);
-  if (!employee) return { error: "Team member not found" };
+  const ctx = await getAttendanceAccessContext();
 
-  const date = todayDate();
-  const now = new Date();
-
-  const existing = await prisma.attendanceRecord.findUnique({
-    where: { employeeId_date: { employeeId, date } },
-  });
-
-  if (existing) {
-    if (!existing.checkOutAt) {
-      return recordCheckOut(employeeId);
-    }
-    return {
-      error: `${employee.name} has already completed attendance for today`,
-    };
+  if (ctx.employeeId === employeeId) {
+    if (!canCheckIn(ctx)) return { error: "You do not have permission to check in" };
+  } else if (!canManageAttendance(ctx)) {
+    return { error: "You do not have permission to check in other team members" };
   }
 
-  const record = await prisma.attendanceRecord.create({
-    data: {
-      salonId: session.user.salonId,
-      employeeId,
-      date,
-      checkInAt: now,
-      method,
-      confidence: confidence ?? null,
-    },
-    include: { employee: { select: { name: true } } },
+  const result = await performCheckIn({
+    salonId: ctx.salonId,
+    employeeId,
+    userId: ctx.userId,
+    method: ctx.employeeId === employeeId ? "self" : method,
+    confidence,
   });
 
-  revalidateAttendance();
-  return {
-    success: true,
-    action: "check_in" as const,
-    employeeName: record.employee.name,
-    time: format(now, "HH:mm"),
-    recordId: record.id,
-  };
+  if ("success" in result && result.success) {
+    revalidateAttendance();
+  }
+
+  return result;
 }
 
 export async function recordCheckOut(employeeId: string) {
-  const session = await requireSession();
-  const employee = await getEmployeeForSalon(employeeId, session.user.salonId);
-  if (!employee) return { error: "Team member not found" };
+  const ctx = await getAttendanceAccessContext();
 
-  const date = todayDate();
-  const now = new Date();
-
-  const existing = await prisma.attendanceRecord.findUnique({
-    where: { employeeId_date: { employeeId, date } },
-  });
-
-  if (!existing) {
-    return { error: `${employee.name} has not checked in today` };
-  }
-  if (existing.checkOutAt) {
-    return { error: `${employee.name} has already checked out today` };
+  if (ctx.employeeId === employeeId) {
+    if (!canCheckOut(ctx)) return { error: "You do not have permission to check out" };
+  } else if (!canManageAttendance(ctx)) {
+    return { error: "You do not have permission to check out other team members" };
   }
 
-  await prisma.attendanceRecord.update({
-    where: { id: existing.id },
-    data: { checkOutAt: now },
+  const result = await performCheckOut({
+    salonId: ctx.salonId,
+    employeeId,
+    userId: ctx.userId,
   });
+
+  if ("success" in result && result.success) {
+    revalidateAttendance();
+  }
+
+  return result;
+}
+
+function attendanceActionError(error: unknown, fallback: string) {
+  console.error("[attendance]", error);
+  if (isPrismaClientValidationError(error)) {
+    return {
+      error:
+        "Attendance system is updating. Please refresh the page and try again.",
+    };
+  }
+  if (
+    error &&
+    typeof error === "object" &&
+    "code" in error &&
+    typeof (error as { code?: string }).code === "string"
+  ) {
+    const code = (error as { code: string }).code;
+    if (code === "P2022" || code === "P2021") {
+      return {
+        error:
+          "Attendance database is missing required columns. Please contact your administrator.",
+      };
+    }
+  }
+  return { error: fallback };
+}
+
+/** Logged-in employee checks themselves in. */
+export async function checkInSelf() {
+  try {
+    const ctx = await getAttendanceAccessContext();
+    if (!canCheckIn(ctx)) return { error: "You do not have permission to check in" };
+    if (!ctx.employeeId) {
+      return { error: "Your account is not linked to an employee profile" };
+    }
+
+    const result = await performCheckIn({
+      salonId: ctx.salonId,
+      employeeId: ctx.employeeId,
+      userId: ctx.userId,
+      method: "self",
+    });
+
+    if ("success" in result && result.success) {
+      revalidateAttendance();
+    }
+
+    return result;
+  } catch (error) {
+    return attendanceActionError(error, "Check-in failed. Please try again.");
+  }
+}
+
+/** Logged-in employee checks themselves out. */
+export async function checkOutSelf() {
+  try {
+    const ctx = await getAttendanceAccessContext();
+    if (!canCheckOut(ctx)) return { error: "You do not have permission to check out" };
+    if (!ctx.employeeId) {
+      return { error: "Your account is not linked to an employee profile" };
+    }
+
+    const result = await performCheckOut({
+      salonId: ctx.salonId,
+      employeeId: ctx.employeeId,
+      userId: ctx.userId,
+    });
+
+    if ("success" in result && result.success) {
+      revalidateAttendance();
+    }
+
+    return result;
+  } catch (error) {
+    return attendanceActionError(error, "Check-out failed. Please try again.");
+  }
+}
+
+export async function getAttendancePageData(dateStr?: string) {
+  try {
+    const ctx = await getAttendanceAccessContext();
+    const dateKey = dateStr ?? getBusinessDateKey();
+
+    const myToday =
+      ctx.employeeId && canViewOwnAttendance(ctx)
+        ? await getMyAttendanceToday({
+            salonId: ctx.salonId,
+            employeeId: ctx.employeeId,
+            employeeName: ctx.employeeName ?? "You",
+          })
+        : null;
+
+    const monthStats =
+      ctx.employeeId && canViewOwnAttendance(ctx)
+        ? await getMyAttendanceMonthStats({
+            salonId: ctx.salonId,
+            employeeId: ctx.employeeId,
+          }).catch(() => ({
+            monthKey: "",
+            lateDays: 0,
+            leaveDays: 0,
+          }))
+        : null;
+
+    const canAdmin = canViewAllAttendance(ctx);
+    const dashboard = canAdmin
+      ? await getDailyAttendanceDashboard(ctx.salonId, dateKey)
+      : null;
+
+    let myHistory: Awaited<ReturnType<typeof getEmployeeAttendanceHistory>> | null =
+      null;
+    if (ctx.employeeId && !canAdmin) {
+      myHistory = await getEmployeeAttendanceHistory(ctx.employeeId, 14);
+    }
+
+    return {
+      dateKey,
+      myToday,
+      monthStats,
+      dashboard,
+      myHistory,
+      timezone: process.env.SALON_TIMEZONE?.trim() || "Asia/Kolkata",
+      permissions: {
+        canCheckIn: canCheckIn(ctx) && !!ctx.employeeId,
+        canCheckOut: canCheckOut(ctx) && !!ctx.employeeId,
+        canViewAll: canAdmin,
+        canManage: canManageAttendance(ctx),
+        canExport: canExportAttendance(ctx),
+        canReports: canViewReports(ctx),
+        employeeLinked: !!ctx.employeeId,
+      },
+    };
+  } catch (error) {
+    console.error("[getAttendancePageData]", error);
+    return {
+      dateKey: getBusinessDateKey(),
+      myToday: null,
+      monthStats: null,
+      dashboard: null,
+      myHistory: null,
+      timezone: process.env.SALON_TIMEZONE?.trim() || "Asia/Kolkata",
+      permissions: {
+        canCheckIn: false,
+        canCheckOut: false,
+        canViewAll: false,
+        canManage: false,
+        canExport: false,
+        canReports: false,
+        employeeLinked: false,
+      },
+      loadError:
+        "Attendance could not be loaded. Try refreshing the page or signing in again.",
+    };
+  }
+}
+
+export async function getEmployeeAttendanceHistory(
+  employeeId: string,
+  days = 30
+) {
+  const ctx = await getAttendanceAccessContext();
+  assertEmployeeAttendanceAccess(ctx, employeeId);
+
+  const end = todayDate();
+  const start = startOfDay(new Date(end.getTime() - days * 86400000));
+
+  const records = await prisma.attendanceRecord.findMany({
+    where: {
+      salonId: ctx.salonId,
+      employeeId,
+      date: { gte: start, lte: end },
+    },
+    include: { employee: { select: { id: true, name: true } } },
+    orderBy: { date: "desc" },
+    take: days,
+  });
+
+  return records.map((r) => ({
+    id: r.id,
+    date: format(r.date, "yyyy-MM-dd"),
+    checkInAt: r.checkInAt.toISOString(),
+    checkOutAt: r.checkOutAt?.toISOString() ?? null,
+    status: r.status,
+    workedMinutes: r.totalWorkedMinutes ?? 0,
+    lateMinutes: r.lateMinutes ?? 0,
+  }));
+}
+
+export async function correctAttendanceRecord(input: {
+  recordId: string;
+  checkInAt: string;
+  checkOutAt?: string | null;
+  reason: string;
+}) {
+  const ctx = await getAttendanceAccessContext();
+  if (!canManageAttendance(ctx)) {
+    return { error: "You do not have permission to correct attendance" };
+  }
+
+  const record = await prisma.attendanceRecord.findFirst({
+    where: { id: input.recordId, salonId: ctx.salonId },
+  });
+  if (!record) return { error: "Attendance record not found" };
+
+  const newCheckIn = new Date(input.checkInAt);
+  const newCheckOut = input.checkOutAt ? new Date(input.checkOutAt) : null;
+  const totalWorkedMinutes = newCheckOut
+    ? Math.max(0, Math.floor((newCheckOut.getTime() - newCheckIn.getTime()) / 60000))
+    : null;
+
+  await prisma.$transaction([
+    prisma.attendanceRecord.update({
+      where: { id: record.id },
+      data: {
+        checkInAt: newCheckIn,
+        checkOutAt: newCheckOut,
+        totalWorkedMinutes,
+        status: newCheckOut ? "CORRECTED" : "WORKING",
+        correctedByUserId: ctx.userId,
+        correctedAt: new Date(),
+        correctionReason: input.reason,
+      },
+    }),
+    prisma.attendanceAuditLog.create({
+      data: {
+        salonId: ctx.salonId,
+        attendanceId: record.id,
+        changedByUserId: ctx.userId,
+        action: "correct",
+        previousCheckInAt: record.checkInAt,
+        previousCheckOutAt: record.checkOutAt,
+        newCheckInAt: newCheckIn,
+        newCheckOutAt: newCheckOut,
+        reason: input.reason,
+      },
+    }),
+  ]);
 
   revalidateAttendance();
-  return {
-    success: true,
-    action: "check_out" as const,
-    employeeName: employee.name,
-    time: format(now, "HH:mm"),
-  };
+  return { success: true };
 }
 
 export async function getAttendanceLog(dateStr: string, employeeId?: string) {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  if (employeeId) {
+    assertEmployeeAttendanceAccess(ctx, employeeId);
+  } else if (!canViewAllAttendance(ctx)) {
+    return [];
+  }
+
   const date = parseAttendanceDate(dateStr);
 
   const records = await prisma.attendanceRecord.findMany({
     where: {
-      salonId: session.user.salonId,
+      salonId: ctx.salonId,
       date,
       ...(employeeId ? { employeeId } : {}),
     },
@@ -273,6 +503,10 @@ export async function getAttendanceLogCsv(
   dateStr: string,
   employeeId?: string
 ): Promise<string> {
+  const ctx = await getAttendanceAccessContext();
+  if (!canExportAttendance(ctx)) {
+    throw new Error("Forbidden");
+  }
   const rows = await getAttendanceLog(dateStr, employeeId);
   const header =
     "Date,Employee,Check-in,Check-out,Hours,Method,Confidence\n";
@@ -311,13 +545,20 @@ export async function getMonthlyAttendanceReport(
   month: number,
   employeeId?: string
 ) {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  if (!canViewReports(ctx)) {
+    throw new Error("Forbidden");
+  }
+  if (employeeId) {
+    assertEmployeeAttendanceAccess(ctx, employeeId);
+  }
+
   const monthStart = startOfMonth(new Date(year, month - 1, 1));
   const monthEnd = endOfMonth(monthStart);
 
   const employees = await prisma.employee.findMany({
     where: {
-      salonId: session.user.salonId,
+      salonId: ctx.salonId,
       status: "active",
       ...(employeeId ? { id: employeeId } : {}),
     },
@@ -327,7 +568,7 @@ export async function getMonthlyAttendanceReport(
 
   const records = await prisma.attendanceRecord.findMany({
     where: {
-      salonId: session.user.salonId,
+      salonId: ctx.salonId,
       date: { gte: monthStart, lte: monthEnd },
       ...(employeeId ? { employeeId } : {}),
     },
@@ -336,7 +577,7 @@ export async function getMonthlyAttendanceReport(
 
   const shifts = await prisma.shift.findMany({
     where: {
-      salonId: session.user.salonId,
+      salonId: ctx.salonId,
       date: { gte: monthStart, lte: monthEnd },
       isWorking: true,
       ...(employeeId ? { employeeId } : {}),
@@ -456,9 +697,12 @@ function formatMinutesAsTime(minutes: number): string {
 }
 
 export async function getActiveEmployeesForAttendance() {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  if (!canManageAttendance(ctx) && !canViewAllAttendance(ctx)) {
+    throw new Error("Forbidden");
+  }
   return prisma.employee.findMany({
-    where: { salonId: session.user.salonId, status: "active" },
+    where: { salonId: ctx.salonId, status: "active" },
     select: { id: true, name: true },
     orderBy: { name: "asc" },
   });
@@ -474,7 +718,8 @@ export async function canEnrollFaces() {
 }
 
 export async function getTodayAttendanceStatus(employeeId: string) {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  assertEmployeeAttendanceAccess(ctx, employeeId);
   const date = todayDate();
   const record = await prisma.attendanceRecord.findUnique({
     where: { employeeId_date: { employeeId, date } },
