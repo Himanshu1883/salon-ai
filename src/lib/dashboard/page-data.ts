@@ -139,8 +139,7 @@ export async function fetchDashboardPageData(salonId: string) {
   const recentQueue = activeQueueEntries.slice(0, 5);
   const upcomingAppointments = todayAppointments.slice(0, 5);
   const pendingAppointmentsToday = todayAppointments.filter(
-    (appointment) =>
-      appointment.status === "scheduled" || appointment.status === "checked_in"
+    (appointment) => appointment.status === "scheduled"
   ).length;
   const completedAppointmentsToday = completedCheckInsToday;
   const waitingCount = countQueueStatus(queueCounts, "waiting");
