@@ -35,6 +35,17 @@ function formatIndianDateDisplay(dateYmd: string): string {
   return format(parsed, "dd/MM/yyyy");
 }
 
+function formatIndianDateInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+}
+
+function isCompleteIndianDateInput(input: string): boolean {
+  return /^\d{2}\/\d{2}\/\d{4}$/.test(input.trim());
+}
+
 function parseIndianDateInput(input: string): string | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
@@ -90,18 +101,37 @@ export function IndianDateTimePicker({
     onChange(composeDateTimeLocal(nextDate, nextTime));
   }
 
-  function handleDateInputChange(next: string) {
+  function handleDateInputChange(raw: string) {
+    const next = formatIndianDateInput(raw);
     setDateInput(next);
-    const parsed = parseIndianDateInput(next);
-    if (!parsed) {
+    setDateError("");
+
+    if (!next.trim()) {
       setDateYmd("");
-      setDateError(next.trim() ? "Use DD/MM/YYYY format" : "");
       emit("", time24);
       return;
     }
+
+    if (!isCompleteIndianDateInput(next)) {
+      return;
+    }
+
+    const parsed = parseIndianDateInput(next);
+    if (!parsed) {
+      setDateYmd("");
+      setDateError("Enter a valid date (DD/MM/YYYY)");
+      emit("", time24);
+      return;
+    }
+
     setDateYmd(parsed);
-    setDateError("");
     emit(parsed, time24);
+  }
+
+  function handleDateInputBlur() {
+    if (!dateInput.trim()) return;
+    if (isCompleteIndianDateInput(dateInput)) return;
+    setDateError("Use DD/MM/YYYY format");
   }
 
   function handleNativeDateChange(next: string) {
@@ -128,7 +158,10 @@ export function IndianDateTimePicker({
               id={`${id}-date`}
               value={dateInput}
               onChange={(e) => handleDateInputChange(e.target.value)}
+              onBlur={handleDateInputBlur}
               placeholder="DD/MM/YYYY"
+              inputMode="numeric"
+              maxLength={10}
               disabled={disabled}
               required={required}
               className={cn(
