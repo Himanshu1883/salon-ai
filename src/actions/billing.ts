@@ -20,14 +20,18 @@ import { deductRetailSale } from "@/lib/inventory/ledger";
 import { isInternalServiceDescription, resolveLineItemLabel } from "@/lib/service-display";
 import {
   getActiveMembershipDiscount,
-  applyMembershipDiscount,
 } from "@/lib/memberships/discount";
 import {
   getInvoiceBalanceDue,
   isInvoiceFullyPaid,
 } from "@/lib/billing/invoice-balance";
+import {
+  applyMembershipDiscountToTotals,
+  calcInvoiceTotals,
+} from "@/lib/billing/calc-invoice-totals";
 
 const TAX_RATE = 0.08;
+const GST_INCLUDED = true;
 
 function invalidateBillingCache(salonId: string) {
   scheduleSalonCacheRevalidation(
@@ -93,18 +97,14 @@ async function deductProductLineItems(
 }
 
 function calcTotals(
-  lineItems: { quantity: number; unitPrice: number }[],
+  lineItems: { quantity: number; unitPrice: number; taxRate?: number }[],
   gstEnabled = true
 ) {
-  const subtotal = lineItems.reduce(
-    (sum, item) => sum + item.quantity * item.unitPrice,
-    0
-  );
-  const tax = gstEnabled
-    ? Math.round(subtotal * TAX_RATE * 100) / 100
-    : 0;
-  const total = Math.round((subtotal + tax) * 100) / 100;
-  return { subtotal, tax, total };
+  return calcInvoiceTotals(lineItems, {
+    gstEnabled,
+    gstIncluded: GST_INCLUDED,
+    defaultTaxRate: TAX_RATE,
+  });
 }
 
 const getCachedSalonGstEnabled = cachedBySalon(
@@ -674,18 +674,23 @@ export async function createInvoice(formData: FormData) {
   }));
 
   if (membershipDiscount && membershipDiscount.discountPercent > 0) {
-    const { discountedSubtotal, discountAmount } = applyMembershipDiscount(
-      totals.subtotal,
-      membershipDiscount.discountPercent
+    const discounted = applyMembershipDiscountToTotals(
+      totals,
+      membershipDiscount.discountPercent,
+      {
+        gstEnabled,
+        gstIncluded: GST_INCLUDED,
+        defaultTaxRate: TAX_RATE,
+      }
     );
-    const tax = gstEnabled
-      ? Math.round(discountedSubtotal * TAX_RATE * 100) / 100
-      : 0;
-    const total = Math.round((discountedSubtotal + tax) * 100) / 100;
-    totals = { subtotal: discountedSubtotal, tax, total };
+    totals = {
+      subtotal: discounted.subtotal,
+      tax: discounted.tax,
+      total: discounted.total,
+    };
     invoiceNotes = [
       invoiceNotes,
-      `Membership discount (${membershipDiscount.planName}): −₹${discountAmount.toFixed(2)}`,
+      `Membership discount (${membershipDiscount.planName}): −₹${discounted.discountAmount.toFixed(2)}`,
     ]
       .filter(Boolean)
       .join("\n");

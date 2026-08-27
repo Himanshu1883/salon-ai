@@ -510,6 +510,7 @@ export function BillingInvoiceForm({
           description: item.description.trim(),
           quantity: item.quantity,
           unitPrice: item.unitPrice,
+          taxRate: item.taxRate,
           serviceId: item.serviceId || undefined,
           stockItemId: item.stockItemId || undefined,
           itemType: item.itemType,

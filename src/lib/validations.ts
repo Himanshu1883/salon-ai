@@ -337,6 +337,7 @@ export const invoiceLineItemSchema = z.object({
   description: z.string().min(1, "Description required"),
   quantity: z.coerce.number().min(1),
   unitPrice: z.coerce.number().min(0),
+  taxRate: z.coerce.number().min(0).max(1).optional(),
   serviceId: z.string().optional(),
   stockItemId: z.string().optional(),
   itemType: z.enum(ITEM_TYPES).optional(),
