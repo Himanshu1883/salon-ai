@@ -32,6 +32,7 @@ import type {
 import type { OpeningHours } from "@/lib/onboarding";
 import {
   filterAppointments,
+  filterScheduleCalendarAppointments,
   type ViewMode,
 } from "@/components/appointments/appointments-utils";
 
@@ -150,6 +151,19 @@ export function AppointmentsClient({
     }
   }
 
+  const scheduleWeekAppointments = useMemo(
+    () => filterScheduleCalendarAppointments(weekAppointments),
+    [weekAppointments]
+  );
+  const scheduleTodayAppointments = useMemo(
+    () => filterScheduleCalendarAppointments(todayAppointments),
+    [todayAppointments]
+  );
+  const scheduleUpcomingAppointments = useMemo(
+    () => filterScheduleCalendarAppointments(upcomingAppointments),
+    [upcomingAppointments]
+  );
+
   const filterOptions = {
     employeeFilter,
     serviceFilter,
@@ -159,18 +173,18 @@ export function AppointmentsClient({
   };
 
   const filteredWeekAppointments = useMemo(
-    () => filterAppointments(weekAppointments, filterOptions),
-    [weekAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
+    () => filterAppointments(scheduleWeekAppointments, filterOptions),
+    [scheduleWeekAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
   );
 
   const filteredTodayAppointments = useMemo(
-    () => filterAppointments(todayAppointments, filterOptions),
-    [todayAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
+    () => filterAppointments(scheduleTodayAppointments, filterOptions),
+    [scheduleTodayAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
   );
 
   const filteredUpcomingAppointments = useMemo(
-    () => filterAppointments(upcomingAppointments, filterOptions),
-    [upcomingAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
+    () => filterAppointments(scheduleUpcomingAppointments, filterOptions),
+    [scheduleUpcomingAppointments, employeeFilter, serviceFilter, statusFilter, searchQuery, services]
   );
 
   const weekRangeLabel =
@@ -215,7 +229,7 @@ export function AppointmentsClient({
           <AppointmentsViewSwitcher
             view={view}
             onChange={setView}
-            listBadge={todayAppointments.length + upcomingAppointments.length}
+            listBadge={scheduleTodayAppointments.length + scheduleUpcomingAppointments.length}
           />
 
           {(view === "week" || view === "day") && (
@@ -280,8 +294,9 @@ export function AppointmentsClient({
         </div>
 
         <AppointmentsSidebar
-          todayAppointments={todayAppointments}
-          upcomingAppointments={upcomingAppointments}
+          todayAppointments={scheduleTodayAppointments}
+          upcomingAppointments={scheduleUpcomingAppointments}
+          analyticsAppointments={todayAppointments}
           employees={employees}
           weekStart={weekStart}
           selectedDay={selectedDay}

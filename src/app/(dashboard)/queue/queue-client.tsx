@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   assignQueueEntry,
@@ -20,6 +21,7 @@ import { QueueSidebar } from "@/components/queue/queue-sidebar";
 import { QueueRecentlyCompleted } from "@/components/queue/queue-recently-completed";
 import { QueueAiInsights, QueueTipBanner } from "@/components/queue/queue-ai-insights";
 import { useRecordSale } from "@/components/dashboard/record-sale-provider";
+import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
 import type {
   AppointmentSnapshot,
   CompletedEntry,
@@ -61,6 +63,7 @@ export function QueueClient({
   appointmentsToday,
   revenueToday,
 }: QueueClientProps) {
+  const router = useRouter();
   const now = useLiveWaitTime();
   const { openRecordSale } = useRecordSale();
 
@@ -101,6 +104,12 @@ export function QueueClient({
       setRefreshing(false);
     }
   }, []);
+
+  const refreshQueueData = useCallback(async () => {
+    markDashboardStale();
+    router.refresh();
+    await syncFromServer();
+  }, [router, syncFromServer]);
 
   const stats = useMemo(
     () =>
@@ -172,7 +181,10 @@ export function QueueClient({
       setEntries(previousEntries);
       setError(result.error);
       setAssigning(assigning);
+      return;
     }
+
+    await refreshQueueData();
   }
 
   async function handleAction(
@@ -224,11 +236,21 @@ export function QueueClient({
         : action === "complete"
           ? completeService
           : cancelQueueEntry;
-    const result = await fn(id);
-    if (result && "error" in result && result.error) {
+
+    try {
+      const result = await fn(id);
+      if (result && "error" in result && result.error) {
+        setEntries(previousEntries);
+        setCompletedEntries(previousCompleted);
+        setError(result.error);
+        return;
+      }
+
+      await refreshQueueData();
+    } catch {
       setEntries(previousEntries);
       setCompletedEntries(previousCompleted);
-      setError(result.error);
+      setError("Something went wrong. Please try again.");
     }
   }
 
@@ -264,7 +286,7 @@ export function QueueClient({
         activeCount={entries.length}
         estimatedWait={estimatedWait}
         refreshing={refreshing}
-        onRefresh={() => void syncFromServer()}
+        onRefresh={() => void refreshQueueData()}
       />
 
       <QueueKpiGrid stats={stats} />

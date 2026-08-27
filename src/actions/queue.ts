@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
+import { revalidatePath } from "next/cache";
 import {
   checkInSchema,
   assignQueueSchema,
@@ -16,8 +17,14 @@ function invalidateQueueCache(salonId: string) {
     "check-in",
     "dashboard-kpis",
     "dashboard-widgets",
-    "dashboard-stats"
+    "dashboard-stats",
+    "appointments"
   );
+  revalidatePath("/queue");
+  revalidatePath("/check-in");
+  revalidatePath("/dashboard");
+  revalidatePath("/sales/appointments");
+  revalidatePath("/appointments");
 }
 
 async function fetchQueueEntries(salonId: string) {
@@ -116,6 +123,26 @@ export async function checkInFromAppointment(appointmentId: string) {
     }
     invalidateQueueCache(session.user.salonId);
     return { success: true, position: existingEntry.position, alreadyInQueue: true };
+  }
+
+  if (appointment.status === "checked_in") {
+    const completedEntry = await prisma.queueEntry.findFirst({
+      where: {
+        salonId: session.user.salonId,
+        appointmentId,
+        status: "completed",
+      },
+      orderBy: { completedAt: "desc" },
+    });
+
+    if (completedEntry) {
+      await prisma.appointment.update({
+        where: { id: appointmentId },
+        data: { status: "completed" },
+      });
+      invalidateQueueCache(session.user.salonId);
+      return { success: true, alreadyCompleted: true };
+    }
   }
 
   const position = await getNextPosition(session.user.salonId);
@@ -246,23 +273,68 @@ export async function completeService(queueEntryId: string) {
   const session = await requireSession();
   const entry = await prisma.queueEntry.findFirst({
     where: { id: queueEntryId, salonId: session.user.salonId },
-    include: { seat: true },
+    include: {
+      seat: true,
+      appointment: {
+        select: {
+          id: true,
+          serviceId: true,
+          customerId: true,
+          employeeId: true,
+          status: true,
+        },
+      },
+    },
   });
   if (!entry) return { error: "Queue entry not found" };
 
-  if (entry.seatId) {
-    await prisma.seat.update({
-      where: { id: entry.seatId },
-      data: { status: "available", employeeId: null },
-    });
-  }
+  const completedAt = new Date();
+  const linkedAppointment = entry.appointment;
+  const shouldCompleteAppointment =
+    !!entry.appointmentId &&
+    linkedAppointment &&
+    linkedAppointment.status !== "completed";
 
-  await prisma.queueEntry.update({
-    where: { id: queueEntryId },
-    data: { status: "completed", completedAt: new Date() },
+  await prisma.$transaction(async (tx) => {
+    if (entry.seatId) {
+      await tx.seat.update({
+        where: { id: entry.seatId },
+        data: { status: "available", employeeId: null },
+      });
+    }
+
+    await tx.queueEntry.update({
+      where: { id: queueEntryId },
+      data: { status: "completed", completedAt },
+    });
+
+    if (shouldCompleteAppointment && entry.appointmentId) {
+      await tx.appointment.update({
+        where: { id: entry.appointmentId },
+        data: { status: "completed" },
+      });
+    }
   });
 
-  invalidateQueueCache(session.user.salonId);
+  if (shouldCompleteAppointment && entry.appointmentId && linkedAppointment) {
+    const { consumeServiceRecipesForAppointment } = await import(
+      "@/lib/inventory/ledger"
+    );
+    await consumeServiceRecipesForAppointment(
+      session.user.salonId!,
+      entry.appointmentId,
+      linkedAppointment.serviceId,
+      linkedAppointment.customerId,
+      linkedAppointment.employeeId ?? entry.employeeId,
+      session.user.id
+    );
+    revalidatePath("/inventory");
+    revalidatePath("/inventory/consumption");
+    revalidatePath("/inventory/ledger");
+    revalidatePath("/inventory/products");
+  }
+
+  invalidateQueueCache(session.user.salonId!);
   return { success: true };
 }
 

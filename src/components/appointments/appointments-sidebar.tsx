@@ -41,6 +41,8 @@ import { usePlan } from "@/components/plans/plan-provider";
 type AppointmentsSidebarProps = {
   todayAppointments: Appointment[];
   upcomingAppointments: Appointment[];
+  /** Full today's list for analytics; schedule lists exclude queue/completed. */
+  analyticsAppointments?: Appointment[];
   employees: Employee[];
   weekStart: Date;
   selectedDay: Date;
@@ -176,6 +178,7 @@ function MiniCalendar({
 export function AppointmentsSidebar({
   todayAppointments,
   upcomingAppointments,
+  analyticsAppointments,
   employees,
   weekStart,
   selectedDay,
@@ -183,7 +186,8 @@ export function AppointmentsSidebar({
   onAppointmentClick,
 }: AppointmentsSidebarProps) {
   const { isEnterprise } = usePlan();
-  const analytics = computeTodayAnalytics(todayAppointments, employees);
+  const analyticsSource = analyticsAppointments ?? todayAppointments;
+  const analytics = computeTodayAnalytics(analyticsSource, employees);
   const availableSlots = countAvailableSlotsToday(todayAppointments, new Date());
   const upcomingSlice = upcomingAppointments.slice(0, 4);
 

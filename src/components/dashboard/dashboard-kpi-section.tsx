@@ -17,7 +17,8 @@ export async function DashboardKpiSection() {
       revenueMonth={kpis.revenueMonth}
       revenueTrend={kpis.revenueTrend}
       revenueByDay={kpis.revenueByDay}
-      todayAppointments={kpis.todayAppointments}
+      pendingAppointmentsToday={kpis.pendingAppointmentsToday}
+      completedAppointmentsToday={kpis.completedAppointmentsToday}
       activeQueue={kpis.activeQueue}
       waitingCount={kpis.waitingCount}
       employeesOnDuty={kpis.employeesOnDuty}

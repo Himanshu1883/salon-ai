@@ -19,7 +19,8 @@ type KpiGridProps = {
   revenueMonth: number;
   revenueTrend: number;
   revenueByDay: RevenueDay[];
-  todayAppointments: number;
+  pendingAppointmentsToday: number;
+  completedAppointmentsToday: number;
   activeQueue: number;
   waitingCount: number;
   employeesOnDuty: number;
@@ -34,7 +35,8 @@ export function KpiGrid({
   revenueMonth,
   revenueTrend,
   revenueByDay,
-  todayAppointments,
+  pendingAppointmentsToday,
+  completedAppointmentsToday,
   activeQueue,
   waitingCount,
   employeesOnDuty,
@@ -48,6 +50,8 @@ export function KpiGrid({
   const weekDays = revenueByDay.filter((d) => d.revenue > 0).length || 1;
   const avgSale =
     weekTotal > 0 ? formatCurrency(Math.round(weekTotal / weekDays)) : "—";
+
+  const appointmentSublabel = `${completedAppointmentsToday} completed today`;
 
   if (isBasicPlan(plan)) {
     return (
@@ -66,8 +70,8 @@ export function KpiGrid({
         <KpiCard
           delay={0.05}
           label="Appointments"
-          value={String(todayAppointments)}
-          sublabel={`${todayAppointments} scheduled today`}
+          value={String(pendingAppointmentsToday)}
+          sublabel={appointmentSublabel}
           href="/sales/appointments"
           icon={<Calendar className="h-5 w-5 text-white" />}
           iconGradient="from-rose-500 to-pink-500 text-white"
@@ -120,8 +124,8 @@ export function KpiGrid({
       <KpiCard
         delay={0.05}
         label="Appointments"
-        value={String(todayAppointments)}
-        sublabel={`${todayAppointments} scheduled today`}
+        value={String(pendingAppointmentsToday)}
+        sublabel={appointmentSublabel}
         href="/sales/appointments"
         icon={<Calendar className="h-5 w-5 text-white" />}
         iconGradient="from-rose-500 to-pink-500 text-white"

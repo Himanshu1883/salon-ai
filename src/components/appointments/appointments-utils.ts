@@ -15,6 +15,17 @@ export type ViewMode = "week" | "day" | "list";
 
 export type ViewSwitcherMode = ViewMode | "month" | "timeline";
 
+/** Still on the appointment book — not in walk-in queue or finished. */
+export function isScheduleCalendarAppointment(
+  appointment: Pick<Appointment, "status">
+) {
+  return appointment.status === "scheduled";
+}
+
+export function filterScheduleCalendarAppointments(appointments: Appointment[]) {
+  return appointments.filter(isScheduleCalendarAppointment);
+}
+
 export function filterAppointments(
   appointments: Appointment[],
   {
@@ -184,7 +195,7 @@ export function countAvailableSlotsToday(
   );
 
   for (const apt of dayAppointments) {
-    if (apt.status === "cancelled") continue;
+    if (!isScheduleCalendarAppointment(apt)) continue;
     const start = new Date(apt.scheduledAt);
     const startMinutes =
       start.getHours() * 60 + start.getMinutes() - CALENDAR_START_HOUR * 60;

@@ -42,6 +42,7 @@ export async function fetchDashboardPageData(salonId: string) {
     recentCheckIns,
     completedServices,
     lowStockCount,
+    completedCheckInsToday,
   ] = await Promise.all([
     fetchDashboardBillingMetrics(salonId, now),
     prisma.queueEntry.findMany({
@@ -119,6 +120,13 @@ export async function fetchDashboardPageData(salonId: string) {
       take: 5,
     }),
     getLowStockCountForSalon(salonId),
+    prisma.queueEntry.count({
+      where: {
+        salonId,
+        status: "completed",
+        completedAt: { gte: todayStart, lte: todayEnd },
+      },
+    }),
   ]);
 
   const queueCounts = (["waiting", "assigned", "in_progress"] as const).map(
@@ -130,6 +138,11 @@ export async function fetchDashboardPageData(salonId: string) {
 
   const recentQueue = activeQueueEntries.slice(0, 5);
   const upcomingAppointments = todayAppointments.slice(0, 5);
+  const pendingAppointmentsToday = todayAppointments.filter(
+    (appointment) =>
+      appointment.status === "scheduled" || appointment.status === "checked_in"
+  ).length;
+  const completedAppointmentsToday = completedCheckInsToday;
   const waitingCount = countQueueStatus(queueCounts, "waiting");
   const activeQueue = activeQueueEntries.length;
 
@@ -225,6 +238,8 @@ export async function fetchDashboardPageData(salonId: string) {
       activeQueue,
       employeesOnDuty,
       todayAppointments: todayAppointments.length,
+      pendingAppointmentsToday,
+      completedAppointmentsToday,
       waitingCount,
       revenueToday,
       revenueMonth,
