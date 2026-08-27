@@ -23,7 +23,7 @@ export default async function DashboardLayout({
 }) {
   const session = await getAuthSession();
   if (!session?.user) redirect("/");
-  if (session.user.isSuperAdmin) redirect("/admin");
+  if (session.user.isSuperAdmin && !session.user.salonId) redirect("/admin");
   const salonId = session.user.salonId;
   if (!salonId) redirect("/");
 

@@ -41,10 +41,16 @@ function rewriteWithSalonSlug(
 export const proxy = auth((req) => {
   const { pathname } = req.nextUrl;
   const isLoggedIn = !!req.auth?.user;
-  const isSuperAdmin = !!req.auth?.user?.isSuperAdmin;
-  const platformRole = resolvePlatformRole(req.auth?.user ?? {});
-  const isPlatformAdmin = platformRole !== null;
   const sessionSalonSlug = req.auth?.user?.salonSlug;
+  const sessionSalonId = req.auth?.user?.salonId;
+  const isSalonWorkspaceSession = Boolean(sessionSalonId && sessionSalonSlug);
+  const isSuperAdmin = isSalonWorkspaceSession
+    ? false
+    : !!req.auth?.user?.isSuperAdmin;
+  const platformRole = isSalonWorkspaceSession
+    ? null
+    : resolvePlatformRole(req.auth?.user ?? {});
+  const isPlatformAdmin = platformRole !== null;
 
   if (pathname.startsWith("/admin")) {
     if (pathname === "/admin/login") {

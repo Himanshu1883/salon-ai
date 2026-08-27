@@ -128,6 +128,39 @@ export function salonDashboardPath(slug: string) {
   return salonPath(slug, "/dashboard");
 }
 
+/** Keep post-login redirects inside the current salon workspace. */
+export function sanitizeSalonCallbackUrl(
+  raw: string | null | undefined,
+  salonSlug: string
+): string {
+  const fallback = salonDashboardPath(salonSlug);
+  if (!raw?.trim()) return fallback;
+
+  let path = raw.trim();
+  try {
+    if (/^https?:\/\//i.test(path)) {
+      const url = new URL(path);
+      path = `${url.pathname}${url.search}`;
+    }
+  } catch {
+    return fallback;
+  }
+
+  if (path.startsWith("/admin")) return fallback;
+
+  const salonPrefix = `/${salonSlug}`;
+  if (path === salonPrefix || path.startsWith(`${salonPrefix}/`)) {
+    return path;
+  }
+
+  const [innerPath] = path.split("?");
+  if (innerPath && isSalonProtectedRoute(innerPath)) {
+    return salonPath(salonSlug, innerPath);
+  }
+
+  return fallback;
+}
+
 /** Full public URL for a salon route. Pass `origin` on the client (e.g. window.location.origin). */
 export function getSalonPublicUrl(
   slug: string,

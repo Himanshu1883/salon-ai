@@ -123,6 +123,70 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        /** Salon-branded login (`/{slug}/login`) must always open that salon workspace. */
+        if (salonSlug) {
+          if (!user.salon || user.salon.slug !== salonSlug) {
+            if (process.env.NODE_ENV === "development") {
+              console.warn(
+                "[auth] salon slug mismatch",
+                parsed.data.email,
+                salonSlug
+              );
+            }
+            return null;
+          }
+
+          if (user.role !== "owner") {
+            let staffStatus = user.employee?.status ?? null;
+
+            if (staffStatus === "inactive") {
+              if (process.env.NODE_ENV === "development") {
+                console.warn("[auth] inactive team member", parsed.data.email);
+              }
+              return null;
+            }
+
+            if (!staffStatus && user.salonId) {
+              const linkedEmployee = await prisma.employee.findFirst({
+                where: {
+                  salonId: user.salonId,
+                  OR: [
+                    ...(user.employeeId ? [{ id: user.employeeId }] : []),
+                    {
+                      email: {
+                        equals: user.email,
+                        mode: "insensitive" as const,
+                      },
+                    },
+                  ],
+                },
+                select: { status: true },
+              });
+              staffStatus = linkedEmployee?.status ?? null;
+
+              if (staffStatus === "inactive") {
+                if (process.env.NODE_ENV === "development") {
+                  console.warn("[auth] inactive team member", parsed.data.email);
+                }
+                return null;
+              }
+            }
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            isSuperAdmin: false,
+            salonId: user.salonId!,
+            salonName: user.salon.name,
+            salonSlug: user.salon.slug,
+            plan: user.salon.plan,
+            dashboardAccessVerified: true,
+          };
+        }
+
         const platformRole: PlatformRole | null =
           user.platformRole ?? (user.isSuperAdmin ? "SUPER_ADMIN" : null);
 

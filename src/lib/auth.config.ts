@@ -18,6 +18,12 @@ export const authConfig = {
         token.salonSlug = user.salonSlug ?? undefined;
         token.plan = user.plan ?? undefined;
         token.dashboardAccessVerified = user.dashboardAccessVerified ?? undefined;
+
+        // Salon workspace sessions must not carry stale platform-admin flags.
+        if (user.salonId && user.salonSlug) {
+          token.isSuperAdmin = false;
+          token.platformRole = undefined;
+        }
       }
       return token;
     },

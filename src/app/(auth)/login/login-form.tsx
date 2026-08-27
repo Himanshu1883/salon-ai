@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { salonDashboardPath, salonForgotPasswordPath } from "@/lib/salon-paths";
+import { salonDashboardPath, salonForgotPasswordPath, sanitizeSalonCallbackUrl } from "@/lib/salon-paths";
 import {
   formatSalonAddress,
   formatSalonPhone,
@@ -241,8 +241,10 @@ function SalonIdentity({ salon, compact = false }: { salon: SalonBranding; compa
 export default function LoginForm({ salon }: LoginFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const defaultCallback = salonDashboardPath(salon.slug);
-  const callbackUrl = searchParams.get("callbackUrl") || defaultCallback;
+  const callbackUrl = sanitizeSalonCallbackUrl(
+    searchParams.get("callbackUrl"),
+    salon.slug
+  );
   const resetSuccess = searchParams.get("reset") === "success";
   const emailUpdated = searchParams.get("email") === "updated";
   const accountDisabled = searchParams.get("error") === "account_disabled";
