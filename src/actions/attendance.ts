@@ -36,6 +36,7 @@ import {
   getMyAttendanceMonthStats,
 } from "@/lib/attendance/service";
 import { getBusinessDateKey, parseBusinessDateKey } from "@/lib/attendance/business-day";
+import { isPrismaClientValidationError } from "@/lib/attendance/legacy-write";
 
 const ATTENDANCE_PATHS = [
   "/attendance",

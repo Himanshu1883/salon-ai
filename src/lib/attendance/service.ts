@@ -102,7 +102,7 @@ export async function performCheckIn(input: {
   );
   const lateMinutes = computeLateMinutes(now, shift?.startTime);
 
-  let record: Awaited<ReturnType<typeof prisma.attendanceRecord.create>>;
+  let record: { id: string };
   try {
     record = await prisma.attendanceRecord.create({
       data: {
@@ -129,7 +129,6 @@ export async function performCheckIn(input: {
         method: input.method,
         confidence: input.confidence ?? null,
       },
-      include: { employee: { select: { id: true, name: true } } },
     });
   }
 
@@ -144,7 +143,7 @@ export async function performCheckIn(input: {
   return {
     success: true as const,
     action: "check_in" as const,
-    employeeName: record.employee.name,
+    employeeName: employee.name,
     time: new Intl.DateTimeFormat("en-IN", {
       hour: "numeric",
       minute: "2-digit",
