@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Calendar,
   Crown,
   Mail,
   Phone,
@@ -272,14 +271,21 @@ export function CustomerInfoCard({
                 </SelectContent>
               </Select>
             </div>
-            <FloatingInput
-              id="customerDob"
-              label="Date of Birth"
-              value={dob}
-              onChange={setDob}
-              type="date"
-              icon={Calendar}
-            />
+            <div className="space-y-1.5">
+              <label
+                htmlFor="customerDob"
+                className="text-xs font-medium text-dashboard-muted"
+              >
+                Date of Birth
+              </label>
+              <input
+                id="customerDob"
+                type="date"
+                value={dob}
+                onChange={(e) => setDob(e.target.value)}
+                className="h-14 w-full rounded-xl border border-dashboard-border bg-white/90 px-4 text-sm text-dashboard-text shadow-sm backdrop-blur-sm [color-scheme:light] focus:border-violet-400/60 focus:outline-none focus:ring-2 focus:ring-violet-500/15"
+              />
+            </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-dashboard-muted">
                 Membership
