@@ -40,6 +40,15 @@ const PATH_PERMISSION_OVERRIDES: Array<{
     permission: "support.view",
   },
   {
+    match: (path) =>
+      path.startsWith("/employee") || path.startsWith("/employee/"),
+    permission: "dashboard.view",
+  },
+  {
+    match: (path) => path.startsWith("/team/analytics"),
+    permission: "team.analytics.view_own",
+  },
+  {
     match: (path) => path === "/invoice-due" || path.startsWith("/invoice-due/"),
     permission: "billing.view",
   },

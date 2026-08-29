@@ -10,6 +10,7 @@ import { getOverduePlatformInvoiceReadOnly } from "@/actions/subscription";
 import { getTopEarnersForSalon } from "@/actions/billing";
 import { fetchDashboardBillingMetrics } from "@/lib/dashboard/billing-metrics";
 import { formatCurrency } from "@/lib/currency";
+import { getUpcomingTodayAppointments } from "@/lib/appointments/upcoming-today";
 import type {
   DashboardActivity,
   TeamMemberStatus,
@@ -137,7 +138,9 @@ export async function fetchDashboardPageData(salonId: string) {
   );
 
   const recentQueue = activeQueueEntries.slice(0, 5);
-  const upcomingAppointments = todayAppointments.slice(0, 5);
+  const upcomingAppointments = getUpcomingTodayAppointments(
+    todayAppointments
+  ).items;
   const pendingAppointmentsToday = todayAppointments.filter(
     (appointment) => appointment.status === "scheduled"
   ).length;

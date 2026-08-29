@@ -81,13 +81,13 @@ const EMPLOYEE_PERMISSIONS: PermissionKey[] = [
   "dashboard.view",
   "appointments.view",
   "queue.view",
-  "customers.view",
   "services.view",
   "packages.view",
   "addons.view",
   "attendance.view_own",
   "attendance.check_in",
   "attendance.check_out",
+  "team.analytics.view_own",
 ];
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<SystemRoleKey, PermissionKey[]> = {

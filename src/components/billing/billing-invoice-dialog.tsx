@@ -143,7 +143,11 @@ export function BillingInvoiceDialog({
           </div>
         ) : (
           <BillingInvoiceForm
-            key={invoicePrefill?.queueEntryId ?? "new-invoice"}
+            key={
+              invoicePrefill?.queueEntryId ??
+              invoicePrefill?.appointmentId ??
+              "new-invoice"
+            }
             services={formData.services}
             employees={formData.employees}
             seats={formData.seats}

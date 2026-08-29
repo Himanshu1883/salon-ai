@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   updateAppointmentStatus,
   deleteAppointment,
 } from "@/actions/appointments";
-import { createInvoiceFromAppointment } from "@/actions/billing";
 import { sendManualSms } from "@/actions/sms";
+import { useAppointmentRecordSale } from "@/components/appointments/use-appointment-record-sale";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
 import { buildCheckInHref, collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
 import { stripVisitGroupMarker } from "@/lib/appointments/visit-group";
@@ -25,12 +24,12 @@ import {
   Check,
   X,
   Trash2,
-  FileText,
   MessageSquare,
   Clock,
   User,
   Scissors,
   LogIn,
+  Receipt,
 } from "lucide-react";
 import type { Appointment } from "./types";
 import { getStatusLabel } from "./appointments-utils";
@@ -55,8 +54,8 @@ export function AppointmentDetailDialog({
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
 }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { openAppointmentSale } = useAppointmentRecordSale();
 
   if (!appointment) return null;
 
@@ -95,20 +94,15 @@ export function AppointmentDetailDialog({
     onRefresh();
   }
 
-  async function handleInvoice() {
-    setLoading(true);
-    const result = await createInvoiceFromAppointment(appointment!.id);
-    setLoading(false);
-    if (result.error && !result.id) {
-      alert(result.error);
-      return;
-    }
-    if (result.id) {
-      router.push(`/billing/${result.id}`);
-      return;
-    }
-    onOpenChange(false);
-    onRefresh();
+  function handleInvoice() {
+    openAppointmentSale(
+      appointment,
+      allAppointments.length > 0 ? allAppointments : [appointment],
+      {
+        onOpened: () => onOpenChange(false),
+        onRefresh,
+      }
+    );
   }
 
   async function handleSms() {
@@ -221,15 +215,26 @@ export function AppointmentDetailDialog({
                 </Link>
               </Button>
             )}
-            {appointment.status === "completed" && (
+            {appointment.status === "scheduled" && (
+              <AppointmentReachedButton
+                appointment={appointment}
+                onSuccess={() => {
+                  onOpenChange(false);
+                  onRefresh();
+                }}
+              />
+            )}
+            {(appointment.status === "scheduled" ||
+              appointment.status === "checked_in" ||
+              appointment.status === "completed") && (
               <Button
                 size="sm"
                 variant="outline"
                 disabled={loading}
                 onClick={handleInvoice}
               >
-                <FileText className="h-4 w-4" />
-                Create invoice
+                <Receipt className="h-4 w-4" />
+                Billing
               </Button>
             )}
             {appointment.status === "scheduled" && appointment.customer.phone && (
@@ -245,13 +250,6 @@ export function AppointmentDetailDialog({
             )}
             {appointment.status === "scheduled" && (
               <>
-                <AppointmentReachedButton
-                  appointment={appointment}
-                  onSuccess={() => {
-                    onOpenChange(false);
-                    onRefresh();
-                  }}
-                />
                 <Button
                   size="sm"
                   variant="outline"

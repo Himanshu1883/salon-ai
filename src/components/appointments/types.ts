@@ -10,6 +10,7 @@ export type Appointment = {
     id?: string;
     name: string;
     duration: number;
+    price?: number;
     category?: { id: string; name: string } | null;
   };
   employee: { id: string; name: string } | null;

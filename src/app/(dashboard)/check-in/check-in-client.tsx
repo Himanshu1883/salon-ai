@@ -10,6 +10,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { checkInCustomer } from "@/actions/queue";
+import { useRouter } from "next/navigation";
 import { CheckInHeader } from "@/components/check-in/check-in-header";
 import { CustomerInfoCard } from "@/components/check-in/customer-info-card";
 import { ServiceSelection } from "@/components/check-in/service-selection";
@@ -50,6 +51,8 @@ export function CheckInClient({
   prefilledCustomer?: CheckInPrefill;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
+  const startNowRef = useRef(false);
+  const router = useRouter();
   const validPrefillServiceIds = useMemo(
     () =>
       (prefilledCustomer?.serviceIds ?? []).filter((id) =>
@@ -98,6 +101,14 @@ export function CheckInClient({
 
       const formData = new FormData(e.currentTarget);
       selectedServices.forEach((id) => formData.append("serviceIds", id));
+      const startNow = startNowRef.current;
+      startNowRef.current = false;
+      if (startNow) formData.set("startNow", "1");
+      if (prefill?.fromAppointmentId) {
+        formData.set("appointmentId", prefill.fromAppointmentId);
+      }
+      const stylistId = selectedStylist || preferredStylist;
+      if (stylistId) formData.set("employeeId", stylistId);
 
       const result = await checkInCustomer(formData);
       setLoading(false);
@@ -113,16 +124,25 @@ export function CheckInClient({
         selectedServices.includes(s.id)
       );
       const nextPosition = (result.position ?? queueEntries.length + 1) as number;
+      const started = Boolean(result.started);
+      const assignedEmployee =
+        employees.find((employee) => employee.id === stylistId) ?? null;
 
       setQueueEntries((prev) => [
         ...prev,
         {
           id: `temp-${Date.now()}`,
           position: nextPosition,
-          status: "waiting",
+          status: started
+            ? "in_progress"
+            : assignedEmployee
+              ? "assigned"
+              : "waiting",
           checkedInAt: new Date(),
           customer: { name: customerName, phone: customerPhone },
-          employee: null,
+          employee: assignedEmployee
+            ? { id: assignedEmployee.id, name: assignedEmployee.name }
+            : null,
           services: selectedServiceItems.map((s) => ({
             service: {
               name: s.name,
@@ -144,8 +164,21 @@ export function CheckInClient({
       localStorage.removeItem(DRAFT_STORAGE_KEY);
 
       setTimeout(() => setShowUndo(false), 8000);
+
+      if (started) {
+        router.push("/queue");
+      }
     },
-    [selectedServices, services, queueEntries.length]
+    [
+      selectedServices,
+      services,
+      queueEntries.length,
+      prefill?.fromAppointmentId,
+      selectedStylist,
+      preferredStylist,
+      employees,
+      router,
+    ]
   );
 
   useEffect(() => {
@@ -217,6 +250,7 @@ export function CheckInClient({
   }
 
   function handleCheckInAndStart() {
+    startNowRef.current = true;
     formRef.current?.requestSubmit();
   }
 

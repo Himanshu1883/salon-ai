@@ -3,10 +3,9 @@ import { WelcomeBanner } from "@/components/dashboard/welcome-banner";
 import { DashboardKpiSection } from "@/components/dashboard/dashboard-kpi-section";
 import { DashboardWidgetsSection } from "@/components/dashboard/dashboard-widgets-section";
 import { DashboardStaleRefresh } from "@/components/dashboard/dashboard-stale-refresh";
-import {
-  DashboardLoadingSkeleton,
-  ChartLoadingSkeleton,
-} from "@/components/dashboard/loading-skeletons";
+import { EmployeeDashboardSection } from "@/components/dashboard/employee-dashboard-section";
+import { getDataScopeContext } from "@/lib/permissions/data-scope";
+import { ChartLoadingSkeleton } from "@/components/dashboard/loading-skeletons";
 
 function KpiSkeleton() {
   return (
@@ -38,7 +37,32 @@ function WidgetsSkeleton() {
   );
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string; from?: string; to?: string }>;
+}) {
+  const params = await searchParams;
+  const scope = await getDataScopeContext();
+
+  if (scope.dataScope === "own") {
+    return (
+      <div className="space-y-4 xl:space-y-6">
+        <Suspense
+          fallback={
+            <div className="h-96 animate-pulse rounded-[20px] bg-[#E8ECF4]" />
+          }
+        >
+          <EmployeeDashboardSection
+            period={params.period}
+            from={params.from}
+            to={params.to}
+          />
+        </Suspense>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 xl:space-y-6">
       <DashboardStaleRefresh />

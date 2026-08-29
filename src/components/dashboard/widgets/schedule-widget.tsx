@@ -22,13 +22,20 @@ type ScheduleWidgetProps = {
   delay?: number;
 };
 
-function getAppointmentStatus(scheduledAt: Date, status: string) {
+function getAppointmentStatus(
+  scheduledAt: Date,
+  status: string,
+  isNext: boolean
+) {
   if (status === "completed")
     return { label: "Completed", variant: "success" as const };
   if (status === "no_show")
     return { label: "No show", variant: "destructive" as const };
+  if (status === "checked_in")
+    return { label: "In Queue", variant: "warning" as const };
+  if (isNext) return { label: "Next", variant: "default" as const };
   if (isPast(scheduledAt))
-    return { label: "In Progress", variant: "warning" as const };
+    return { label: "Due", variant: "warning" as const };
   if (isFuture(scheduledAt))
     return { label: "Upcoming", variant: "secondary" as const };
   return { label: "Now", variant: "default" as const };
@@ -69,17 +76,26 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
           </div>
         ) : (
           <div className="divide-y divide-dashboard-border/60">
-            {appointments.map((apt) => {
+            {appointments.map((apt, index) => {
               const start = new Date(apt.scheduledAt);
               const end = addMinutes(start, apt.service.duration);
               const time = formatAppointmentDateTime(start, "hh:mm a");
               const timeRange = `${formatAppointmentDateTime(start, "h:mm a")} – ${formatAppointmentDateTime(end, "h:mm a")}`;
-              const statusInfo = getAppointmentStatus(start, apt.status);
+              const isNext = index === 0;
+              const statusInfo = getAppointmentStatus(
+                start,
+                apt.status,
+                isNext
+              );
 
               return (
                 <div
                   key={apt.id}
-                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 xl:gap-4"
+                  className={`flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 xl:gap-4 ${
+                    isNext
+                      ? "rounded-2xl bg-violet-50/90 px-3 ring-1 ring-violet-200 first:pt-3.5 last:pb-3.5"
+                      : ""
+                  }`}
                 >
                   <div className="w-[72px] shrink-0">
                     <p className="text-xs font-semibold text-dashboard-primary xl:text-sm">

@@ -124,7 +124,11 @@ export function RecordSaleProvider({
     <RecordSaleContext.Provider value={{ openRecordSale }}>
       {children}
       <BillingInvoiceDialog
-        key={invoicePrefill?.queueEntryId ?? "record-sale"}
+        key={
+          invoicePrefill?.queueEntryId ??
+          invoicePrefill?.appointmentId ??
+          "record-sale"
+        }
         open={open && Boolean(formData) && !loading}
         onOpenChange={handleOpenChange}
         services={formData?.services ?? []}

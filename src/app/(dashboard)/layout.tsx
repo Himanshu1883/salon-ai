@@ -16,6 +16,7 @@ import { canViewModule } from "@/lib/permissions/nav";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import { DEFAULT_ROLE_PERMISSIONS } from "@/lib/permissions/defaults";
 import { normalizeSalonPlan } from "@/lib/plans";
+import { resolveDataScope } from "@/lib/permissions/data-scope-core";
 
 export default async function DashboardLayout({
   children,
@@ -72,9 +73,18 @@ export default async function DashboardLayout({
     : (Array.from(resolved.permissions) as PermissionKey[]);
 
   const permissionSet = new Set(permissionKeys);
-  const duePayments = canViewModule(permissionSet, "billing", isOwner)
-    ? await getCachedDuePaymentsSummary(salonId)
-    : null;
+  const dataScope = resolveDataScope({
+    isOwner: resolved.isOwner,
+    roleKey: resolved.roleKey,
+    hierarchyLevel: resolved.hierarchyLevel,
+    userRole,
+  });
+  const duePayments =
+    dataScope === "own"
+      ? null
+      : canViewModule(permissionSet, "billing", isOwner)
+        ? await getCachedDuePaymentsSummary(salonId)
+        : null;
 
   return (
     <PlanProvider plan={plan}>
@@ -102,6 +112,8 @@ export default async function DashboardLayout({
             <PermissionLayoutGate
               permissions={permissionKeys}
               isOwner={resolved.isOwner}
+              roleKey={resolved.roleKey}
+              userRole={userRole}
             >
               {children}
             </PermissionLayoutGate>

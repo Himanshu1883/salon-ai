@@ -853,7 +853,19 @@ export async function fetchStaffAnalyticsOverview(
     ),
     getUtilization(salonId, from, to, employeeId),
     getCustomerPerformance(salonId, from, to, employeeId, 0),
-    fetchStaffAnalyticsEmployees(salonId),
+    employeeId
+      ? prisma.employee.findMany({
+          where: { salonId, id: employeeId },
+          select: {
+            id: true,
+            name: true,
+            role: true,
+            status: true,
+            avatarUrl: true,
+            specialties: true,
+          },
+        })
+      : fetchStaffAnalyticsEmployees(salonId),
     getUpcomingAppointments(salonId, employeeId),
     getAttendanceSummary(salonId, from, to, employeeId),
     getProductSales(salonId, from, to, employeeId),

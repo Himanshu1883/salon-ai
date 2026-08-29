@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   Check,
@@ -10,13 +9,11 @@ import {
   X,
 } from "lucide-react";
 import {
-  createInvoiceFromAppointment,
-} from "@/actions/billing";
-import {
   deleteAppointment,
   updateAppointmentStatus,
 } from "@/actions/appointments";
 import { sendManualSms } from "@/actions/sms";
+import { useAppointmentRecordSale } from "@/components/appointments/use-appointment-record-sale";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,8 +33,8 @@ export function AppointmentList({
   appointments: Appointment[];
   onRefresh: () => void;
 }) {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { openAppointmentSale } = useAppointmentRecordSale();
 
   async function handleStatus(id: string, status: string) {
     setLoading(true);
@@ -54,19 +51,8 @@ export function AppointmentList({
     onRefresh();
   }
 
-  async function handleInvoice(id: string) {
-    setLoading(true);
-    const result = await createInvoiceFromAppointment(id);
-    setLoading(false);
-    if (result.error && !result.id) {
-      alert(result.error);
-      return;
-    }
-    if (result.id) {
-      router.push(`/billing/${result.id}`);
-      return;
-    }
-    onRefresh();
+  function handleInvoice(apt: Appointment) {
+    openAppointmentSale(apt, appointments, { onRefresh });
   }
 
   async function handleSms(apt: Appointment) {
@@ -148,7 +134,7 @@ export function AppointmentList({
                 disabled={loading}
                 title="Create invoice"
                 className="rounded-xl"
-                onClick={() => handleInvoice(apt.id)}
+                onClick={() => handleInvoice(apt)}
               >
                 <FileText className="h-4 w-4 text-[#6C3BFF]" />
               </Button>

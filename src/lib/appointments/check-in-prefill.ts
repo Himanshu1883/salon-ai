@@ -1,4 +1,5 @@
 import type { Appointment } from "@/components/appointments/types";
+import type { InvoicePrefill } from "@/components/billing/types";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
 
 export function collectVisitGroupAppointments(
@@ -59,4 +60,34 @@ export function buildCheckInHref(
 
   const query = params.toString();
   return query ? `/check-in?${query}` : "/check-in";
+}
+
+export function appointmentsToInvoicePrefill(
+  appointment: Appointment,
+  allAppointments: Appointment[] = []
+): InvoicePrefill {
+  const visitAppointments = collectVisitGroupAppointments(
+    appointment,
+    allAppointments.length > 0 ? allAppointments : [appointment]
+  );
+  const assignedEmployee =
+    visitAppointments.find((item) => item.employee?.id)?.employee ??
+    appointment.employee;
+
+  return {
+    customer: {
+      id: appointment.customerId,
+      name: appointment.customer.name,
+      phone: appointment.customer.phone ?? "",
+    },
+    employeeId: assignedEmployee?.id,
+    appointmentId: appointment.id,
+    lineItems: visitAppointments.map((item) => ({
+      serviceId: item.serviceId ?? item.service.id ?? "",
+      description: item.service.name,
+      quantity: 1,
+      unitPrice: item.service.price ?? 0,
+      employeeId: item.employee?.id ?? assignedEmployee?.id,
+    })),
+  };
 }

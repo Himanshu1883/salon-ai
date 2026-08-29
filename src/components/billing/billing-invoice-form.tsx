@@ -91,28 +91,33 @@ function todayInputValue() {
 
 function prefillToLineItems(
   prefill: InvoicePrefill,
-  employees: BillingEmployee[]
+  employees: BillingEmployee[],
+  services: BillingService[] = []
 ): LineItem[] {
-  const defaultEmployeeId =
-    prefill.employeeId ?? employees[0]?.id ?? "";
+  const defaultEmployeeId = prefill.employeeId ?? "";
 
   if (prefill.lineItems?.length) {
-    return prefill.lineItems.map((item) => ({
-      key: crypto.randomUUID(),
-      itemType: "SERVICE" as const,
-      serviceId: item.serviceId,
-      stockItemId: "",
-      description: item.description,
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      discount: 0,
-      discountType: "percent" as const,
-      taxRate: 0.18,
-      employeeId: item.employeeId ?? defaultEmployeeId,
-    }));
+    return prefill.lineItems.map((item) => {
+      const catalogPrice = services.find(
+        (service) => service.id === item.serviceId
+      )?.price;
+      return {
+        key: crypto.randomUUID(),
+        itemType: "SERVICE" as const,
+        serviceId: item.serviceId,
+        stockItemId: "",
+        description: item.description,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice || catalogPrice || 0,
+        discount: 0,
+        discountType: "percent" as const,
+        taxRate: 0.18,
+        employeeId: item.employeeId ?? defaultEmployeeId,
+      };
+    });
   }
 
-  return [newLineItem(defaultEmployeeId)];
+  return [newLineItem(defaultEmployeeId || employees[0]?.id || "")];
 }
 
 function statusLabel(status: string) {
@@ -162,7 +167,7 @@ export function BillingInvoiceForm({
   const [seatId, setSeatId] = useState(invoicePrefill?.seatId ?? "");
   const [lineItems, setLineItems] = useState<LineItem[]>(() =>
     invoicePrefill
-      ? prefillToLineItems(invoicePrefill, employees)
+      ? prefillToLineItems(invoicePrefill, employees, services)
       : [newLineItem(employees[0]?.id ?? "")]
   );
   const [products, setProducts] = useState<BillingProduct[]>([]);
@@ -535,6 +540,9 @@ export function BillingInvoiceForm({
     formData.set("customerName", customer.name.trim());
     formData.set("customerPhone", customer.phone.trim());
     if (customer.id) formData.set("customerId", customer.id);
+    if (invoicePrefill?.appointmentId) {
+      formData.set("appointmentId", invoicePrefill.appointmentId);
+    }
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
     formData.set("status", invoiceStatus);

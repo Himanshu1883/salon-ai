@@ -9,6 +9,7 @@ import {
 import { salonCacheTag } from "@/lib/salon-cache";
 import { fetchLayoutAlertMetrics } from "@/lib/layout/alert-metrics";
 import { getCachedDashboardPageData } from "@/lib/dashboard/page-data";
+import { requireSalonWidePermission } from "@/lib/permissions/data-scope";
 
 export type RevenueDay = {
   date: string;
@@ -48,6 +49,7 @@ export async function getDashboardWidgets() {
 
 /** Full stats — used by reports; merges cached KPI + widget fetches. */
 export async function getDashboardStats() {
+  await requireSalonWidePermission("reports.view");
   const session = await requireSession();
   const salonId = session.user.salonId;
   const now = new Date();

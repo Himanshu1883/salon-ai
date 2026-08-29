@@ -21,6 +21,11 @@ import {
   getSequentialSlotStart,
   getTotalDuration,
 } from "@/lib/appointments/visit-group";
+import {
+  appointmentScopeWhere,
+  assertEmployeeResourceAccess,
+  getDataScopeContext,
+} from "@/lib/permissions/data-scope";
 
 export async function getSalonOpeningHours() {
   const session = await requireSession();
@@ -42,13 +47,15 @@ const getCachedSalonOpeningHours = cachedBySalon(
 async function fetchAppointmentsInRange(
   salonId: string,
   start: Date,
-  end: Date
+  end: Date,
+  employeeId?: string | null
 ) {
   return prisma.appointment.findMany({
     where: {
       salonId,
       scheduledAt: { gte: start, lte: end },
       status: { not: "cancelled" },
+      ...(employeeId ? { employeeId } : {}),
     },
     select: {
       id: true,
@@ -63,6 +70,7 @@ async function fetchAppointmentsInRange(
           id: true,
           name: true,
           duration: true,
+          price: true,
           category: { select: { id: true, name: true } },
         },
       },
@@ -73,24 +81,27 @@ async function fetchAppointmentsInRange(
 }
 
 export async function getAppointmentsInRange(start: Date, end: Date) {
-  const session = await requireSession();
-  const salonId = session.user.salonId!;
+  const ctx = await getDataScopeContext();
+  const salonId = ctx.salonId;
+  const employeeId = ctx.dataScope === "own" ? ctx.employeeId : null;
+  if (ctx.dataScope === "own" && !employeeId) return [];
   const rangeKey = `${start.toISOString().slice(0, 10)}:${end.toISOString().slice(0, 10)}`;
+  const scopeKey = employeeId ?? "all";
 
   return cachedRead(
-    `salon-cache:appointments:range:${salonId}:${rangeKey}`,
+    `salon-cache:appointments:range:${salonId}:${scopeKey}:${rangeKey}`,
     60,
     () =>
       unstable_cache(
-        () => fetchAppointmentsInRange(salonId, start, end),
-        ["appointments", "range", salonId, rangeKey],
+        () => fetchAppointmentsInRange(salonId, start, end, employeeId),
+        ["appointments", "range", salonId, scopeKey, rangeKey],
         { revalidate: 60, tags: [salonCacheTag(salonId, "appointments")] }
       )()
   );
 }
 
 export async function getAppointments(filter: "today" | "upcoming" = "upcoming") {
-  const session = await requireSession();
+  const ctx = await getDataScopeContext();
   const now = new Date();
 
   const dateFilter =
@@ -100,7 +111,7 @@ export async function getAppointments(filter: "today" | "upcoming" = "upcoming")
 
   return prisma.appointment.findMany({
     where: {
-      salonId: session.user.salonId,
+      ...appointmentScopeWhere(ctx),
       scheduledAt: dateFilter,
       status: { not: "cancelled" },
     },
@@ -121,6 +132,7 @@ export async function getAppointmentsForWeek(weekStart: Date) {
 
 export async function createAppointment(formData: FormData) {
   const session = await requireSession();
+  const scope = await getDataScopeContext();
 
   let serviceLines: { serviceId: string; employeeId?: string }[] = [];
   const serviceLinesRaw = formData.get("serviceLines") as string | null;
@@ -198,6 +210,10 @@ export async function createAppointment(formData: FormData) {
     const duration = durationByServiceId.get(line.serviceId) ?? 0;
     const slotStart = getSequentialSlotStart(scheduledAt, priorDurations);
 
+    if (scope.dataScope === "own" && scope.employeeId) {
+      line.employeeId = scope.employeeId;
+    }
+
     if (line.employeeId) {
       const availability = await assertEmployeeAvailableForSlot(
         session.user.salonId,
@@ -229,7 +245,10 @@ export async function createAppointment(formData: FormData) {
           salonId: session.user.salonId,
           customerId: customer.id,
           serviceId: line.serviceId,
-          employeeId: line.employeeId || null,
+          employeeId:
+            scope.dataScope === "own"
+              ? scope.employeeId
+              : line.employeeId || null,
           scheduledAt: slotStart,
           notes: index === 0 ? visitNotes : createVisitGroupMarker(visitGroupId),
         },
@@ -264,11 +283,17 @@ export async function updateAppointmentStatus(
   status: string
 ) {
   const session = await requireSession();
+  const scope = await getDataScopeContext();
   const appointment = await prisma.appointment.findFirst({
     where: { id, salonId: session.user.salonId },
     include: { service: true },
   });
   if (!appointment) return { error: "Appointment not found" };
+  try {
+    assertEmployeeResourceAccess(scope, appointment.employeeId);
+  } catch {
+    return { error: "Appointment not found" };
+  }
 
   const wasCompleted = appointment.status === "completed";
   const isCompleting = status === "completed" && !wasCompleted;
@@ -279,6 +304,14 @@ export async function updateAppointmentStatus(
   });
 
   if (isCompleting) {
+    await prisma.queueEntry.updateMany({
+      where: {
+        salonId: session.user.salonId,
+        appointmentId: id,
+        status: { in: ["waiting", "assigned", "in_progress"] },
+      },
+      data: { status: "completed", completedAt: new Date() },
+    });
     const { consumeServiceRecipesForAppointment } = await import(
       "@/lib/inventory/ledger"
     );
@@ -306,10 +339,16 @@ export async function updateAppointmentStatus(
 
 export async function deleteAppointment(id: string) {
   const session = await requireSession();
+  const scope = await getDataScopeContext();
   const appointment = await prisma.appointment.findFirst({
     where: { id, salonId: session.user.salonId },
   });
   if (!appointment) return { error: "Appointment not found" };
+  try {
+    assertEmployeeResourceAccess(scope, appointment.employeeId);
+  } catch {
+    return { error: "Appointment not found" };
+  }
 
   await prisma.appointment.delete({ where: { id } });
   revalidatePath("/sales/appointments");

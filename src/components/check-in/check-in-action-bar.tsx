@@ -51,7 +51,7 @@ export function CheckInActionBar({
             disabled={!canSubmit || loading}
             onClick={onCheckInAndStart}
             className="h-11 rounded-xl border-violet-300/60 bg-white/80 px-4 text-dashboard-primary backdrop-blur-sm hover:bg-violet-50/80"
-            title="Assign stylist after check-in from the queue page"
+            title="Check in and start the service now"
           >
             <Play className="h-4 w-4" />
             <span className="hidden sm:inline">Check-in & Start</span>

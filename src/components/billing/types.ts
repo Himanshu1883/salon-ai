@@ -59,6 +59,7 @@ export type InvoicePrefill = {
   employeeId?: string;
   seatId?: string;
   queueEntryId?: string;
+  appointmentId?: string;
   lineItems?: InvoicePrefillLineItem[];
 };
 

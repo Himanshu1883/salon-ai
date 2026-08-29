@@ -5,6 +5,10 @@ import { requireSession } from "@/lib/auth";
 import { upsertCustomer, linkInvoiceToCustomer } from "@/lib/customers";
 import { customerSchema } from "@/lib/validations";
 import { revalidateSalonCache, cachedBySalon } from "@/lib/salon-cache";
+import {
+  customerScopeWhere,
+  getDataScopeContext,
+} from "@/lib/permissions/data-scope";
 
 function invalidateCustomersCache(salonId: string) {
   revalidateSalonCache(
@@ -35,13 +39,15 @@ function buildCustomerSearchConditions(query: string) {
 }
 
 export async function searchCustomers(query: string) {
-  const session = await requireSession();
+  const ctx = await getDataScopeContext();
   if (!query.trim()) return [];
 
   return prisma.customer.findMany({
     where: {
-      salonId: session.user.salonId,
-      OR: buildCustomerSearchConditions(query),
+      AND: [
+        customerScopeWhere(ctx),
+        { OR: buildCustomerSearchConditions(query) },
+      ],
     },
     orderBy: { name: "asc" },
     take: 10,
@@ -102,17 +108,22 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
   page: number;
   pageSize: number;
 }> {
-  const session = await requireSession();
-  const salonId = session.user.salonId;
+  const ctx = await getDataScopeContext();
+  const salonId = ctx.salonId;
 
   const page = Math.max(1, options?.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, options?.pageSize ?? 50));
   const sort = options?.sort ?? "createdAt_desc";
 
-  const where: Record<string, unknown> = { salonId };
-  if (options?.search?.trim()) {
-    where.OR = buildCustomerSearchConditions(options.search);
-  }
+  const scopeWhere = customerScopeWhere(ctx);
+  const where: Record<string, unknown> = options?.search?.trim()
+    ? {
+        AND: [
+          scopeWhere,
+          { OR: buildCustomerSearchConditions(options.search) },
+        ],
+      }
+    : scopeWhere;
 
   const [customers, totalCount] = await Promise.all([
     prisma.customer.findMany({
@@ -274,25 +285,31 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
 }
 
 export async function getCustomerById(id: string) {
-  const session = await requireSession();
+  const ctx = await getDataScopeContext();
   return prisma.customer.findFirst({
-    where: { id, salonId: session.user.salonId },
+    where: { id, ...customerScopeWhere(ctx) },
   });
 }
 
 export async function getCustomerStats(id: string) {
-  const session = await requireSession();
-  const salonId = session.user.salonId;
+  const ctx = await getDataScopeContext();
+  const salonId = ctx.salonId;
 
   const customer = await prisma.customer.findFirst({
-    where: { id, salonId },
+    where: { id, ...customerScopeWhere(ctx) },
   });
   if (!customer) return null;
+
+  const employeeFilter =
+    ctx.dataScope === "own" && ctx.employeeId
+      ? { employeeId: ctx.employeeId }
+      : {};
 
   const [invoices, checkIns, appointments] = await Promise.all([
     prisma.invoice.findMany({
       where: {
         salonId,
+        ...employeeFilter,
         OR: [
           { customerId: id },
           ...(customer.phone
@@ -303,7 +320,7 @@ export async function getCustomerStats(id: string) {
       orderBy: { createdAt: "desc" },
     }),
     prisma.queueEntry.findMany({
-      where: { salonId, customerId: id },
+      where: { salonId, customerId: id, ...employeeFilter },
       include: {
         employee: true,
         services: { include: { service: true } },
@@ -311,7 +328,7 @@ export async function getCustomerStats(id: string) {
       orderBy: { checkedInAt: "desc" },
     }),
     prisma.appointment.findMany({
-      where: { salonId, customerId: id },
+      where: { salonId, customerId: id, ...employeeFilter },
       include: {
         service: true,
         employee: true,
@@ -407,9 +424,10 @@ export async function createCustomer(formData: FormData) {
 
 export async function updateCustomer(id: string, formData: FormData) {
   const session = await requireSession();
+  const ctx = await getDataScopeContext();
 
   const existing = await prisma.customer.findFirst({
-    where: { id, salonId: session.user.salonId },
+    where: { id, ...customerScopeWhere(ctx) },
   });
   if (!existing) return { error: "Customer not found" };
 

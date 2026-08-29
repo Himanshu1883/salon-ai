@@ -2,7 +2,7 @@
 
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/permissions/require";
+import { requireSalonWidePermission } from "@/lib/permissions/data-scope";
 import { revalidatePath } from "next/cache";
 import {
   startOfDay,
@@ -47,7 +47,7 @@ export type ReportCatalogItem = ReportDefinition & {
 export async function getReportsCatalog(
   filters?: ReportsCatalogFilters
 ): Promise<ReportCatalogItem[]> {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const salonId = session.user.salonId;
   const userId = session.user.id;
 
@@ -91,7 +91,7 @@ export async function getReportsCatalog(
 }
 
 export const getFavoriteReportSlugs = cache(async (): Promise<string[]> => {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const favorites = await prisma.reportFavorite.findMany({
     where: {
       salonId: session.user.salonId,
@@ -103,7 +103,7 @@ export const getFavoriteReportSlugs = cache(async (): Promise<string[]> => {
 });
 
 export async function toggleReportFavorite(reportSlug: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const salonId = session.user.salonId;
   const userId = session.user.id;
 
@@ -138,7 +138,7 @@ export type SalesSummaryRow = {
 };
 
 export async function getSalesSummary(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const invoices = await prisma.invoice.findMany({
@@ -194,7 +194,7 @@ export async function getSalesByPeriod(
   dateTo: string,
   groupBy: "daily" | "weekly" = "daily"
 ) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const from = startOfDay(parseDate(dateFrom));
   const to = endOfDay(parseDate(dateTo));
 
@@ -267,7 +267,7 @@ export type SalesLogRow = {
 };
 
 export async function getSalesLog(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const lineItems = await prisma.invoiceLineItem.findMany({
@@ -301,7 +301,7 @@ export async function getSalesLog(dateFrom?: string, dateTo?: string) {
 }
 
 export async function exportSalesListCsv(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const invoices = await prisma.invoice.findMany({
@@ -337,7 +337,7 @@ export async function getGiftCardsByPeriod(
   dateTo: string,
   groupBy: "daily" | "weekly" = "daily"
 ) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const from = startOfDay(parseDate(dateFrom));
   const to = endOfDay(parseDate(dateTo));
 
@@ -389,7 +389,7 @@ export async function getGiftCardsByPeriod(
 }
 
 export async function getPackagesSummary(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const lineItems = await prisma.invoiceLineItem.findMany({
@@ -425,7 +425,7 @@ export async function getPackagesSummary(dateFrom?: string, dateTo?: string) {
 // --- Finance reports ---
 
 export async function getRevenueSummary(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const invoices = await prisma.invoice.findMany({
@@ -446,7 +446,7 @@ export async function getRevenueSummary(dateFrom?: string, dateTo?: string) {
 }
 
 export async function getUnpaidInvoices() {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
 
   return prisma.invoice.findMany({
     where: {
@@ -465,7 +465,7 @@ export async function getAppointmentsByPeriod(
   dateTo: string,
   groupBy: "daily" | "weekly" = "daily"
 ) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const from = startOfDay(parseDate(dateFrom));
   const to = endOfDay(parseDate(dateTo));
 
@@ -513,7 +513,7 @@ export async function getAppointmentsByPeriod(
 }
 
 export async function getNoShows(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const scheduledAt = dateRangeFilter(dateFrom, dateTo);
 
   return prisma.appointment.findMany({
@@ -528,7 +528,7 @@ export async function getNoShows(dateFrom?: string, dateTo?: string) {
 }
 
 export async function getCompletionRate(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const scheduledAt = dateRangeFilter(dateFrom, dateTo);
 
   const appointments = await prisma.appointment.findMany({
@@ -558,7 +558,7 @@ function parseTimeToHours(start: string, end: string): number {
 }
 
 export async function getTeamShiftHours(dateFrom: string, dateTo: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const from = startOfDay(parseDate(dateFrom));
   const to = endOfDay(parseDate(dateTo));
 
@@ -598,7 +598,7 @@ export async function getTeamShiftHours(dateFrom: string, dateTo: string) {
 // --- Clients reports ---
 
 export async function getNewClients(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const createdAt = dateRangeFilter(dateFrom, dateTo);
 
   return prisma.customer.findMany({
@@ -611,7 +611,7 @@ export async function getNewClients(dateFrom?: string, dateTo?: string) {
 }
 
 export async function getClientSegmentsSummary() {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
 
   const segments = await prisma.customSegment.findMany({
     where: { salonId: session.user.salonId },
@@ -626,7 +626,7 @@ export async function getClientSegmentsSummary() {
 }
 
 export async function getTopSpenders(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const paidAt = dateRangeFilter(dateFrom, dateTo);
 
   const invoices = await prisma.invoice.findMany({
@@ -665,7 +665,7 @@ export async function getTopSpenders(dateFrom?: string, dateTo?: string) {
 // --- Inventory reports ---
 
 export async function getStockLevelsReport() {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
 
   const items = await prisma.stockItem.findMany({
     where: { salonId: session.user.salonId },
@@ -686,7 +686,7 @@ export async function getLowStockReport() {
 }
 
 export async function getPurchaseHistoryReport(dateFrom?: string, dateTo?: string) {
-  const session = await requirePermission("reports.view");
+  const session = await requireSalonWidePermission("reports.view");
   const purchaseDate = dateRangeFilter(dateFrom, dateTo);
 
   return prisma.stockPurchase.findMany({

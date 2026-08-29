@@ -9,6 +9,10 @@ import {
   assignQueueSchema,
 } from "@/lib/validations";
 import { upsertCustomer } from "@/lib/customers";
+import {
+  assertEmployeeResourceAccess,
+  getDataScopeContext,
+} from "@/lib/permissions/data-scope";
 
 function invalidateQueueCache(salonId: string) {
   revalidateSalonCache(
@@ -88,17 +92,40 @@ async function getNextPosition(salonId: string) {
 }
 
 export async function getQueueEntries() {
-  const session = await requireSession();
-  return getCachedQueueEntries(session.user.salonId);
+  const ctx = await getDataScopeContext();
+  if (ctx.dataScope === "own") {
+    if (!ctx.employeeId) return [];
+    return prisma.queueEntry.findMany({
+      where: {
+        salonId: ctx.salonId,
+        status: { in: ["waiting", "assigned", "in_progress"] },
+        OR: [{ employeeId: ctx.employeeId }, { employeeId: null, status: "waiting" }],
+      },
+      include: {
+        customer: true,
+        employee: true,
+        seat: true,
+        services: { include: { service: true } },
+      },
+      orderBy: { position: "asc" },
+    });
+  }
+  return getCachedQueueEntries(ctx.salonId);
 }
 
 export async function checkInFromAppointment(appointmentId: string) {
   const session = await requireSession();
+  const scope = await getDataScopeContext();
 
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, salonId: session.user.salonId },
   });
   if (!appointment) return { error: "Appointment not found" };
+  try {
+    assertEmployeeResourceAccess(scope, appointment.employeeId);
+  } catch {
+    return { error: "Appointment not found" };
+  }
   if (appointment.status === "cancelled") {
     return { error: "Cannot check in a cancelled appointment" };
   }
@@ -174,6 +201,17 @@ export async function checkInFromAppointment(appointmentId: string) {
 export async function checkInCustomer(formData: FormData) {
   const session = await requireSession();
   const serviceIds = formData.getAll("serviceIds") as string[];
+  const startNow = formData.get("startNow") === "1";
+  const appointmentId =
+    typeof formData.get("appointmentId") === "string" &&
+    (formData.get("appointmentId") as string).trim()
+      ? (formData.get("appointmentId") as string).trim()
+      : undefined;
+  const employeeId =
+    typeof formData.get("employeeId") === "string" &&
+    (formData.get("employeeId") as string).trim()
+      ? (formData.get("employeeId") as string).trim()
+      : undefined;
 
   const raw = {
     customerId: (formData.get("customerId") as string) || undefined,
@@ -187,20 +225,100 @@ export async function checkInCustomer(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const position = await getNextPosition(session.user.salonId);
-
   const customer = await upsertCustomer(session.user.salonId, {
     customerId: parsed.data.customerId,
     name: parsed.data.customerName,
     phone: parsed.data.customerPhone,
   });
 
+  if (appointmentId) {
+    const appointment = await prisma.appointment.findFirst({
+      where: { id: appointmentId, salonId: session.user.salonId },
+      select: { id: true, employeeId: true, status: true },
+    });
+    if (appointment) {
+      const existingEntry = await prisma.queueEntry.findFirst({
+        where: {
+          salonId: session.user.salonId,
+          appointmentId,
+          status: { in: ["waiting", "assigned", "in_progress"] },
+        },
+      });
+      const assignedEmployeeId =
+        employeeId || appointment.employeeId || existingEntry?.employeeId || null;
+
+      if (existingEntry) {
+        await prisma.$transaction([
+          prisma.queueEntry.update({
+            where: { id: existingEntry.id },
+            data: {
+              status: startNow
+                ? "in_progress"
+                : assignedEmployeeId
+                  ? "assigned"
+                  : existingEntry.status,
+              employeeId: assignedEmployeeId,
+              startedAt: startNow ? new Date() : existingEntry.startedAt,
+            },
+          }),
+          prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { status: "checked_in" },
+          }),
+        ]);
+        invalidateQueueCache(session.user.salonId);
+        return {
+          success: true,
+          position: existingEntry.position,
+          started: startNow,
+          alreadyInQueue: true,
+        };
+      }
+
+      const position = await getNextPosition(session.user.salonId);
+      await prisma.$transaction([
+        prisma.appointment.update({
+          where: { id: appointmentId },
+          data: { status: "checked_in" },
+        }),
+        prisma.queueEntry.create({
+          data: {
+            salonId: session.user.salonId,
+            customerId: customer.id,
+            appointmentId,
+            position,
+            status: startNow
+              ? "in_progress"
+              : assignedEmployeeId
+                ? "assigned"
+                : "waiting",
+            employeeId: assignedEmployeeId,
+            startedAt: startNow ? new Date() : null,
+            services: {
+              create: parsed.data.serviceIds.map((serviceId) => ({ serviceId })),
+            },
+          },
+        }),
+      ]);
+      invalidateQueueCache(session.user.salonId);
+      return { success: true, position, started: startNow };
+    }
+  }
+
+  const position = await getNextPosition(session.user.salonId);
+
   await prisma.queueEntry.create({
     data: {
       salonId: session.user.salonId,
       customerId: customer.id,
       position,
-      status: "waiting",
+      status: startNow
+        ? "in_progress"
+        : employeeId
+          ? "assigned"
+          : "waiting",
+      employeeId: employeeId ?? null,
+      startedAt: startNow ? new Date() : null,
       services: {
         create: parsed.data.serviceIds.map((serviceId) => ({ serviceId })),
       },
@@ -208,7 +326,7 @@ export async function checkInCustomer(formData: FormData) {
   });
 
   invalidateQueueCache(session.user.salonId);
-  return { success: true, position };
+  return { success: true, position, started: startNow };
 }
 
 export async function assignQueueEntry(formData: FormData) {

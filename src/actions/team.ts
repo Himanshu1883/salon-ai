@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
-import { requirePermission } from "@/lib/permissions/require";
+import { requirePermission, PermissionDeniedError } from "@/lib/permissions/require";
 import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { employeeSchema, employeeProfileSchema } from "@/lib/validations";
 import { saveEmployeeDocument } from "@/lib/employee-upload";
@@ -12,6 +12,10 @@ import {
   setLinkedLoginActiveState,
 } from "@/lib/employee-login-link";
 import { invalidateResolvedPermissionsCache } from "@/lib/permissions/resolve";
+import {
+  getDataScopeContext,
+  usesOwnDataScope,
+} from "@/lib/permissions/data-scope";
 
 const teamMemberSelect = {
   id: true,
@@ -73,6 +77,10 @@ const getCachedTeamMembers = cachedBySalon("team", fetchTeamMembers, {
 });
 
 export async function getTeamMembers(search?: string) {
+  const ctx = await getDataScopeContext();
+  if (usesOwnDataScope(ctx) && !ctx.permissions.has("team.view") && !ctx.isOwner) {
+    throw new PermissionDeniedError("team.view");
+  }
   await requirePermission("team.view");
   const session = await requireSession();
   if (search) {
@@ -94,12 +102,42 @@ export async function getTeamMembers(search?: string) {
 }
 
 export async function getTeamMember(id: string) {
-  await requirePermission("team.view");
+  const ctx = await getDataScopeContext();
+  const canManageTeam = ctx.isOwner || ctx.permissions.has("team.view");
+  if (usesOwnDataScope(ctx) && !canManageTeam) {
+    if (!ctx.employeeId || ctx.employeeId !== id) {
+      throw new PermissionDeniedError("team.view");
+    }
+  } else {
+    await requirePermission("team.view");
+  }
   const session = await requireSession();
   return prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
     include: {
       services: { include: { service: true } },
+    },
+  });
+}
+
+export async function getOwnEmployeeProfile() {
+  const ctx = await getDataScopeContext();
+  if (!ctx.employeeId) return null;
+  return prisma.employee.findFirst({
+    where: { id: ctx.employeeId, salonId: ctx.salonId },
+    select: {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      role: true,
+      specialties: true,
+      avatarUrl: true,
+      status: true,
+      createdAt: true,
+      services: {
+        select: { service: { select: { id: true, name: true } } },
+      },
     },
   });
 }

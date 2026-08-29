@@ -6,8 +6,12 @@ import { cachedRead } from "@/lib/memory-cache";
 import {
   PermissionDeniedError,
   hasPermission,
-  requirePermission,
+  requireAnyPermission,
 } from "@/lib/permissions/require";
+import {
+  STAFF_ANALYTICS_PERMISSIONS,
+  getDataScopeContext,
+} from "@/lib/permissions/data-scope";
 import { prisma } from "@/lib/prisma";
 import { salonCacheTag } from "@/lib/salon-cache";
 import {
@@ -23,7 +27,7 @@ import {
   type AnalyticsPeriod,
 } from "@/lib/analytics/date-range";
 
-type AuthSession = Awaited<ReturnType<typeof requirePermission>>;
+type AuthSession = Awaited<ReturnType<typeof requireAnyPermission>>;
 
 export type StaffAnalyticsSearchParams = {
   employeeId?: string;
@@ -56,6 +60,21 @@ async function resolveEmployeeScopeFromSession(
   requestedEmployeeId?: string
 ): Promise<string | null> {
   const salonId = session.user.salonId!;
+
+  const scope = await getDataScopeContext();
+  if (scope.dataScope === "own") {
+    if (!scope.employeeId) {
+      throw new PermissionDeniedError("team.analytics.view_own");
+    }
+    if (
+      requestedEmployeeId &&
+      requestedEmployeeId !== "all" &&
+      requestedEmployeeId !== scope.employeeId
+    ) {
+      throw new PermissionDeniedError("team.analytics.view");
+    }
+    return scope.employeeId;
+  }
 
   if (session.user.role === "owner") {
     return requestedEmployeeId && requestedEmployeeId !== "all"
@@ -101,7 +120,7 @@ const resolveStaffAnalyticsContext = cache(
     _paramsKey: string,
     params: StaffAnalyticsSearchParams
   ): Promise<ResolvedStaffAnalyticsContext> => {
-    const session = await requirePermission("team.analytics.view");
+    const session = await requireAnyPermission(STAFF_ANALYTICS_PERMISSIONS);
     const salonId = session.user.salonId!;
     const employeeId = await resolveEmployeeScopeFromSession(
       session,
@@ -190,13 +209,19 @@ const loadStaffAnalyticsDetails = cache(
 export async function getStaffAnalyticsRangeLabel(
   params: StaffAnalyticsSearchParams
 ) {
-  await requirePermission("team.analytics.view");
+  await requireAnyPermission(STAFF_ANALYTICS_PERMISSIONS);
   const period = (params.period as AnalyticsPeriod) || "this_month";
   return resolveAnalyticsDateRange(period, params.from, params.to).label;
 }
 
 export async function getStaffAnalyticsEmployees() {
-  const session = await requirePermission("team.analytics.view");
+  const session = await requireAnyPermission(STAFF_ANALYTICS_PERMISSIONS);
+  const scope = await getDataScopeContext();
+  if (scope.dataScope === "own" && scope.employeeId) {
+    return fetchStaffAnalyticsEmployees(session.user.salonId!).then((rows) =>
+      rows.filter((row) => row.id === scope.employeeId)
+    );
+  }
   return fetchStaffAnalyticsEmployees(session.user.salonId!);
 }
 
@@ -230,14 +255,14 @@ export async function getStaffAnalytics(params: StaffAnalyticsSearchParams) {
 export async function exportStaffAnalyticsCsv(
   params: StaffAnalyticsSearchParams
 ) {
-  await requirePermission("team.analytics.view");
+  await requireAnyPermission(STAFF_ANALYTICS_PERMISSIONS);
   const data = await getStaffAnalytics(params);
   return staffAnalyticsToCsv(data);
 }
 
 export async function canAccessStaffAnalytics() {
   try {
-    await requirePermission("team.analytics.view");
+    await requireAnyPermission(STAFF_ANALYTICS_PERMISSIONS);
     return true;
   } catch {
     return false;

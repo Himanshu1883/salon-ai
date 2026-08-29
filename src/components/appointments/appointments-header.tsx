@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Plus, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,13 @@ export function AppointmentsHeader({
   defaultScheduledAt,
   onSuccess,
 }: AppointmentsHeaderProps) {
+  const [formKey, setFormKey] = useState(0);
+
+  function handleOpenChange(next: boolean) {
+    if (next) setFormKey((key) => key + 1);
+    onOpenChange(next);
+  }
+
   return (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div>
@@ -58,7 +66,7 @@ export function AppointmentsHeader({
             AI Suggest
           </Link>
         </Button>
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
             <Button className="h-11 rounded-2xl border-0 bg-gradient-to-r from-[#FF2D6F] to-[#FF5A8F] px-5 text-white shadow-lg shadow-[#FF2D6F]/25 hover:from-[#E82663] hover:to-[#FF2D6F]">
               <Plus className="h-4 w-4" />
@@ -75,6 +83,7 @@ export function AppointmentsHeader({
               </p>
             </DialogHeader>
             <AppointmentForm
+              key={formKey}
               services={services}
               employees={employees}
               openingHours={openingHours}

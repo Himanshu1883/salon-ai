@@ -93,11 +93,11 @@ export function StaffAnalyticsFilters({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link
-            href="/team/members"
+            href={employees.length <= 1 ? "/dashboard" : "/team/members"}
             className="mb-3 inline-flex items-center gap-1 text-sm text-[#6B7280] hover:text-[#6C3BFF]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to team
+            {employees.length <= 1 ? "Back to dashboard" : "Back to team"}
           </Link>
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EDE9FE] text-[#6C3BFF]">
@@ -105,7 +105,7 @@ export function StaffAnalyticsFilters({
             </div>
             <div>
               <h1 className="text-2xl font-bold text-[#1C103D] sm:text-3xl">
-                Staff Analytics
+              {employees.length <= 1 ? "My Performance" : "Staff Analytics"}
               </h1>
               {rangeLabel && (
                 <p className="text-sm text-[#6B7280]">{rangeLabel}</p>
@@ -127,6 +127,7 @@ export function StaffAnalyticsFilters({
       <Card className="rounded-[20px] border-[#E8ECF4] shadow-sm">
         <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-end lg:p-6">
           <div className="grid flex-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {employees.length > 1 && (
             <div className="space-y-2">
               <Label>Employee</Label>
               <Select
@@ -149,6 +150,7 @@ export function StaffAnalyticsFilters({
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="space-y-2">
               <Label>Date range</Label>
               <Select

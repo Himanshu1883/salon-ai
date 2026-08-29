@@ -37,6 +37,7 @@ import {
 } from "./appointments-utils";
 import { cn } from "@/lib/utils";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
+import { getUpcomingTodayAppointments } from "@/lib/appointments/upcoming-today";
 import { usePlan } from "@/components/plans/plan-provider";
 
 type AppointmentsSidebarProps = {
@@ -191,20 +192,30 @@ export function AppointmentsSidebar({
   const analytics = computeTodayAnalytics(analyticsSource, employees);
   const availableSlots = countAvailableSlotsToday(todayAppointments, new Date());
   const upcomingSlice = upcomingAppointments.slice(0, 4);
+  const { items: todayUpcoming, nextId } = getUpcomingTodayAppointments(
+    todayAppointments
+  );
 
   return (
     <aside className="hidden w-[320px] shrink-0 space-y-4 xl:block">
       <SidebarSection title="Today's Schedule">
-        {todayAppointments.length === 0 ? (
+        {todayUpcoming.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No appointments today</p>
         ) : (
           <div className="space-y-2">
-            {todayAppointments.slice(0, 5).map((apt) => (
+            {todayUpcoming.map((apt) => {
+              const isNext = apt.id === nextId;
+              return (
               <button
                 key={apt.id}
                 type="button"
                 onClick={() => onAppointmentClick(apt)}
-                className="flex w-full items-center gap-3 rounded-xl bg-[#F7F8FC] p-2.5 text-left transition-all hover:bg-white hover:shadow-sm"
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-all hover:bg-white hover:shadow-sm",
+                  isNext
+                    ? "bg-violet-50 ring-1 ring-violet-200"
+                    : "bg-[#F7F8FC]"
+                )}
               >
                 <div
                   className={cn(
@@ -218,6 +229,11 @@ export function AppointmentsSidebar({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[#1C103D]">
                     {apt.customer.name}
+                    {isNext ? (
+                      <span className="ml-1.5 text-[10px] font-semibold uppercase tracking-wide text-[#6C3BFF]">
+                        Next
+                      </span>
+                    ) : null}
                   </p>
                   <p className="truncate text-xs text-[#6B7280]">
                     {formatAppointmentDateTime(apt.scheduledAt, "h:mm a")} ·{" "}
@@ -225,7 +241,8 @@ export function AppointmentsSidebar({
                   </p>
                 </div>
               </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </SidebarSection>

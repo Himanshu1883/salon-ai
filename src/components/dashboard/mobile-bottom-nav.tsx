@@ -5,9 +5,10 @@ import { usePathname } from "next/navigation";
 import {
   CalendarDays,
   LayoutDashboard,
+  LineChart,
   Menu,
+  Clock,
   Receipt,
-  Timer,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,12 +37,27 @@ const NAV_ITEMS = [
   },
 ] as const;
 
-const EMPLOYEE_MOBILE_EXTRAS = [
+const EMPLOYEE_NAV_ITEMS = [
+  { href: "/dashboard", label: "Home", icon: LayoutDashboard, match: (p: string) => p === "/dashboard" || p.startsWith("/employee/dashboard") },
+  {
+    href: "/sales/appointments",
+    label: "Bookings",
+    icon: CalendarDays,
+    match: (p: string) =>
+      p.startsWith("/sales/appointments") || p.startsWith("/appointments"),
+  },
   {
     href: "/attendance",
-    label: "My Time",
-    icon: Timer,
+    label: "Attendance",
+    icon: Clock,
     match: (p: string) => p === "/attendance" || p.startsWith("/attendance/"),
+  },
+  {
+    href: "/team/analytics",
+    label: "Performance",
+    icon: LineChart,
+    match: (p: string) =>
+      p.startsWith("/team/analytics") || p.startsWith("/employee/analytics"),
   },
 ] as const;
 
@@ -62,9 +78,7 @@ export function MobileBottomNav({
 }: MobileBottomNavProps) {
   const pathname = usePathname();
   const employeeNav = isEmployeeNavUser(userRole, isOwner, roleKey);
-  const items = employeeNav
-    ? [...EMPLOYEE_MOBILE_EXTRAS, ...NAV_ITEMS]
-    : NAV_ITEMS;
+  const items = employeeNav ? EMPLOYEE_NAV_ITEMS : NAV_ITEMS;
 
   if (accessBlocked) return null;
 

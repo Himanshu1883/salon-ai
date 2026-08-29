@@ -4,6 +4,14 @@ type UpsertCustomerResult = Awaited<ReturnType<typeof prisma.customer.create>> &
   isNew: boolean;
 };
 
+function normalizeCustomerName(name: string) {
+  return name.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function namesMatch(left: string, right: string) {
+  return normalizeCustomerName(left) === normalizeCustomerName(right);
+}
+
 export async function upsertCustomer(
   salonId: string,
   data: {
@@ -17,11 +25,10 @@ export async function upsertCustomer(
     const existing = await prisma.customer.findFirst({
       where: { id: data.customerId, salonId },
     });
-    if (existing) {
+    if (existing && namesMatch(existing.name, data.name)) {
       const customer = await prisma.customer.update({
         where: { id: existing.id },
         data: {
-          name: data.name,
           phone: data.phone ?? existing.phone,
           email: data.email ?? existing.email,
         },
@@ -31,14 +38,17 @@ export async function upsertCustomer(
   }
 
   if (data.phone) {
-    const byPhone = await prisma.customer.findFirst({
+    const phoneMatches = await prisma.customer.findMany({
       where: { salonId, phone: data.phone },
+      take: 20,
     });
+    const byPhone = phoneMatches.find((customer) =>
+      namesMatch(customer.name, data.name)
+    );
     if (byPhone) {
       const customer = await prisma.customer.update({
         where: { id: byPhone.id },
         data: {
-          name: data.name,
           email: data.email ?? byPhone.email,
         },
       });
@@ -49,7 +59,7 @@ export async function upsertCustomer(
   const customer = await prisma.customer.create({
     data: {
       salonId,
-      name: data.name,
+      name: data.name.trim(),
       phone: data.phone,
       email: data.email,
     },

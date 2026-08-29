@@ -68,9 +68,12 @@ async function getEmployeeForSalon(employeeId: string, salonId: string) {
 }
 
 export async function getFaceProfiles() {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  if (!canViewAllAttendance(ctx) && !canManageAttendance(ctx)) {
+    return [];
+  }
   const profiles = await prisma.employeeFaceProfile.findMany({
-    where: { salonId: session.user.salonId },
+    where: { salonId: ctx.salonId },
     include: {
       employee: { select: { id: true, name: true, status: true } },
     },
@@ -87,9 +90,10 @@ export async function getFaceProfiles() {
 }
 
 export async function getEmployeeFaceStatus(employeeId: string) {
-  const session = await requireSession();
+  const ctx = await getAttendanceAccessContext();
+  assertEmployeeAttendanceAccess(ctx, employeeId);
   const profile = await prisma.employeeFaceProfile.findFirst({
-    where: { employeeId, salonId: session.user.salonId },
+    where: { employeeId, salonId: ctx.salonId },
     select: { id: true, enrolledAt: true },
   });
   return profile

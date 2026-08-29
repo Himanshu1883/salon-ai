@@ -35,6 +35,7 @@ import {
   type SalonPlan,
 } from "@/lib/plans";
 import { canViewModule } from "@/lib/permissions/nav";
+import { filterEmployeeNavModules } from "@/lib/permissions/data-scope-core";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 
@@ -388,7 +389,10 @@ export function Sidebar({
         { href: "/support", label: "Customer Support", icon: HeadphonesIcon, module: "settings" },
       ]
     : employeeNav
-      ? prependEmployeeNavItems(baseNavItems)
+      ? filterEmployeeNavModules(
+          prependEmployeeNavItems(baseNavItems),
+          permissionSet
+        )
       : baseNavItems;
 
   const canManageRoles =
@@ -423,7 +427,7 @@ export function Sidebar({
         </div>
       </div>
 
-      {!collapsed && !accessBlocked && (
+      {!collapsed && !accessBlocked && !employeeNav && (
         <div className="space-y-1 border-b border-white/10 px-3 py-3">
           <Link
             href="/settings/salon"
@@ -465,7 +469,7 @@ export function Sidebar({
             badge={item.label === "Billing" ? duePaymentsBadge : undefined}
           />
         ))}
-        {canManageRoles && !accessBlocked && (
+        {canManageRoles && !accessBlocked && !employeeNav && (
           <>
             <NavLinkItem
               item={{

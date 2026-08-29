@@ -4,6 +4,11 @@ import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prism
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import {
+  getDataScopeContext,
+  isAttributedToEmployee,
+  salesInvoiceScopeWhere,
+} from "@/lib/permissions/data-scope";
+import {
   createInvoiceFromCheckInOptionsSchema,
   invoiceSchema,
   invoiceSchemaBasic,
@@ -502,9 +507,18 @@ export async function getInvoices(filters?: {
   page?: number;
   pageSize?: number;
 }) {
-  const session = await requireSession();
-  const salonId = session.user.salonId!;
-  const where = buildInvoiceListWhere(salonId, filters);
+  const ctx = await getDataScopeContext();
+  const salonId = ctx.salonId;
+  const where = {
+    ...buildInvoiceListWhere(salonId, {
+      ...filters,
+      employeeId:
+        ctx.dataScope === "own"
+          ? undefined
+          : filters?.employeeId,
+    }),
+    ...(ctx.dataScope === "own" ? salesInvoiceScopeWhere(ctx) : {}),
+  };
   const page = Math.max(1, filters?.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, filters?.pageSize ?? 50));
 
@@ -529,9 +543,9 @@ export async function getInvoices(filters?: {
 }
 
 export async function getInvoice(id: string) {
-  const session = await requireSession();
-  return prisma.invoice.findFirst({
-    where: { id, salonId: session.user.salonId },
+  const ctx = await getDataScopeContext();
+  const invoice = await prisma.invoice.findFirst({
+    where: { id, salonId: ctx.salonId },
     include: {
       lineItems: { include: { service: true } },
       salon: true,
@@ -546,6 +560,15 @@ export async function getInvoice(id: string) {
       },
     },
   });
+  if (!invoice) return null;
+  if (
+    ctx.dataScope === "own" &&
+    ctx.employeeId &&
+    !isAttributedToEmployee(ctx.employeeId, invoice)
+  ) {
+    return null;
+  }
+  return invoice;
 }
 
 export async function createInvoice(formData: FormData) {
@@ -575,6 +598,7 @@ export async function createInvoice(formData: FormData) {
     seatId: (formData.get("seatId") as string) || undefined,
     lineItems: lineItemsRaw,
   };
+  const appointmentIdRaw = (formData.get("appointmentId") as string) || undefined;
   const clientGstEnabled = formData.get("gstEnabled");
   const clientEmployeeCount = formData.get("activeEmployeeCount");
   const immediatePaymentMethod = formData.get("paymentMethod") as string | null;
@@ -671,6 +695,8 @@ export async function createInvoice(formData: FormData) {
     stockRecords,
     customer,
     membershipDiscount,
+    linkedAppointment,
+    existingAppointmentInvoice,
   ] = await Promise.all([
     validateEmployeesAndSeat(
       salonId,
@@ -696,9 +722,31 @@ export async function createInvoice(formData: FormData) {
         ? null
         : getActiveMembershipDiscount(salonId, createdCustomer.id)
     ),
+    appointmentIdRaw
+      ? prisma.appointment.findFirst({
+          where: { id: appointmentIdRaw, salonId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+    appointmentIdRaw
+      ? prisma.invoice.findFirst({
+          where: { appointmentId: appointmentIdRaw, salonId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
   ]);
 
   if ("error" in validation) return validation;
+  if (appointmentIdRaw && !linkedAppointment) {
+    return { error: "Appointment not found" };
+  }
+  if (existingAppointmentInvoice) {
+    return {
+      error: "Invoice already exists for this appointment",
+      id: existingAppointmentInvoice.id,
+    };
+  }
+  const linkedAppointmentId = linkedAppointment?.id ?? null;
 
   let totals = calcTotals(parsed.data.lineItems, gstEnabled);
   let invoiceNotes = parsed.data.notes ?? "";
@@ -772,6 +820,7 @@ export async function createInvoice(formData: FormData) {
             status: fullyPaid ? "paid" : "partial",
             employeeId: invoiceEmployeeId,
             seatId: parsed.data.seatId || null,
+            appointmentId: linkedAppointmentId,
             subtotal: totals.subtotal,
             tax: totals.tax,
             total: totals.total,
@@ -830,6 +879,7 @@ export async function createInvoice(formData: FormData) {
         status: parsed.data.status,
         employeeId: invoiceEmployeeId,
         seatId: parsed.data.seatId || null,
+        appointmentId: linkedAppointmentId,
         subtotal: totals.subtotal,
         tax: totals.tax,
         total: totals.total,

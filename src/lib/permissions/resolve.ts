@@ -178,6 +178,7 @@ function resolveFromContext(
       "attendance.view_own",
       "attendance.check_in",
       "attendance.check_out",
+      "team.analytics.view_own",
     ];
     for (const key of employeeAttendance) {
       const denied = details.get(key)?.source === "deny";

@@ -19,8 +19,6 @@ import {
   Receipt,
   Clock,
   Sparkles,
-  Timer,
-  CalendarDays,
 } from "lucide-react";
 
 export type SalonPlan = "BASIC" | "ENTERPRISE";
@@ -148,10 +146,20 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/settings/billing", label: "Settings", icon: Settings, module: "settings" },
 ];
 
-/** Extra nav entries prepended for staff/employee accounts (does not replace existing nav). */
+/** Extra nav entries prepended for staff/employee accounts. */
 export const EMPLOYEE_NAV_EXTRAS: NavItem[] = [
-  { href: "/attendance", label: "My Time", icon: Timer, module: "attendance" },
-  { href: "/sales/appointments", label: "Calendar", icon: CalendarDays, module: "appointments" },
+  {
+    href: "/team/analytics",
+    label: "My Performance",
+    icon: LineChart,
+    module: "dashboard",
+  },
+  {
+    href: "/employee/profile",
+    label: "My Profile",
+    icon: Users,
+    module: "dashboard",
+  },
 ];
 
 export function isEmployeeNavUser(
@@ -230,6 +238,7 @@ function normalizeAppPath(pathname: string): string {
 export function getModuleForPath(pathname: string): PlanModule | null {
   const path = normalizeAppPath(pathname);
   if (path === "/dashboard" || path.startsWith("/dashboard/")) return "dashboard";
+  if (path.startsWith("/employee")) return "dashboard";
   if (matchPath(path, "/projects")) return "projects";
   if (
     matchPath(path, "/sales/appointments") ||

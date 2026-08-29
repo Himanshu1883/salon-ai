@@ -1,8 +1,11 @@
-import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
+import { resolveSessionEmployee } from "@/lib/auth/session-employee";
 import { getResolvedPermissions } from "@/lib/permissions/resolve";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import { PermissionDeniedError } from "@/lib/permissions/require";
+import { resolveDataScope, type DataScope } from "@/lib/permissions/data-scope-core";
+
+export { resolveSessionEmployee };
 
 export type AttendanceAccessContext = {
   userId: string;
@@ -11,58 +14,8 @@ export type AttendanceAccessContext = {
   employeeId: string | null;
   employeeName: string | null;
   permissions: Set<PermissionKey>;
+  dataScope: DataScope;
 };
-
-export async function resolveSessionEmployee(
-  userId: string,
-  salonId: string,
-  userEmail?: string | null
-) {
-  const user = await prisma.user.findFirst({
-    where: { id: userId, salonId },
-    select: {
-      employeeId: true,
-      email: true,
-      employee: {
-        select: { id: true, name: true, status: true },
-      },
-    },
-  });
-
-  if (user?.employee && user.employee.status === "active") {
-    return {
-      employeeId: user.employee.id,
-      employeeName: user.employee.name,
-    };
-  }
-
-  if (user?.employeeId) {
-    const employee = await prisma.employee.findFirst({
-      where: { id: user.employeeId, salonId, status: "active" },
-      select: { id: true, name: true },
-    });
-    if (employee) {
-      return { employeeId: employee.id, employeeName: employee.name };
-    }
-  }
-
-  const email = userEmail ?? user?.email;
-  if (email) {
-    const employee = await prisma.employee.findFirst({
-      where: {
-        salonId,
-        status: "active",
-        email: { equals: email, mode: "insensitive" },
-      },
-      select: { id: true, name: true },
-    });
-    if (employee) {
-      return { employeeId: employee.id, employeeName: employee.name };
-    }
-  }
-
-  return { employeeId: null, employeeName: null };
-}
 
 export async function getAttendanceAccessContext(): Promise<AttendanceAccessContext> {
   const session = await requireSession();
@@ -81,6 +34,12 @@ export async function getAttendanceAccessContext(): Promise<AttendanceAccessCont
     employeeId: employee.employeeId,
     employeeName: employee.employeeName,
     permissions: resolved.permissions,
+    dataScope: resolveDataScope({
+      isOwner: resolved.isOwner,
+      roleKey: resolved.roleKey,
+      hierarchyLevel: resolved.hierarchyLevel,
+      userRole: session.user.role ?? "employee",
+    }),
   };
 }
 
@@ -93,6 +52,7 @@ export function hasAttendancePermission(
 }
 
 export function canViewAllAttendance(ctx: AttendanceAccessContext): boolean {
+  if (ctx.dataScope === "own") return false;
   return (
     ctx.isOwner ||
     ctx.permissions.has("attendance.view") ||
@@ -138,6 +98,7 @@ export function canExportAttendance(ctx: AttendanceAccessContext): boolean {
 }
 
 export function canViewReports(ctx: AttendanceAccessContext): boolean {
+  if (ctx.dataScope === "own") return false;
   return (
     ctx.isOwner ||
     ctx.permissions.has("attendance.reports") ||
