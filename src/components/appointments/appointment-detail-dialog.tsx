@@ -65,9 +65,9 @@ export function AppointmentDetailDialog({
   useEffect(() => {
     if (!open) return;
     void fetch("/api/appointments/check-in", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({}),
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
     });
   }, [open]);
 
@@ -94,7 +94,10 @@ export function AppointmentDetailDialog({
     if (result.error) {
       onCheckInError?.(visitAppointmentIds);
       alert(result.error);
+      return;
     }
+    onOpenChange(false);
+    onRefresh();
   }
 
   const start = new Date(selectedAppointment.scheduledAt);

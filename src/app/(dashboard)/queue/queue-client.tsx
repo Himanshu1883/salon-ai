@@ -58,6 +58,16 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   const [completedToday, setCompletedToday] = useState(
     initialOverview.completedToday
   );
+  const locallyCompletedIds = useRef(new Set<string>());
+
+  const applyOverview = useCallback((data: QueueOverview) => {
+    const next = normalizeQueueOverview(data);
+    const hidden = locallyCompletedIds.current;
+    setOverview(next);
+    setEntries(next.entries.filter((entry) => !hidden.has(entry.id)));
+    setCompletedRecent(next.completedRecent);
+    setCompletedToday(next.completedToday);
+  }, []);
 
   useEffect(() => {
     applyOverview(normalizeQueueOverview(overviewProp));
@@ -72,17 +82,6 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
-
-  const locallyCompletedIds = useRef(new Set<string>());
-
-  const applyOverview = useCallback((data: QueueOverview) => {
-    const next = normalizeQueueOverview(data);
-    const hidden = locallyCompletedIds.current;
-    setOverview(next);
-    setEntries(next.entries.filter((entry) => !hidden.has(entry.id)));
-    setCompletedRecent(next.completedRecent);
-    setCompletedToday(next.completedToday);
-  }, []);
 
   const syncFromServer = useCallback(async () => {
     setRefreshing(true);

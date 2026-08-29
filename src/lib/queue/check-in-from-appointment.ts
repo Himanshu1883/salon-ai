@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { prisma } from "@/lib/prisma";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
@@ -7,15 +8,17 @@ import {
 } from "@/lib/permissions/data-scope";
 import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
 
-function safeInvalidateQueueCache(
+function scheduleQueueCacheRefresh(
   salonId: string,
   options?: { revalidateAppointmentPages?: boolean }
 ) {
-  try {
-    invalidateQueueCache(salonId, options);
-  } catch (error) {
-    console.error("[check-in-from-appointment] cache revalidate failed", error);
-  }
+  after(() => {
+    try {
+      invalidateQueueCache(salonId, options);
+    } catch (error) {
+      console.error("[check-in-from-appointment] cache revalidate failed", error);
+    }
+  });
 }
 
 function checkInErrorMessage(error: unknown): string {
@@ -99,6 +102,13 @@ export async function performCheckInFromAppointment(options: {
   try {
     return await performCheckInFromAppointmentInner(options);
   } catch (error) {
+    if (error instanceof PrismaClientKnownRequestError && error.code === "P2002") {
+      return {
+        success: true,
+        alreadyInQueue: true,
+        appointmentIds: [options.appointmentId],
+      };
+    }
     return { error: checkInErrorMessage(error) };
   }
 }
@@ -167,7 +177,7 @@ async function performCheckInFromAppointmentInner(options: {
           ]
         : []),
     ]);
-    safeInvalidateQueueCache(salonId, skipAppointmentPages);
+    scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
     return {
       success: true,
       position: existingEntry.position,
@@ -191,7 +201,7 @@ async function performCheckInFromAppointmentInner(options: {
         where: { salonId, id: { in: visitIds } },
         data: { status: "completed" },
       });
-      safeInvalidateQueueCache(salonId, skipAppointmentPages);
+      scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
       return { success: true, alreadyCompleted: true, appointmentIds: visitIds };
     }
   }
@@ -255,6 +265,6 @@ async function performCheckInFromAppointmentInner(options: {
     }),
   ]);
 
-  safeInvalidateQueueCache(salonId, skipAppointmentPages);
+  scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
   return { success: true, position, appointmentIds: visitIds };
 }

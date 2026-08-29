@@ -40,3 +40,14 @@ export async function POST(request: Request) {
     },
   });
 }
+
+export async function GET() {
+  const session = await getAuthSession();
+  if (!session?.user?.salonId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  return NextResponse.json(
+    { ok: true },
+    { headers: { "Cache-Control": "private, no-store" } }
+  );
+}
