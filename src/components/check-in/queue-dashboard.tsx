@@ -54,6 +54,7 @@ const statusBadge: Record<string, string> = {
 
 export function QueueDashboard({ dashboard }: QueueDashboardProps) {
   const router = useRouter();
+  const data = dashboard ?? EMPTY_DASHBOARD;
   const {
     waiting,
     beingServed,
@@ -63,7 +64,7 @@ export function QueueDashboard({ dashboard }: QueueDashboardProps) {
     activeCount,
     nextCustomer,
     liveQueue,
-  } = dashboard ?? EMPTY_DASHBOARD;
+  } = data;
 
   const stats = [
     {
@@ -246,26 +247,26 @@ export function QueueDashboard({ dashboard }: QueueDashboardProps) {
         <CheckInCardContent className="pt-2">
           <div className="space-y-2">
             {[
-              { label: "Walk-ins", value: String(dashboard.walkInsToday), real: true },
+              { label: "Walk-ins", value: String(data.walkInsToday), real: true },
               {
                 label: "Revenue",
-                value: dashboard.revenueTodayLabel,
+                value: data.revenueTodayLabel,
                 real: true,
               },
               {
                 label: "Avg Bill",
-                value: dashboard.avgBillLabel,
-                real: dashboard.avgBill > 0,
+                value: data.avgBillLabel,
+                real: data.avgBill > 0,
               },
               {
                 label: "Conversion",
-                value: dashboard.conversionLabel,
-                real: dashboard.conversionReal,
+                value: data.conversionLabel,
+                real: data.conversionReal,
               },
               {
                 label: "Staff Utilization",
-                value: dashboard.staffUtilizationLabel,
-                real: dashboard.staffUtilizationReal,
+                value: data.staffUtilizationLabel,
+                real: data.staffUtilizationReal,
               },
             ].map((row, index) => (
               <motion.div
