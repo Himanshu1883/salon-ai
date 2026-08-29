@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { UserCheck } from "lucide-react";
-import { requestAppointmentCheckIn } from "@/lib/appointments/check-in-from-schedule";
+import {
+  isCheckInBusinessFailure,
+  requestAppointmentCheckIn,
+} from "@/lib/appointments/check-in-from-schedule";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -73,7 +76,7 @@ export function AppointmentReachedButton({
     const result = await requestAppointmentCheckIn(appointment.id);
     setLoading(false);
 
-    if (result.error) {
+    if (isCheckInBusinessFailure(result.error)) {
       onCheckInError?.(ids);
       alert(result.error);
       return;

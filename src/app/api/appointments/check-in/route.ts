@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
+import { getDataScopeContextFromAuth } from "@/lib/permissions/data-scope";
 import { performCheckInFromAppointment } from "@/lib/queue/check-in-from-appointment";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const session = await getAuthSession();
-  if (!session?.user?.salonId) {
+  const scope = await getDataScopeContextFromAuth();
+  if (!scope) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -29,9 +30,10 @@ export async function POST(request: Request) {
   }
 
   const result = await performCheckInFromAppointment({
-    salonId: session.user.salonId,
+    salonId: scope.salonId,
     appointmentId,
     startNow,
+    scope,
   });
 
   return NextResponse.json(result, {

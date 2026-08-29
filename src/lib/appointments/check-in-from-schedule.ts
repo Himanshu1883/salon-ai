@@ -1,5 +1,3 @@
-import { checkInFromAppointment } from "@/actions/queue";
-
 export type AppointmentCheckInResult = {
   error?: string;
   success?: boolean;
@@ -10,21 +8,30 @@ export type AppointmentCheckInResult = {
 
 type CheckInRequestOptions = {
   startNow?: boolean;
-  retry?: boolean;
 };
 
-function isSuccess(result: AppointmentCheckInResult) {
-  return Boolean(result.success || result.alreadyInQueue || result.alreadyCompleted) && !result.error;
+/** Real booking problems — restore the row. Transient/network errors must not. */
+export function isCheckInBusinessFailure(error?: string) {
+  if (!error) return false;
+  return (
+    error === "Appointment not found" ||
+    error.startsWith("Cannot check in") ||
+    error === "Appointment is already completed" ||
+    error.includes("missing from the catalog") ||
+    error.includes("linked service or staff")
+  );
 }
 
-function isRetryableCheckInError(error?: string) {
+function isAlreadyInQueue(result: AppointmentCheckInResult) {
   return (
-    !error ||
-    error === "Could not check in. Try again." ||
-    error === "Unauthorized" ||
-    error === "Invalid request" ||
-    error === "This appointment is already in the queue."
+    result.alreadyInQueue === true ||
+    result.error === "This appointment is already in the queue."
   );
+}
+
+function isSuccess(result: AppointmentCheckInResult) {
+  if (isAlreadyInQueue(result) || result.alreadyCompleted) return true;
+  return Boolean(result.success && !result.error);
 }
 
 async function postAppointmentCheckIn(
@@ -37,10 +44,11 @@ async function postAppointmentCheckIn(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ appointmentId, startNow }),
   });
-  const data = (await response.json().catch(() => ({}))) as AppointmentCheckInResult;
-  if (isSuccess(data)) return { ...data, success: true };
-  if (data.error === "This appointment is already in the queue.") {
-    return { success: true, alreadyInQueue: true };
+  const data = (await response
+    .json()
+    .catch(() => ({}))) as AppointmentCheckInResult;
+  if (isSuccess(data)) {
+    return { ...data, success: true, error: undefined };
   }
   if (data.error) return data;
   if (!response.ok) {
@@ -54,42 +62,23 @@ export async function requestAppointmentCheckIn(
   options: CheckInRequestOptions = {}
 ): Promise<AppointmentCheckInResult> {
   const startNow = options.startNow === true;
-
-  const finish = async (result: AppointmentCheckInResult) => {
-    if (isSuccess(result)) return { ...result, success: true };
-    if (!isRetryableCheckInError(result.error)) return result;
-    const verify = await postAppointmentCheckIn(appointmentId, startNow).catch(
-      () => ({ error: "Could not check in. Try again." }) as AppointmentCheckInResult
-    );
-    if (isSuccess(verify)) return { ...verify, success: true };
-    return result;
-  };
-
   try {
     const result = await postAppointmentCheckIn(appointmentId, startNow);
-    if (isSuccess(result) || options.retry === false) return finish(result);
-    if (!result.error || !isRetryableCheckInError(result.error)) return result;
+    if (isSuccess(result)) return { ...result, success: true, error: undefined };
+    if (isCheckInBusinessFailure(result.error)) return result;
 
     const retry = await postAppointmentCheckIn(appointmentId, startNow);
-    if (isSuccess(retry)) return retry;
-
-    try {
-      const action = await checkInFromAppointment(appointmentId, { startNow });
-      if (isSuccess(action) || !action.error) {
-        return { ...action, success: !action.error };
-      }
-    } catch {
-      /* verify below */
-    }
-
-    return finish(retry.error ? retry : result);
+    if (isSuccess(retry)) return { ...retry, success: true, error: undefined };
+    return retry;
   } catch {
     try {
-      const action = await checkInFromAppointment(appointmentId, { startNow });
-      if (!action.error) return { ...action, success: true };
+      const verify = await postAppointmentCheckIn(appointmentId, startNow);
+      if (isSuccess(verify)) {
+        return { ...verify, success: true, error: undefined };
+      }
+      return verify;
     } catch {
-      /* verify */
+      return { error: "Could not check in. Try again." };
     }
-    return finish({ error: "Could not check in. Try again." });
   }
 }

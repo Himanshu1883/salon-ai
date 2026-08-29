@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
 import {
   assertEmployeeResourceAccess,
-  getDataScopeContext,
+  getDataScopeContextFromAuth,
+  type DataScopeContext,
 } from "@/lib/permissions/data-scope";
 import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
 
@@ -98,6 +99,7 @@ export async function performCheckInFromAppointment(options: {
   salonId: string;
   appointmentId: string;
   startNow?: boolean;
+  scope?: DataScopeContext | null;
 }): Promise<CheckInFromAppointmentResult> {
   try {
     return await performCheckInFromAppointmentInner(options);
@@ -117,9 +119,11 @@ async function performCheckInFromAppointmentInner(options: {
   salonId: string;
   appointmentId: string;
   startNow?: boolean;
+  scope?: DataScopeContext | null;
 }): Promise<CheckInFromAppointmentResult> {
   const { salonId, appointmentId, startNow = false } = options;
-  const scope = await getDataScopeContext();
+  const scope = options.scope ?? (await getDataScopeContextFromAuth());
+  if (!scope) return { error: "Unauthorized" };
 
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, salonId },
@@ -141,7 +145,6 @@ async function performCheckInFromAppointmentInner(options: {
 
   const visitAppointments = await findVisitGroupAppointments(salonId, appointment);
   const visitIds = visitAppointments.map((item) => item.id);
-  const skipAppointmentPages = { revalidateAppointmentPages: false as const };
   const employeeId =
     visitAppointments.find((item) => item.employeeId)?.employeeId ??
     appointment.employeeId;
@@ -177,7 +180,7 @@ async function performCheckInFromAppointmentInner(options: {
           ]
         : []),
     ]);
-    scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
+    scheduleQueueCacheRefresh(salonId);
     return {
       success: true,
       position: existingEntry.position,
@@ -201,7 +204,7 @@ async function performCheckInFromAppointmentInner(options: {
         where: { salonId, id: { in: visitIds } },
         data: { status: "completed" },
       });
-      scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
+      scheduleQueueCacheRefresh(salonId);
       return { success: true, alreadyCompleted: true, appointmentIds: visitIds };
     }
   }
@@ -265,6 +268,6 @@ async function performCheckInFromAppointmentInner(options: {
     }),
   ]);
 
-  scheduleQueueCacheRefresh(salonId, skipAppointmentPages);
+  scheduleQueueCacheRefresh(salonId);
   return { success: true, position, appointmentIds: visitIds };
 }

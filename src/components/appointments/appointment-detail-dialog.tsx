@@ -9,7 +9,10 @@ import {
 import { sendManualSms } from "@/actions/sms";
 import { useAppointmentRecordSale } from "@/components/appointments/use-appointment-record-sale";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
-import { requestAppointmentCheckIn } from "@/lib/appointments/check-in-from-schedule";
+import {
+  isCheckInBusinessFailure,
+  requestAppointmentCheckIn,
+} from "@/lib/appointments/check-in-from-schedule";
 import { collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
 import { stripVisitGroupMarker } from "@/lib/appointments/visit-group";
 import {
@@ -91,7 +94,7 @@ export function AppointmentDetailDialog({
       startNow: true,
     });
     walkInInFlight.current = false;
-    if (result.error) {
+    if (isCheckInBusinessFailure(result.error)) {
       onCheckInError?.(visitAppointmentIds);
       alert(result.error);
       return;
@@ -250,6 +253,10 @@ export function AppointmentDetailDialog({
                 visitAppointmentIds={visitAppointmentIds}
                 onCheckedIn={onCheckedIn}
                 onCheckInError={onCheckInError}
+                onSuccess={() => {
+                  onOpenChange(false);
+                  onRefresh();
+                }}
               />
             )}
             {(appointment.status === "scheduled" ||

@@ -80,6 +80,14 @@ export function AppointmentsClient({
   >(() => new Set());
 
   useEffect(() => {
+    void fetch("/api/appointments/check-in", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    });
+  }, []);
+
+  useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
     function handleChange(e: MediaQueryListEvent | MediaQueryList) {
       if (e.matches && view === "week") {

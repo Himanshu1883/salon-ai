@@ -1,5 +1,5 @@
 import { cache } from "react";
-import { requireSession } from "@/lib/auth";
+import { getAuthSession, requireSession } from "@/lib/auth";
 import { resolveSessionEmployee } from "@/lib/auth/session-employee";
 import {
   PermissionDeniedError,
@@ -55,41 +55,57 @@ export {
 
 export type { DataScope };
 
-export const getDataScopeContext = cache(
-  async (): Promise<DataScopeContext> => {
-    const session = await requireSession();
-    const salonId = session.user.salonId!;
-    const userRole = session.user.role ?? "employee";
-    const resolved: ResolvedPermissions = await getResolvedPermissions(
-      session.user.id,
-      salonId
-    );
-    const employee = await resolveSessionEmployee(
-      session.user.id,
-      salonId,
-      session.user.email
-    );
-    const dataScope = resolveDataScope({
-      isOwner: resolved.isOwner,
-      roleKey: resolved.roleKey,
-      hierarchyLevel: resolved.hierarchyLevel,
-      userRole,
-    });
+async function buildDataScopeContext(session: {
+  user: {
+    id: string;
+    salonId?: string | null;
+    role?: string | null;
+    email?: string | null;
+  };
+}): Promise<DataScopeContext> {
+  const salonId = session.user.salonId!;
+  const userRole = session.user.role ?? "employee";
+  const resolved: ResolvedPermissions = await getResolvedPermissions(
+    session.user.id,
+    salonId
+  );
+  const employee = await resolveSessionEmployee(
+    session.user.id,
+    salonId,
+    session.user.email
+  );
+  const dataScope = resolveDataScope({
+    isOwner: resolved.isOwner,
+    roleKey: resolved.roleKey,
+    hierarchyLevel: resolved.hierarchyLevel,
+    userRole,
+  });
 
-    return {
-      userId: session.user.id,
-      salonId,
-      userRole,
-      isOwner: resolved.isOwner,
-      roleKey: resolved.roleKey,
-      hierarchyLevel: resolved.hierarchyLevel,
-      permissions: resolved.permissions,
-      employeeId: employee.employeeId,
-      employeeName: employee.employeeName,
-      dataScope,
-    };
-  }
-);
+  return {
+    userId: session.user.id,
+    salonId,
+    userRole,
+    isOwner: resolved.isOwner,
+    roleKey: resolved.roleKey,
+    hierarchyLevel: resolved.hierarchyLevel,
+    permissions: resolved.permissions,
+    employeeId: employee.employeeId,
+    employeeName: employee.employeeName,
+    dataScope,
+  };
+}
+
+export const getDataScopeContext = cache(async (): Promise<DataScopeContext> => {
+  const session = await requireSession();
+  return buildDataScopeContext(session);
+});
+
+/** Session lookup without redirect() — safe inside API routes. */
+export async function getDataScopeContextFromAuth(): Promise<DataScopeContext | null> {
+  const session = await getAuthSession();
+  if (!session?.user?.id || !session.user.salonId) return null;
+  return buildDataScopeContext(session);
+}
 
 export function scopedEmployeeId(ctx: DataScopeContext): string | null {
   if (ctx.dataScope !== "own") return null;

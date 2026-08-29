@@ -170,6 +170,7 @@ export function AppointmentList({
                   ).map((item) => item.id)}
                   onCheckedIn={onCheckedIn}
                   onCheckInError={onCheckInError}
+                  onSuccess={onRefresh}
                   variant="button"
                   className="h-9 px-3 text-xs"
                 />
