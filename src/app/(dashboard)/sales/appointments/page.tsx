@@ -4,6 +4,7 @@ import { getActiveEmployees } from "@/actions/employees";
 import { AppointmentsClient } from "@/app/(dashboard)/appointments/appointments-client";
 import { appointmentDateKey } from "@/lib/appointments/datetime";
 import { getBusinessDateKey } from "@/lib/attendance/business-day";
+import { getDataScopeContext } from "@/lib/permissions/data-scope";
 import {
   startOfWeek,
   endOfWeek,
@@ -32,12 +33,14 @@ export default async function SalesAppointmentsPage({
   const upcomingEnd = endOfDay(addDays(now, 30));
   const rangeEnd = max([weekEnd, upcomingEnd]);
 
-  const [allAppointments, services, employees, openingHours] = await Promise.all([
-    getAppointmentsInRange(weekStart, rangeEnd),
-    getServiceOptions(),
-    getActiveEmployees(),
-    getSalonOpeningHours(),
-  ]);
+  const [allAppointments, services, employees, openingHours, scope] =
+    await Promise.all([
+      getAppointmentsInRange(weekStart, rangeEnd),
+      getServiceOptions(),
+      getActiveEmployees(),
+      getSalonOpeningHours(),
+      getDataScopeContext(),
+    ]);
 
   const todayKey = getBusinessDateKey(now);
 
@@ -50,6 +53,30 @@ export default async function SalesAppointmentsPage({
   const upcomingAppointments = allAppointments.filter(
     (a) => appointmentDateKey(a.scheduledAt) > todayKey
   );
+
+  let scheduleEmployees = employees.map((employee) => ({
+    id: employee.id,
+    name: employee.name,
+    role: employee.role,
+    specialties: employee.specialties,
+    serviceIds: employee.services?.map((link) => link.serviceId) ?? [],
+  }));
+  if (scope.dataScope === "own" && scope.employeeId) {
+    scheduleEmployees = scheduleEmployees.filter(
+      (employee) => employee.id === scope.employeeId
+    );
+    if (scheduleEmployees.length === 0) {
+      scheduleEmployees = [
+        {
+          id: scope.employeeId,
+          name: scope.employeeName ?? "Me",
+          role: "Staff",
+          specialties: "",
+          serviceIds: [],
+        },
+      ];
+    }
+  }
 
   return (
     <AppointmentsClient
@@ -111,13 +138,7 @@ export default async function SalesAppointmentsPage({
         name: s.name,
         duration: s.duration,
       }))}
-      employees={employees.map((e) => ({
-        id: e.id,
-        name: e.name,
-        role: e.role,
-        specialties: e.specialties,
-        serviceIds: e.services?.map((link) => link.serviceId) ?? [],
-      }))}
+      employees={scheduleEmployees}
       openingHours={openingHours}
       prefilledCustomer={{
         customerId: params.customerId ?? "",
@@ -125,6 +146,7 @@ export default async function SalesAppointmentsPage({
         phone: params.phone ?? "",
       }}
       autoOpenCreate={Boolean(params.customerId || params.name)}
+      includeCheckedInOnSchedule={scope.dataScope === "own"}
     />
   );
 }

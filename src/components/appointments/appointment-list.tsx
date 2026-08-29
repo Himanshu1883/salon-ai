@@ -15,6 +15,7 @@ import {
 import { sendManualSms } from "@/actions/sms";
 import { useAppointmentRecordSale } from "@/components/appointments/use-appointment-record-sale";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
+import { collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Appointment } from "./types";
@@ -28,10 +29,16 @@ import { useState } from "react";
 
 export function AppointmentList({
   appointments,
+  allAppointments,
   onRefresh,
+  onCheckedIn,
+  onCheckInError,
 }: {
   appointments: Appointment[];
+  allAppointments?: Appointment[];
   onRefresh: () => void;
+  onCheckedIn?: (appointmentIds: string[]) => void;
+  onCheckInError?: (appointmentIds: string[]) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const { openAppointmentSale } = useAppointmentRecordSale();
@@ -155,7 +162,14 @@ export function AppointmentList({
               <>
                 <AppointmentReachedButton
                   appointment={apt}
-                  onSuccess={onRefresh}
+                  visitAppointmentIds={collectVisitGroupAppointments(
+                    apt,
+                    allAppointments && allAppointments.length > 0
+                      ? allAppointments
+                      : appointments
+                  ).map((item) => item.id)}
+                  onCheckedIn={onCheckedIn}
+                  onCheckInError={onCheckInError}
                   variant="button"
                   className="h-9 px-3 text-xs"
                 />

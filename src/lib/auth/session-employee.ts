@@ -25,8 +25,8 @@ export async function resolveSessionEmployee(
 
   if (user?.employeeId) {
     const employee = await prisma.employee.findFirst({
-      where: { id: user.employeeId, salonId, status: "active" },
-      select: { id: true, name: true },
+      where: { id: user.employeeId, salonId },
+      select: { id: true, name: true, status: true },
     });
     if (employee) {
       return { employeeId: employee.id, employeeName: employee.name };

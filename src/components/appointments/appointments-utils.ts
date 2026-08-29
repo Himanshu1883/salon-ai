@@ -18,15 +18,25 @@ export type ViewMode = "week" | "day" | "list";
 
 export type ViewSwitcherMode = ViewMode | "month" | "timeline";
 
-/** Still on the appointment book — not in walk-in queue or finished. */
+/** Still on the appointment book — not finished or cancelled. */
 export function isScheduleCalendarAppointment(
-  appointment: Pick<Appointment, "status">
+  appointment: Pick<Appointment, "status">,
+  options?: { includeCheckedIn?: boolean }
 ) {
-  return appointment.status === "scheduled";
+  if (appointment.status === "scheduled") return true;
+  if (options?.includeCheckedIn && appointment.status === "checked_in") {
+    return true;
+  }
+  return false;
 }
 
-export function filterScheduleCalendarAppointments(appointments: Appointment[]) {
-  return appointments.filter(isScheduleCalendarAppointment);
+export function filterScheduleCalendarAppointments(
+  appointments: Appointment[],
+  options?: { includeCheckedIn?: boolean }
+) {
+  return appointments.filter((appointment) =>
+    isScheduleCalendarAppointment(appointment, options)
+  );
 }
 
 export function filterAppointments(
@@ -198,7 +208,7 @@ export function countAvailableSlotsToday(
   );
 
   for (const apt of dayAppointments) {
-    if (!isScheduleCalendarAppointment(apt)) continue;
+    if (!isScheduleCalendarAppointment(apt, { includeCheckedIn: true })) continue;
     const startMinutes =
       appointmentClockMinutes(apt.scheduledAt) - CALENDAR_START_HOUR * 60;
     const slotCount = Math.ceil(apt.service.duration / SLOT_MINUTES);

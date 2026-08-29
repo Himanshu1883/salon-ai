@@ -2,8 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { revalidatePath } from "next/cache";
+import { cachedBySalon } from "@/lib/salon-cache";
 import {
   checkInSchema,
   assignQueueSchema,
@@ -13,23 +13,8 @@ import {
   assertEmployeeResourceAccess,
   getDataScopeContext,
 } from "@/lib/permissions/data-scope";
-
-function invalidateQueueCache(salonId: string) {
-  revalidateSalonCache(
-    salonId,
-    "queue",
-    "check-in",
-    "dashboard-kpis",
-    "dashboard-widgets",
-    "dashboard-stats",
-    "appointments"
-  );
-  revalidatePath("/queue");
-  revalidatePath("/check-in");
-  revalidatePath("/dashboard");
-  revalidatePath("/sales/appointments");
-  revalidatePath("/appointments");
-}
+import { performCheckInFromAppointment } from "@/lib/queue/check-in-from-appointment";
+import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
 
 async function fetchQueueEntries(salonId: string) {
   return prisma.queueEntry.findMany({
@@ -113,89 +98,16 @@ export async function getQueueEntries() {
   return getCachedQueueEntries(ctx.salonId);
 }
 
-export async function checkInFromAppointment(appointmentId: string) {
+export async function checkInFromAppointment(
+  appointmentId: string,
+  options?: { startNow?: boolean }
+) {
   const session = await requireSession();
-  const scope = await getDataScopeContext();
-
-  const appointment = await prisma.appointment.findFirst({
-    where: { id: appointmentId, salonId: session.user.salonId },
+  return performCheckInFromAppointment({
+    salonId: session.user.salonId,
+    appointmentId,
+    startNow: options?.startNow,
   });
-  if (!appointment) return { error: "Appointment not found" };
-  try {
-    assertEmployeeResourceAccess(scope, appointment.employeeId);
-  } catch {
-    return { error: "Appointment not found" };
-  }
-  if (appointment.status === "cancelled") {
-    return { error: "Cannot check in a cancelled appointment" };
-  }
-  if (appointment.status === "completed") {
-    return { error: "Appointment is already completed" };
-  }
-
-  const existingEntry = await prisma.queueEntry.findFirst({
-    where: {
-      salonId: session.user.salonId,
-      appointmentId,
-      status: { in: ["waiting", "assigned", "in_progress"] },
-    },
-  });
-
-  if (existingEntry) {
-    if (appointment.status !== "checked_in") {
-      await prisma.appointment.update({
-        where: { id: appointmentId },
-        data: { status: "checked_in" },
-      });
-    }
-    invalidateQueueCache(session.user.salonId);
-    return { success: true, position: existingEntry.position, alreadyInQueue: true };
-  }
-
-  if (appointment.status === "checked_in") {
-    const completedEntry = await prisma.queueEntry.findFirst({
-      where: {
-        salonId: session.user.salonId,
-        appointmentId,
-        status: "completed",
-      },
-      orderBy: { completedAt: "desc" },
-    });
-
-    if (completedEntry) {
-      await prisma.appointment.update({
-        where: { id: appointmentId },
-        data: { status: "completed" },
-      });
-      invalidateQueueCache(session.user.salonId);
-      return { success: true, alreadyCompleted: true };
-    }
-  }
-
-  const position = await getNextPosition(session.user.salonId);
-
-  await prisma.$transaction([
-    prisma.appointment.update({
-      where: { id: appointmentId },
-      data: { status: "checked_in" },
-    }),
-    prisma.queueEntry.create({
-      data: {
-        salonId: session.user.salonId,
-        customerId: appointment.customerId,
-        appointmentId,
-        position,
-        status: appointment.employeeId ? "assigned" : "waiting",
-        employeeId: appointment.employeeId,
-        services: {
-          create: [{ serviceId: appointment.serviceId }],
-        },
-      },
-    }),
-  ]);
-
-  invalidateQueueCache(session.user.salonId);
-  return { success: true, position };
 }
 
 export async function checkInCustomer(formData: FormData) {

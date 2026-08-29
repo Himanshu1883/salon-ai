@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteInvoice, updateInvoiceStatus } from "@/actions/billing";
 import { BillingInvoiceTable } from "@/components/billing/billing-invoice-table";
 import { BillingEmptyState } from "@/components/billing/billing-empty-state";
-import { ClientsPagination } from "@/components/clients/clients-pagination";
+import { SalesPagination } from "@/components/sales/sales-pagination";
 import type { BillingInvoice } from "@/components/billing/types";
 import { useBillingStatsContext } from "./billing-stats-context";
 import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
@@ -25,7 +25,6 @@ export function BillingInvoiceListClient({
   invoices,
   totalCount,
   page,
-  pageSize,
   start,
   end,
   totalPages,
@@ -89,19 +88,15 @@ export function BillingInvoiceListClient({
         onMarkSent={(id) => handleStatus(id, "sent")}
         onDelete={handleDelete}
       />
-      {totalCount > pageSize && (
-        <div className="px-4">
-          <ClientsPagination
-            start={start}
-            end={end}
-            totalCount={totalCount}
-            page={page}
-            totalPages={totalPages}
-            isPending={isPending}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <SalesPagination
+        start={start}
+        end={end}
+        totalCount={totalCount}
+        page={page}
+        totalPages={totalPages}
+        itemLabel="invoice"
+        onPageChange={handlePageChange}
+      />
     </div>
   );
 }

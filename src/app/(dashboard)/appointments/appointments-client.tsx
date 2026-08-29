@@ -46,6 +46,7 @@ export function AppointmentsClient({
   openingHours,
   prefilledCustomer,
   autoOpenCreate = false,
+  includeCheckedInOnSchedule = false,
 }: {
   weekAppointments: Appointment[];
   weekStartIso: string;
@@ -56,6 +57,7 @@ export function AppointmentsClient({
   openingHours: OpeningHours;
   prefilledCustomer?: PrefilledCustomer;
   autoOpenCreate?: boolean;
+  includeCheckedInOnSchedule?: boolean;
 }) {
   const router = useRouter();
   const weekStart = startOfWeek(new Date(weekStartIso), { weekStartsOn: 1 });
@@ -73,6 +75,9 @@ export function AppointmentsClient({
     null
   );
   const [detailOpen, setDetailOpen] = useState(false);
+  const [removedAppointmentIds, setRemovedAppointmentIds] = useState<
+    Set<string>
+  >(() => new Set());
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 768px)");
@@ -86,17 +91,55 @@ export function AppointmentsClient({
     return () => mq.removeEventListener("change", handleChange);
   }, [view]);
 
+  const visibleWeekAppointments = useMemo(
+    () =>
+      weekAppointments.filter((apt) => !removedAppointmentIds.has(apt.id)),
+    [weekAppointments, removedAppointmentIds]
+  );
+  const visibleTodayAppointments = useMemo(
+    () =>
+      todayAppointments.filter((apt) => !removedAppointmentIds.has(apt.id)),
+    [todayAppointments, removedAppointmentIds]
+  );
+  const visibleUpcomingAppointments = useMemo(
+    () =>
+      upcomingAppointments.filter((apt) => !removedAppointmentIds.has(apt.id)),
+    [upcomingAppointments, removedAppointmentIds]
+  );
+
   const existingAppointments = useMemo(() => {
     const byId = new Map<string, Appointment>();
     for (const apt of [
-      ...weekAppointments,
-      ...todayAppointments,
-      ...upcomingAppointments,
+      ...visibleWeekAppointments,
+      ...visibleTodayAppointments,
+      ...visibleUpcomingAppointments,
     ]) {
       byId.set(apt.id, apt);
     }
     return [...byId.values()];
-  }, [weekAppointments, todayAppointments, upcomingAppointments]);
+  }, [
+    visibleWeekAppointments,
+    visibleTodayAppointments,
+    visibleUpcomingAppointments,
+  ]);
+
+  function removeAppointmentsFromSchedule(ids: string[]) {
+    setRemovedAppointmentIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) next.add(id);
+      return next;
+    });
+    setDetailOpen(false);
+    setDetailAppointment(null);
+  }
+
+  function restoreAppointmentsOnSchedule(ids: string[]) {
+    setRemovedAppointmentIds((prev) => {
+      const next = new Set(prev);
+      for (const id of ids) next.delete(id);
+      return next;
+    });
+  }
 
   function handleSuccess() {
     setOpen(false);
@@ -151,17 +194,31 @@ export function AppointmentsClient({
     }
   }
 
+  const scheduleOptions = { includeCheckedIn: includeCheckedInOnSchedule };
+
   const scheduleWeekAppointments = useMemo(
-    () => filterScheduleCalendarAppointments(weekAppointments),
-    [weekAppointments]
+    () =>
+      filterScheduleCalendarAppointments(
+        visibleWeekAppointments,
+        scheduleOptions
+      ),
+    [visibleWeekAppointments, includeCheckedInOnSchedule]
   );
   const scheduleTodayAppointments = useMemo(
-    () => filterScheduleCalendarAppointments(todayAppointments),
-    [todayAppointments]
+    () =>
+      filterScheduleCalendarAppointments(
+        visibleTodayAppointments,
+        scheduleOptions
+      ),
+    [visibleTodayAppointments, includeCheckedInOnSchedule]
   );
   const scheduleUpcomingAppointments = useMemo(
-    () => filterScheduleCalendarAppointments(upcomingAppointments),
-    [upcomingAppointments]
+    () =>
+      filterScheduleCalendarAppointments(
+        visibleUpcomingAppointments,
+        scheduleOptions
+      ),
+    [visibleUpcomingAppointments, includeCheckedInOnSchedule]
   );
 
   const filterOptions = {
@@ -272,7 +329,10 @@ export function AppointmentsClient({
                 </div>
                 <AppointmentList
                   appointments={filteredTodayAppointments}
+                  allAppointments={existingAppointments}
                   onRefresh={() => router.refresh()}
+                  onCheckedIn={removeAppointmentsFromSchedule}
+                  onCheckInError={restoreAppointmentsOnSchedule}
                 />
               </div>
               <div className="rounded-[20px] border border-[#E8ECF4] bg-white p-6 shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
@@ -286,7 +346,10 @@ export function AppointmentsClient({
                 </div>
                 <AppointmentList
                   appointments={filteredUpcomingAppointments}
+                  allAppointments={existingAppointments}
                   onRefresh={() => router.refresh()}
+                  onCheckedIn={removeAppointmentsFromSchedule}
+                  onCheckInError={restoreAppointmentsOnSchedule}
                 />
               </div>
             </motion.div>
@@ -296,7 +359,7 @@ export function AppointmentsClient({
         <AppointmentsSidebar
           todayAppointments={scheduleTodayAppointments}
           upcomingAppointments={scheduleUpcomingAppointments}
-          analyticsAppointments={todayAppointments}
+          analyticsAppointments={visibleTodayAppointments}
           employees={employees}
           weekStart={weekStart}
           selectedDay={selectedDay}
@@ -306,7 +369,7 @@ export function AppointmentsClient({
       </div>
 
       <AppointmentsAnalytics
-        todayAppointments={todayAppointments}
+        todayAppointments={visibleTodayAppointments}
         employees={employees}
       />
 
@@ -316,6 +379,8 @@ export function AppointmentsClient({
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onRefresh={() => router.refresh()}
+        onCheckedIn={removeAppointmentsFromSchedule}
+        onCheckInError={restoreAppointmentsOnSchedule}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getInvoiceBalanceDue } from "@/lib/billing/invoice-balance";
 import type { BillingInvoice } from "@/components/billing/types";
 
-export const BILLING_PAGE_SIZE = 50;
+export const BILLING_PAGE_SIZE = 10;
 
 export const invoiceListSelect = {
   id: true,

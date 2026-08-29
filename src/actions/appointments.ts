@@ -85,16 +85,22 @@ export async function getAppointmentsInRange(start: Date, end: Date) {
   const salonId = ctx.salonId;
   const employeeId = ctx.dataScope === "own" ? ctx.employeeId : null;
   if (ctx.dataScope === "own" && !employeeId) return [];
+
+  // Staff must see their own book live — shared salon cache can serve an empty
+  // "all staff" snapshot and hide rows the dashboard already shows.
+  if (employeeId) {
+    return fetchAppointmentsInRange(salonId, start, end, employeeId);
+  }
+
   const rangeKey = `${start.toISOString().slice(0, 10)}:${end.toISOString().slice(0, 10)}`;
-  const scopeKey = employeeId ?? "all";
 
   return cachedRead(
-    `salon-cache:appointments:range:${salonId}:${scopeKey}:${rangeKey}`,
+    `salon-cache:appointments:range:${salonId}:all:${rangeKey}`,
     60,
     () =>
       unstable_cache(
-        () => fetchAppointmentsInRange(salonId, start, end, employeeId),
-        ["appointments", "range", salonId, scopeKey, rangeKey],
+        () => fetchAppointmentsInRange(salonId, start, end),
+        ["appointments", "range", salonId, "all", rangeKey],
         { revalidate: 60, tags: [salonCacheTag(salonId, "appointments")] }
       )()
   );

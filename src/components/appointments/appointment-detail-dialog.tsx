@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   updateAppointmentStatus,
@@ -10,7 +9,8 @@ import {
 import { sendManualSms } from "@/actions/sms";
 import { useAppointmentRecordSale } from "@/components/appointments/use-appointment-record-sale";
 import { AppointmentReachedButton } from "@/components/appointments/appointment-reached-button";
-import { buildCheckInHref, collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
+import { requestAppointmentCheckIn } from "@/lib/appointments/check-in-from-schedule";
+import { collectVisitGroupAppointments } from "@/lib/appointments/check-in-prefill";
 import { stripVisitGroupMarker } from "@/lib/appointments/visit-group";
 import {
   Dialog,
@@ -47,15 +47,29 @@ export function AppointmentDetailDialog({
   open,
   onOpenChange,
   onRefresh,
+  onCheckedIn,
+  onCheckInError,
 }: {
   appointment: Appointment | null;
   allAppointments?: Appointment[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onRefresh: () => void;
+  onCheckedIn?: (appointmentIds: string[]) => void;
+  onCheckInError?: (appointmentIds: string[]) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const walkInInFlight = useRef(false);
   const { openAppointmentSale } = useAppointmentRecordSale();
+
+  useEffect(() => {
+    if (!open) return;
+    void fetch("/api/appointments/check-in", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+  }, [open]);
 
   if (!appointment) return null;
   const selectedAppointment = appointment;
@@ -64,13 +78,24 @@ export function AppointmentDetailDialog({
     selectedAppointment,
     allAppointments.length > 0 ? allAppointments : [selectedAppointment]
   );
-  const checkInHref = buildCheckInHref(
-    selectedAppointment,
-    allAppointments.length > 0 ? allAppointments : [selectedAppointment]
-  );
+  const visitAppointmentIds = visitAppointments.map((item) => item.id);
   const canWalkIn =
     selectedAppointment.status === "scheduled" ||
     selectedAppointment.status === "checked_in";
+
+  async function handleWalkInCheckIn() {
+    if (walkInInFlight.current) return;
+    walkInInFlight.current = true;
+    onCheckedIn?.(visitAppointmentIds);
+    const result = await requestAppointmentCheckIn(selectedAppointment.id, {
+      startNow: true,
+    });
+    walkInInFlight.current = false;
+    if (result.error) {
+      onCheckInError?.(visitAppointmentIds);
+      alert(result.error);
+    }
+  }
 
   const start = new Date(selectedAppointment.scheduledAt);
   const visitEnd = visitAppointments.reduce((latest, item) => {
@@ -207,23 +232,21 @@ export function AppointmentDetailDialog({
 
           <div className="flex flex-wrap gap-2">
             {canWalkIn && (
-              <Button size="sm" asChild disabled={loading}>
-                <Link
-                  href={checkInHref}
-                  onClick={() => onOpenChange(false)}
-                >
-                  <LogIn className="h-4 w-4" />
-                  Walk-in check-in
-                </Link>
+              <Button
+                size="sm"
+                disabled={loading}
+                onClick={() => void handleWalkInCheckIn()}
+              >
+                <LogIn className="h-4 w-4" />
+                Walk-in check-in
               </Button>
             )}
             {appointment.status === "scheduled" && (
               <AppointmentReachedButton
                 appointment={appointment}
-                onSuccess={() => {
-                  onOpenChange(false);
-                  onRefresh();
-                }}
+                visitAppointmentIds={visitAppointmentIds}
+                onCheckedIn={onCheckedIn}
+                onCheckInError={onCheckInError}
               />
             )}
             {(appointment.status === "scheduled" ||

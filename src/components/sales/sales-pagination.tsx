@@ -11,6 +11,7 @@ type SalesPaginationProps = {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  itemLabel?: string;
 };
 
 export function SalesPagination({
@@ -20,6 +21,7 @@ export function SalesPagination({
   page,
   totalPages,
   onPageChange,
+  itemLabel = "transaction",
 }: SalesPaginationProps) {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
   const visiblePages = pages.filter(
@@ -29,7 +31,7 @@ export function SalesPagination({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#ECECEC] px-5 py-4 text-sm text-[#6B7280]">
       <p>
-        Showing {start} to {end} of {totalCount} transaction
+        Showing {start} to {end} of {totalCount} {itemLabel}
         {totalCount !== 1 ? "s" : ""}
       </p>
       <div className="flex items-center gap-1">
