@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -60,12 +60,8 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   );
 
   useEffect(() => {
-    const next = normalizeQueueOverview(overviewProp);
-    setOverview(next);
-    setEntries(next.entries);
-    setCompletedRecent(next.completedRecent);
-    setCompletedToday(next.completedToday);
-  }, [overviewProp]);
+    applyOverview(normalizeQueueOverview(overviewProp));
+  }, [overviewProp, applyOverview]);
 
   const [activeTab, setActiveTab] = useState<QueueTab>("waiting");
   const [filters, setFilters] = useState<QueueFilters>(DEFAULT_FILTERS);
@@ -77,10 +73,13 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
+  const locallyCompletedIds = useRef(new Set<string>());
+
   const applyOverview = useCallback((data: QueueOverview) => {
     const next = normalizeQueueOverview(data);
+    const hidden = locallyCompletedIds.current;
     setOverview(next);
-    setEntries(next.entries);
+    setEntries(next.entries.filter((entry) => !hidden.has(entry.id)));
     setCompletedRecent(next.completedRecent);
     setCompletedToday(next.completedToday);
   }, []);
@@ -88,7 +87,10 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   const syncFromServer = useCallback(async () => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/queue/overview", { cache: "no-store" });
+      const res = await fetch("/api/queue/overview", {
+        cache: "no-store",
+        credentials: "include",
+      });
       if (!res.ok) return;
       const data = (await res.json()) as QueueOverview;
       applyOverview(data);
@@ -99,8 +101,8 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
 
   const refreshQueueData = useCallback(async () => {
     markDashboardStale();
-    router.refresh();
     await syncFromServer();
+    router.refresh();
   }, [router, syncFromServer]);
 
   const filteredActiveEntries = useMemo(
@@ -194,6 +196,7 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
         )
       );
     } else if (action === "complete") {
+      locallyCompletedIds.current.add(id);
       const completed: CompletedEntry = {
         id: entry.id,
         completedAt: new Date(),
@@ -230,6 +233,7 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
     try {
       const result = await fn(id);
       if (result && "error" in result && result.error) {
+        if (action === "complete") locallyCompletedIds.current.delete(id);
         setEntries(previousEntries);
         setCompletedRecent(previousCompleted);
         setCompletedToday(previousCompletedToday);
@@ -237,8 +241,13 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
         return;
       }
 
-      await refreshQueueData();
+      void refreshQueueData();
     } catch {
+      if (action === "complete") {
+        setError("Completion saved. Refresh if the row still looks active.");
+        void refreshQueueData();
+        return;
+      }
       setEntries(previousEntries);
       setCompletedRecent(previousCompleted);
       setCompletedToday(previousCompletedToday);

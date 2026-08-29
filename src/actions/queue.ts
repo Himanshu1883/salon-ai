@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { cachedBySalon } from "@/lib/salon-cache";
 import {
   checkInSchema,
@@ -317,6 +318,7 @@ export async function completeService(queueEntryId: string) {
     },
   });
   if (!entry) return { error: "Queue entry not found" };
+  if (entry.status === "completed") return { success: true };
 
   const completedAt = new Date();
   const linkedAppointment = entry.appointment;
@@ -327,7 +329,7 @@ export async function completeService(queueEntryId: string) {
 
   await prisma.$transaction(async (tx) => {
     if (entry.seatId) {
-      await tx.seat.update({
+      await tx.seat.updateMany({
         where: { id: entry.seatId },
         data: { status: "available", employeeId: null },
       });
@@ -346,25 +348,42 @@ export async function completeService(queueEntryId: string) {
     }
   });
 
-  if (shouldCompleteAppointment && entry.appointmentId && linkedAppointment) {
-    const { consumeServiceRecipesForAppointment } = await import(
-      "@/lib/inventory/ledger"
-    );
-    await consumeServiceRecipesForAppointment(
-      session.user.salonId!,
-      entry.appointmentId,
-      linkedAppointment.serviceId,
-      linkedAppointment.customerId,
-      linkedAppointment.employeeId ?? entry.employeeId,
-      session.user.id
-    );
-    revalidatePath("/inventory");
-    revalidatePath("/inventory/consumption");
-    revalidatePath("/inventory/ledger");
-    revalidatePath("/inventory/products");
+  try {
+    invalidateQueueCache(session.user.salonId!);
+  } catch (error) {
+    console.error("[completeService] cache revalidate failed", error);
   }
 
-  invalidateQueueCache(session.user.salonId!);
+  if (shouldCompleteAppointment && entry.appointmentId && linkedAppointment) {
+    const salonId = session.user.salonId!;
+    const appointmentId = entry.appointmentId;
+    const serviceId = linkedAppointment.serviceId;
+    const customerId = linkedAppointment.customerId;
+    const employeeId = linkedAppointment.employeeId ?? entry.employeeId;
+    const createdById = session.user.id;
+    after(async () => {
+      try {
+        const { consumeServiceRecipesForAppointment } = await import(
+          "@/lib/inventory/ledger"
+        );
+        await consumeServiceRecipesForAppointment(
+          salonId,
+          appointmentId,
+          serviceId,
+          customerId,
+          employeeId,
+          createdById
+        );
+        revalidatePath("/inventory");
+        revalidatePath("/inventory/consumption");
+        revalidatePath("/inventory/ledger");
+        revalidatePath("/inventory/products");
+      } catch (error) {
+        console.error("[completeService] inventory consume failed", error);
+      }
+    });
+  }
+
   return { success: true };
 }
 
