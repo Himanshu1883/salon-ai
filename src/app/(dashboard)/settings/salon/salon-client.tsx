@@ -12,8 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSalonLoginUrl } from "@/hooks/use-salon-login-url";
-import { getSalonLogoUrl } from "@/lib/salon-logo";
-import { ImageIcon, Loader2, Trash2, Upload } from "lucide-react";
+import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
+import { Loader2, Trash2, Upload } from "lucide-react";
 
 type SalonProfile = {
   name: string;
@@ -41,8 +41,6 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
   const [logoError, setLogoError] = useState<string | null>(null);
   const [logoSuccess, setLogoSuccess] = useState(false);
   const { fullUrl: salonLoginUrl } = useSalonLoginUrl(profile?.slug ?? "");
-
-  const logoPreviewUrl = getSalonLogoUrl(profile?.logoUrl);
 
   useEffect(() => {
     setGstEnabled(profile?.gstEnabled ?? true);
@@ -162,16 +160,15 @@ export function SalonProfileClient({ profile }: { profile: SalonProfile }) {
 
           <div className="mt-4 flex flex-wrap items-center gap-4">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-stone-200 bg-white">
-              {logoPreviewUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={logoPreviewUrl}
-                  alt={`${profile?.name ?? "Salon"} logo`}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <ImageIcon className="h-8 w-8 text-stone-300" />
-              )}
+              <SalonLogoMark
+                logoUrl={profile?.logoUrl}
+                fallbackInitial={profile?.name ?? "S"}
+                size="lg"
+                shape="rounded"
+                variant="dark"
+                alt=""
+                className="h-20 w-20 text-lg shadow-none ring-0"
+              />
             </div>
 
             <div className="flex flex-wrap items-center gap-2">

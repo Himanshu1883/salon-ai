@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { cn, getInitials } from "@/lib/utils";
 
 export function MemberAvatar({
@@ -9,15 +12,19 @@ export function MemberAvatar({
   avatarUrl?: string | null;
   className?: string;
 }) {
-  if (avatarUrl) {
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(avatarUrl) && !failed;
+
+  if (showImage) {
     return (
       <img
-        src={avatarUrl}
+        src={avatarUrl!}
         alt={name}
         className={cn(
           "h-9 w-9 shrink-0 rounded-full object-cover",
           className
         )}
+        onError={() => setFailed(true)}
       />
     );
   }
@@ -29,7 +36,7 @@ export function MemberAvatar({
         className
       )}
     >
-      {getInitials(name)}
+      {getInitials(name) || "S"}
     </div>
   );
 }

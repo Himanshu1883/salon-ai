@@ -51,6 +51,10 @@ async function saveToLocalDisk(
   return { path: path.join(relativeDir, filename).replace(/\\/g, "/") };
 }
 
+function shouldRetryWithPublic(message: string) {
+  return /cannot use private access on a public store/i.test(message);
+}
+
 async function saveToBlob(
   buffer: Buffer,
   salonId: string,
@@ -65,19 +69,31 @@ async function saveToBlob(
     };
   }
 
-  try {
-    const filename = `${randomUUID()}${ext}`;
-    const blob = await put(`logos/${salonId}/${filename}`, buffer, {
-      access: "public",
-      contentType,
-      token,
-    });
-    return { path: blob.url };
-  } catch (error) {
-    const message =
-      error instanceof Error ? error.message : "Could not upload to storage";
-    return { error: `Logo upload failed: ${message}` };
+  const pathname = `logos/${salonId}/${randomUUID()}${ext}`;
+  const attempts = ["private", "public"] as const;
+
+  let lastMessage = "Could not upload to storage";
+  for (const access of attempts) {
+    try {
+      await put(pathname, buffer, {
+        access,
+        contentType,
+        token,
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      });
+      return { path: pathname };
+    } catch (error) {
+      lastMessage =
+        error instanceof Error ? error.message : "Could not upload to storage";
+      if (access === "private" && shouldRetryWithPublic(lastMessage)) {
+        continue;
+      }
+      break;
+    }
   }
+
+  return { error: `Logo upload failed: ${lastMessage}` };
 }
 
 export async function saveSalonLogo(
@@ -100,7 +116,7 @@ export async function saveSalonLogo(
   const ext = EXTENSIONS[mime] ?? (path.extname(file.name) || ".png");
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  if (process.env.VERCEL === "1") {
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
     return saveToBlob(buffer, salonId, ext, mime);
   }
 

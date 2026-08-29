@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   BarChart3,
   CalendarDays,
-  Leaf,
   ShieldCheck,
   ShoppingBag,
   Users,
@@ -11,10 +10,10 @@ import {
 import {
   formatSalonAddress,
   formatSalonPhone,
-  getSalonLogoUrl,
 } from "@/lib/salon-logo";
 import { cn } from "@/lib/utils";
 import type { SalonAuthBranding } from "@/lib/salon-auth-page";
+import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 
 const FEATURES = [
   {
@@ -39,59 +38,6 @@ const FEATURES = [
   },
 ] as const;
 
-function SalonLogoMark({
-  logoUrl,
-  size = "md",
-  variant = "dark",
-}: {
-  logoUrl: string | null;
-  size?: "sm" | "md" | "lg";
-  variant?: "light" | "dark";
-}) {
-  const publicUrl = getSalonLogoUrl(logoUrl);
-  const sizeClasses = {
-    sm: "h-10 w-10",
-    md: "h-14 w-14",
-    lg: "h-16 w-16",
-  }[size];
-
-  if (publicUrl) {
-    return (
-      <div
-        className={cn(
-          "relative shrink-0 overflow-hidden rounded-xl ring-1",
-          sizeClasses,
-          variant === "light"
-            ? "bg-white/10 ring-white/20"
-            : "bg-stone-50 ring-stone-200"
-        )}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={publicUrl} alt="" className="h-full w-full object-cover" />
-      </div>
-    );
-  }
-
-  return (
-    <div
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-xl ring-1",
-        sizeClasses,
-        variant === "light"
-          ? "bg-dashboard-secondary/20 ring-dashboard-secondary/40"
-          : "bg-dashboard-primary/15 ring-dashboard-primary/25"
-      )}
-    >
-      <Leaf
-        className={cn(
-          variant === "light" ? "text-dashboard-secondary" : "text-dashboard-primary",
-          size === "lg" ? "h-7 w-7" : size === "md" ? "h-6 w-6" : "h-5 w-5"
-        )}
-      />
-    </div>
-  );
-}
-
 export function SalonAuthIdentity({
   salon,
   compact = false,
@@ -112,7 +58,9 @@ export function SalonAuthIdentity({
       >
         <SalonLogoMark
           logoUrl={salon.logoUrl}
+          fallbackInitial={salon.name}
           size={compact ? "md" : "lg"}
+          shape="rounded"
           variant="dark"
         />
         <div className={compact ? "text-center" : "min-w-0"}>

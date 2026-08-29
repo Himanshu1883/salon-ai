@@ -1,9 +1,29 @@
+export function isVercelBlobUrl(path: string): boolean {
+  return (
+    path.includes(".blob.vercel-storage.com") ||
+    path.includes(".public.blob.vercel-storage.com")
+  );
+}
+
 export function getSalonLogoUrl(path: string | null | undefined): string | null {
   if (!path) return null;
+
+  if (isVercelBlobUrl(path)) {
+    try {
+      const url = new URL(path);
+      const blobPath = decodeURIComponent(url.pathname.replace(/^\/+/, ""));
+      if (!blobPath) return null;
+      return `/api/public/salon-logo/${blobPath}`;
+    } catch {
+      return null;
+    }
+  }
+
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
   }
-  return `/api/public/salon-logo/${path}`;
+
+  return `/api/public/salon-logo/${path.replace(/^\/+/, "")}`;
 }
 
 export function formatSalonAddress(salon: {
