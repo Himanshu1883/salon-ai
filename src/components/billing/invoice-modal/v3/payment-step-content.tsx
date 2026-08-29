@@ -96,6 +96,17 @@ export function PaymentStepContent({
         </div>
       </motion.section>
 
+      {onPartialPaymentEnabledChange && onPartialAmountChange && (
+        <PartialPaymentFields
+          enabled={partialPaymentEnabled}
+          onEnabledChange={onPartialPaymentEnabledChange}
+          amount={partialAmount}
+          onAmountChange={onPartialAmountChange}
+          total={displayTotal}
+          error={partialError}
+        />
+      )}
+
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,17 +122,6 @@ export function PaymentStepContent({
           splitError={splitError}
         />
       </motion.div>
-
-      {onPartialPaymentEnabledChange && onPartialAmountChange && (
-        <PartialPaymentFields
-          enabled={partialPaymentEnabled}
-          onEnabledChange={onPartialPaymentEnabledChange}
-          amount={partialAmount}
-          onAmountChange={onPartialAmountChange}
-          total={displayTotal}
-          error={partialError}
-        />
-      )}
 
       {paymentError && (
         <p className="text-[12px] text-red-500">{paymentError}</p>

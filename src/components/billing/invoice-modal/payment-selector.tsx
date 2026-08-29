@@ -130,10 +130,10 @@ export function PaymentSelector({
 }: PaymentSelectorProps) {
   return (
     <section aria-labelledby="payment-section">
-      <SectionHeader id="payment-section" className="mb-5">
+      <SectionHeader id="payment-section" className="mb-3">
         Choose payment method
       </SectionHeader>
-      <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
         {PAYMENT_OPTIONS.map((option) => {
           const Icon = option.icon;
           const isSelected = selected === option.id;
@@ -144,7 +144,7 @@ export function PaymentSelector({
               whileTap={{ scale: 0.98 }}
               onClick={() => onSelect(option.id)}
               className={cn(
-                "relative flex min-h-[5.5rem] flex-col items-center justify-center gap-2 rounded-2xl border bg-white p-3 text-center transition-all sm:min-h-0 sm:gap-3 sm:p-4",
+                "relative flex min-h-[3.25rem] flex-col items-center justify-center gap-1 rounded-xl border bg-white px-2 py-2 text-center transition-all sm:min-h-[3.5rem]",
                 "shadow-sm shadow-violet-950/[0.02]",
                 isSelected
                   ? "border-violet-400 shadow-md shadow-violet-500/10 ring-2 ring-violet-500/20"
@@ -153,25 +153,25 @@ export function PaymentSelector({
             >
               <span
                 className={cn(
-                  "absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center rounded-full border-2 transition-colors sm:right-3 sm:top-3",
+                  "absolute right-1.5 top-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border-2 transition-colors",
                   isSelected
                     ? "border-violet-600 bg-violet-600"
                     : "border-violet-200 bg-white"
                 )}
               >
                 {isSelected && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  <span className="h-1 w-1 rounded-full bg-white" />
                 )}
               </span>
               <div
                 className={cn(
-                  "flex h-11 w-11 items-center justify-center rounded-2xl sm:h-12 sm:w-12",
+                  "flex h-7 w-7 items-center justify-center rounded-lg",
                   option.iconClassName
                 )}
               >
-                <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
+                <Icon className="h-3.5 w-3.5" />
               </div>
-              <span className="text-[13px] font-medium leading-tight text-dashboard-text sm:text-sm">
+              <span className="text-[11px] font-medium leading-tight text-dashboard-text sm:text-xs">
                 {option.label}
               </span>
             </motion.button>
