@@ -3,6 +3,7 @@ import Link from "next/link";
 import {
   BarChart3,
   CalendarDays,
+  Leaf,
   ShieldCheck,
   ShoppingBag,
   Users,
