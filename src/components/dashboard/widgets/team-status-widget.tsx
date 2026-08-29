@@ -8,7 +8,7 @@ import type { TeamMemberStatus } from "@/actions/dashboard";
 const statusConfig = {
   on_shift: { label: "On Shift", variant: "success" as const },
   busy: { label: "With client", variant: "warning" as const },
-  available: { label: "Available", variant: "secondary" as const },
+  available: { label: "Available", variant: "success" as const },
 };
 
 type TeamStatusWidgetProps = {

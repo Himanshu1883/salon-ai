@@ -115,7 +115,7 @@ export function RevenueAreaChart({
 
         <div className="mt-4 border-t border-dashboard-border pt-4">
           <p className="text-sm text-dashboard-muted">
-            This month:{" "}
+            Month to date{" "}
             <span className="font-semibold text-dashboard-text">
               {formatCurrency(revenueMonth)}
             </span>

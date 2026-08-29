@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { addMinutes, format, isPast, isFuture } from "date-fns";
-import { Calendar, Clock, UserRound } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -67,8 +67,7 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
             </Button>
           </div>
         ) : (
-          <div className="relative space-y-0">
-            <div className="absolute bottom-4 left-[27px] top-4 w-px bg-gradient-to-b from-dashboard-primary/30 via-dashboard-secondary/20 to-transparent" />
+          <div className="divide-y divide-dashboard-border/60">
             {appointments.map((apt) => {
               const start = new Date(apt.scheduledAt);
               const end = addMinutes(start, apt.service.duration);
@@ -79,46 +78,31 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
               return (
                 <div
                   key={apt.id}
-                  className="relative flex items-start gap-4 py-3 pl-0"
+                  className="flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 xl:gap-4"
                 >
-                  <div className="relative z-10 flex w-14 shrink-0 flex-col items-center">
-                    <div className="h-3 w-3 rounded-full border-2 border-white bg-dashboard-primary shadow-md shadow-violet-200" />
-                    <p className="mt-2 text-center text-xs font-semibold text-dashboard-primary">
+                  <div className="w-[72px] shrink-0">
+                    <p className="text-xs font-semibold text-dashboard-primary xl:text-sm">
                       {time}
                     </p>
                   </div>
-                  <div className="min-w-0 flex-1 rounded-xl border border-dashboard-border bg-dashboard-bg/60 p-3 xl:rounded-2xl xl:p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold text-white">
-                          {apt.customer.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-dashboard-text">
-                            {apt.customer.name}
-                          </p>
-                          <p className="mt-0.5 truncate text-sm text-dashboard-muted">
-                            {apt.service.name}
-                          </p>
-                          <div className="mt-1.5 space-y-1">
-                            <p className="flex items-center gap-1.5 text-xs text-dashboard-muted">
-                              <UserRound className="h-3.5 w-3.5 shrink-0 text-dashboard-primary/70" />
-                              <span className="truncate">
-                                {apt.employee?.name ?? "Unassigned stylist"}
-                              </span>
-                            </p>
-                            <p className="flex items-center gap-1.5 text-xs text-dashboard-muted">
-                              <Clock className="h-3.5 w-3.5 shrink-0 text-dashboard-primary/70" />
-                              <span className="truncate">
-                                {timeRange} · {apt.service.duration} min
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge variant={statusInfo.variant}>{statusInfo.label}</Badge>
-                    </div>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold text-white">
+                    {apt.customer.name.charAt(0).toUpperCase()}
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-dashboard-text">
+                      {apt.customer.name}
+                      <span className="font-normal text-dashboard-muted">
+                        {" "}
+                        — {apt.service.name}
+                      </span>
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-dashboard-muted">
+                      {apt.employee?.name ?? "Unassigned stylist"} · {timeRange}
+                    </p>
+                  </div>
+                  <Badge variant={statusInfo.variant} className="shrink-0">
+                    {statusInfo.label}
+                  </Badge>
                 </div>
               );
             })}

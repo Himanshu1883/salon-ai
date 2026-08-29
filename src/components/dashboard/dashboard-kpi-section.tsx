@@ -9,7 +9,7 @@ export async function DashboardKpiSection() {
   const plan = normalizeSalonPlan(session?.user?.plan);
 
   const kpis = await getDashboardKpis();
-  return (<>
+  return (<div className="space-y-4 xl:space-y-5">
     <QuickActionsWidget delay={0.05} />
     <KpiGrid
       plan={plan}
@@ -27,6 +27,6 @@ export async function DashboardKpiSection() {
       totalCustomers={kpis.totalCustomers}
     />
 
-</>
+</div>
   );
 }

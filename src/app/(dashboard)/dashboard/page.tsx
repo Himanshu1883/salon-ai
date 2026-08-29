@@ -10,12 +10,9 @@ import {
 
 function KpiSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 animate-pulse">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-24 rounded-[20px] border border-[#E8ECF4] bg-white xl:h-32"
-        />
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 md:gap-3 animate-pulse">
+      {Array.from({ length: 10 }).map((_, i) => (
+        <div key={i} className="h-[60px] rounded-2xl bg-white shadow-sm sm:h-[64px]" />
       ))}
     </div>
   );

@@ -23,8 +23,7 @@ export function DashboardCard({
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
       whileHover={hover ? { scale: 1.02 } : undefined}
       className={cn(
-        "rounded-[20px] border border-dashboard-border bg-dashboard-card shadow-dashboard-card backdrop-blur-sm",
-        "ring-1 ring-inset ring-white/60",
+        "rounded-2xl border-0 bg-white shadow-[0_4px_18px_rgba(15,23,42,0.05)]",
         className
       )}
     >

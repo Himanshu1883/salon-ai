@@ -45,7 +45,7 @@ export function FloatingInput({
           "peer h-14 w-full rounded-xl border border-dashboard-border bg-white/90 px-4 pt-5 pb-2 text-sm text-dashboard-text shadow-sm backdrop-blur-sm transition-all",
           "placeholder:text-transparent focus:border-violet-400/60 focus:outline-none focus:ring-2 focus:ring-violet-500/15",
           Icon && "pr-11"
-        )}
+        )} 
       />
       <label
         htmlFor={id}
