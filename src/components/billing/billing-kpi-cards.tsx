@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { IndianRupee, FileText, Clock } from "lucide-react";
+import { IndianRupee, FileText } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { cn } from "@/lib/utils";
 import type { BillingStats } from "./types";
@@ -94,7 +94,7 @@ export function BillingKpiCards({
       <KpiCard
         delay={0}
         label="Revenue today"
-        value={formatCurrency(stats.revenueToday)}
+        value={stats.revenueTodayLabel ?? formatCurrency(stats.revenueToday)}
         sublabel="Collected today"
         icon={<IndianRupee className="h-5 w-5 text-emerald-600" />}
         iconBg="bg-emerald-50"
@@ -102,7 +102,7 @@ export function BillingKpiCards({
       <KpiCard
         delay={0.05}
         label="This month"
-        value={formatCurrency(stats.revenueMonth)}
+        value={stats.revenueMonthLabel ?? formatCurrency(stats.revenueMonth)}
         sublabel="Month to date"
         icon={<IndianRupee className="h-5 w-5 text-violet-600" />}
         iconBg="bg-violet-50"
@@ -111,7 +111,10 @@ export function BillingKpiCards({
         delay={0.1}
         label="Unpaid"
         value={String(stats.unpaidCount)}
-        sublabel={stats.unpaidCount > 0 ? "Awaiting payment" : "All clear"}
+        sublabel={
+          stats.unpaidSublabel ??
+          (stats.unpaidCount > 0 ? "Awaiting payment" : "All clear")
+        }
         icon={<FileText className="h-5 w-5 text-amber-600" />}
         iconBg="bg-amber-50"
         active={activeStatusFilter === "unpaid"}

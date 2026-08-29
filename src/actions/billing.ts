@@ -17,9 +17,15 @@ import {
 import { revalidatePath } from "next/cache";
 import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
 import { getCachedBillingStats } from "@/lib/billing/stats-cache";
+import {
+  BILLING_PAGE_SIZE,
+  buildInvoiceListWhere,
+  fetchInvoicePage,
+} from "@/lib/billing/invoice-list-query";
+import { fetchBillingOverview, type BillingOverviewFilters } from "@/lib/billing/overview";
 import { getSalonPlan } from "@/lib/plan-access";
 import { isBasicPlan } from "@/lib/plans";
-import { startOfDay, endOfDay, startOfMonth, endOfMonth, subDays } from "date-fns";
+import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
 import { getSalonBillingWhatsAppTemplate } from "@/actions/whatsapp";
 import { deductRetailSale } from "@/lib/inventory/ledger";
@@ -430,75 +436,6 @@ export async function getStaffEarningsTotal() {
   return result._sum.total ?? 0;
 }
 
-const invoiceListSelect = {
-  id: true,
-  customerName: true,
-  customerPhone: true,
-  status: true,
-  subtotal: true,
-  tax: true,
-  total: true,
-  amountPaid: true,
-  dueDate: true,
-  paidAt: true,
-  paymentMethod: true,
-  createdAt: true,
-  lineItems: {
-    select: {
-      id: true,
-      description: true,
-      quantity: true,
-      unitPrice: true,
-      total: true,
-      service: { select: { name: true } },
-    },
-    take: 8,
-    orderBy: { id: "asc" as const },
-  },
-  employee: { select: { id: true, name: true } },
-  seat: { select: { id: true, number: true } },
-} as const;
-
-function buildInvoiceListWhere(
-  salonId: string,
-  filters?: {
-    status?: string;
-    dateFrom?: string;
-    dateTo?: string;
-    employeeId?: string;
-  }
-) {
-  const where: Record<string, unknown> = { salonId };
-
-  if (filters?.status === "unpaid") {
-    where.status = { in: ["draft", "sent", "overdue", "partial"] };
-  } else if (filters?.status && filters.status !== "all") {
-    where.status = filters.status;
-  }
-
-  if (filters?.employeeId && filters.employeeId !== "all") {
-    where.employeeId = filters.employeeId;
-  }
-
-  if (filters?.dateFrom || filters?.dateTo) {
-    where.createdAt = {};
-    if (filters.dateFrom) {
-      (where.createdAt as Record<string, Date>).gte = startOfDay(
-        new Date(filters.dateFrom)
-      );
-    }
-    if (filters.dateTo) {
-      (where.createdAt as Record<string, Date>).lte = endOfDay(
-        new Date(filters.dateTo)
-      );
-    }
-  } else if (filters?.status !== "unpaid") {
-    where.createdAt = { gte: subDays(new Date(), 90) };
-  }
-
-  return where;
-}
-
 export async function getInvoices(filters?: {
   status?: string;
   dateFrom?: string;
@@ -520,26 +457,17 @@ export async function getInvoices(filters?: {
     ...(ctx.dataScope === "own" ? salesInvoiceScopeWhere(ctx) : {}),
   };
   const page = Math.max(1, filters?.page ?? 1);
-  const pageSize = Math.min(100, Math.max(1, filters?.pageSize ?? 50));
+  const pageSize = Math.min(
+    100,
+    Math.max(1, filters?.pageSize ?? BILLING_PAGE_SIZE)
+  );
 
-  const [rows, totalCount] = await Promise.all([
-    prisma.invoice.findMany({
-      where,
-      select: invoiceListSelect,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.invoice.count({ where }),
-  ]);
+  return fetchInvoicePage(where, page, pageSize);
+}
 
-  const invoices = rows.map((row) => ({
-    ...row,
-    appointment: null,
-    checkIn: null,
-  }));
-
-  return { invoices, totalCount, page, pageSize };
+export async function getBillingOverview(filters: BillingOverviewFilters = {}) {
+  const ctx = await getDataScopeContext();
+  return fetchBillingOverview(ctx, filters);
 }
 
 export async function getInvoice(id: string) {

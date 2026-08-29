@@ -7,22 +7,14 @@ import { revalidatePath, unstable_cache } from "next/cache";
 import { cachedRead } from "@/lib/memory-cache";
 import { salonCacheTag } from "@/lib/salon-cache";
 import {
-  startOfDay,
   endOfDay,
-  parseISO,
-  isValid,
 } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
+import { parseSaleDate, paidAtFilter } from "@/lib/sales/dates";
+import { fetchSalesOverview, type SalesOverviewFilters } from "@/lib/sales/overview";
+import { getDataScopeContext } from "@/lib/permissions/data-scope";
 
 const TAX_RATE = 0.08;
-
-function parseSaleDate(dateStr: string): Date {
-  const parsed = parseISO(dateStr);
-  if (!isValid(parsed)) {
-    return startOfDay(new Date());
-  }
-  return parsed;
-}
 
 function calcTotals(lineItems: { quantity: number; unitPrice: number }[]) {
   const subtotal = lineItems.reduce(
@@ -32,13 +24,6 @@ function calcTotals(lineItems: { quantity: number; unitPrice: number }[]) {
   const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
   const total = Math.round((subtotal + tax) * 100) / 100;
   return { subtotal, tax, total };
-}
-
-function paidAtFilter(dateFrom?: string, dateTo?: string) {
-  const filter: Record<string, Date> = {};
-  if (dateFrom) filter.gte = startOfDay(parseSaleDate(dateFrom));
-  if (dateTo) filter.lte = endOfDay(parseSaleDate(dateTo));
-  return Object.keys(filter).length > 0 ? filter : undefined;
 }
 
 const PAID_SALES_LIMIT = 500;
@@ -117,6 +102,11 @@ export async function getPaidSales(filters?: {
         { revalidate: 30, tags: [salonCacheTag(salonId, "billing")] }
       )()
   );
+}
+
+export async function getSalesOverview(filters: SalesOverviewFilters = {}) {
+  const ctx = await getDataScopeContext();
+  return fetchSalesOverview(ctx, filters);
 }
 
 export type PaymentMethodBreakdown = {

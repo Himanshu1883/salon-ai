@@ -10,7 +10,6 @@ import {
   Trash2,
 } from "lucide-react";
 import { formatCurrency, getInitials, cn } from "@/lib/utils";
-import { getInvoiceBalanceDue } from "@/lib/billing/invoice-balance";
 import { resolveLineItemLabel } from "@/lib/service-display";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { Button } from "@/components/ui/button";
@@ -37,7 +36,7 @@ function InvoiceAmountDisplay({
   inv: BillingInvoice;
   compact?: boolean;
 }) {
-  const balanceDue = getInvoiceBalanceDue(inv);
+  const balanceDue = inv.balanceDue ?? 0;
   const amountPaid = inv.amountPaid ?? 0;
 
   if (inv.status === "partial" || (amountPaid > 0 && balanceDue > 0.009)) {
@@ -74,7 +73,7 @@ type BillingInvoiceTableProps = {
   invoices: BillingInvoice[];
   loading: boolean;
   isBasicPlan?: boolean;
-  onMarkPaid: (invoiceId: string, method: string, amountPaid: number, status: string) => void;
+  onMarkPaid: () => void;
   onMarkSent: (id: string) => void;
   onDelete: (id: string) => void;
 };
@@ -89,7 +88,7 @@ function InvoiceRowActions({
 }: {
   inv: BillingInvoice;
   loading: boolean;
-  onMarkPaid: (invoiceId: string, method: string, amountPaid: number, status: string) => void;
+  onMarkPaid: () => void;
   onMarkSent: (id: string) => void;
   onDelete: (id: string) => void;
   compact?: boolean;
@@ -107,9 +106,7 @@ function InvoiceRowActions({
           total={inv.total}
           amountPaid={inv.amountPaid ?? 0}
           compact={compact}
-          onSuccess={(method, amountPaid, status) =>
-            onMarkPaid(inv.id, method, amountPaid, status)
-          }
+          onSuccess={() => onMarkPaid()}
         />
       )}
       <DropdownMenu>

@@ -12,42 +12,30 @@ import {
   type PlatformSubscriptionInvoice,
 } from "@/components/subscription/platform-subscription-invoices";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type {
-  BillingEmployee,
-  BillingFilters,
-  BillingInvoice,
-  BillingStats,
-} from "@/components/billing/types";
+import type { BillingFilters, BillingInvoice } from "@/components/billing/types";
+import type { BillingOverview } from "@/lib/billing/overview";
 import { BillingStatsProvider } from "./billing-stats-context";
+import { BillingInvoiceListClient } from "./billing-invoice-list-client";
 import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
 
 export function BillingClient({
-  stats: initialStats,
-  employees,
+  overview,
   filters,
   prefilledCustomer,
   autoOpenCreate = false,
-  isBasicPlan = false,
   salonName = "Salon",
   gstEnabled = true,
   initialTab = "customers",
-  invoicesContent,
 }: {
-  stats: BillingStats;
-  employees: BillingEmployee[];
+  overview: BillingOverview;
   filters: BillingFilters;
   prefilledCustomer?: { name: string; phone: string };
   autoOpenCreate?: boolean;
-  isBasicPlan?: boolean;
   salonName?: string;
   gstEnabled?: boolean;
   initialTab?: "customers" | "subscription";
-  invoicesContent: React.ReactNode;
 }) {
   const router = useRouter();
-  const listPrependRef = useRef<((invoice: BillingInvoice) => void) | null>(null);
-  const recordedInvoiceIdsRef = useRef(new Set<string>());
-  const [stats, setStats] = useState(initialStats);
   const [open, setOpen] = useState(autoOpenCreate);
   const [activeTab, setActiveTab] = useState(initialTab);
   const [platformInvoices, setPlatformInvoices] = useState<
@@ -61,10 +49,6 @@ export function BillingClient({
   const [dateFrom, setDateFrom] = useState(filters.dateFrom);
   const [dateTo, setDateTo] = useState(filters.dateTo);
   const [employeeId, setEmployeeId] = useState(filters.employeeId);
-
-  useEffect(() => {
-    setStats(initialStats);
-  }, [initialStats]);
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -111,34 +95,9 @@ export function BillingClient({
     router.replace(query ? `/billing?${query}` : "/billing", { scroll: false });
   }
 
-  function handleInvoiceCreated(
-    invoice: BillingInvoice,
-    options?: { close?: boolean }
-  ) {
-    const alreadyRecorded = recordedInvoiceIdsRef.current.has(invoice.id);
-    if (!alreadyRecorded) {
-      recordedInvoiceIdsRef.current.add(invoice.id);
-      if (invoice.status === "paid") {
-        setStats((stats) => ({
-          ...stats,
-          revenueToday: stats.revenueToday + invoice.total,
-          revenueMonth: stats.revenueMonth + invoice.total,
-        }));
-      } else if (invoice.status === "partial") {
-        setStats((stats) => ({
-          ...stats,
-          revenueToday: stats.revenueToday + (invoice.amountPaid ?? 0),
-          revenueMonth: stats.revenueMonth + (invoice.amountPaid ?? 0),
-          unpaidCount: stats.unpaidCount + 1,
-        }));
-      } else if (invoice.status !== "paid") {
-        setStats((stats) => ({ ...stats, unpaidCount: stats.unpaidCount + 1 }));
-      }
-      listPrependRef.current?.(invoice);
-      markDashboardStale();
-      router.refresh();
-    }
-
+  function handleInvoiceCreated(_invoice: BillingInvoice, options?: { close?: boolean }) {
+    markDashboardStale();
+    router.refresh();
     if (options?.close !== false) {
       setOpen(false);
     }
@@ -236,11 +195,7 @@ export function BillingClient({
   }
 
   return (
-    <BillingStatsProvider
-      listPrependRef={listPrependRef}
-      updateStats={(updater) => setStats((current) => updater(current))}
-      openNewInvoice={() => setOpen(true)}
-    >
+    <BillingStatsProvider openNewInvoice={() => setOpen(true)}>
       <div className="space-y-6">
         <BillingHeader
           onNewInvoice={() => setOpen(true)}
@@ -265,7 +220,7 @@ export function BillingClient({
 
           <TabsContent value="customers" className="mt-0 space-y-6">
             <BillingKpiCards
-              stats={stats}
+              stats={overview.stats}
               activeStatusFilter={status}
               onUnpaidClick={handleUnpaidCardClick}
             />
@@ -285,8 +240,8 @@ export function BillingClient({
                   dateFrom={dateFrom}
                   dateTo={dateTo}
                   employeeId={employeeId}
-                  employees={employees}
-                  isBasicPlan={isBasicPlan}
+                  employees={overview.employees}
+                  isBasicPlan={overview.isBasicPlan}
                   onStatusChange={handleStatusChange}
                   onDateFromChange={handleDateFromChange}
                   onDateToChange={handleDateToChange}
@@ -295,7 +250,18 @@ export function BillingClient({
                 />
               </div>
 
-              <div className="sm:p-1">{invoicesContent}</div>
+              <div className="sm:p-1">
+                <BillingInvoiceListClient
+                  invoices={overview.invoices}
+                  totalCount={overview.totalCount}
+                  page={overview.page}
+                  pageSize={overview.pageSize}
+                  start={overview.start}
+                  end={overview.end}
+                  totalPages={overview.totalPages}
+                  isBasicPlan={overview.isBasicPlan}
+                />
+              </div>
             </div>
           </TabsContent>
 
@@ -320,7 +286,7 @@ export function BillingClient({
           open={open}
           onOpenChange={setOpen}
           prefilledCustomer={prefilledCustomer}
-          isBasicPlan={isBasicPlan}
+          isBasicPlan={overview.isBasicPlan}
           salonName={salonName}
           gstEnabled={gstEnabled}
           onSuccess={handleInvoiceCreated}

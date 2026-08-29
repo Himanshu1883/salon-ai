@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getPaidSales } from "@/actions/sales";
+import { getSalesOverview } from "@/actions/sales";
 import { SalesListClient } from "@/components/sales/sales-list-client";
 
 async function SalesList({
@@ -7,13 +7,14 @@ async function SalesList({
 }: {
   filters: { dateFrom: string; dateTo: string; search: string };
 }) {
-  const sales = await getPaidSales({
+  const overview = await getSalesOverview({
     dateFrom: filters.dateFrom || undefined,
     dateTo: filters.dateTo || undefined,
     search: filters.search || undefined,
+    page: 1,
   });
 
-  return <SalesListClient sales={sales} filters={filters} />;
+  return <SalesListClient overview={overview} filters={filters} />;
 }
 
 function SalesListSkeleton() {
@@ -36,7 +37,7 @@ export function SalesPageContent({
   filters: { dateFrom: string; dateTo: string; search: string };
 }) {
   return (
-    <Suspense fallback={<SalesListSkeleton />}>
+    <Suspense fallback={<SalesListSkeleton />} key={JSON.stringify(filters)}>
       <SalesList filters={filters} />
     </Suspense>
   );

@@ -16,6 +16,7 @@ export type BillingInvoice = {
   tax: number;
   total: number;
   amountPaid?: number;
+  balanceDue?: number;
   dueDate: Date | null;
   paidAt: Date | null;
   paymentMethod: string | null;
@@ -72,6 +73,9 @@ export type BillingStats = {
   revenueToday: number;
   revenueMonth: number;
   unpaidCount: number;
+  revenueTodayLabel?: string;
+  revenueMonthLabel?: string;
+  unpaidSublabel?: string;
 };
 
 export type BillingFilters = {

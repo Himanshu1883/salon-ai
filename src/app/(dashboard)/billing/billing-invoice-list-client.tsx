@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition, useCallback } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { deleteInvoice, updateInvoiceStatus } from "@/actions/billing";
 import { BillingInvoiceTable } from "@/components/billing/billing-invoice-table";
@@ -15,42 +15,33 @@ type BillingInvoiceListClientProps = {
   totalCount: number;
   page: number;
   pageSize: number;
+  start: number;
+  end: number;
+  totalPages: number;
   isBasicPlan?: boolean;
 };
 
 export function BillingInvoiceListClient({
-  invoices: initialInvoices,
+  invoices,
   totalCount,
   page,
   pageSize,
+  start,
+  end,
+  totalPages,
   isBasicPlan = false,
 }: BillingInvoiceListClientProps) {
   const router = useRouter();
-  const { updateStats, openNewInvoice, registerPrependInvoice } =
-    useBillingStatsContext();
+  const { openNewInvoice } = useBillingStatsContext();
   const [isPending, startTransition] = useTransition();
-  const [invoices, setInvoices] = useState(initialInvoices);
   const [loading, setLoading] = useState(false);
 
-  const prependInvoice = useCallback((invoice: BillingInvoice) => {
-    setInvoices((prev) => [
-      invoice,
-      ...prev.filter((item) => item.id !== invoice.id),
-    ]);
-  }, []);
-
-  useEffect(() => {
-    registerPrependInvoice(prependInvoice);
-    return () => registerPrependInvoice(null);
-  }, [prependInvoice, registerPrependInvoice]);
-
-  useEffect(() => {
-    setInvoices(initialInvoices);
-  }, [initialInvoices]);
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-  const start = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
-  const end = Math.min(page * pageSize, totalCount);
+  function refresh() {
+    markDashboardStale();
+    startTransition(() => {
+      router.refresh();
+    });
+  }
 
   function handlePageChange(nextPage: number) {
     const params = new URLSearchParams(window.location.search);
@@ -65,74 +56,19 @@ export function BillingInvoiceListClient({
     });
   }
 
-  function handleInvoicePaid(
-    invoiceId: string,
-    method: string,
-    amountPaid: number,
-    status: string
-  ) {
-    setInvoices((prev) =>
-      prev.map((inv) =>
-        inv.id === invoiceId
-          ? {
-              ...inv,
-              status,
-              paidAt: status === "paid" ? new Date() : inv.paidAt,
-              paymentMethod: method,
-              amountPaid,
-            }
-          : inv
-      )
-    );
-
-    const inv = invoices.find((item) => item.id === invoiceId);
-    if (!inv) return;
-
-    const previousPaid = inv.amountPaid ?? 0;
-    const receivedNow = Math.max(0, amountPaid - previousPaid);
-    updateStats((stats) => ({
-      ...stats,
-      revenueToday: stats.revenueToday + receivedNow,
-      revenueMonth: stats.revenueMonth + receivedNow,
-      unpaidCount:
-        status === "paid"
-          ? Math.max(0, stats.unpaidCount - 1)
-          : stats.unpaidCount,
-    }));
-    markDashboardStale();
-    router.refresh();
-  }
-
-  function handleStatusChange(id: string, status: string) {
-    setInvoices((prev) =>
-      prev.map((inv) => (inv.id === id ? { ...inv, status } : inv))
-    );
-  }
-
-  function handleInvoiceDeleted(id: string) {
-    const inv = invoices.find((item) => item.id === id);
-    setInvoices((prev) => prev.filter((item) => item.id !== id));
-    if (inv && inv.status !== "paid" && inv.status !== "cancelled") {
-      updateStats((stats) => ({
-        ...stats,
-        unpaidCount: Math.max(0, stats.unpaidCount - 1),
-      }));
-    }
-  }
-
   async function handleDelete(id: string) {
     if (!confirm("Delete this invoice?")) return;
     setLoading(true);
     await deleteInvoice(id);
     setLoading(false);
-    handleInvoiceDeleted(id);
+    refresh();
   }
 
   async function handleStatus(id: string, status: string) {
     setLoading(true);
     await updateInvoiceStatus(id, status);
     setLoading(false);
-    handleStatusChange(id, status);
+    refresh();
   }
 
   if (invoices.length === 0) {
@@ -149,7 +85,7 @@ export function BillingInvoiceListClient({
         invoices={invoices}
         loading={loading || isPending}
         isBasicPlan={isBasicPlan}
-        onMarkPaid={handleInvoicePaid}
+        onMarkPaid={refresh}
         onMarkSent={(id) => handleStatus(id, "sent")}
         onDelete={handleDelete}
       />

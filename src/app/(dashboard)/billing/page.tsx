@@ -1,11 +1,6 @@
-import { Suspense } from "react";
-import { getBillingStats } from "@/actions/billing";
-import { getEmployeeOptions } from "@/actions/employees";
+import { getBillingOverview } from "@/actions/billing";
 import { requireSession } from "@/lib/auth";
-import { normalizeSalonPlan, isBasicPlan } from "@/lib/plans";
 import { BillingClient } from "./billing-client";
-import { BillingInvoicesServer } from "./billing-invoices-server";
-import { BillingTableSkeleton } from "@/components/billing/billing-table-skeleton";
 
 export default async function BillingPage({
   searchParams,
@@ -21,30 +16,21 @@ export default async function BillingPage({
     page?: string;
   }>;
 }) {
-  const session = await requireSession();
+  await requireSession();
   const params = await searchParams;
-  const plan = normalizeSalonPlan(session.user.plan ?? "ENTERPRISE");
+  const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
-  const [stats, employees] = await Promise.all([
-    getBillingStats(),
-    getEmployeeOptions(),
-  ]);
-
-  const invoiceFilters = {
+  const overview = await getBillingOverview({
     status: params.status,
     dateFrom: params.dateFrom,
     dateTo: params.dateTo,
     employeeId: params.employeeId,
-    page: params.page,
-  };
+    page,
+  });
 
   return (
     <BillingClient
-      stats={stats}
-      employees={employees.map((employee) => ({
-        id: employee.id,
-        name: employee.name,
-      }))}
+      overview={overview}
       filters={{
         status: params.status ?? "all",
         dateFrom: params.dateFrom ?? "",
@@ -56,19 +42,7 @@ export default async function BillingPage({
         phone: params.customerPhone ?? "",
       }}
       autoOpenCreate={Boolean(params.customerName)}
-      isBasicPlan={isBasicPlan(plan)}
       initialTab={params.tab === "subscription" ? "subscription" : "customers"}
-      invoicesContent={
-        <Suspense
-          key={JSON.stringify(invoiceFilters)}
-          fallback={<BillingTableSkeleton />}
-        >
-          <BillingInvoicesServer
-            searchParams={invoiceFilters}
-            isBasicPlan={isBasicPlan(plan)}
-          />
-        </Suspense>
-      }
     />
   );
 }
