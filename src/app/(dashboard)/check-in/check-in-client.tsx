@@ -19,40 +19,24 @@ import { EstimatedBillCard } from "@/components/check-in/estimated-bill-card";
 import { QueueDashboard } from "@/components/check-in/queue-dashboard";
 import { CheckInActionBar } from "@/components/check-in/check-in-action-bar";
 import { DRAFT_STORAGE_KEY } from "@/components/check-in/utils";
-import type {
-  BillingStatsSnapshot,
-  CheckInEmployee,
-  CheckInService,
-  CompletedEntryItem,
-  PrefilledCustomer,
-  CheckInPrefill,
-  QueueEntryItem,
-  RecentCustomerItem,
-} from "@/components/check-in/types";
+import type { CheckInPrefill, RecentCustomerItem } from "@/components/check-in/types";
+import type { CheckInOverview } from "@/lib/queue/overview-types";
 import { Button } from "@/components/ui/button";
 
 export function CheckInClient({
-  services,
-  queueEntries: queueEntriesProp,
-  completedEntries: completedEntriesProp,
-  estimatedWait,
-  employees,
-  recentCustomers,
-  billingStats,
+  overview: initialOverview,
   prefilledCustomer,
 }: {
-  services: CheckInService[];
-  queueEntries: QueueEntryItem[];
-  completedEntries: CompletedEntryItem[];
-  estimatedWait: number;
-  employees: CheckInEmployee[];
-  recentCustomers: RecentCustomerItem[];
-  billingStats: BillingStatsSnapshot;
+  overview: CheckInOverview;
   prefilledCustomer?: CheckInPrefill;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const startNowRef = useRef(false);
   const router = useRouter();
+  const [overview, setOverview] = useState(initialOverview);
+  const services = overview?.services ?? [];
+  const employees = overview?.employees ?? [];
+  const recentCustomers = overview?.recentCustomers ?? [];
   const validPrefillServiceIds = useMemo(
     () =>
       (prefilledCustomer?.serviceIds ?? []).filter((id) =>
@@ -65,15 +49,10 @@ export function CheckInClient({
     employees.some((employee) => employee.id === prefilledCustomer.employeeId)
       ? prefilledCustomer.employeeId
       : "";
-  const [queueEntries, setQueueEntries] = useState(queueEntriesProp);
-  const [completedEntries, setCompletedEntries] = useState(completedEntriesProp);
-  const [localEstimatedWait, setLocalEstimatedWait] = useState(estimatedWait);
 
   useEffect(() => {
-    setQueueEntries(queueEntriesProp);
-    setCompletedEntries(completedEntriesProp);
-    setLocalEstimatedWait(estimatedWait);
-  }, [queueEntriesProp, completedEntriesProp, estimatedWait]);
+    setOverview(initialOverview);
+  }, [initialOverview]);
 
   const [selectedServices, setSelectedServices] = useState<string[]>(
     validPrefillServiceIds
@@ -118,41 +97,9 @@ export function CheckInClient({
         return;
       }
 
-      const customerName = formData.get("customerName") as string;
-      const customerPhone = (formData.get("customerPhone") as string) || null;
-      const selectedServiceItems = services.filter((s) =>
-        selectedServices.includes(s.id)
-      );
-      const nextPosition = (result.position ?? queueEntries.length + 1) as number;
+      const nextPosition = (result.position ??
+        (overview.dashboard?.activeCount ?? 0) + 1) as number;
       const started = Boolean(result.started);
-      const assignedEmployee =
-        employees.find((employee) => employee.id === stylistId) ?? null;
-
-      setQueueEntries((prev) => [
-        ...prev,
-        {
-          id: `temp-${Date.now()}`,
-          position: nextPosition,
-          status: started
-            ? "in_progress"
-            : assignedEmployee
-              ? "assigned"
-              : "waiting",
-          checkedInAt: new Date(),
-          customer: { name: customerName, phone: customerPhone },
-          employee: assignedEmployee
-            ? { id: assignedEmployee.id, name: assignedEmployee.name }
-            : null,
-          services: selectedServiceItems.map((s) => ({
-            service: {
-              name: s.name,
-              duration: s.duration,
-              price: s.price,
-            },
-          })),
-        },
-      ]);
-      setLocalEstimatedWait((w) => w + 5);
 
       setSuccess({ position: nextPosition });
       setShowUndo(true);
@@ -165,6 +112,15 @@ export function CheckInClient({
 
       setTimeout(() => setShowUndo(false), 8000);
 
+      try {
+        const res = await fetch("/api/check-in/overview", { cache: "no-store" });
+        if (res.ok) {
+          setOverview((await res.json()) as CheckInOverview);
+        }
+      } catch {
+        /* keep current overview until next load */
+      }
+
       if (started) {
         router.push("/queue");
       }
@@ -172,7 +128,7 @@ export function CheckInClient({
     [
       selectedServices,
       services,
-      queueEntries.length,
+      overview.dashboard?.activeCount,
       prefill?.fromAppointmentId,
       selectedStylist,
       preferredStylist,
@@ -285,7 +241,7 @@ export function CheckInClient({
       <CheckInHeader
         recentCustomers={recentCustomers}
         onSelectRecent={handleSelectRecent}
-        queueCount={queueEntries.length}
+        queueCount={overview.dashboard?.activeCount ?? 0}
         selectedServicesCount={selectedServices.length}
       />
 
@@ -390,13 +346,7 @@ export function CheckInClient({
               />
             </div>
           )}
-          <QueueDashboard
-            queueEntries={queueEntries}
-            completedEntries={completedEntries}
-            estimatedWait={localEstimatedWait}
-            billingStats={billingStats}
-            employeeCount={employees.length}
-          />
+          <QueueDashboard dashboard={overview.dashboard} />
         </aside>
       </div>
 

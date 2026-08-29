@@ -3,46 +3,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Lightbulb, X } from "lucide-react";
-import type { QueueDashboardStats } from "./types";
 
 type QueueAiInsightsProps = {
-  stats: QueueDashboardStats;
+  insights?: string[];
 };
 
-export function QueueAiInsights({ stats }: QueueAiInsightsProps) {
-  const insights: string[] = [];
-
-  if (stats.waiting > 0 && stats.staffAvailable === 0) {
-    insights.push(
-      "All stylists are busy. New walk-ins will wait longer — consider calling in backup staff."
-    );
-  }
-  if (stats.avgWaitMinutes > 15) {
-    insights.push(
-      `Average wait is ${stats.avgWaitMinutes} min. Assign waiting customers to available stylists promptly.`
-    );
-  }
-  if (stats.completedToday > stats.completedYesterday && stats.completedYesterday > 0) {
-    insights.push(
-      "Completion pace is up vs yesterday. Keep momentum during peak hours."
-    );
-  }
-  if (stats.cancelledToday > 2) {
-    insights.push(
-      `${stats.cancelledToday} cancellations today. Review no-show and cancellation patterns in Reports.`
-    );
-  }
-  if (stats.noShowToday > 0) {
-    insights.push(
-      `${stats.noShowToday} no-show appointment(s) today. Follow up with SMS reminders for upcoming bookings.`
-    );
-  }
-  if (insights.length === 0) {
-    insights.push(
-      "Queue operations look healthy. Monitor wait times during the next rush."
-    );
-  }
-
+export function QueueAiInsights({ insights }: QueueAiInsightsProps) {
+  const items =
+    insights && insights.length > 0
+      ? insights
+      : ["Queue operations look healthy. Monitor wait times during the next rush."];
   return (
     <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
       <div className="mb-4 flex items-center gap-2">
@@ -55,7 +25,7 @@ export function QueueAiInsights({ stats }: QueueAiInsightsProps) {
         </span>
       </div>
       <ul className="space-y-3">
-        {insights.map((text, i) => (
+      {items.map((text, i) => (
           <motion.li
             key={i}
             initial={{ opacity: 0, x: -8 }}

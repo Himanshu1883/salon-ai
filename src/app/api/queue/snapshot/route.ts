@@ -1,70 +1,36 @@
 import { NextResponse } from "next/server";
-import {
-  getQueueEntries,
-  getEstimatedWaitMinutes,
-  getRecentCompletedCheckIns,
-} from "@/actions/queue";
+import { getAuthSession } from "@/lib/auth";
+import { getQueueOverview } from "@/actions/queue-overview";
+import { PermissionDeniedError } from "@/lib/permissions/require";
 
 /** Lightweight queue snapshot for client-side refresh without full RSC reload. */
 export async function GET() {
-  try {
-    const [entries, estimatedWait, completedEntries] = await Promise.all([
-      getQueueEntries(),
-      getEstimatedWaitMinutes(),
-      getRecentCompletedCheckIns(),
-    ]);
+  const session = await getAuthSession();
+  if (!session?.user?.salonId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
+  try {
+    const overview = await getQueueOverview();
     return NextResponse.json(
       {
-        entries: entries.map((e) => ({
-          id: e.id,
-          position: e.position,
-          status: e.status,
-          checkedInAt: e.checkedInAt,
-          startedAt: e.startedAt,
-          completedAt: e.completedAt,
-          customerId: e.customerId,
-          customer: {
-            name: e.customer.name,
-            phone: e.customer.phone,
-          },
-          employee: e.employee
-            ? { id: e.employee.id, name: e.employee.name }
-            : null,
-          seat: e.seat ? { id: e.seat.id, number: e.seat.number } : null,
-          services: e.services.map((qs) => ({
-            service: {
-              id: qs.service.id,
-              name: qs.service.name,
-              duration: qs.service.duration,
-              price: qs.service.price,
-            },
-          })),
-        })),
-        estimatedWait,
-        completedEntries: completedEntries.map((e) => ({
-          id: e.id,
-          completedAt: e.completedAt,
-          employeeId: e.employeeId,
-          seatId: e.seatId,
-          customer: {
-            name: e.customer.name,
-            phone: e.customer.phone,
-          },
-          services: e.services.map((qs) => ({
-            service: {
-              id: qs.service.id,
-              name: qs.service.name,
-              price: qs.service.price,
-            },
-          })),
-          invoices: e.invoices.map((inv) => ({
-            id: inv.id,
-            status: inv.status,
-            paymentMethod: inv.paymentMethod,
-            total: inv.total,
-          })),
-        })),
+        entries: overview.entries,
+        estimatedWait: overview.estimatedWait,
+        completedEntries: overview.completedRecent,
+        stats: overview.stats,
+        tabCounts: overview.tabCounts,
+        kpis: overview.kpis,
+        sidebar: overview.sidebar,
+        insights: overview.insights,
+        completedToday: overview.completedToday,
+        cancelledToday: overview.cancelledToday,
+        noShowToday: overview.noShowToday,
+        appointmentsToday: overview.appointmentsToday,
+        employees: overview.employees,
+        seats: overview.seats,
+        services: overview.services,
+        revenueToday: overview.revenueToday,
+        generatedAt: overview.generatedAt,
       },
       {
         headers: {
@@ -72,7 +38,10 @@ export async function GET() {
         },
       }
     );
-  } catch {
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 }

@@ -5,59 +5,25 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { Sparkles } from "lucide-react";
-import type {
-  CompletedEntry,
-  Employee,
-  QueueDashboardStats,
-  QueueEntry,
-} from "./types";
 import { formatCurrency } from "@/lib/currency";
 import {
-  getInitials,
-  getServiceNames,
-  getServiceTotal,
-} from "./queue-utils";
+  EMPTY_QUEUE_OVERVIEW,
+  type QueueSidebarPayload,
+} from "@/lib/queue/overview-types";
 
 type QueueSidebarProps = {
-  entries: QueueEntry[];
-  completedEntries: CompletedEntry[];
-  employees: Employee[];
-  stats: QueueDashboardStats;
+  sidebar?: QueueSidebarPayload;
 };
 
-const CHART_COLORS = ["#6C3BFF", "#3B82F6", "#10B981", "#EF4444"];
-
-export function QueueSidebar({
-  entries,
-  completedEntries,
-  employees,
-  stats,
-}: QueueSidebarProps) {
-  const chartData = [
-    { name: "Waiting", value: stats.waiting, color: CHART_COLORS[0] },
-    { name: "In Progress", value: stats.inProgress + stats.assigned, color: CHART_COLORS[1] },
-    { name: "Completed", value: stats.completedToday, color: CHART_COLORS[2] },
-    { name: "Cancelled", value: stats.cancelledToday, color: CHART_COLORS[3] },
-  ].filter((d) => d.value > 0);
-
-  const totalToday =
-    stats.waiting +
-    stats.inService +
-    stats.completedToday +
-    stats.cancelledToday;
-
-  const upcoming = entries
-    .filter((e) => e.status === "waiting")
-    .slice(0, 3);
-
-  const recentDone = completedEntries.slice(0, 3);
-
-  const busyIds = new Set(
-    entries
-      .filter((e) => e.status === "assigned" || e.status === "in_progress")
-      .map((e) => e.employee?.id)
-      .filter(Boolean)
-  );
+export function QueueSidebar({ sidebar }: QueueSidebarProps) {
+  const {
+    chartData,
+    totalToday,
+    upcomingWaiting,
+    recentDone,
+    staff,
+    aiSuggestion,
+  } = sidebar ?? EMPTY_QUEUE_OVERVIEW.sidebar;
 
   return (
     <div className="space-y-4">
@@ -112,24 +78,24 @@ export function QueueSidebar({
 
       <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
         <h3 className="text-sm font-semibold text-[#1C103D]">Upcoming in queue</h3>
-        {upcoming.length === 0 ? (
+        {upcomingWaiting.length === 0 ? (
           <p className="mt-3 text-sm text-[#9CA3AF]">No one waiting</p>
         ) : (
           <div className="mt-3 space-y-2.5">
-            {upcoming.map((entry) => (
+            {upcomingWaiting.map((entry) => (
               <div
                 key={entry.id}
                 className="flex items-center gap-3 rounded-xl bg-[#F7F8FC] p-2.5"
               >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EDE9FE] text-xs font-bold text-[#6C3BFF]">
-                  {getInitials(entry.customer.name)}
+                  {entry.initials}
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-[#1C103D]">
-                    {entry.customer.name}
+                    {entry.customerName}
                   </p>
                   <p className="truncate text-xs text-[#9CA3AF]">
-                    {getServiceNames(entry)}
+                    {entry.serviceNames}
                   </p>
                 </div>
                 <span className="shrink-0 text-xs text-[#6B7280]">
@@ -154,11 +120,11 @@ export function QueueSidebar({
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-[10px] font-bold text-emerald-700">
-                    {getInitials(entry.customer.name)}
+                    {entry.initials}
                   </div>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-[#1C103D]">
-                      {entry.customer.name}
+                      {entry.customerName}
                     </p>
                     <p className="truncate text-[10px] text-[#9CA3AF]">
                       {entry.completedAt
@@ -168,7 +134,7 @@ export function QueueSidebar({
                   </div>
                 </div>
                 <span className="shrink-0 text-xs font-semibold text-[#1C103D]">
-                  {formatCurrency(getServiceTotal(entry))}
+                  {formatCurrency(entry.total)}
                 </span>
               </div>
             ))}
@@ -179,31 +145,28 @@ export function QueueSidebar({
       <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
         <h3 className="text-sm font-semibold text-[#1C103D]">Staff availability</h3>
         <div className="mt-3 space-y-2">
-          {employees.slice(0, 6).map((emp) => {
-            const busy = busyIds.has(emp.id);
-            return (
-              <div
-                key={emp.id}
-                className="flex items-center justify-between rounded-xl bg-[#F7F8FC] px-3 py-2"
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#6C3BFF] shadow-sm">
-                    {getInitials(emp.name)}
-                  </div>
-                  <span className="text-sm text-[#1C103D]">{emp.name}</span>
+          {staff.map((emp) => (
+            <div
+              key={emp.id}
+              className="flex items-center justify-between rounded-xl bg-[#F7F8FC] px-3 py-2"
+            >
+              <div className="flex items-center gap-2">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#6C3BFF] shadow-sm">
+                  {emp.initials}
                 </div>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    busy
-                      ? "bg-blue-50 text-blue-700"
-                      : "bg-emerald-50 text-emerald-700"
-                  }`}
-                >
-                  {busy ? "Busy" : "Available"}
-                </span>
+                <span className="text-sm text-[#1C103D]">{emp.name}</span>
               </div>
-            );
-          })}
+              <span
+                className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  emp.busy
+                    ? "bg-blue-50 text-blue-700"
+                    : "bg-emerald-50 text-emerald-700"
+                }`}
+              >
+                {emp.busy ? "Busy" : "Available"}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -217,11 +180,7 @@ export function QueueSidebar({
           <div>
             <p className="text-sm font-semibold text-[#1C103D]">AI Suggestion</p>
             <p className="mt-1 text-xs leading-relaxed text-[#6B7280]">
-              {stats.waiting >= 3 && stats.staffAvailable <= 1
-                ? "It's a busy period! Consider assigning another stylist to reduce wait times."
-                : stats.avgWaitMinutes > 20
-                  ? "Average wait is high. Prioritize long-waiting customers or add walk-in capacity."
-                  : "Queue is flowing smoothly. Keep monitoring peak-hour staffing."}
+              {aiSuggestion}
             </p>
             <Link
               href="/team/members"

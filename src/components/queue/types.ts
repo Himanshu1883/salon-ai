@@ -14,6 +14,10 @@ export type QueueEntry = {
   employee: { id: string; name: string } | null;
   seat: { id: string; number: number } | null;
   services: QueueServiceItem[];
+  waitMinutes?: number;
+  serviceNames?: string;
+  serviceDuration?: number;
+  serviceTotal?: number;
 };
 
 export type CompletedEntry = {
@@ -24,6 +28,8 @@ export type CompletedEntry = {
   seatId?: string | null;
   services: { service: { id: string; name: string; price: number } }[];
   invoices: { id: string; status?: string; paymentMethod?: string | null; total?: number }[];
+  serviceNames?: string;
+  serviceTotal?: number;
 };
 
 export type QueueInvoiceEntry = Pick<

@@ -22,60 +22,50 @@ import { QueueRecentlyCompleted } from "@/components/queue/queue-recently-comple
 import { QueueAiInsights, QueueTipBanner } from "@/components/queue/queue-ai-insights";
 import { useRecordSale } from "@/components/dashboard/record-sale-provider";
 import { markDashboardStale } from "@/lib/dashboard/stale-refresh";
+import {
+  normalizeQueueOverview,
+  type QueueOverview,
+} from "@/lib/queue/overview-types";
 import type {
-  AppointmentSnapshot,
   CompletedEntry,
-  Employee,
   QueueEntry,
   QueueInvoiceEntry,
   QueueTab,
-  Seat,
-  ServiceOption,
 } from "@/components/queue/types";
 import {
-  computeQueueStats,
   DEFAULT_FILTERS,
   filterActiveEntries,
-  getTabEntries,
   queueEntryToInvoicePrefill,
   type QueueFilters,
 } from "@/components/queue/queue-utils";
 import { useLiveWaitTime } from "@/components/queue/use-live-wait-time";
 
 export type QueueClientProps = {
-  entries: QueueEntry[];
-  employees: Employee[];
-  seats: Seat[];
-  estimatedWait: number;
-  completedEntries: CompletedEntry[];
-  services: ServiceOption[];
-  appointmentsToday: AppointmentSnapshot[];
-  revenueToday: number;
+  overview?: QueueOverview | null;
 };
 
-export function QueueClient({
-  entries: initialEntries,
-  employees,
-  seats,
-  estimatedWait: initialEstimatedWait,
-  completedEntries: initialCompletedEntries,
-  services,
-  appointmentsToday,
-  revenueToday,
-}: QueueClientProps) {
+export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   const router = useRouter();
   const now = useLiveWaitTime();
   const { openRecordSale } = useRecordSale();
 
-  const [entries, setEntries] = useState(initialEntries);
-  const [completedEntries, setCompletedEntries] = useState(initialCompletedEntries);
-  const [estimatedWait, setEstimatedWait] = useState(initialEstimatedWait);
+  const initialOverview = normalizeQueueOverview(overviewProp);
+  const [overview, setOverview] = useState(initialOverview);
+  const [entries, setEntries] = useState(initialOverview.entries);
+  const [completedRecent, setCompletedRecent] = useState(
+    initialOverview.completedRecent
+  );
+  const [completedToday, setCompletedToday] = useState(
+    initialOverview.completedToday
+  );
 
   useEffect(() => {
-    setEntries(initialEntries);
-    setCompletedEntries(initialCompletedEntries);
-    setEstimatedWait(initialEstimatedWait);
-  }, [initialEntries, initialCompletedEntries, initialEstimatedWait]);
+    const next = normalizeQueueOverview(overviewProp);
+    setOverview(next);
+    setEntries(next.entries);
+    setCompletedRecent(next.completedRecent);
+    setCompletedToday(next.completedToday);
+  }, [overviewProp]);
 
   const [activeTab, setActiveTab] = useState<QueueTab>("waiting");
   const [filters, setFilters] = useState<QueueFilters>(DEFAULT_FILTERS);
@@ -87,23 +77,25 @@ export function QueueClient({
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
 
+  const applyOverview = useCallback((data: QueueOverview) => {
+    const next = normalizeQueueOverview(data);
+    setOverview(next);
+    setEntries(next.entries);
+    setCompletedRecent(next.completedRecent);
+    setCompletedToday(next.completedToday);
+  }, []);
+
   const syncFromServer = useCallback(async () => {
     setRefreshing(true);
     try {
-      const res = await fetch("/api/queue/snapshot", { cache: "no-store" });
+      const res = await fetch("/api/queue/overview", { cache: "no-store" });
       if (!res.ok) return;
-      const data = (await res.json()) as {
-        entries: QueueEntry[];
-        completedEntries: CompletedEntry[];
-        estimatedWait: number;
-      };
-      setEntries(data.entries);
-      setCompletedEntries(data.completedEntries);
-      setEstimatedWait(data.estimatedWait);
+      const data = (await res.json()) as QueueOverview;
+      applyOverview(data);
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [applyOverview]);
 
   const refreshQueueData = useCallback(async () => {
     markDashboardStale();
@@ -111,44 +103,40 @@ export function QueueClient({
     await syncFromServer();
   }, [router, syncFromServer]);
 
-  const stats = useMemo(
-    () =>
-      computeQueueStats(
-        entries,
-        completedEntries,
-        employees,
-        appointmentsToday,
-        revenueToday,
-        estimatedWait
-      ),
-    [entries, completedEntries, employees, appointmentsToday, revenueToday, estimatedWait]
-  );
-
   const filteredActiveEntries = useMemo(
     () => filterActiveEntries(entries, filters, now),
     [entries, filters, now]
   );
 
   const tabItems = useMemo(() => {
-    const raw = getTabEntries(
-      activeTab,
-      entries,
-      completedEntries,
-      appointmentsToday
-    );
-    if (activeTab === "waiting" || activeTab === "assigned" || activeTab === "in_progress") {
-      const filteredIds = new Set(filteredActiveEntries.map((e) => e.id));
-      return raw.filter((item) => "id" in item && filteredIds.has(item.id));
+    if (
+      activeTab === "waiting" ||
+      activeTab === "assigned" ||
+      activeTab === "in_progress"
+    ) {
+      return filteredActiveEntries.filter((e) => e.status === activeTab);
     }
-    return raw;
-  }, [activeTab, entries, completedEntries, appointmentsToday, filteredActiveEntries]);
+    if (activeTab === "completed") return completedToday;
+    if (activeTab === "cancelled") return overview.cancelledToday;
+    if (activeTab === "no_show") return overview.noShowToday;
+    return entries;
+  }, [
+    activeTab,
+    filteredActiveEntries,
+    completedToday,
+    overview.cancelledToday,
+    overview.noShowToday,
+    entries,
+  ]);
 
   async function handleAssign() {
     if (!assigning || !employeeId) return;
     setError("");
 
-    const employee = employees.find((e) => e.id === employeeId);
-    const seat = seatId ? seats.find((s) => s.id === seatId) : null;
+    const employee = overview.employees.find((e) => e.id === employeeId);
+    const seat = seatId
+      ? overview.seats.find((s) => s.id === seatId)
+      : null;
     const previousEntries = entries;
     const entryId = assigning.id;
 
@@ -192,7 +180,8 @@ export function QueueClient({
     id: string
   ) {
     const previousEntries = entries;
-    const previousCompleted = completedEntries;
+    const previousCompleted = completedRecent;
+    const previousCompletedToday = completedToday;
     const entry = entries.find((e) => e.id === id);
     if (!entry) return;
 
@@ -205,25 +194,26 @@ export function QueueClient({
         )
       );
     } else if (action === "complete") {
+      const completed: CompletedEntry = {
+        id: entry.id,
+        completedAt: new Date(),
+        employeeId: entry.employee?.id ?? null,
+        seatId: entry.seat?.id ?? null,
+        customer: entry.customer,
+        services: entry.services.map((qs) => ({
+          service: {
+            id: qs.service.id,
+            name: qs.service.name,
+            price: qs.service.price,
+          },
+        })),
+        invoices: [],
+        serviceNames: entry.serviceNames,
+        serviceTotal: entry.serviceTotal,
+      };
       setEntries((prev) => prev.filter((e) => e.id !== id));
-      setCompletedEntries((prev) => [
-        {
-          id: entry.id,
-          completedAt: new Date(),
-          employeeId: entry.employee?.id ?? null,
-          seatId: entry.seat?.id ?? null,
-          customer: entry.customer,
-          services: entry.services.map((qs) => ({
-            service: {
-              id: qs.service.id,
-              name: qs.service.name,
-              price: qs.service.price,
-            },
-          })),
-          invoices: [],
-        },
-        ...prev,
-      ]);
+      setCompletedRecent((prev) => [completed, ...prev]);
+      setCompletedToday((prev) => [completed, ...prev]);
     } else {
       setEntries((prev) => prev.filter((e) => e.id !== id));
     }
@@ -241,7 +231,8 @@ export function QueueClient({
       const result = await fn(id);
       if (result && "error" in result && result.error) {
         setEntries(previousEntries);
-        setCompletedEntries(previousCompleted);
+        setCompletedRecent(previousCompleted);
+        setCompletedToday(previousCompletedToday);
         setError(result.error);
         return;
       }
@@ -249,7 +240,8 @@ export function QueueClient({
       await refreshQueueData();
     } catch {
       setEntries(previousEntries);
-      setCompletedEntries(previousCompleted);
+      setCompletedRecent(previousCompleted);
+      setCompletedToday(previousCompletedToday);
       setError("Something went wrong. Please try again.");
     }
   }
@@ -259,7 +251,7 @@ export function QueueClient({
     openRecordSale({
       prefill: queueEntryToInvoicePrefill(entry),
       onSuccess: (invoice) => {
-        setCompletedEntries((prev) =>
+        setCompletedRecent((prev) =>
           prev.map((e) =>
             e.id === entry.id
               ? {
@@ -283,18 +275,18 @@ export function QueueClient({
   return (
     <div className="space-y-5 pb-6">
       <QueueHeader
-        activeCount={entries.length}
-        estimatedWait={estimatedWait}
+        activeCount={overview.stats.activeTotal}
+        estimatedWait={overview.stats.estimatedWait}
         refreshing={refreshing}
         onRefresh={() => void refreshQueueData()}
       />
 
-      <QueueKpiGrid stats={stats} />
+      <QueueKpiGrid kpis={overview.kpis} />
 
       <QueueFilterBar
         filters={filters}
-        employees={employees}
-        services={services}
+        employees={overview.employees}
+        services={overview.services}
         onChange={setFilters}
       />
 
@@ -308,9 +300,7 @@ export function QueueClient({
             <QueueTabs
               activeTab={activeTab}
               onTabChange={setActiveTab}
-              entries={entries}
-              completedEntries={completedEntries}
-              appointmentsToday={appointmentsToday}
+              tabCounts={overview.tabCounts}
             />
 
             <div className="hidden md:block">
@@ -343,39 +333,29 @@ export function QueueClient({
           </motion.div>
 
           <QueueRecentlyCompleted
-            entries={completedEntries}
+            entries={completedRecent}
             loading={loading}
             onCreateInvoice={openInvoiceDialog}
           />
 
-          <QueueAiInsights stats={stats} />
+          <QueueAiInsights insights={overview.insights} />
         </div>
 
         <div className="hidden xl:block">
-          <QueueSidebar
-            entries={entries}
-            completedEntries={completedEntries}
-            employees={employees}
-            stats={stats}
-          />
+          <QueueSidebar sidebar={overview.sidebar} />
         </div>
       </div>
 
       <div className="xl:hidden">
-        <QueueSidebar
-          entries={entries}
-          completedEntries={completedEntries}
-          employees={employees}
-          stats={stats}
-        />
+        <QueueSidebar sidebar={overview.sidebar} />
       </div>
 
       <QueueTipBanner />
 
       <QueueAssignDialog
         entry={assigning}
-        employees={employees}
-        seats={seats}
+        employees={overview.employees}
+        seats={overview.seats}
         employeeId={employeeId}
         seatId={seatId}
         loading={loading}

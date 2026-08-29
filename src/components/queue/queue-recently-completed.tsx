@@ -37,7 +37,7 @@ export function QueueRecentlyCompleted({
 
       <div className="divide-y divide-[#E8ECF4]">
         {entries.map((entry) => {
-          const total = getServiceTotal(entry);
+          const total = entry.serviceTotal ?? getServiceTotal(entry);
           const hasInvoice = entry.invoices.length > 0;
           const invoice = entry.invoices[0];
           const isPaid = invoice?.status === "paid";
@@ -54,7 +54,7 @@ export function QueueRecentlyCompleted({
                     {entry.customer.name}
                   </p>
                   <p className="text-sm text-[#6B7280]">
-                    {getServiceNames(entry)}
+                    {entry.serviceNames ?? getServiceNames(entry)}
                     {entry.completedAt &&
                       ` · ${format(new Date(entry.completedAt), "MMM d, h:mm a")}`}
                   </p>

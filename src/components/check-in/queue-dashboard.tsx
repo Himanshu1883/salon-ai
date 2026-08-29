@@ -14,25 +14,36 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/currency";
 import {
   CheckInCard,
   CheckInCardContent,
   CheckInCardHeader,
 } from "./check-in-card";
-import type {
-  BillingStatsSnapshot,
-  CompletedEntryItem,
-  QueueEntryItem,
-} from "./types";
-import { getInitials } from "./utils";
+import type { CheckInDashboardPayload } from "@/lib/queue/overview-types";
 
 type QueueDashboardProps = {
-  queueEntries: QueueEntryItem[];
-  completedEntries: CompletedEntryItem[];
-  estimatedWait: number;
-  billingStats: BillingStatsSnapshot;
-  employeeCount: number;
+  dashboard?: CheckInDashboardPayload;
+};
+
+const EMPTY_DASHBOARD: CheckInDashboardPayload = {
+  waiting: 0,
+  beingServed: 0,
+  completedToday: 0,
+  cancelledToday: 0,
+  estimatedWait: 0,
+  activeCount: 0,
+  nextCustomer: null,
+  liveQueue: [],
+  walkInsToday: 0,
+  revenueToday: 0,
+  revenueTodayLabel: "—",
+  avgBill: 0,
+  avgBillLabel: "—",
+  conversionLabel: "—",
+  conversionReal: false,
+  staffUtilization: 0,
+  staffUtilizationLabel: "0%",
+  staffUtilizationReal: false,
 };
 
 const statusBadge: Record<string, string> = {
@@ -41,26 +52,18 @@ const statusBadge: Record<string, string> = {
   in_progress: "bg-pink-50 text-pink-700 ring-pink-200/60",
 };
 
-export function QueueDashboard({
-  queueEntries,
-  completedEntries,
-  estimatedWait,
-  billingStats,
-  employeeCount,
-}: QueueDashboardProps) {
+export function QueueDashboard({ dashboard }: QueueDashboardProps) {
   const router = useRouter();
-
-  const waiting = queueEntries.filter((e) => e.status === "waiting").length;
-  const beingServed = queueEntries.filter(
-    (e) => e.status === "in_progress" || e.status === "assigned"
-  ).length;
-
-  const todayCompleted = completedEntries.filter((e) => {
-    if (!e.completedAt) return false;
-    const d = new Date(e.completedAt);
-    const now = new Date();
-    return d.toDateString() === now.toDateString();
-  }).length;
+  const {
+    waiting,
+    beingServed,
+    completedToday,
+    cancelledToday,
+    estimatedWait,
+    activeCount,
+    nextCustomer,
+    liveQueue,
+  } = dashboard ?? EMPTY_DASHBOARD;
 
   const stats = [
     {
@@ -79,43 +82,26 @@ export function QueueDashboard({
     },
     {
       label: "Completed",
-      value: todayCompleted,
+      value: completedToday,
       icon: TrendingUp,
       iconBg: "bg-amber-100",
       accent: "text-amber-600",
     },
     {
       label: "Cancelled",
-      value: 0,
+      value: cancelledToday,
       icon: XCircle,
       iconBg: "bg-teal-100",
       accent: "text-teal-600",
-      stub: true,
     },
   ];
-
-  const nextCustomer = queueEntries.find((e) => e.status === "waiting");
-  const walkInsToday = waiting + beingServed + todayCompleted;
-  const avgBill =
-    completedEntries.length > 0
-      ? completedEntries.reduce(
-          (sum, e) =>
-            sum +
-            e.services.reduce((s, svc) => s + (svc.service.price ?? 0), 0),
-          0
-        ) / completedEntries.length
-      : 0;
-  const staffUtilization =
-    employeeCount > 0
-      ? Math.min(100, Math.round((beingServed / employeeCount) * 100))
-      : 0;
 
   return (
     <div className="space-y-4 lg:sticky lg:top-4">
       <CheckInCard>
         <CheckInCardHeader
           title="Today's Queue"
-          description={`${queueEntries.length} active · ~${estimatedWait} min wait`}
+          description={`${activeCount} active · ~${estimatedWait} min wait`}
           action={
             <Link
               href="/queue"
@@ -151,7 +137,6 @@ export function QueueDashboard({
                 </span>
                 <span className="text-[10px] font-medium text-dashboard-muted">
                   {stat.label}
-                  {stat.stub && " *"}
                 </span>
               </motion.div>
             ))}
@@ -174,14 +159,14 @@ export function QueueDashboard({
             </h3>
             <div className="flex items-center gap-3 rounded-xl border border-violet-200/40 bg-gradient-to-br from-violet-50/80 to-white/90 p-3.5 backdrop-blur-sm">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-dashboard-primary to-violet-500 text-xs font-bold text-white shadow-md shadow-violet-500/20">
-                {getInitials(nextCustomer.customer.name)}
+                {nextCustomer.initials}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium text-dashboard-text">
-                  {nextCustomer.customer.name}
+                  {nextCustomer.name}
                 </p>
                 <p className="truncate text-xs text-dashboard-muted">
-                  {nextCustomer.services.map((s) => s.service.name).join(", ")}
+                  {nextCustomer.serviceNames}
                 </p>
                 <p className="text-xs text-dashboard-muted/70">
                   {format(new Date(nextCustomer.checkedInAt), "h:mm a")}
@@ -198,10 +183,10 @@ export function QueueDashboard({
       <CheckInCard>
         <CheckInCardHeader
           title="Live Queue"
-          description={`${queueEntries.length} active`}
+          description={`${activeCount} active`}
         />
         <CheckInCardContent className="pt-2">
-          {queueEntries.length === 0 ? (
+          {liveQueue.length === 0 ? (
             <div className="flex flex-col items-center py-8 text-center">
               <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-violet-50">
                 <Users className="h-6 w-6 text-dashboard-muted/40" />
@@ -215,7 +200,7 @@ export function QueueDashboard({
             </div>
           ) : (
             <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-              {queueEntries.map((entry, index) => (
+              {liveQueue.map((entry, index) => (
                 <motion.button
                   key={entry.id}
                   type="button"
@@ -230,10 +215,10 @@ export function QueueDashboard({
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-dashboard-text">
-                      {entry.customer.name}
+                      {entry.customerName}
                     </p>
                     <p className="truncate text-[10px] text-dashboard-muted">
-                      {entry.services.map((s) => s.service.name).join(", ")}
+                      {entry.serviceNames}
                     </p>
                   </div>
                   <span
@@ -261,26 +246,26 @@ export function QueueDashboard({
         <CheckInCardContent className="pt-2">
           <div className="space-y-2">
             {[
-              { label: "Walk-ins", value: String(walkInsToday), real: true },
+              { label: "Walk-ins", value: String(dashboard.walkInsToday), real: true },
               {
                 label: "Revenue",
-                value: formatCurrency(billingStats.revenueToday),
+                value: dashboard.revenueTodayLabel,
                 real: true,
               },
               {
                 label: "Avg Bill",
-                value: avgBill > 0 ? formatCurrency(avgBill) : "—",
-                real: completedEntries.length > 0,
+                value: dashboard.avgBillLabel,
+                real: dashboard.avgBill > 0,
               },
               {
                 label: "Conversion",
-                value: walkInsToday > 0 ? "78%" : "—",
-                real: false,
+                value: dashboard.conversionLabel,
+                real: dashboard.conversionReal,
               },
               {
                 label: "Staff Utilization",
-                value: `${staffUtilization}%`,
-                real: employeeCount > 0,
+                value: dashboard.staffUtilizationLabel,
+                real: dashboard.staffUtilizationReal,
               },
             ].map((row, index) => (
               <motion.div

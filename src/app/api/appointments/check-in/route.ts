@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/auth";
 import { performCheckInFromAppointment } from "@/lib/queue/check-in-from-appointment";
 
+export const dynamic = "force-dynamic";
+
 export async function POST(request: Request) {
   const session = await getAuthSession();
   if (!session?.user?.salonId) {
@@ -19,23 +21,22 @@ export async function POST(request: Request) {
       typeof body.appointmentId === "string" ? body.appointmentId.trim() : "";
     startNow = body.startNow === true;
   } catch {
-    return NextResponse.json({ error: "Invalid request" });
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
   if (!appointmentId) {
-    return NextResponse.json({ error: "Appointment is required" });
+    return NextResponse.json({ error: "Appointment is required" }, { status: 400 });
   }
 
-  try {
-    const result = await performCheckInFromAppointment({
-      salonId: session.user.salonId,
-      appointmentId,
-      startNow,
-    });
-    return NextResponse.json(result, {
-      headers: { "Cache-Control": "private, no-store" },
-    });
-  } catch {
-    return NextResponse.json({ error: "Could not check in. Try again." });
-  }
+  const result = await performCheckInFromAppointment({
+    salonId: session.user.salonId,
+    appointmentId,
+    startNow,
+  });
+
+  return NextResponse.json(result, {
+    headers: {
+      "Cache-Control": "private, no-store",
+    },
+  });
 }

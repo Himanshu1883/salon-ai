@@ -15,17 +15,10 @@ import {
   TrendingUp,
   UserCheck,
   Users,
-  UserX,
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/currency";
-import type { QueueDashboardStats } from "./types";
-import {
-  computeTrend,
-  formatWaitTime,
-  generateSparkline,
-} from "./queue-utils";
+import type { QueueKpiIconKey, QueueKpiPayload } from "@/lib/queue/overview-types";
 
 type KpiItem = {
   label: string;
@@ -120,126 +113,40 @@ function KpiCard({ item, index }: { item: KpiItem; index: number }) {
   );
 }
 
-export function QueueKpiGrid({ stats }: { stats: QueueDashboardStats }) {
-  const completedTrend = computeTrend(
-    stats.completedToday,
-    stats.completedYesterday
-  );
+const KPI_ICONS: Record<QueueKpiIconKey, React.ReactNode> = {
+  waiting: <Users className="h-5 w-5 text-white" />,
+  inService: <Scissors className="h-5 w-5 text-white" />,
+  completed: <TrendingUp className="h-5 w-5 text-white" />,
+  avgWait: <Clock className="h-5 w-5 text-white" />,
+  avgService: <Clock className="h-5 w-5 text-white" />,
+  walkIns: <ListOrdered className="h-5 w-5 text-white" />,
+  appointments: <Calendar className="h-5 w-5 text-white" />,
+  cancelled: <XCircle className="h-5 w-5 text-white" />,
+  revenue: <IndianRupee className="h-5 w-5 text-white" />,
+  staffAvailable: <UserCheck className="h-5 w-5 text-white" />,
+  staffBusy: <Users className="h-5 w-5 text-white" />,
+  active: <ListOrdered className="h-5 w-5 text-white" />,
+};
 
-  const kpis: KpiItem[] = [
-    {
-      label: "Waiting",
-      value: String(stats.waiting),
-      sublabel: `Est. ${stats.estimatedWait} min wait`,
-      icon: <Users className="h-5 w-5 text-white" />,
-      gradient: "from-amber-400 to-orange-500",
-      sparkColor: "#F97316",
-      sparkline: generateSparkline(stats.waiting),
-    },
-    {
-      label: "In Service",
-      value: String(stats.inService),
-      sublabel: `${stats.inProgress} in progress`,
-      icon: <Scissors className="h-5 w-5 text-white" />,
-      gradient: "from-[#6C3BFF] to-[#8B5CF6]",
-      sparkColor: "#6C3BFF",
-      sparkline: generateSparkline(stats.inService),
-    },
-    {
-      label: "Completed Today",
-      value: String(stats.completedToday),
-      trend: completedTrend,
-      icon: <TrendingUp className="h-5 w-5 text-white" />,
-      gradient: "from-emerald-500 to-teal-500",
-      sparkColor: "#10B981",
-      sparkline: generateSparkline(stats.completedToday),
-    },
-    {
-      label: "Avg Wait",
-      value: formatWaitTime(stats.avgWaitMinutes),
-      sublabel: "Across active queue",
-      icon: <Clock className="h-5 w-5 text-white" />,
-      gradient: "from-blue-500 to-indigo-500",
-      sparkColor: "#3B82F6",
-      sparkline: generateSparkline(stats.avgWaitMinutes),
-    },
-    {
-      label: "Avg Service Time",
-      value: stats.avgServiceMinutes > 0 ? formatWaitTime(stats.avgServiceMinutes) : "—",
-      sublabel: "Completed today",
-      icon: <Clock className="h-5 w-5 text-white" />,
-      gradient: "from-violet-500 to-purple-600",
-      sparkColor: "#8B5CF6",
-      sparkline: generateSparkline(stats.avgServiceMinutes || 30),
-    },
-    {
-      label: "Walk-ins Today",
-      value: String(stats.walkInsToday),
-      sublabel: `${stats.activeTotal} currently active`,
-      icon: <ListOrdered className="h-5 w-5 text-white" />,
-      gradient: "from-rose-500 to-pink-500",
-      sparkColor: "#F43F5E",
-      sparkline: generateSparkline(stats.walkInsToday),
-    },
-    {
-      label: "Appointments Today",
-      value: String(stats.appointmentsToday),
-      sublabel: "Scheduled",
-      icon: <Calendar className="h-5 w-5 text-white" />,
-      gradient: "from-cyan-500 to-sky-500",
-      sparkColor: "#0EA5E9",
-      sparkline: generateSparkline(stats.appointmentsToday),
-    },
-    {
-      label: "Cancelled",
-      value: String(stats.cancelledToday),
-      sublabel: "Appointments today",
-      icon: <XCircle className="h-5 w-5 text-white" />,
-      gradient: "from-red-500 to-rose-500",
-      sparkColor: "#EF4444",
-      sparkline: generateSparkline(stats.cancelledToday),
-    },
-    {
-      label: "Revenue Today",
-      value: formatCurrency(stats.revenueToday),
-      sublabel: "Paid invoices",
-      icon: <IndianRupee className="h-5 w-5 text-white" />,
-      gradient: "from-[#6C3BFF] to-[#FF2D6F]",
-      sparkColor: "#6C3BFF",
-      sparkline: generateSparkline(Math.max(stats.revenueToday / 1000, 1)),
-    },
-    {
-      label: "Staff Available",
-      value: String(stats.staffAvailable),
-      sublabel: "Ready to serve",
-      icon: <UserCheck className="h-5 w-5 text-white" />,
-      gradient: "from-teal-500 to-emerald-500",
-      sparkColor: "#14B8A6",
-      sparkline: generateSparkline(stats.staffAvailable),
-    },
-    {
-      label: "Staff Busy",
-      value: String(stats.staffBusy),
-      sublabel: "Currently serving",
-      icon: <Users className="h-5 w-5 text-white" />,
-      gradient: "from-fuchsia-500 to-purple-600",
-      sparkColor: "#D946EF",
-      sparkline: generateSparkline(stats.staffBusy),
-    },
-    {
-      label: "Active in Queue",
-      value: String(stats.activeTotal),
-      sublabel: `${stats.assigned} assigned`,
-      icon: <ListOrdered className="h-5 w-5 text-white" />,
-      gradient: "from-indigo-500 to-violet-600",
-      sparkColor: "#6366F1",
-      sparkline: generateSparkline(stats.activeTotal),
-    },
-  ];
+function toKpiItem(kpi: QueueKpiPayload): KpiItem {
+  return {
+    label: kpi.label,
+    value: kpi.value,
+    sublabel: kpi.sublabel,
+    trend: kpi.trend,
+    icon: KPI_ICONS[kpi.icon],
+    gradient: kpi.gradient,
+    sparkColor: kpi.sparkColor,
+    sparkline: kpi.sparkline,
+  };
+}
+
+export function QueueKpiGrid({ kpis }: { kpis?: QueueKpiPayload[] }) {
+  const items = (kpis ?? []).map(toKpiItem);
 
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-      {kpis.map((kpi, i) => (
+      {items.map((kpi, i) => (
         <KpiCard key={kpi.label} item={kpi} index={i} />
       ))}
     </div>

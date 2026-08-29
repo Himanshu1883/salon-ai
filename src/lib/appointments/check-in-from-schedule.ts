@@ -1,3 +1,5 @@
+import { checkInFromAppointment } from "@/actions/queue";
+
 export type AppointmentCheckInResult = {
   error?: string;
   success?: boolean;
@@ -9,12 +11,22 @@ type CheckInRequestOptions = {
   retry?: boolean;
 };
 
+function isRetryableCheckInError(error?: string) {
+  return (
+    !error ||
+    error === "Could not check in. Try again." ||
+    error === "Unauthorized" ||
+    error === "Invalid request"
+  );
+}
+
 async function postAppointmentCheckIn(
   appointmentId: string,
   startNow: boolean
 ): Promise<AppointmentCheckInResult> {
   const response = await fetch("/api/appointments/check-in", {
     method: "POST",
+    credentials: "include",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ appointmentId, startNow }),
   });
@@ -34,17 +46,18 @@ export async function requestAppointmentCheckIn(
   try {
     const result = await postAppointmentCheckIn(appointmentId, startNow);
     if (result.error && options.retry !== false) {
-      return postAppointmentCheckIn(appointmentId, startNow);
+      const retry = await postAppointmentCheckIn(appointmentId, startNow);
+      if (!retry.error || !isRetryableCheckInError(retry.error)) {
+        return retry;
+      }
+      return checkInFromAppointment(appointmentId, { startNow });
     }
     return result;
   } catch {
-    if (options.retry !== false) {
-      try {
-        return await postAppointmentCheckIn(appointmentId, startNow);
-      } catch {
-        return { error: "Could not check in. Try again." };
-      }
+    try {
+      return await checkInFromAppointment(appointmentId, { startNow });
+    } catch {
+      return { error: "Could not check in. Try again." };
     }
-    return { error: "Could not check in. Try again." };
   }
 }

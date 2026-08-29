@@ -113,34 +113,38 @@ export const STATUS_STYLES: Record<
 };
 
 export function computeQueueStats(
-  entries: QueueEntry[],
-  completedEntries: CompletedEntry[],
-  employees: { id: string }[],
-  appointmentsToday: AppointmentSnapshot[],
-  revenueToday: number,
-  estimatedWait: number
+  entries: QueueEntry[] = [],
+  completedEntries: CompletedEntry[] = [],
+  employees: { id: string }[] = [],
+  appointmentsToday: AppointmentSnapshot[] = [],
+  revenueToday: number = 0,
+  estimatedWait: number = 0
 ): QueueDashboardStats {
-  const waiting = entries.filter((e) => e.status === "waiting").length;
-  const assigned = entries.filter((e) => e.status === "assigned").length;
-  const inProgress = entries.filter((e) => e.status === "in_progress").length;
+  const active = entries ?? [];
+  const completed = completedEntries ?? [];
+  const staff = employees ?? [];
+  const appointments = appointmentsToday ?? [];
+  const waiting = active.filter((e) => e.status === "waiting").length;
+  const assigned = active.filter((e) => e.status === "assigned").length;
+  const inProgress = active.filter((e) => e.status === "in_progress").length;
   const inService = assigned + inProgress;
 
-  const todayCompleted = completedEntries.filter(
+  const todayCompleted = completed.filter(
     (e) => e.completedAt && isToday(new Date(e.completedAt))
   );
-  const yesterdayCompleted = completedEntries.filter(
+  const yesterdayCompleted = completed.filter(
     (e) => e.completedAt && isYesterday(new Date(e.completedAt))
   );
 
   const busyEmployeeIds = new Set(
-    entries
+    active
       .filter((e) => e.status === "assigned" || e.status === "in_progress")
       .map((e) => e.employee?.id)
       .filter(Boolean) as string[]
   );
 
   const waitSamples = [
-    ...entries.filter((e) => e.startedAt).map((e) => getWaitMinutes(e)),
+    ...active.filter((e) => e.startedAt).map((e) => getWaitMinutes(e)),
     ...todayCompleted
       .filter((e) => e.completedAt)
       .map((e) => {
@@ -198,11 +202,11 @@ export function computeQueueStats(
     inService +
     todayCompleted.length;
 
-  const cancelledToday = appointmentsToday.filter(
+  const cancelledToday = appointments.filter(
     (a) => a.status === "cancelled"
   ).length;
 
-  const noShowToday = appointmentsToday.filter(
+  const noShowToday = appointments.filter(
     (a) => a.status === "no_show"
   ).length;
 
@@ -216,15 +220,15 @@ export function computeQueueStats(
     avgWaitMinutes,
     avgServiceMinutes,
     walkInsToday,
-    appointmentsToday: appointmentsToday.filter((a) => a.status !== "cancelled")
+    appointmentsToday: appointments.filter((a) => a.status !== "cancelled")
       .length,
     cancelledToday,
     noShowToday,
     revenueToday,
-    staffAvailable: Math.max(0, employees.length - busyEmployeeIds.size),
+    staffAvailable: Math.max(0, staff.length - busyEmployeeIds.size),
     staffBusy: busyEmployeeIds.size,
     estimatedWait,
-    activeTotal: entries.length,
+    activeTotal: active.length,
   };
 }
 
@@ -273,7 +277,7 @@ export function filterActiveEntries(
   filters: QueueFilters,
   now: Date = new Date()
 ): QueueEntry[] {
-  return entries.filter((entry) => {
+  return (entries ?? []).filter((entry) => {
     if (filters.search.trim()) {
       const q = filters.search.toLowerCase();
       const haystack = [
@@ -337,23 +341,26 @@ export function getTabEntries(
   completedEntries: CompletedEntry[],
   appointmentsToday: AppointmentSnapshot[]
 ): (QueueEntry | CompletedEntry | AppointmentSnapshot)[] {
+  const active = entries ?? [];
+  const completed = completedEntries ?? [];
+  const appointments = appointmentsToday ?? [];
   switch (tab) {
     case "waiting":
-      return entries.filter((e) => e.status === "waiting");
+      return active.filter((e) => e.status === "waiting");
     case "assigned":
-      return entries.filter((e) => e.status === "assigned");
+      return active.filter((e) => e.status === "assigned");
     case "in_progress":
-      return entries.filter((e) => e.status === "in_progress");
+      return active.filter((e) => e.status === "in_progress");
     case "completed":
-      return completedEntries.filter(
+      return completed.filter(
         (e) => e.completedAt && isToday(new Date(e.completedAt))
       );
     case "cancelled":
-      return appointmentsToday.filter((a) => a.status === "cancelled");
+      return appointments.filter((a) => a.status === "cancelled");
     case "no_show":
-      return appointmentsToday.filter((a) => a.status === "no_show");
+      return appointments.filter((a) => a.status === "no_show");
     default:
-      return entries;
+      return active;
   }
 }
 

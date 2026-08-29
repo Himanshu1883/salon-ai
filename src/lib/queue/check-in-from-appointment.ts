@@ -1,3 +1,4 @@
+import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
 import { prisma } from "@/lib/prisma";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
 import {
@@ -5,6 +6,33 @@ import {
   getDataScopeContext,
 } from "@/lib/permissions/data-scope";
 import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
+
+function safeInvalidateQueueCache(
+  salonId: string,
+  options?: { revalidateAppointmentPages?: boolean }
+) {
+  try {
+    invalidateQueueCache(salonId, options);
+  } catch (error) {
+    console.error("[check-in-from-appointment] cache revalidate failed", error);
+  }
+}
+
+function checkInErrorMessage(error: unknown): string {
+  if (error instanceof PrismaClientKnownRequestError) {
+    if (error.code === "P2003") {
+      return "A linked service or staff record is missing. Update the appointment and try again.";
+    }
+    if (error.code === "P2002") {
+      return "This appointment is already in the queue.";
+    }
+  }
+  if (error instanceof Error && error.message === "UNAUTHORIZED") {
+    return "Unauthorized";
+  }
+  console.error("[check-in-from-appointment]", error);
+  return "Could not check in. Try again.";
+}
 
 export type CheckInFromAppointmentResult = {
   error?: string;
@@ -68,6 +96,18 @@ export async function performCheckInFromAppointment(options: {
   appointmentId: string;
   startNow?: boolean;
 }): Promise<CheckInFromAppointmentResult> {
+  try {
+    return await performCheckInFromAppointmentInner(options);
+  } catch (error) {
+    return { error: checkInErrorMessage(error) };
+  }
+}
+
+async function performCheckInFromAppointmentInner(options: {
+  salonId: string;
+  appointmentId: string;
+  startNow?: boolean;
+}): Promise<CheckInFromAppointmentResult> {
   const { salonId, appointmentId, startNow = false } = options;
   const scope = await getDataScopeContext();
 
@@ -75,10 +115,12 @@ export async function performCheckInFromAppointment(options: {
     where: { id: appointmentId, salonId },
   });
   if (!appointment) return { error: "Appointment not found" };
-  try {
-    assertEmployeeResourceAccess(scope, appointment.employeeId);
-  } catch {
-    return { error: "Appointment not found" };
+  if (appointment.employeeId) {
+    try {
+      assertEmployeeResourceAccess(scope, appointment.employeeId);
+    } catch {
+      return { error: "Appointment not found" };
+    }
   }
   if (appointment.status === "cancelled") {
     return { error: "Cannot check in a cancelled appointment" };
@@ -125,7 +167,7 @@ export async function performCheckInFromAppointment(options: {
           ]
         : []),
     ]);
-    invalidateQueueCache(salonId, skipAppointmentPages);
+    safeInvalidateQueueCache(salonId, skipAppointmentPages);
     return {
       success: true,
       position: existingEntry.position,
@@ -149,22 +191,42 @@ export async function performCheckInFromAppointment(options: {
         where: { salonId, id: { in: visitIds } },
         data: { status: "completed" },
       });
-      invalidateQueueCache(salonId, skipAppointmentPages);
+      safeInvalidateQueueCache(salonId, skipAppointmentPages);
       return { success: true, alreadyCompleted: true, appointmentIds: visitIds };
     }
   }
 
   const position = await getNextPosition(salonId);
-  const serviceIds = [
+  const requestedServiceIds = [
     ...new Set(
       visitAppointments
         .map((item) => item.serviceId)
         .filter((id): id is string => Boolean(id))
     ),
   ];
+  const [validServices, validEmployee] = await Promise.all([
+    prisma.service.findMany({
+      where: { salonId, id: { in: requestedServiceIds } },
+      select: { id: true },
+    }),
+    employeeId
+      ? prisma.employee.findFirst({
+          where: { id: employeeId, salonId },
+          select: { id: true },
+        })
+      : Promise.resolve(null),
+  ]);
+  const serviceIds = validServices.map((item) => item.id);
+  if (serviceIds.length === 0) {
+    return {
+      error:
+        "The appointment service is missing from the catalog. Update the booking and try again.",
+    };
+  }
+  const assignedEmployeeId = validEmployee?.id ?? null;
   const queueStatus = startNow
     ? "in_progress"
-    : employeeId
+    : assignedEmployeeId
       ? "assigned"
       : "waiting";
 
@@ -184,18 +246,15 @@ export async function performCheckInFromAppointment(options: {
         appointmentId,
         position,
         status: queueStatus,
-        employeeId,
+        employeeId: assignedEmployeeId,
         startedAt: startNow ? new Date() : null,
         services: {
-          create: (serviceIds.length > 0
-            ? serviceIds
-            : [appointment.serviceId]
-          ).map((serviceId) => ({ serviceId })),
+          create: serviceIds.map((serviceId) => ({ serviceId })),
         },
       },
     }),
   ]);
 
-  invalidateQueueCache(salonId, skipAppointmentPages);
+  safeInvalidateQueueCache(salonId, skipAppointmentPages);
   return { success: true, position, appointmentIds: visitIds };
 }

@@ -13,14 +13,16 @@ import type {
 type QueueTabsProps = {
   activeTab: QueueTab;
   onTabChange: (tab: QueueTab) => void;
-  entries: QueueEntry[];
-  completedEntries: CompletedEntry[];
-  appointmentsToday: AppointmentSnapshot[];
+  tabCounts?: Record<QueueTab, number>;
+  entries?: QueueEntry[];
+  completedEntries?: CompletedEntry[];
+  appointmentsToday?: AppointmentSnapshot[];
 };
 
 export function QueueTabs({
   activeTab,
   onTabChange,
+  tabCounts,
   entries,
   completedEntries,
   appointmentsToday,
@@ -28,12 +30,14 @@ export function QueueTabs({
   return (
     <div className="flex gap-1 overflow-x-auto border-b border-[#E8ECF4] pb-px">
       {QUEUE_TABS.map((tab) => {
-        const count = getTabCount(
-          tab.id,
-          entries,
-          completedEntries,
-          appointmentsToday
-        );
+        const count =
+          tabCounts?.[tab.id] ??
+          getTabCount(
+            tab.id,
+            entries ?? [],
+            completedEntries ?? [],
+            appointmentsToday ?? []
+          );
         const active = activeTab === tab.id;
         return (
           <button
