@@ -58,28 +58,30 @@ export function AppointmentDetailDialog({
   const { openAppointmentSale } = useAppointmentRecordSale();
 
   if (!appointment) return null;
+  const selectedAppointment = appointment;
 
   const visitAppointments = collectVisitGroupAppointments(
-    appointment,
-    allAppointments.length > 0 ? allAppointments : [appointment]
+    selectedAppointment,
+    allAppointments.length > 0 ? allAppointments : [selectedAppointment]
   );
   const checkInHref = buildCheckInHref(
-    appointment,
-    allAppointments.length > 0 ? allAppointments : [appointment]
+    selectedAppointment,
+    allAppointments.length > 0 ? allAppointments : [selectedAppointment]
   );
   const canWalkIn =
-    appointment.status === "scheduled" || appointment.status === "checked_in";
+    selectedAppointment.status === "scheduled" ||
+    selectedAppointment.status === "checked_in";
 
-  const start = new Date(appointment.scheduledAt);
+  const start = new Date(selectedAppointment.scheduledAt);
   const visitEnd = visitAppointments.reduce((latest, item) => {
     const itemEnd = new Date(item.scheduledAt).getTime() + item.service.duration * 60_000;
     return itemEnd > latest ? itemEnd : latest;
-  }, start.getTime() + appointment.service.duration * 60_000);
+  }, start.getTime() + selectedAppointment.service.duration * 60_000);
   const end = new Date(visitEnd);
 
   async function handleStatus(status: string) {
     setLoading(true);
-    await updateAppointmentStatus(appointment!.id, status);
+    await updateAppointmentStatus(selectedAppointment.id, status);
     setLoading(false);
     onOpenChange(false);
     onRefresh();
@@ -88,7 +90,7 @@ export function AppointmentDetailDialog({
   async function handleDelete() {
     if (!confirm("Delete this appointment?")) return;
     setLoading(true);
-    await deleteAppointment(appointment!.id);
+    await deleteAppointment(selectedAppointment.id);
     setLoading(false);
     onOpenChange(false);
     onRefresh();
@@ -96,8 +98,8 @@ export function AppointmentDetailDialog({
 
   function handleInvoice() {
     openAppointmentSale(
-      appointment,
-      allAppointments.length > 0 ? allAppointments : [appointment],
+      selectedAppointment,
+      allAppointments.length > 0 ? allAppointments : [selectedAppointment],
       {
         onOpened: () => onOpenChange(false),
         onRefresh,
@@ -106,19 +108,19 @@ export function AppointmentDetailDialog({
   }
 
   async function handleSms() {
-    if (!appointment!.customer.phone) {
+    if (!selectedAppointment.customer.phone) {
       alert("Customer has no phone number");
       return;
     }
     setLoading(true);
     const formData = new FormData();
-    formData.set("recipientPhone", appointment!.customer.phone);
-    formData.set("recipientName", appointment!.customer.name);
+    formData.set("recipientPhone", selectedAppointment.customer.phone);
+    formData.set("recipientName", selectedAppointment.customer.name);
     formData.set(
       "message",
-      `Hi ${appointment!.customer.name}! Reminder: your ${appointment!.service.name} appointment is on ${formatAppointmentDateTime(start, "EEE, MMM d · h:mm a")}.`
+      `Hi ${selectedAppointment.customer.name}! Reminder: your ${selectedAppointment.service.name} appointment is on ${formatAppointmentDateTime(start, "EEE, MMM d · h:mm a")}.`
     );
-    formData.set("appointmentId", appointment!.id);
+    formData.set("appointmentId", selectedAppointment.id);
     const result = await sendManualSms(formData);
     setLoading(false);
     alert(
