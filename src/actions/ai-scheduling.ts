@@ -7,6 +7,7 @@ import { findBestSlots, enrichWithAiExplanation } from "@/lib/ai-scheduling";
 import { assertEmployeeAvailableForSlot } from "@/lib/appointments/availability";
 import { revalidatePath } from "next/cache";
 import { startOfDay, endOfDay, addDays } from "date-fns";
+import { parseAppointmentDateTime } from "@/lib/appointments/datetime";
 
 export async function getAiSchedulingSuggestions(formData: FormData) {
   const session = await requireSession();
@@ -101,7 +102,10 @@ export async function bookSuggestedSlot(formData: FormData) {
     return { error: "Service not found" };
   }
 
-  const slotStart = new Date(scheduledAt);
+  const slotStart = parseAppointmentDateTime(scheduledAt);
+  if (Number.isNaN(slotStart.getTime())) {
+    return { error: "Enter a valid date and time" };
+  }
 
   if (employeeId) {
     const availability = await assertEmployeeAvailableForSlot(

@@ -292,7 +292,30 @@ export async function requireSession() {
     } as typeof session & { user: typeof session.user & SalonSessionUser };
   }
 
-  const user = await fetchSessionUser(session.user.id);
+  let user: Awaited<ReturnType<typeof fetchSessionUser>> = null;
+  try {
+    user = await fetchSessionUser(session.user.id);
+  } catch (error) {
+    if (
+      session.user.salonId &&
+      session.user.salonName &&
+      session.user.salonSlug
+    ) {
+      console.warn("[auth] session lookup failed, using JWT salon context");
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          salonId: session.user.salonId,
+          salonName: session.user.salonName,
+          salonSlug: session.user.salonSlug,
+          role: session.user.role ?? "owner",
+          plan: normalizeSalonPlan(session.user.plan),
+        },
+      } as typeof session & { user: typeof session.user & SalonSessionUser };
+    }
+    throw error;
+  }
 
   if (!user?.salonId || !user.salon) {
     redirect(loginRedirectPath(session.user.salonSlug));

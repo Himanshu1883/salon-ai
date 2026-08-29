@@ -1,7 +1,7 @@
 export const SERVICE_CATALOG_TYPES = ["SERVICE", "PACKAGE", "ADD_ON"] as const;
 export type ServiceCatalogType = (typeof SERVICE_CATALOG_TYPES)[number];
 
-export const SERVICE_AUDIENCES = ["MEN", "WOMEN", "UNISEX", "KIDS"] as const;
+export const SERVICE_AUDIENCES = ["MEN", "WOMEN", "UNISEX", "KIDS", "COUPLES"] as const;
 export type ServiceAudience = (typeof SERVICE_AUDIENCES)[number];
 
 export const SERVICE_STATUSES = ["ACTIVE", "INACTIVE", "ARCHIVED"] as const;
@@ -23,6 +23,7 @@ export const AUDIENCE_LABELS: Record<ServiceAudience, string> = {
   WOMEN: "Women",
   UNISEX: "Unisex",
   KIDS: "Kids",
+  COUPLES: "Couples",
 };
 
 export const CATALOG_TYPE_LABELS: Record<ServiceCatalogType, string> = {

@@ -1,7 +1,5 @@
 import {
   addMinutes,
-  format,
-  isSameDay,
   startOfDay,
 } from "date-fns";
 import type { Appointment, Employee } from "./types";
@@ -10,6 +8,11 @@ import {
   CALENDAR_START_HOUR,
   SLOT_MINUTES,
 } from "./types";
+import {
+  appointmentClockMinutes,
+  formatAppointmentDateTime,
+  isAppointmentOnCalendarDay,
+} from "@/lib/appointments/datetime";
 
 export type ViewMode = "week" | "day" | "list";
 
@@ -183,7 +186,7 @@ export function countAvailableSlotsToday(
   day: Date
 ) {
   const dayAppointments = todayAppointments.filter((a) =>
-    isSameDay(new Date(a.scheduledAt), day)
+    isAppointmentOnCalendarDay(a.scheduledAt, day)
   );
 
   const slots: boolean[] = Array.from(
@@ -196,9 +199,8 @@ export function countAvailableSlotsToday(
 
   for (const apt of dayAppointments) {
     if (!isScheduleCalendarAppointment(apt)) continue;
-    const start = new Date(apt.scheduledAt);
     const startMinutes =
-      start.getHours() * 60 + start.getMinutes() - CALENDAR_START_HOUR * 60;
+      appointmentClockMinutes(apt.scheduledAt) - CALENDAR_START_HOUR * 60;
     const slotCount = Math.ceil(apt.service.duration / SLOT_MINUTES);
     const startSlot = Math.floor(startMinutes / SLOT_MINUTES);
     for (let i = startSlot; i < startSlot + slotCount && i < slots.length; i++) {
@@ -212,9 +214,9 @@ export function countAvailableSlotsToday(
 export function formatAppointmentTime(apt: Appointment) {
   const start = new Date(apt.scheduledAt);
   const end = addMinutes(start, apt.service.duration);
-  return `${format(start, "h:mm")} – ${format(end, "h:mm a")}`;
+  return `${formatAppointmentDateTime(start, "h:mm")} – ${formatAppointmentDateTime(end, "h:mm a")}`;
 }
 
 export function isAppointmentToday(apt: Appointment) {
-  return isSameDay(new Date(apt.scheduledAt), startOfDay(new Date()));
+  return isAppointmentOnCalendarDay(apt.scheduledAt, startOfDay(new Date()));
 }

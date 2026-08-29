@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   Calendar,
   Cake,
@@ -426,7 +427,7 @@ export function ClientsDetailDialog({
                             className="rounded-xl bg-[#EDE9FE] px-3 py-2 text-sm text-[#1C103D]"
                           >
                             {apt.services} ·{" "}
-                            {format(new Date(apt.date), "d MMM · h:mm a")}
+                            {formatAppointmentDateTime(apt.date, "d MMM · h:mm a")}
                           </div>
                         ))}
                       </div>

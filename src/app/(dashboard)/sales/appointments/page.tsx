@@ -2,12 +2,13 @@ import { getAppointmentsInRange, getSalonOpeningHours } from "@/actions/appointm
 import { getServiceOptions } from "@/actions/services";
 import { getActiveEmployees } from "@/actions/employees";
 import { AppointmentsClient } from "@/app/(dashboard)/appointments/appointments-client";
+import { appointmentDateKey } from "@/lib/appointments/datetime";
+import { getBusinessDateKey } from "@/lib/attendance/business-day";
 import {
   startOfWeek,
   endOfWeek,
-  format,
-  startOfDay,
   endOfDay,
+  format,
   addDays,
   max,
 } from "date-fns";
@@ -38,18 +39,16 @@ export default async function SalesAppointmentsPage({
     getSalonOpeningHours(),
   ]);
 
-  const todayStart = startOfDay(now);
-  const todayEnd = endOfDay(now);
+  const todayKey = getBusinessDateKey(now);
 
   const weekAppointments = allAppointments.filter(
-    (a) => new Date(a.scheduledAt) <= weekEnd
+    (a) => appointmentDateKey(a.scheduledAt) <= format(weekEnd, "yyyy-MM-dd")
   );
-  const todayAppointments = allAppointments.filter((a) => {
-    const at = new Date(a.scheduledAt);
-    return at >= todayStart && at <= todayEnd;
-  });
+  const todayAppointments = allAppointments.filter(
+    (a) => appointmentDateKey(a.scheduledAt) === todayKey
+  );
   const upcomingAppointments = allAppointments.filter(
-    (a) => new Date(a.scheduledAt) > todayEnd
+    (a) => appointmentDateKey(a.scheduledAt) > todayKey
   );
 
   return (

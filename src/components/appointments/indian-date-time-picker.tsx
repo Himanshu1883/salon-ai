@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 
 function toDateYmd(value: string): string {
   if (!value) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const isoDate = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (isoDate) return isoDate[1];
   const parsed = new Date(value);
   if (Number.isNaN(parsed.getTime())) return "";
   return format(parsed, "yyyy-MM-dd");

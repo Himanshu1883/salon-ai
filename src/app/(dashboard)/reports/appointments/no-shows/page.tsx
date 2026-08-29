@@ -1,7 +1,7 @@
-import { format } from "date-fns";
 import { getNoShows } from "@/actions/reports";
 import { ReportPageShell } from "@/components/reports/report-page-shell";
 import { ReportDataTable, ReportStatCards } from "@/components/reports/report-table";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 
 export default async function NoShowsPage({
   searchParams,
@@ -30,7 +30,7 @@ export default async function NoShowsPage({
           { key: "employee", header: "Employee" },
         ]}
         rows={appointments.map((r) => ({
-          date: format(new Date(r.scheduledAt), "dd MMM yyyy HH:mm"),
+          date: formatAppointmentDateTime(r.scheduledAt, "dd MMM yyyy h:mm a"),
           customer: r.customer.name,
           service: r.service.name,
           employee: r.employee?.name ?? "—",

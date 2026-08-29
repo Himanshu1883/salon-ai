@@ -21,6 +21,11 @@ import {
   getCalendarBounds,
   isSlotWithinSalonHours,
 } from "@/lib/appointments/salon-hours";
+import {
+  appointmentClockMinutes,
+  appointmentDateKey,
+  formatAppointmentDateTime,
+} from "@/lib/appointments/datetime";
 import type { Appointment, Employee } from "./types";
 import {
   SLOT_HEIGHT_PX,
@@ -139,10 +144,7 @@ function layoutOverlaps(appointments: Appointment[]): LayoutBlock[] {
 }
 
 function topPxFor(scheduledAt: Date, startHour: number) {
-  const minutes =
-    scheduledAt.getHours() * 60 +
-    scheduledAt.getMinutes() -
-    startHour * 60;
+  const minutes = appointmentClockMinutes(scheduledAt) - startHour * 60;
   return (minutes / SLOT_MINUTES) * SLOT_HEIGHT_PX;
 }
 
@@ -470,7 +472,7 @@ function BusyChip({
   const singleAppointment =
     appointments.length === 1 ? appointments[0] : null;
 
-  const timeLabel = `${format(new Date(cluster.start), "h:mm a")} – ${format(new Date(cluster.end), "h:mm a")}`;
+  const timeLabel = `${formatAppointmentDateTime(new Date(cluster.start), "h:mm a")} – ${formatAppointmentDateTime(new Date(cluster.end), "h:mm a")}`;
 
   function clearCloseTimer() {
     if (closeTimerRef.current !== null) {
@@ -727,7 +729,7 @@ function DayStaffCalendar({
   const dayKey = format(selectedDay, "yyyy-MM-dd");
   const dayAppointments = appointments.filter(
     (apt) =>
-      format(new Date(apt.scheduledAt), "yyyy-MM-dd") === dayKey &&
+      appointmentDateKey(apt.scheduledAt) === dayKey &&
       apt.status !== "cancelled"
   );
 
@@ -957,7 +959,7 @@ function WeekBusyCalendar({
       map.set(format(day, "yyyy-MM-dd"), []);
     }
     for (const apt of appointments) {
-      const key = format(new Date(apt.scheduledAt), "yyyy-MM-dd");
+      const key = appointmentDateKey(apt.scheduledAt);
       if (map.has(key)) map.get(key)!.push(apt);
     }
     return map;
@@ -1116,7 +1118,7 @@ function MobileAgendaList({
 }) {
   const dayKey = format(selectedDay, "yyyy-MM-dd");
   const dayAppointments = appointments
-    .filter((apt) => format(new Date(apt.scheduledAt), "yyyy-MM-dd") === dayKey)
+    .filter((apt) => appointmentDateKey(apt.scheduledAt) === dayKey)
     .sort(
       (a, b) =>
         new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()

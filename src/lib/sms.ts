@@ -1,3 +1,5 @@
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
+
 export function isTwilioConfigured(): boolean {
   return !!(
     process.env.TWILIO_ACCOUNT_SID &&
@@ -55,12 +57,9 @@ export function buildAppointmentReminderMessage(
   scheduledAt: Date,
   salonName: string
 ): string {
-  const dateStr = scheduledAt.toLocaleString("en-US", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  const dateStr = formatAppointmentDateTime(
+    scheduledAt,
+    "EEE, MMM d, h:mm a"
+  );
   return `Hi ${customerName}! Reminder: your ${serviceName} appointment at ${salonName} is on ${dateStr}. Reply STOP to opt out.`;
 }

@@ -27,7 +27,7 @@ function getGeneratedPrismaVersion(): string {
   }
 }
 
-function resetCachedPrismaClient() {
+export function resetCachedPrismaClient() {
   globalForPrisma.prisma = undefined;
   if (globalForPrisma.pgPool) {
     void globalForPrisma.pgPool.end();
@@ -124,9 +124,10 @@ function getPoolConfig(): PoolConfig {
   const config: PoolConfig = {
     connectionString,
     max: isServerless ? 1 : 10,
-    idleTimeoutMillis: isServerless ? 10_000 : 30_000,
+    idleTimeoutMillis: isServerless ? 10_000 : 20_000,
     connectionTimeoutMillis: isServerless ? 25_000 : 15_000,
     keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
     allowExitOnIdle: isServerless,
   };
 
@@ -150,7 +151,11 @@ function getPgPool(): Pool {
   }
 
   if (!globalForPrisma.pgPool) {
-    globalForPrisma.pgPool = new Pool(getPoolConfig());
+    const pool = new Pool(getPoolConfig());
+    pool.on("error", (error) => {
+      console.warn("[db] idle client error:", error.message);
+    });
+    globalForPrisma.pgPool = pool;
     globalForPrisma.pgPoolConnectionString = connectionString;
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { format as formatDate } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   Check,
   FileText,
@@ -80,7 +80,7 @@ export function AppointmentList({
     formData.set("recipientName", apt.customer.name);
     formData.set(
       "message",
-      `Hi ${apt.customer.name}! Reminder: your ${apt.service.name} appointment is on ${formatDate(new Date(apt.scheduledAt), "EEE, MMM d · h:mm a")}.`
+      `Hi ${apt.customer.name}! Reminder: your ${apt.service.name} appointment is on ${formatAppointmentDateTime(apt.scheduledAt, "EEE, MMM d · h:mm a")}.`
     );
     formData.set("appointmentId", apt.id);
     const result = await sendManualSms(formData);
@@ -122,7 +122,7 @@ export function AppointmentList({
                 {apt.employee ? ` · ${apt.employee.name}` : ""}
               </p>
               <p className="text-xs text-[#9CA3AF]">
-                {formatDate(new Date(apt.scheduledAt), "EEE, MMM d")} ·{" "}
+                {formatAppointmentDateTime(apt.scheduledAt, "EEE, MMM d")} ·{" "}
                 {formatAppointmentTime(apt)}
               </p>
             </div>

@@ -66,7 +66,7 @@ export function CompactKpiCard({
 
   if (href) {
     return (
-      <Link href={href} className="block h-full min-w-0">
+      <Link href={href} className="block h-full  min-w-0">
         {card}
       </Link>
     );

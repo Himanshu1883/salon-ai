@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { addMinutes, format, isPast, isFuture } from "date-fns";
+import { addMinutes, isPast, isFuture } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { Calendar } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Badge } from "@/components/ui/badge";
@@ -71,8 +72,8 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
             {appointments.map((apt) => {
               const start = new Date(apt.scheduledAt);
               const end = addMinutes(start, apt.service.duration);
-              const time = format(start, "hh:mm a");
-              const timeRange = `${format(start, "h:mm a")} – ${format(end, "h:mm a")}`;
+              const time = formatAppointmentDateTime(start, "hh:mm a");
+              const timeRange = `${formatAppointmentDateTime(start, "h:mm a")} – ${formatAppointmentDateTime(end, "h:mm a")}`;
               const statusInfo = getAppointmentStatus(start, apt.status);
 
               return (

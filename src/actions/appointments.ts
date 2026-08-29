@@ -11,6 +11,7 @@ import { scheduleSalonCacheRevalidation, cachedBySalon, salonCacheTag } from "@/
 import { cachedRead } from "@/lib/memory-cache";
 import { unstable_cache } from "next/cache";
 import { assertEmployeeAvailableForSlot } from "@/lib/appointments/availability";
+import { parseAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   parseOpeningHours,
   validateAppointmentAgainstSalonHours,
@@ -173,7 +174,10 @@ export async function createAppointment(formData: FormData) {
     (line) => durationByServiceId.get(line.serviceId) ?? 0
   );
   const totalDuration = getTotalDuration(lineDurations);
-  const scheduledAt = new Date(parsed.data.scheduledAt);
+  const scheduledAt = parseAppointmentDateTime(parsed.data.scheduledAt);
+  if (Number.isNaN(scheduledAt.getTime())) {
+    return { error: "Enter a valid date and time" };
+  }
 
   const salon = await prisma.salon.findUnique({
     where: { id: session.user.salonId },

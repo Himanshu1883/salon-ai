@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -106,7 +107,7 @@ export function QueueTable({
                   {item.employee?.name ?? "—"}
                 </TableCell>
                 <TableCell className="text-sm text-[#6B7280]">
-                  {format(new Date(item.scheduledAt), "h:mm a")}
+                  {formatAppointmentDateTime(item.scheduledAt, "h:mm a")}
                 </TableCell>
                 <TableCell>
                   <QueueStatusBadge status={item.status} />

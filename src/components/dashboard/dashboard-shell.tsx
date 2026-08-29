@@ -8,6 +8,7 @@ import { RecordSaleProvider, useRecordSale } from "@/components/dashboard/record
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
+import { DashboardSessionKeepAlive } from "@/components/dashboard/dashboard-session-keepalive";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -97,6 +98,7 @@ function DashboardShellInner({
 
   return (
     <>
+      <DashboardSessionKeepAlive />
       {mobileOpen && (
         <button
           type="button"

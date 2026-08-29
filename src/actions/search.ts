@@ -7,6 +7,10 @@ import { getSalonPlan } from "@/lib/plan-access";
 import { canAccessModule, type PlanModule } from "@/lib/plans";
 import { formatCurrency } from "@/lib/currency";
 import { getRoleLabel } from "@/lib/team";
+import {
+  appointmentDateKey,
+  formatAppointmentDateTime,
+} from "@/lib/appointments/datetime";
 
 export type GlobalSearchResultType =
   | "customer"
@@ -147,13 +151,13 @@ export async function globalSearch(query: string): Promise<GlobalSearchResponse>
             type: "appointment" as const,
             title: `${row.customer.name} — ${row.service.name}`,
             subtitle: [
-              format(row.scheduledAt, "EEE, MMM d · h:mm a"),
+              formatAppointmentDateTime(row.scheduledAt, "EEE, MMM d · h:mm a"),
               row.employee?.name,
               row.status,
             ]
               .filter(Boolean)
               .join(" · "),
-            href: `/sales/appointments?weekStart=${format(row.scheduledAt, "yyyy-MM-dd")}`,
+            href: `/sales/appointments?weekStart=${appointmentDateKey(row.scheduledAt)}`,
           }))
         )
     );

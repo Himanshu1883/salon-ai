@@ -14,8 +14,14 @@ let globalPermissionsReady = false;
 async function ensureGlobalPermissions(prisma: PrismaClient) {
   if (globalPermissionsReady) return;
 
-  const count = await prisma.permission.count();
-  if (count >= PERMISSION_DEFINITIONS.length) {
+  const [count, importPermission] = await Promise.all([
+    prisma.permission.count(),
+    prisma.permission.findUnique({
+      where: { key: "services.import" },
+      select: { id: true },
+    }),
+  ]);
+  if (count >= PERMISSION_DEFINITIONS.length && importPermission) {
     globalPermissionsReady = true;
     return;
   }
@@ -57,6 +63,26 @@ export async function ensureSalonSystemRoles(
     where: { salonId, isSystemRole: true },
   });
   if (existingRoles >= systemRoleCount) {
+    await ensureGlobalPermissions(prisma);
+    const importPermission = await prisma.permission.findUnique({
+      where: { key: "services.import" },
+      select: { id: true },
+    });
+    if (importPermission) {
+      const managerRoles = await prisma.salonRole.findMany({
+        where: { salonId, isSystemRole: true, key: { in: ["OWNER", "MANAGER"] } },
+        select: { id: true },
+      });
+      if (managerRoles.length > 0) {
+        await prisma.salonRolePermission.createMany({
+          data: managerRoles.map((role) => ({
+            roleId: role.id,
+            permissionId: importPermission.id,
+          })),
+          skipDuplicates: true,
+        });
+      }
+    }
     ensuredSalonIds.add(salonId);
     return;
   }

@@ -45,6 +45,7 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import { cn, getInitials } from "@/lib/utils";
 import { format } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { usePlan } from "@/components/plans/plan-provider";
 import { CustomerMembershipTab } from "@/components/memberships/customer-membership-tab";
 import { CustomerHairConsultationTab } from "@/components/hair-consultation/customer-hair-tab";
@@ -316,7 +317,9 @@ function ServiceHistoryList({
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-dashboard-muted">
                 <span className="inline-flex items-center gap-1">
                   <Clock className="h-3 w-3" />
-                  {format(new Date(entry.date), "MMM d, yyyy · h:mm a")}
+                  {entry.type === "appointment"
+                    ? formatAppointmentDateTime(entry.date, "MMM d, yyyy · h:mm a")
+                    : format(new Date(entry.date), "MMM d, yyyy · h:mm a")}
                 </span>
                 {entry.employee && (
                   <>
@@ -658,7 +661,7 @@ export function CustomerDetailClient({
                   {apt.services}
                 </span>
                 <span className="text-dashboard-muted">
-                  {format(new Date(apt.date), "MMM d · h:mm a")}
+                  {formatAppointmentDateTime(apt.date, "MMM d · h:mm a")}
                 </span>
               </div>
             ))}

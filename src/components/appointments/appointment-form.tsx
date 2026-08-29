@@ -23,6 +23,7 @@ import {
   getSequentialSlotStart,
   getTotalDuration,
 } from "@/lib/appointments/visit-group";
+import { parseAppointmentDateTime } from "@/lib/appointments/datetime";
 import type { OpeningHours } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 import type { Appointment, Employee, PrefilledCustomer, Service } from "./types";
@@ -141,7 +142,7 @@ export function AppointmentForm({
     const result: Record<string, Set<string>> = {};
     if (!scheduledAt) return result;
 
-    const baseStart = new Date(scheduledAt);
+    const baseStart = parseAppointmentDateTime(scheduledAt);
     if (Number.isNaN(baseStart.getTime())) return result;
 
     let priorDurations: number[] = [];
@@ -167,7 +168,7 @@ export function AppointmentForm({
 
   const salonHoursValidation = useMemo(() => {
     if (!scheduledAt || totalDuration <= 0) return null;
-    const start = new Date(scheduledAt);
+    const start = parseAppointmentDateTime(scheduledAt);
     if (Number.isNaN(start.getTime())) return null;
     return validateAppointmentAgainstSalonHours(
       openingHours,
@@ -200,7 +201,7 @@ export function AppointmentForm({
       return;
     }
 
-    const baseStart = new Date(scheduledAt);
+    const baseStart = parseAppointmentDateTime(scheduledAt);
     if (Number.isNaN(baseStart.getTime())) {
       setLoading(false);
       setError("Enter a valid date and time");
@@ -280,7 +281,9 @@ export function AppointmentForm({
     salonHoursValidation !== null && !salonHoursValidation.ok;
 
   function applyNextAvailableDate() {
-    const reference = scheduledAt ? new Date(scheduledAt) : new Date();
+    const reference = scheduledAt
+      ? parseAppointmentDateTime(scheduledAt)
+      : new Date();
     const nextDay = findNextOpenDate(
       openingHours,
       addDays(startOfDay(reference), 1)

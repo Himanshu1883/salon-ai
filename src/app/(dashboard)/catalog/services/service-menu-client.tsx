@@ -23,6 +23,7 @@ import {
   type CategoryBulkDeleteHandling,
 } from "./service-bulk-actions";
 import { ServiceForm, PackageForm, AddOnForm } from "./catalog-forms";
+import { ServiceImportDialog } from "./service-import-dialog";
 import { CatalogDialogContent, catalogFormFooterClassName } from "./catalog-dialog";
 import type { CatalogServiceItem, CatalogTab, CategoryGroup } from "./catalog-types";
 import {
@@ -84,6 +85,7 @@ import {
   CheckSquare,
   Package,
   Sparkles,
+  Upload,
 } from "lucide-react";
 import { invoiceModalStyles } from "@/components/billing/invoice-modal/styles";
 import { formatCurrency, formatDuration, cn } from "@/lib/utils";
@@ -133,6 +135,30 @@ function matchesCatalogFilters(
   if (opts.minDuration != null && item.duration < opts.minDuration) return false;
   if (opts.maxDuration != null && item.duration > opts.maxDuration) return false;
   return true;
+}
+
+function catalogFiltersAreActive(opts: {
+  q: string;
+  catalogTab: CatalogTab;
+  audience: string | null;
+  status: string | null;
+  staffId: string | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  minDuration: number | null;
+  maxDuration: number | null;
+}) {
+  return Boolean(
+    opts.q ||
+      opts.audience ||
+      opts.status ||
+      opts.staffId ||
+      opts.minPrice != null ||
+      opts.maxPrice != null ||
+      opts.minDuration != null ||
+      opts.maxDuration != null ||
+      opts.catalogTab !== "ALL"
+  );
 }
 
 type CategorySummary = { id: string; name: string; sortOrder: number };
@@ -272,7 +298,7 @@ function ServiceReorderCard({
           </p>
         </div>
         <p className="shrink-0 text-sm font-semibold tabular-nums text-dashboard-text">
-          {formatCurrency(service.price)}
+          {service.isStartingPrice ? `from ${formatCurrency(service.price)}` : formatCurrency(service.price)}
         </p>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -525,7 +551,14 @@ function ServicesTable({
                 </span>
               </TableCell>
               <TableCell className="font-semibold tabular-nums text-dashboard-text">
-                {formatCurrency(service.price)}
+                {service.isStartingPrice ? (
+                  <span>
+                    <span className="mr-1 text-xs font-medium text-dashboard-muted">from</span>
+                    {formatCurrency(service.price)}
+                  </span>
+                ) : (
+                  formatCurrency(service.price)
+                )}
               </TableCell>
               <TableCell className="hidden lg:table-cell">
                 {service.employees.length > 0 ? (
@@ -650,6 +683,7 @@ export function ServiceMenuClient({
   const [manageOrder, setManageOrder] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [addPackageOpen, setAddPackageOpen] = useState(false);
   const [addAddOnOpen, setAddAddOnOpen] = useState(false);
   const [editItem, setEditItem] = useState<CatalogServiceItem | null>(null);
@@ -674,6 +708,8 @@ export function ServiceMenuClient({
   const [bulkAddServicesOpen, setBulkAddServicesOpen] = useState(false);
   const [bulkAddCategoriesOpen, setBulkAddCategoriesOpen] = useState(false);
   const skipNextCategoriesSync = useRef(false);
+  const categorySidebarRef = useRef<HTMLDivElement>(null);
+  const categorySidebarListRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (skipNextCategoriesSync.current) {
@@ -683,6 +719,23 @@ export function ServiceMenuClient({
     setLocalCategories(initialCategories);
     setLocalUncategorized(uncategorized);
   }, [initialCategories, uncategorized]);
+
+  useEffect(() => {
+    const sidebar = categorySidebarRef.current;
+    if (!sidebar) return;
+
+    const onWheel = (event: WheelEvent) => {
+      const list = categorySidebarListRef.current;
+      if (list) {
+        list.scrollTop += event.deltaY;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    sidebar.addEventListener("wheel", onWheel, { passive: false });
+    return () => sidebar.removeEventListener("wheel", onWheel);
+  }, []);
 
   const allCatalogItems = useMemo(
     () => [
@@ -752,7 +805,10 @@ export function ServiceMenuClient({
       groups = groups.filter((g) => g.id === selectedCategoryId);
     }
 
-    return groups.filter((g) => g.services.length > 0 || !filterOpts.q);
+    const filtersActive = catalogFiltersAreActive(filterOpts);
+    return groups.filter(
+      (g) => g.services.length > 0 || (!filtersActive && !selectedCategoryId)
+    );
   }, [localCategories, selectedCategoryId, filterOpts]);
 
   const filteredUncategorized = useMemo(
@@ -777,13 +833,18 @@ export function ServiceMenuClient({
       PACKAGES: [],
       ADDONS: [],
     };
+    const filtersActive = catalogFiltersAreActive(filterOpts);
     for (const cat of localCategories) {
+      const visibleCount =
+        categoryCounts.get(cat.id) ??
+        cat.services.filter((s) => matchesCatalogFilters(s, filterOpts)).length;
+      if (filtersActive && visibleCount === 0) continue;
       const key = cat.categoryGroup ?? "SERVICES";
       if (groups[key]) groups[key].push(cat);
       else groups.SERVICES.push(cat);
     }
     return groups;
-  }, [localCategories]);
+  }, [localCategories, filterOpts, categoryCounts]);
 
   function toggleBulkMode() {
     setBulkMode((v) => {
@@ -1118,6 +1179,15 @@ export function ServiceMenuClient({
             </div>
 
             <div className="flex flex-wrap gap-2 lg:justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50"
+                onClick={() => setImportOpen(true)}
+              >
+                <Upload className="h-4 w-4" />
+                Import CSV / Excel / PDF
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -1130,6 +1200,13 @@ export function ServiceMenuClient({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="rounded-xl">
+                  <DropdownMenuItem
+                    onClick={() => setImportOpen(true)}
+                    className="rounded-lg"
+                  >
+                    <Upload className="mr-2 h-4 w-4" />
+                    Import services
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => setAddCategoryOpen(true)}
                     className="rounded-lg"
@@ -1423,25 +1500,35 @@ export function ServiceMenuClient({
           <p className="mb-3 mt-4 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">Category</p>
           <div className="flex flex-wrap gap-2">
             <Button size="sm" variant={selectedCategoryId === null ? "default" : "outline"} onClick={() => setSelectedCategoryId(null)} className="rounded-xl">All categories</Button>
-            {localCategories.map((cat) => (
+            {localCategories
+              .filter(
+                (cat) =>
+                  (categoryCounts.get(cat.id) ?? 0) > 0 ||
+                  !catalogFiltersAreActive(filterOpts)
+              )
+              .map((cat) => (
               <Button key={cat.id} size="sm" variant={selectedCategoryId === cat.id ? "default" : "outline"} onClick={() => setSelectedCategoryId(cat.id)} className="rounded-xl">{cat.name}</Button>
             ))}
           </div>
         </motion.div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
         {/* Category sidebar */}
         <motion.div
+          ref={categorySidebarRef}
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="h-fit rounded-[20px] border border-dashboard-border bg-dashboard-card p-5 shadow-dashboard-card"
+          className="flex h-fit flex-col rounded-[20px] border border-dashboard-border bg-dashboard-card p-5 pb-6 shadow-dashboard-card lg:sticky lg:top-4 lg:z-10 lg:max-h-[calc(100dvh-10rem)] lg:overflow-hidden"
         >
-          <h2 className="mb-4 text-sm font-semibold text-dashboard-text">
+          <h2 className="mb-4 shrink-0 text-sm font-semibold text-dashboard-text">
             Categories
           </h2>
-          <ul className="space-y-1">
+          <ul
+            ref={categorySidebarListRef}
+            className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-y-contain pr-1"
+          >
             <li>
               <button
                 type="button"
@@ -1528,7 +1615,7 @@ export function ServiceMenuClient({
           <button
             type="button"
             onClick={() => setAddCategoryOpen(true)}
-            className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-violet-200 bg-violet-50/50 px-3 py-2.5 text-sm font-medium text-dashboard-primary transition-colors hover:border-violet-300 hover:bg-violet-50"
+            className="mt-4 flex w-full shrink-0 items-center justify-center gap-1.5 rounded-xl border border-dashed border-violet-200 bg-violet-50/50 px-3 py-2.5 text-sm font-medium text-dashboard-primary transition-colors hover:border-violet-300 hover:bg-violet-50"
           >
             <Plus className="h-4 w-4" />
             Add category
@@ -1737,6 +1824,7 @@ export function ServiceMenuClient({
         onOpenChange={setBulkAddCategoriesOpen}
         onSuccess={handleBulkCategoriesCreated}
       />
+      <ServiceImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </div>
   );
 }

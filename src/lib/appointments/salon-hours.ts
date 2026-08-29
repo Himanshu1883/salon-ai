@@ -14,6 +14,11 @@ import {
   type OpeningHours,
 } from "@/lib/onboarding";
 import { SLOT_HEIGHT_PX, SLOT_MINUTES } from "@/components/appointments/types";
+import {
+  appointmentClockMinutes,
+  asAppointmentWallClock,
+  formatAppointmentDateTime,
+} from "@/lib/appointments/datetime";
 
 const DAY_KEYS: DayKey[] = [
   "sunday",
@@ -59,6 +64,13 @@ export function formatSalonTime(time: string): string {
 
 export function getDayHours(openingHours: OpeningHours, date: Date): DayHours {
   return openingHours[dayKeyFromDate(date)];
+}
+
+function getDayHoursForAppointmentInstant(
+  openingHours: OpeningHours,
+  scheduledAt: Date
+): DayHours {
+  return openingHours[DAY_KEYS[scheduledAt.getUTCDay()]];
 }
 
 export type DayHoursRange = {
@@ -147,24 +159,24 @@ export function validateAppointmentAgainstSalonHours(
     return { ok: false, error: "Choose a valid date and time." };
   }
 
-  const dayHours = getDayHours(openingHours, scheduledAt);
+  const dayHours = getDayHoursForAppointmentInstant(openingHours, scheduledAt);
+  const wallClock = asAppointmentWallClock(scheduledAt);
 
   if (dayHours.closed) {
     const nextDate = findNextOpenDate(
       openingHours,
-      addDays(startOfDay(scheduledAt), 1)
+      addDays(startOfDay(wallClock), 1)
     );
     return {
       ok: false,
-      error: `Salon is closed on ${format(scheduledAt, "EEEE")}. Please choose the next available date (${format(nextDate, "EEEE, MMM d")}).`,
+      error: `Salon is closed on ${formatAppointmentDateTime(scheduledAt, "EEEE")}. Please choose the next available date (${format(nextDate, "EEEE, MMM d")}).`,
       suggestNextDate: nextDate,
     };
   }
 
   const openMinutes = parseTimeToMinutes(dayHours.open);
   const closeMinutes = parseTimeToMinutes(dayHours.close);
-  const startMinutes =
-    scheduledAt.getHours() * 60 + scheduledAt.getMinutes();
+  const startMinutes = appointmentClockMinutes(scheduledAt);
   const endMinutes = startMinutes + durationMinutes;
   const closeLabel = formatSalonTime(dayHours.close);
 
@@ -178,7 +190,7 @@ export function validateAppointmentAgainstSalonHours(
   if (startMinutes >= closeMinutes) {
     const nextDate = findNextOpenDate(
       openingHours,
-      addDays(startOfDay(scheduledAt), 1)
+      addDays(startOfDay(wallClock), 1)
     );
     return {
       ok: false,
@@ -191,19 +203,19 @@ export function validateAppointmentAgainstSalonHours(
     const latestStartMinutes = closeMinutes - durationMinutes;
     const nextDate = findNextOpenDate(
       openingHours,
-      addDays(startOfDay(scheduledAt), 1)
+      addDays(startOfDay(wallClock), 1)
     );
 
     if (latestStartMinutes < openMinutes) {
       return {
         ok: false,
-        error: `This service cannot finish before closing at ${closeLabel} on ${format(scheduledAt, "EEEE")}. Please choose the next available date (${format(nextDate, "EEEE, MMM d")}).`,
+        error: `This service cannot finish before closing at ${closeLabel} on ${formatAppointmentDateTime(scheduledAt, "EEEE")}. Please choose the next available date (${format(nextDate, "EEEE, MMM d")}).`,
         suggestNextDate: nextDate,
       };
     }
 
     const latestStart = setMinutes(
-      setHours(startOfDay(scheduledAt), Math.floor(latestStartMinutes / 60)),
+      setHours(startOfDay(wallClock), Math.floor(latestStartMinutes / 60)),
       latestStartMinutes % 60
     );
 
@@ -239,11 +251,13 @@ export function clipAppointmentToDayHours(
   calendarStartHour: number,
   calendarEndHour: number
 ): { top: number; height: number; hidden: boolean } | null {
-  const range = getDayHoursRange(openingHours, scheduledAt);
+  const range = getDayHoursRange(
+    openingHours,
+    asAppointmentWallClock(scheduledAt)
+  );
   if (range.closed) return null;
 
-  const startMinutes =
-    scheduledAt.getHours() * 60 + scheduledAt.getMinutes();
+  const startMinutes = appointmentClockMinutes(scheduledAt);
   const endMinutes = startMinutes + durationMinutes;
   const gridStartMinutes = calendarStartHour * 60;
   const gridEndMinutes = calendarEndHour * 60;
@@ -281,10 +295,8 @@ export function clipIntervalToDayHours(
   if (range.closed) return null;
 
   const dayStart = startOfDay(day);
-  const startDate = new Date(startMs);
-  const endDate = new Date(endMs);
-  const startMinutes = startDate.getHours() * 60 + startDate.getMinutes();
-  const endMinutes = endDate.getHours() * 60 + endDate.getMinutes();
+  const startMinutes = appointmentClockMinutes(new Date(startMs));
+  const endMinutes = appointmentClockMinutes(new Date(endMs));
   const gridStartMinutes = calendarStartHour * 60;
   const gridEndMinutes = calendarEndHour * 60;
 

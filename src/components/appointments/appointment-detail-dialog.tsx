@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import {
   updateAppointmentStatus,
   deleteAppointment,
@@ -122,7 +122,7 @@ export function AppointmentDetailDialog({
     formData.set("recipientName", appointment!.customer.name);
     formData.set(
       "message",
-      `Hi ${appointment!.customer.name}! Reminder: your ${appointment!.service.name} appointment is on ${format(start, "EEE, MMM d · h:mm a")}.`
+      `Hi ${appointment!.customer.name}! Reminder: your ${appointment!.service.name} appointment is on ${formatAppointmentDateTime(start, "EEE, MMM d · h:mm a")}.`
     );
     formData.set("appointmentId", appointment!.id);
     const result = await sendManualSms(formData);
@@ -188,10 +188,11 @@ export function AppointmentDetailDialog({
               <Clock className="mt-0.5 h-4 w-4 shrink-0 text-stone-400" />
               <div>
                 <p className="font-medium text-stone-900">
-                  {format(start, "EEEE, MMMM d")}
+                  {formatAppointmentDateTime(start, "EEEE, MMMM d")}
                 </p>
                 <p className="text-stone-500">
-                  {format(start, "h:mm a")} – {format(end, "h:mm a")}
+                  {formatAppointmentDateTime(start, "h:mm a")} –{" "}
+                  {formatAppointmentDateTime(end, "h:mm a")}
                 </p>
               </div>
             </div>

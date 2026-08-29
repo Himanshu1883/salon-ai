@@ -36,6 +36,7 @@ import {
   getStatusColor,
 } from "./appointments-utils";
 import { cn } from "@/lib/utils";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { usePlan } from "@/components/plans/plan-provider";
 
 type AppointmentsSidebarProps = {
@@ -219,7 +220,7 @@ export function AppointmentsSidebar({
                     {apt.customer.name}
                   </p>
                   <p className="truncate text-xs text-[#6B7280]">
-                    {format(new Date(apt.scheduledAt), "h:mm a")} ·{" "}
+                    {formatAppointmentDateTime(apt.scheduledAt, "h:mm a")} ·{" "}
                     {apt.service.name}
                   </p>
                 </div>
@@ -257,7 +258,7 @@ export function AppointmentsSidebar({
                     {apt.customer.name}
                   </p>
                   <p className="text-xs text-[#6B7280]">
-                    {format(new Date(apt.scheduledAt), "MMM d · h:mm a")}
+                    {formatAppointmentDateTime(apt.scheduledAt, "MMM d · h:mm a")}
                   </p>
                   <p className="text-xs text-[#9CA3AF]">
                     {formatAppointmentTime(apt)}

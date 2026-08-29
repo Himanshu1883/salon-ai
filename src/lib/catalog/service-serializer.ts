@@ -97,6 +97,7 @@ export function serializeCatalogItem(service: {
   status: string;
   onlineBooking: boolean;
   inStoreBooking: boolean;
+  isStartingPrice?: boolean;
   pricingStrategy: string | null;
   discountPercent: number | null;
   discountAmount: number | null;
@@ -169,6 +170,7 @@ export function serializeCatalogItem(service: {
     status: service.status,
     onlineBooking: service.onlineBooking,
     inStoreBooking: service.inStoreBooking,
+    isStartingPrice: Boolean(service.isStartingPrice),
     pricingStrategy: service.pricingStrategy,
     discountPercent: service.discountPercent,
     discountAmount: service.discountAmount,

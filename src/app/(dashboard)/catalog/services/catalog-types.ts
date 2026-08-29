@@ -12,6 +12,7 @@ export type CatalogServiceItem = {
   status: string;
   onlineBooking: boolean;
   inStoreBooking: boolean;
+  isStartingPrice?: boolean;
   pricingStrategy?: string | null;
   discountPercent?: number | null;
   discountAmount?: number | null;
@@ -61,6 +62,7 @@ export function normalizeCatalogItem(raw: Record<string, unknown>): CatalogServi
     status: (raw.status as string) ?? "ACTIVE",
     onlineBooking: (raw.onlineBooking as boolean) ?? true,
     inStoreBooking: (raw.inStoreBooking as boolean) ?? true,
+    isStartingPrice: (raw.isStartingPrice as boolean) ?? false,
     pricingStrategy: (raw.pricingStrategy as string | null) ?? null,
     discountPercent: (raw.discountPercent as number | null) ?? null,
     discountAmount: (raw.discountAmount as number | null) ?? null,

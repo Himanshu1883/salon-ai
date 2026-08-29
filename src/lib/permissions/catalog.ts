@@ -33,6 +33,7 @@ export const PERMISSION_DEFINITIONS = [
   { key: "services.create", name: "Create services", module: "services", action: "create" },
   { key: "services.update", name: "Update services", module: "services", action: "update" },
   { key: "services.delete", name: "Delete services", module: "services", action: "delete" },
+  { key: "services.import", name: "Import service menu", module: "services", action: "import" },
   { key: "packages.view", name: "View packages", module: "packages", action: "view" },
   { key: "packages.create", name: "Create packages", module: "packages", action: "create" },
   { key: "packages.update", name: "Update packages", module: "packages", action: "update" },

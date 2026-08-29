@@ -113,6 +113,7 @@ model Salon {
   hairColors            HairColor[]
   hairConsultationSettings HairConsultationSettings?
   salonRoles           SalonRole[]
+  serviceMenuImports   ServiceMenuImport[]
 }
 
 enum SupportMessageSender {
@@ -263,6 +264,7 @@ model User {
   employee      Employee?     @relation(fields: [employeeId], references: [id], onDelete: SetNull)
   passwordResetTokens PasswordResetToken[]
   permissionOverrides UserPermissionOverride[]
+  serviceMenuImports ServiceMenuImport[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -525,6 +527,7 @@ enum ServiceAudience {
   WOMEN
   UNISEX
   KIDS
+  COUPLES
 }
 
 enum ServiceStatus {
@@ -577,6 +580,7 @@ model Service {
   status          ServiceStatus           @default(ACTIVE)
   onlineBooking   Boolean                 @default(true)
   inStoreBooking  Boolean                 @default(true)
+  isStartingPrice Boolean                 @default(false)
   pricingStrategy PackagePricingStrategy?
   discountPercent Float?
   discountAmount  Float?
@@ -598,6 +602,29 @@ model Service {
   @@index([salonId, categoryId, sortOrder])
   @@index([salonId, catalogType, status])
   @@index([salonId, audience])
+}
+
+model ServiceMenuImport {
+  id                String   @id @default(cuid())
+  salonId           String
+  salon             Salon    @relation(fields: [salonId], references: [id], onDelete: Cascade)
+  uploadedById      String
+  uploadedBy        User     @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  filename          String
+  fileType          String
+  totalRecords      Int
+  importedCount     Int
+  skippedCount      Int
+  failedCount       Int
+  warningCount      Int      @default(0)
+  categoriesCreated Int      @default(0)
+  packagesCreated   Int      @default(0)
+  servicesCreated   Int      @default(0)
+  servicesReused    Int      @default(0)
+  summary           Json?
+  createdAt         DateTime @default(now())
+
+  @@index([salonId, createdAt])
 }
 
 model ServicePackageItem {

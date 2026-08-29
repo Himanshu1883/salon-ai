@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { CalendarClock, TrendingDown, TrendingUp } from "lucide-react";
 import { MemberAvatar } from "@/components/team/member-avatar";
 import { Badge } from "@/components/ui/badge";
@@ -169,8 +169,8 @@ export function StaffAnalyticsOverviewUi({ data }: { data: OverviewData }) {
               <div className="rounded-2xl border border-[#E8ECF4] bg-[#FAFAFF] p-4">
                 <div className="flex items-center gap-2 text-sm text-[#6C3BFF]">
                   <CalendarClock className="h-4 w-4" />
-                  {format(
-                    parseISO(data.nextAppointment.scheduledAt),
+                  {formatAppointmentDateTime(
+                    data.nextAppointment.scheduledAt,
                     "EEE, MMM d · h:mm a"
                   )}
                 </div>
@@ -214,10 +214,10 @@ export function StaffAnalyticsOverviewUi({ data }: { data: OverviewData }) {
                   </div>
                   <div className="text-right text-sm">
                     <p className="font-medium text-[#1C103D]">
-                      {format(parseISO(apt.scheduledAt), "EEE, MMM d")}
+                      {formatAppointmentDateTime(apt.scheduledAt, "EEE, MMM d")}
                     </p>
                     <p className="font-medium text-[#6C3BFF]">
-                      {format(parseISO(apt.scheduledAt), "h:mm a")}
+                      {formatAppointmentDateTime(apt.scheduledAt, "h:mm a")}
                     </p>
                     <p className="text-[#6B7280]">{apt.duration} min</p>
                   </div>

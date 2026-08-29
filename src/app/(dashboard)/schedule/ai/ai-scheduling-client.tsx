@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Sparkles, Calendar, Clock, User, Armchair } from "lucide-react";
-import { format } from "date-fns";
+import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 
 type Service = { id: string; name: string; duration: number };
 type Employee = { id: string; name: string };
@@ -210,7 +210,7 @@ export function AiSchedulingClient({
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="h-4 w-4 text-rose-600" />
-                    {format(new Date(slot.scheduledAt), "EEE, MMM d · h:mm a")}
+                    {formatAppointmentDateTime(slot.scheduledAt, "EEE, MMM d · h:mm a")}
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <User className="h-4 w-4 text-rose-600" />
