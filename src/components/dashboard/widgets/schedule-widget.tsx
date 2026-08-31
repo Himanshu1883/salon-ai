@@ -13,10 +13,10 @@ type Appointment = {
   id: string;
   scheduledAt: Date;
   status: string;
-  notes?: string | null;
+  notes: string | null;
   customer: { name: string };
   service: { name: string; duration: number };
-  employee: { name: string } | null;
+  employee: { id: string; name: string } | null;
 };
 
 type ScheduleWidgetProps = {

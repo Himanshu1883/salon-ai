@@ -81,7 +81,7 @@ export async function fetchDashboardPageData(salonId: string) {
         status: true,
         customer: { select: { name: true } },
         service: { select: { name: true, duration: true } },
-        employee: { select: { name: true } },
+        employee: { select: { id: true, name: true } },
         notes: true,
       },
       orderBy: { scheduledAt: "asc" },
