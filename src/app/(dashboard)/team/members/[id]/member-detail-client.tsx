@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateTeamMember, deactivateTeamMember, deleteTeamMember } from "@/actions/team";
@@ -72,16 +72,26 @@ export function MemberDetailClient({
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [localMember, setLocalMember] = useState(member);
   const [role, setRole] = useState(member.role);
   const [status, setStatus] = useState(member.status);
   const [selectedServices, setSelectedServices] = useState<string[]>(
     member.services.map((s) => s.service.id)
   );
 
+  useEffect(() => {
+    setLocalMember(member);
+    setRole(member.role);
+    setStatus(member.status);
+    setSelectedServices(member.services.map((s) => s.service.id));
+  }, [member]);
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSaved(false);
 
     const formData = new FormData(e.currentTarget);
     selectedServices.forEach((id) => formData.append("serviceIds", id));
@@ -93,7 +103,22 @@ export function MemberDetailClient({
       setError(result.error);
       return;
     }
-    router.refresh();
+    if (result.member) {
+      setLocalMember((prev) => ({
+        ...prev,
+        name: result.member!.name,
+        phone: result.member!.phone,
+        email: result.member!.email,
+        role: result.member!.role,
+        specialties: result.member!.specialties,
+        status: result.member!.status,
+        services: result.member!.services,
+      }));
+      setRole(result.member.role);
+      setStatus(result.member.status);
+    }
+    setSaved(true);
+    void router.refresh();
   }
 
   async function handleDeactivate() {
@@ -103,7 +128,8 @@ export function MemberDetailClient({
       alert(result.error);
       return;
     }
-    router.refresh();
+    setLocalMember((prev) => ({ ...prev, status: "inactive" }));
+    void router.refresh();
   }
 
   async function handleDelete() {
@@ -122,7 +148,7 @@ export function MemberDetailClient({
       return;
     }
     router.push("/team/members");
-    router.refresh();
+    void router.refresh();
   }
 
   return (
@@ -134,24 +160,24 @@ export function MemberDetailClient({
           </Link>
         </Button>
         <div className="flex flex-1 items-center gap-4">
-          <MemberAvatar
-            name={member.name}
-            avatarUrl={member.avatarUrl}
+            <MemberAvatar
+            name={localMember.name}
+            avatarUrl={localMember.avatarUrl}
             className="h-12 w-12 text-base"
           />
           <div>
             <h1 className="text-2xl font-semibold text-stone-900">
-              {member.name}
+              {localMember.name}
             </h1>
             <p className="text-sm text-stone-500">
-              {getRoleLabel(member.role)}
+              {getRoleLabel(localMember.role)}
             </p>
           </div>
           <Badge
-            variant={statusVariant[member.status] ?? "secondary"}
+            variant={statusVariant[localMember.status] ?? "secondary"}
             className="ml-auto"
           >
-            {member.status.replace("_", " ")}
+            {localMember.status.replace("_", " ")}
           </Badge>
         </div>
         <Button variant="outline" asChild>
@@ -160,7 +186,7 @@ export function MemberDetailClient({
             View shifts
           </Link>
         </Button>
-        {canDelete && member.status !== "inactive" && (
+        {canDelete && localMember.status !== "inactive" && (
           <Button variant="outline" onClick={handleDeactivate}>
             Deactivate
           </Button>
@@ -304,6 +330,9 @@ export function MemberDetailClient({
         )}
 
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {saved && !error ? (
+          <p className="text-sm text-emerald-600">Saved</p>
+        ) : null}
         {canUpdate ? (
           <Button type="submit" disabled={loading}>
             {loading ? "Saving..." : "Save changes"}

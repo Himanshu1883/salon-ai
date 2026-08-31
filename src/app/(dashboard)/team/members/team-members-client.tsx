@@ -323,7 +323,7 @@ export function TeamMembersClient({
       }
       return [member, ...prev];
     });
-    router.refresh();
+    void router.refresh();
   }
 
   async function handleDeactivate(id: string) {
@@ -343,7 +343,7 @@ export function TeamMembersClient({
       alert(result.error);
       return;
     }
-    router.refresh();
+    void router.refresh();
   }
 
   async function handleReactivate(id: string) {
@@ -356,7 +356,7 @@ export function TeamMembersClient({
       alert(result.error);
       return;
     }
-    router.refresh();
+    void router.refresh();
   }
 
   async function handleDelete(id: string) {
@@ -374,7 +374,7 @@ export function TeamMembersClient({
       alert(result.error);
       return;
     }
-    router.refresh();
+    void router.refresh();
   }
 
   function renderAccessCell(member: TeamMember) {

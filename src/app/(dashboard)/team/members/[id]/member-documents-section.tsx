@@ -160,7 +160,7 @@ export function MemberDocumentsSection({
       setShowAddOther(false);
       setOtherName("");
     }
-    router.refresh();
+    void router.refresh();
   }
 
   async function handleRemove(
@@ -181,7 +181,7 @@ export function MemberDocumentsSection({
       setError(result.error);
       return;
     }
-    router.refresh();
+    void router.refresh();
   }
 
   return (

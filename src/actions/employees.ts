@@ -1,20 +1,22 @@
 "use server";
 
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
-import { cachedBySalon } from "@/lib/salon-cache";
-import { scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { employeeSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 
-function revalidateEmployeePages(salonId: string) {
+function scheduleEmployeePageRevalidation(salonId: string) {
   scheduleSalonCacheRevalidation(salonId, "team", "catalog");
-  revalidatePath("/employees");
-  revalidatePath("/team/members");
-  revalidatePath("/team/shifts");
-  revalidatePath("/dashboard");
-  revalidatePath("/catalog/services");
-  revalidatePath("/projects");
+  after(() => {
+    revalidatePath("/employees");
+    revalidatePath("/team/members");
+    revalidatePath("/team/shifts");
+    revalidatePath("/dashboard");
+    revalidatePath("/catalog/services");
+    revalidatePath("/projects");
+  });
 }
 
 const getCachedEmployeeOptions = cachedBySalon(
@@ -119,7 +121,7 @@ export async function createEmployee(formData: FormData) {
     },
   });
 
-  revalidateEmployeePages(session.user.salonId!);
+  scheduleEmployeePageRevalidation(session.user.salonId!);
   return { success: true };
 }
 
@@ -144,12 +146,35 @@ export async function updateEmployee(id: string, formData: FormData) {
 
   const employee = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
+    select: {
+      id: true,
+      services: { select: { serviceId: true } },
+    },
   });
   if (!employee) return { error: "Employee not found" };
 
-  await prisma.$transaction([
-    prisma.employeeService.deleteMany({ where: { employeeId: id } }),
-    prisma.employee.update({
+  const nextServiceIds = parsed.data.serviceIds ?? [];
+  const previousServiceIds = employee.services.map((row) => row.serviceId);
+  const previousSet = new Set(previousServiceIds);
+  const nextSet = new Set(nextServiceIds);
+  const toAdd = nextServiceIds.filter((serviceId) => !previousSet.has(serviceId));
+  const toRemove = previousServiceIds.filter(
+    (serviceId) => !nextSet.has(serviceId)
+  );
+
+  await prisma.$transaction(async (tx) => {
+    if (toRemove.length > 0) {
+      await tx.employeeService.deleteMany({
+        where: { employeeId: id, serviceId: { in: toRemove } },
+      });
+    }
+    if (toAdd.length > 0) {
+      await tx.employeeService.createMany({
+        data: toAdd.map((serviceId) => ({ employeeId: id, serviceId })),
+        skipDuplicates: true,
+      });
+    }
+    await tx.employee.update({
       where: { id },
       data: {
         name: parsed.data.name,
@@ -158,18 +183,11 @@ export async function updateEmployee(id: string, formData: FormData) {
         role: parsed.data.role,
         specialties: parsed.data.specialties,
         status: parsed.data.status,
-        services: parsed.data.serviceIds?.length
-          ? {
-              create: parsed.data.serviceIds.map((serviceId) => ({
-                serviceId,
-              })),
-            }
-          : undefined,
       },
-    }),
-  ]);
+    });
+  });
 
-  revalidateEmployeePages(session.user.salonId!);
+  scheduleEmployeePageRevalidation(session.user.salonId!);
   return { success: true };
 }
 
@@ -181,6 +199,6 @@ export async function deleteEmployee(id: string) {
   if (!employee) return { error: "Employee not found" };
 
   await prisma.employee.delete({ where: { id } });
-  revalidateEmployeePages(session.user.salonId!);
+  scheduleEmployeePageRevalidation(session.user.salonId!);
   return { success: true };
 }

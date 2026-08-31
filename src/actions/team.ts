@@ -1,10 +1,11 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireSession, requireOwnerOrManager } from "@/lib/auth";
 import { requirePermission, PermissionDeniedError } from "@/lib/permissions/require";
-import { cachedBySalon, revalidateSalonCache } from "@/lib/salon-cache";
+import { cachedBySalon, scheduleSalonCacheRevalidation } from "@/lib/salon-cache";
 import { employeeSchema, employeeProfileSchema } from "@/lib/validations";
 import { saveEmployeeDocument } from "@/lib/employee-upload";
 import { parseOtherDocuments } from "@/lib/employee";
@@ -49,18 +50,27 @@ async function syncStaffLoginWithStatus(
   return setLinkedLoginActiveState(salonId, employee, loginActive);
 }
 
-function revalidateTeam(salonId: string) {
-  revalidateSalonCache(
+function revalidateTeamPaths(memberId?: string) {
+  revalidatePath("/team/members");
+  revalidatePath("/team/shifts");
+  revalidatePath("/employees");
+  revalidatePath("/dashboard");
+  if (memberId) {
+    revalidatePath(`/team/members/${memberId}`);
+  }
+}
+
+function scheduleTeamRevalidation(salonId: string, memberId?: string) {
+  scheduleSalonCacheRevalidation(
     salonId,
     "team",
     "dashboard-widgets",
     "dashboard-kpis",
     "queue"
   );
-  revalidatePath("/team/members");
-  revalidatePath("/team/shifts");
-  revalidatePath("/employees");
-  revalidatePath("/dashboard");
+  after(() => {
+    revalidateTeamPaths(memberId);
+  });
 }
 
 async function fetchTeamMembers(salonId: string) {
@@ -181,7 +191,7 @@ export async function createTeamMember(formData: FormData) {
     select: teamMemberSelect,
   });
 
-  revalidateTeam(session.user.salonId);
+  scheduleTeamRevalidation(session.user.salonId);
   return { success: true as const, id: member.id, member };
 }
 
@@ -206,30 +216,63 @@ export async function updateTeamMember(id: string, formData: FormData) {
 
   const existing = await prisma.employee.findFirst({
     where: { id, salonId: session.user.salonId },
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      services: { select: { serviceId: true } },
+    },
   });
   if (!existing) return { error: "Team member not found" };
 
-  await prisma.$transaction([
-    prisma.employeeService.deleteMany({ where: { employeeId: id } }),
-    prisma.employee.update({
-      where: { id },
-      data: {
-        name: parsed.data.name,
-        phone: parsed.data.phone,
-        email: parsed.data.email || null,
-        role: parsed.data.role,
-        specialties: parsed.data.specialties,
-        status: parsed.data.status,
-        services: parsed.data.serviceIds?.length
-          ? {
-              create: parsed.data.serviceIds.map((serviceId) => ({
-                serviceId,
-              })),
-            }
-          : undefined,
-      },
-    }),
-  ]);
+  const nextServiceIds = parsed.data.serviceIds ?? [];
+  const previousServiceIds = existing.services.map((row) => row.serviceId);
+  const previousSet = new Set(previousServiceIds);
+  const nextSet = new Set(nextServiceIds);
+  const toAdd = nextServiceIds.filter((serviceId) => !previousSet.has(serviceId));
+  const toRemove = previousServiceIds.filter(
+    (serviceId) => !nextSet.has(serviceId)
+  );
+
+  const member =
+    toAdd.length === 0 && toRemove.length === 0
+      ? await prisma.employee.update({
+          where: { id },
+          data: {
+            name: parsed.data.name,
+            phone: parsed.data.phone,
+            email: parsed.data.email || null,
+            role: parsed.data.role,
+            specialties: parsed.data.specialties,
+            status: parsed.data.status,
+          },
+          select: teamMemberSelect,
+        })
+      : await prisma.$transaction(async (tx) => {
+          if (toRemove.length > 0) {
+            await tx.employeeService.deleteMany({
+              where: { employeeId: id, serviceId: { in: toRemove } },
+            });
+          }
+          if (toAdd.length > 0) {
+            await tx.employeeService.createMany({
+              data: toAdd.map((serviceId) => ({ employeeId: id, serviceId })),
+              skipDuplicates: true,
+            });
+          }
+          return tx.employee.update({
+            where: { id },
+            data: {
+              name: parsed.data.name,
+              phone: parsed.data.phone,
+              email: parsed.data.email || null,
+              role: parsed.data.role,
+              specialties: parsed.data.specialties,
+              status: parsed.data.status,
+            },
+            select: teamMemberSelect,
+          });
+        });
 
   if (parsed.data.status !== existing.status) {
     const affectedUserIds = await syncStaffLoginWithStatus(
@@ -240,16 +283,12 @@ export async function updateTeamMember(id: string, formData: FormData) {
       },
       parsed.data.status
     );
-    revalidateTeamAccess(session.user.salonId, affectedUserIds);
+    after(() => {
+      revalidateTeamAccess(session.user.salonId, affectedUserIds);
+    });
   }
 
-  const member = await prisma.employee.findFirst({
-    where: { id, salonId: session.user.salonId },
-    select: teamMemberSelect,
-  });
-
-  revalidateTeam(session.user.salonId);
-  revalidatePath(`/team/members/${id}`);
+  scheduleTeamRevalidation(session.user.salonId, id);
   return { success: true as const, member };
 }
 
@@ -292,7 +331,7 @@ export async function updateTeamMemberProfile(id: string, formData: FormData) {
     },
   });
 
-  revalidateTeam(session.user.salonId);
+  scheduleTeamRevalidation(session.user.salonId, id);
   return { success: true };
 }
 
@@ -357,7 +396,7 @@ export async function uploadEmployeeDocument(
     });
   }
 
-  revalidateTeam(session.user.salonId);
+  scheduleTeamRevalidation(session.user.salonId, employeeId);
   return { success: true, path: upload.path };
 }
 
@@ -396,7 +435,7 @@ export async function removeEmployeeDocument(
     return { error: "Invalid document type" };
   }
 
-  revalidateTeam(session.user.salonId);
+  scheduleTeamRevalidation(session.user.salonId, employeeId);
   return { success: true };
 }
 
@@ -419,9 +458,10 @@ export async function deactivateTeamMember(id: string) {
     "inactive"
   );
 
-  revalidateTeam(session.user.salonId);
-  revalidateTeamAccess(session.user.salonId, affectedUserIds);
-  revalidatePath(`/team/members/${id}`);
+  scheduleTeamRevalidation(session.user.salonId, id);
+  after(() => {
+    revalidateTeamAccess(session.user.salonId, affectedUserIds);
+  });
   return { success: true as const };
 }
 
@@ -444,9 +484,10 @@ export async function reactivateTeamMember(id: string) {
     "active"
   );
 
-  revalidateTeam(session.user.salonId);
-  revalidateTeamAccess(session.user.salonId, affectedUserIds);
-  revalidatePath(`/team/members/${id}`);
+  scheduleTeamRevalidation(session.user.salonId, id);
+  after(() => {
+    revalidateTeamAccess(session.user.salonId, affectedUserIds);
+  });
   return { success: true as const };
 }
 
@@ -466,7 +507,9 @@ export async function deleteTeamMember(id: string) {
 
   await prisma.employee.delete({ where: { id } });
 
-  revalidateTeam(session.user.salonId);
-  revalidateTeamAccess(session.user.salonId, affectedUserIds);
+  scheduleTeamRevalidation(session.user.salonId);
+  after(() => {
+    revalidateTeamAccess(session.user.salonId, affectedUserIds);
+  });
   return { success: true as const };
 }

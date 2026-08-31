@@ -222,13 +222,13 @@ export function EmployeesClient({
   async function handleDelete(id: string) {
     if (!confirm("Delete this employee?")) return;
     await deleteEmployee(id);
-    router.refresh();
+    void router.refresh();
   }
 
   function handleSuccess() {
     setOpen(false);
     setEditing(null);
-    router.refresh();
+    void router.refresh();
   }
 
   return (

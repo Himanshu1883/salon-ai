@@ -62,7 +62,7 @@ export function MemberAddressSection({
     }
 
     setEditing(false);
-    router.refresh();
+    void router.refresh();
   }
 
   return (
