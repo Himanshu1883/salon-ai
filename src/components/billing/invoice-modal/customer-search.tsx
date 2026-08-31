@@ -437,20 +437,20 @@ export function PhoneSearch({ value, onChange }: PhoneSearchProps) {
       document.removeEventListener("pointerdown", handlePointerDownOutside, true);
   }, [open]);
 
-  const selectCustomer = useCallback(
-    (customer: CustomerResult) => {
-      onChange({
-        id: customer.id,
-        name: customer.name,
-        phone: customer.phone ?? "",
-        email: customer.email ?? "",
-        loyaltyPoints: customer.loyaltyPoints,
-      });
-      setQuery(customer.phone ?? "");
-      setOpen(false);
-    },
-    [onChange]
-  );
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
+  const selectCustomer = useCallback((customer: CustomerResult) => {
+    onChangeRef.current({
+      id: customer.id,
+      name: customer.name,
+      phone: customer.phone ?? "",
+      email: customer.email ?? "",
+      loyaltyPoints: customer.loyaltyPoints,
+    });
+    setQuery(customer.phone ?? "");
+    setOpen(false);
+  }, []);
 
   useEffect(() => {
     const digits = query.replace(/\D/g, "");

@@ -11,11 +11,11 @@ type MembershipSalesWidgetProps = {
 export function MembershipSalesWidget({ delay = 0 }: MembershipSalesWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Membership Sales</h3>
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">Membership Sales</h3>
         <Link
           href="/sales/memberships"
-          className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           Manage
         </Link>
@@ -46,11 +46,11 @@ type BirthdaysWidgetProps = {
 export function BirthdaysWidget({ delay = 0 }: BirthdaysWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Birthdays</h3>
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">Birthdays</h3>
         <Link
           href="/clients/segments"
-          className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           Segments
         </Link>

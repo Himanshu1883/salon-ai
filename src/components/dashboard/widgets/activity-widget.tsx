@@ -32,14 +32,14 @@ export function ActivityWidget({ recentActivity, delay = 0 }: ActivityWidgetProp
 
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">
           Recent Activity
         </h3>
         {isEnterprise && (
           <Link
             href="/queue"
-            className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+            className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
           >
             View queue
           </Link>
@@ -73,18 +73,18 @@ export function ActivityWidget({ recentActivity, delay = 0 }: ActivityWidgetProp
               const Icon = activityIcons[item.type];
               const gradient = activityColors[item.type];
               const inner = (
-                <div className="flex items-start gap-3 rounded-2xl px-2 py-3 transition-colors hover:bg-dashboard-bg/80">
+                <div className="flex min-w-0 items-start gap-3 rounded-2xl px-2 py-3 transition-colors hover:bg-dashboard-bg/80">
                   <div
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} text-white shadow-sm`}
                   >
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-dashboard-text">
+                    <p className="truncate text-sm font-medium text-dashboard-text">
                       {item.title}
                     </p>
                     {item.subtitle && (
-                      <p className="mt-0.5 text-xs text-dashboard-muted">
+                      <p className="mt-0.5 truncate text-xs text-dashboard-muted">
                         {item.subtitle}
                       </p>
                     )}

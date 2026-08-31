@@ -111,8 +111,8 @@ function ActionCardContent({ action }: { action: ActionStyle }) {
         <action.icon className="h-5 w-5" />
       </div>
       <div className="min-w-0 text-left">
-        <p className="text-sm font-semibold leading-tight">{action.label}</p>
-        <p className={cn("text-xs", action.descriptionClassName)}>
+        <p className="text-[11px] font-semibold leading-tight sm:text-sm">{action.label}</p>
+        <p className={cn("truncate text-[10px] sm:text-xs", action.descriptionClassName)}>
           {action.description}
         </p>
       </div>
@@ -136,11 +136,11 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5"
+      className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 @min-[68rem]:grid-cols-5"
     >
       {visibleActions.map((action) => {
         const cardClassName = cn(
-          "flex items-center gap-3 rounded-2xl border-0 px-4 py-3.5 transition-all hover:scale-[1.01] hover:shadow-md xl:px-5 xl:py-4",
+          "flex w-full min-w-0 items-center gap-2 rounded-2xl border-0 px-3 py-3 transition-all hover:scale-[1.01] hover:shadow-md sm:gap-3 sm:px-4 sm:py-3.5 xl:px-5 xl:py-4",
           action.className
         );
 

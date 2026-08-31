@@ -11,6 +11,7 @@ type CompactKpiCardProps = {
   icon: React.ReactNode;
   iconGradient: string;
   delay?: number;
+  size?: "compact" | "lg";
 };
 
 function CompactKpiCardContent({
@@ -18,22 +19,48 @@ function CompactKpiCardContent({
   value,
   icon,
   iconGradient,
+  size = "compact",
 }: Omit<CompactKpiCardProps, "href" | "delay">) {
+  const isLg = size === "lg";
+
   return (
-    <div className="flex items-start gap-2.5 px-3 py-2.5 xl:gap-3 xl:px-3.5 xl:py-3">
+    <div
+      className={cn(
+        "flex items-center",
+        isLg
+          ? "gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5 xl:px-5 xl:py-4"
+          : "items-start gap-2.5 px-3 py-2.5 xl:gap-3 xl:px-3.5 xl:py-3"
+      )}
+    >
       <div
         className={cn(
-          "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br shadow-sm xl:h-9 xl:w-9",
+          "flex shrink-0 items-center justify-center bg-gradient-to-br shadow-sm",
+          isLg
+            ? "h-9 w-9 rounded-xl sm:h-10 sm:w-10 xl:h-11 xl:w-11"
+            : "h-8 w-8 rounded-lg xl:h-9 xl:w-9",
           iconGradient
         )}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium leading-snug text-dashboard-muted sm:text-xs">
+        <p
+          className={cn(
+            isLg
+              ? "text-[11px] font-semibold leading-tight text-dashboard-text sm:text-sm"
+              : "text-[11px] font-medium leading-snug text-dashboard-muted sm:text-xs"
+          )}
+        >
           {label}
         </p>
-        <p className="mt-0.5 break-words text-sm font-bold leading-tight tracking-tight text-dashboard-text sm:text-base">
+        <p
+          className={cn(
+            "truncate leading-tight tracking-tight",
+            isLg
+              ? "mt-0.5 truncate text-xs font-bold text-dashboard-text"
+              : "mt-0.5 truncate text-sm font-bold text-dashboard-text sm:text-base"
+          )}
+        >
           {value}
         </p>
       </div>
@@ -48,6 +75,7 @@ export function CompactKpiCard({
   icon,
   iconGradient,
   delay = 0,
+  size = "compact",
 }: CompactKpiCardProps) {
   const card = (
     <DashboardCard
@@ -60,6 +88,7 @@ export function CompactKpiCard({
         value={value}
         icon={icon}
         iconGradient={iconGradient}
+        size={size}
       />
     </DashboardCard>
   );

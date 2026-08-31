@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { salonCacheTag } from "@/lib/salon-cache";
 import { cachedRead } from "@/lib/memory-cache";
 import { unstable_cache } from "next/cache";
-import { startOfDay, endOfDay, format } from "date-fns";
+import { startOfDay, endOfDay, format, subDays } from "date-fns";
 import { getPendingSmsCountForSalon } from "@/actions/sms";
 import { getCustomerCountForSalon, getRecentCustomersForSalon } from "@/actions/customers";
 import { getLowStockCountForSalon } from "@/actions/stock";
@@ -11,8 +11,11 @@ import { getTopEarnersForSalon } from "@/actions/billing";
 import { fetchDashboardBillingMetrics } from "@/lib/dashboard/billing-metrics";
 import { formatCurrency } from "@/lib/currency";
 import { getUpcomingTodayAppointments } from "@/lib/appointments/upcoming-today";
+import { getStockStatus } from "@/lib/stock";
 import type {
+  CustomerDay,
   DashboardActivity,
+  DashboardLowStockItem,
   TeamMemberStatus,
 } from "@/actions/dashboard";
 
@@ -44,6 +47,9 @@ export async function fetchDashboardPageData(salonId: string) {
     completedServices,
     lowStockCount,
     completedCheckInsToday,
+    customerDailyRows,
+    lowStockItemRows,
+    totalStockItems,
   ] = await Promise.all([
     fetchDashboardBillingMetrics(salonId, now),
     prisma.queueEntry.findMany({
@@ -76,6 +82,7 @@ export async function fetchDashboardPageData(salonId: string) {
         customer: { select: { name: true } },
         service: { select: { name: true, duration: true } },
         employee: { select: { name: true } },
+        notes: true,
       },
       orderBy: { scheduledAt: "asc" },
     }),
@@ -128,6 +135,45 @@ export async function fetchDashboardPageData(salonId: string) {
         completedAt: { gte: todayStart, lte: todayEnd },
       },
     }),
+    prisma.$queryRaw<{ day: Date; count: bigint | number }[]>`
+      SELECT
+        date_trunc('day', "createdAt")::date AS day,
+        COUNT(*)::int AS count
+      FROM "Customer"
+      WHERE "salonId" = ${salonId}
+        AND "createdAt" >= ${startOfDay(subDays(now, 6))}
+        AND "createdAt" <= ${todayEnd}
+      GROUP BY 1
+      ORDER BY 1
+    `,
+    prisma.$queryRaw<
+      {
+        id: string;
+        name: string;
+        sku: string | null;
+        unit: string;
+        quantityOnHand: number;
+        reorderLevel: number | null;
+      }[]
+    >`
+      SELECT
+        id,
+        name,
+        sku,
+        unit,
+        "quantityOnHand",
+        "reorderLevel"
+      FROM "StockItem"
+      WHERE "salonId" = ${salonId}
+        AND status = 'active'
+        AND (
+          "quantityOnHand" <= 0
+          OR ("reorderLevel" IS NOT NULL AND "quantityOnHand" <= "reorderLevel")
+        )
+      ORDER BY "quantityOnHand" ASC, name ASC
+      LIMIT 50
+    `,
+    prisma.stockItem.count({ where: { salonId, status: "active" } }),
   ]);
 
   const queueCounts = (["waiting", "assigned", "in_progress"] as const).map(
@@ -147,6 +193,48 @@ export async function fetchDashboardPageData(salonId: string) {
   const completedAppointmentsToday = completedCheckInsToday;
   const waitingCount = countQueueStatus(queueCounts, "waiting");
   const activeQueue = activeQueueEntries.length;
+
+  const newByDay = new Map<string, number>();
+  for (const row of customerDailyRows) {
+    newByDay.set(
+      format(startOfDay(row.day), "yyyy-MM-dd"),
+      Number(row.count ?? 0)
+    );
+  }
+  const weekNewCustomers = [...newByDay.values()].reduce(
+    (sum, count) => sum + count,
+    0
+  );
+  let runningTotal = Math.max(0, totalCustomers - weekNewCustomers);
+  const customersByDay: CustomerDay[] = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = startOfDay(subDays(now, i));
+    const key = format(day, "yyyy-MM-dd");
+    const newCount = newByDay.get(key) ?? 0;
+    runningTotal += newCount;
+    customersByDay.push({
+      date: key,
+      label: format(day, "EEE"),
+      newCount,
+      total: runningTotal,
+    });
+  }
+
+  const lowStockItems: DashboardLowStockItem[] = lowStockItemRows.map((row) => {
+    const quantityOnHand = Number(row.quantityOnHand ?? 0);
+    const reorderLevel =
+      row.reorderLevel == null ? null : Number(row.reorderLevel);
+    const status = getStockStatus({ quantityOnHand, reorderLevel });
+    return {
+      id: row.id,
+      name: row.name,
+      sku: row.sku,
+      unit: row.unit,
+      quantityOnHand,
+      reorderLevel,
+      status: status === "out" ? "out" : "low",
+    };
+  });
 
   const {
     revenueToday,
@@ -256,6 +344,7 @@ export async function fetchDashboardPageData(salonId: string) {
       waitingCount,
       recentQueue,
       upcomingAppointments,
+      todayAppointmentList: todayAppointments,
       revenueToday,
       revenueMonth,
       todayAppointments: upcomingAppointments.length,
@@ -263,7 +352,11 @@ export async function fetchDashboardPageData(salonId: string) {
       topEarners,
       recentCustomers,
       lowStockCount,
+      lowStockItems,
+      totalStockItems,
       revenueByDay,
+      customersByDay,
+      totalCustomers,
       teamOnShift,
       recentActivity,
       subscriptionStatus: subscription?.status ?? null,
@@ -282,10 +375,10 @@ export async function fetchDashboardPageData(salonId: string) {
 }
 
 export function getCachedDashboardPageData(salonId: string) {
-  return cachedRead(`salon-cache:dashboard-page:${salonId}`, 15, () =>
+  return cachedRead(`salon-cache:dashboard-page:v3:${salonId}`, 15, () =>
     unstable_cache(
       () => fetchDashboardPageData(salonId),
-      ["dashboard-page", salonId],
+      ["dashboard-page", salonId, "v3"],
       {
         revalidate: 15,
         tags: [

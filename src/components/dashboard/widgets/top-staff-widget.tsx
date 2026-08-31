@@ -20,11 +20,11 @@ type TopStaffWidgetProps = {
 export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Top Staff</h3>
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">Top Staff</h3>
         <Link
           href="/reports/team/earnings"
-          className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           Full report
         </Link>
@@ -43,18 +43,18 @@ export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
             {topEarners.map((earner, i) => (
               <div
                 key={earner.id}
-                className="flex items-center justify-between rounded-2xl border border-dashboard-border bg-dashboard-bg/40 px-4 py-3"
+                className="flex min-w-0 items-center justify-between gap-2 rounded-2xl border border-dashboard-border bg-dashboard-bg/40 px-3 py-3 sm:px-4"
               >
-                <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-sm font-bold text-white">
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-sm font-bold text-white">
                     {i + 1}
                   </span>
-                  <div>
-                    <p className="text-sm font-medium text-dashboard-text">{earner.name}</p>
-                    <p className="text-xs capitalize text-dashboard-muted">{earner.role}</p>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-dashboard-text">{earner.name}</p>
+                    <p className="truncate text-xs capitalize text-dashboard-muted">{earner.role}</p>
                   </div>
                 </div>
-                <div className="text-right">
+                <div className="shrink-0 text-right">
                   <p className="text-sm font-semibold text-dashboard-text">
                     {formatCurrency(earner.monthEarnings)}
                   </p>

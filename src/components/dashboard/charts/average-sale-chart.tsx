@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import {
-  Area,
-  AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -14,25 +14,32 @@ import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
 import type { RevenueDay } from "@/actions/dashboard";
 
-type RevenueAreaChartProps = {
+type AverageSaleChartProps = {
   data: RevenueDay[];
-  revenueMonth: number;
   delay?: number;
 };
 
-export function RevenueAreaChart({
-  data,
-  revenueMonth,
-  delay = 0,
-}: RevenueAreaChartProps) {
-  const weekTotal = data.reduce((sum, d) => sum + d.revenue, 0);
+function averageTicket(days: RevenueDay[]) {
+  const sales = days.reduce((sum, day) => sum + (day.salesCount ?? 0), 0);
+  const revenue = days.reduce((sum, day) => sum + day.revenue, 0);
+  return sales > 0 ? revenue / sales : 0;
+}
+
+export function AverageSaleChart({ data, delay = 0 }: AverageSaleChartProps) {
+  const chartData = data.map((day) => ({
+    ...day,
+    averageSale:
+      (day.salesCount ?? 0) > 0 ? day.revenue / day.salesCount : 0,
+  }));
+  const weekAverage = averageTicket(data);
+  const weekSales = data.reduce((sum, day) => sum + (day.salesCount ?? 0), 0);
 
   return (
     <DashboardCard delay={delay} className="h-full">
       <div className="flex min-w-0 flex-row items-start justify-between gap-2 px-3 pt-3 pb-1.5">
         <div className="min-w-0">
           <h3 className="truncate text-sm font-semibold text-dashboard-text">
-            Revenue Analytics
+            Average Sale
           </h3>
           <p className="text-[11px] text-dashboard-muted">Last 7 days</p>
         </div>
@@ -47,36 +54,30 @@ export function RevenueAreaChart({
       <div className="min-w-0 px-3 pb-3">
         <div className="mb-2 min-w-0">
           <p className="truncate text-lg font-bold tracking-tight text-dashboard-text sm:text-xl">
-            {formatCurrency(weekTotal)}
+            {weekAverage > 0 ? formatCurrency(Math.round(weekAverage)) : "—"}
           </p>
-          <p className="text-[11px] text-dashboard-muted">7-day total</p>
+          <p className="text-[11px] text-dashboard-muted">Avg ticket</p>
         </div>
 
-        {weekTotal === 0 ? (
+        {weekAverage === 0 ? (
           <div className="flex h-[128px] flex-col items-center justify-center rounded-xl border border-dashed border-dashboard-border text-center">
             <p className="text-xs font-medium text-dashboard-text">
-              No revenue yet
+              No sales yet
             </p>
             <Link
               href="/billing"
               className="mt-1 text-xs font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
             >
-              Create invoice →
+              Record a sale →
             </Link>
           </div>
         ) : (
           <div className="h-[128px] w-full min-w-0 overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={data}
+              <BarChart
+                data={chartData}
                 margin={{ top: 4, right: 4, left: 0, bottom: 0 }}
               >
-                <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8B5CF6" stopOpacity={0.35} />
-                    <stop offset="100%" stopColor="#6D28D9" stopOpacity={0.02} />
-                  </linearGradient>
-                </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#E5E7EB"
@@ -92,8 +93,10 @@ export function RevenueAreaChart({
                   axisLine={false}
                   tickLine={false}
                   tick={{ fill: "#6B7280", fontSize: 10 }}
-                  tickFormatter={(v) =>
-                    v >= 1000 ? `${Math.round(v / 1000)}k` : String(v)
+                  tickFormatter={(value) =>
+                    value >= 1000
+                      ? `${Math.round(Number(value) / 1000)}k`
+                      : String(value)
                   }
                   width={32}
                 />
@@ -106,26 +109,22 @@ export function RevenueAreaChart({
                   }}
                   formatter={(value) => [
                     formatCurrency(Number(value ?? 0)),
-                    "Revenue",
+                    "Avg sale",
                   ]}
                 />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#6D28D9"
-                  strokeWidth={2}
-                  fill="url(#revenueGradient)"
+                <Bar
+                  dataKey="averageSale"
+                  fill="#0D9488"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={18}
                 />
-              </AreaChart>
+              </BarChart>
             </ResponsiveContainer>
           </div>
         )}
 
         <p className="mt-2 border-t border-dashboard-border pt-2 text-[11px] text-dashboard-muted">
-          MTD{" "}
-          <span className="font-semibold text-dashboard-text">
-            {formatCurrency(revenueMonth)}
-          </span>
+          {weekSales === 1 ? "1 sale this week" : `${weekSales} sales this week`}
         </p>
       </div>
     </DashboardCard>

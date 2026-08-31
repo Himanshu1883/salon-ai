@@ -19,11 +19,11 @@ type TeamStatusWidgetProps = {
 export function TeamStatusWidget({ team, delay = 0 }: TeamStatusWidgetProps) {
   return (
     <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Team Status</h3>
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
+        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">Team Status</h3>
         <Link
           href="/team/shifts"
-          className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           Shifts
         </Link>
@@ -68,7 +68,9 @@ export function TeamStatusWidget({ team, delay = 0 }: TeamStatusWidgetProps) {
                       </p>
                     </div>
                   </div>
-                  <Badge variant={config.variant}>{config.label}</Badge>
+                  <Badge variant={config.variant} className="shrink-0">
+                    {config.label}
+                  </Badge>
                 </div>
               );
             })}

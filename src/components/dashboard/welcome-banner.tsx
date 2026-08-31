@@ -15,11 +15,11 @@ export function WelcomeBanner() {
   const displayName = name ? decodeURIComponent(name) : "your salon";
 
   return (
-    <div className="mb-2 flex items-start gap-3 rounded-[20px] border border-violet-100 bg-violet-50/60 p-3 shadow-sm">
+    <div className="mb-2 flex min-w-0 items-start gap-3 rounded-[20px] border border-violet-100 bg-violet-50/60 p-3 shadow-sm">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-violet-600 text-white">
         <Sparkles className="h-3.5 w-3.5" />
       </div>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-violet-900">
           Welcome to Go Tix, {displayName}!
         </p>

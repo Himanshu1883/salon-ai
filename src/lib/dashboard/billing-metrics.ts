@@ -87,10 +87,11 @@ export async function fetchDashboardBillingMetrics(
         status: { in: [...UNPAID_STATUSES] },
       },
     }),
-    prisma.$queryRaw<{ day: Date; revenue: number | null }[]>`
+    prisma.$queryRaw<{ day: Date; revenue: number | null; sales: bigint | number | null }[]>`
       SELECT
         date_trunc('day', "paidAt")::date AS day,
-        COALESCE(SUM(total), 0)::float AS revenue
+        COALESCE(SUM(total), 0)::float AS revenue,
+        COUNT(*)::int AS sales
       FROM "Invoice"
       WHERE "salonId" = ${salonId}
         AND status = 'paid'
@@ -100,10 +101,11 @@ export async function fetchDashboardBillingMetrics(
       GROUP BY 1
       ORDER BY 1
     `,
-    prisma.$queryRaw<{ day: Date; revenue: number | null }[]>`
+    prisma.$queryRaw<{ day: Date; revenue: number | null; sales: bigint | number | null }[]>`
       SELECT
         date_trunc('day', "createdAt")::date AS day,
-        COALESCE(SUM("amountPaid"), 0)::float AS revenue
+        COALESCE(SUM("amountPaid"), 0)::float AS revenue,
+        COUNT(*)::int AS sales
       FROM "Invoice"
       WHERE "salonId" = ${salonId}
         AND status = 'partial'
@@ -153,20 +155,26 @@ export async function fetchDashboardBillingMetrics(
         ? 100
         : 0;
 
-  const dailyMap = new Map<string, number>();
+  const dailyMap = new Map<string, { revenue: number; salesCount: number }>();
   for (const row of [...paidDailyRows, ...partialDailyRows]) {
     const key = format(startOfDay(row.day), "yyyy-MM-dd");
-    dailyMap.set(key, (dailyMap.get(key) ?? 0) + (row.revenue ?? 0));
+    const current = dailyMap.get(key) ?? { revenue: 0, salesCount: 0 };
+    dailyMap.set(key, {
+      revenue: current.revenue + (row.revenue ?? 0),
+      salesCount: current.salesCount + Number(row.sales ?? 0),
+    });
   }
 
   const revenueByDay: RevenueDay[] = [];
   for (let i = 6; i >= 0; i--) {
     const day = startOfDay(subDays(now, i));
     const key = format(day, "yyyy-MM-dd");
+    const dayStats = dailyMap.get(key);
     revenueByDay.push({
       date: key,
       label: format(day, "EEE"),
-      revenue: dailyMap.get(key) ?? 0,
+      revenue: dayStats?.revenue ?? 0,
+      salesCount: dayStats?.salesCount ?? 0,
     });
   }
 

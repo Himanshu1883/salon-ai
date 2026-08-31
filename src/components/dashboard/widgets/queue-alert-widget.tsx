@@ -23,12 +23,12 @@ export function QueueAlertWidget({
 
   return (
     <DashboardCard delay={delay} hover={false} className="border-orange-200 bg-orange-50/80">
-      <div className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
+      <div className="flex min-w-0 flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
             <Clock className="h-5 w-5" />
           </div>
-          <p className="text-sm text-orange-950">
+          <p className="min-w-0 text-sm text-orange-950">
             <span className="font-semibold">{waitingCount} waiting</span>
             {estimatedWait !== undefined && (
               <>

@@ -10,6 +10,7 @@ import {
   markInvoicePaid,
 } from "@/actions/billing";
 import { getProducts } from "@/actions/inventory/products";
+import { getCustomerOpenAppointmentPrefill } from "@/actions/invoice-prefill";
 import { resolveLineItemLabel } from "@/lib/service-display";
 import type { InvoiceCustomer } from "./invoice-modal/customer-search";
 import {
@@ -123,6 +124,26 @@ function prefillToLineItems(
   return [newLineItem(defaultEmployeeId || employees[0]?.id || "")];
 }
 
+function isBlankLineItem(item: LineItem) {
+  return !item.serviceId && !item.stockItemId && !item.description.trim();
+}
+
+function areLineItemsBlank(items: LineItem[]) {
+  return items.length === 0 || items.every(isBlankLineItem);
+}
+
+function areLineItemsFromAppointment(items: LineItem[]) {
+  return items.some((item) => Boolean(item.appointmentServiceItemId));
+}
+
+function canReplaceInvoiceLines(
+  items: LineItem[],
+  autoPrefillAppointmentId: string | null
+) {
+  if (areLineItemsBlank(items)) return true;
+  return Boolean(autoPrefillAppointmentId) && areLineItemsFromAppointment(items);
+}
+
 function statusLabel(status: string) {
   const map: Record<string, string> = {
     draft: "Draft",
@@ -173,6 +194,9 @@ export function BillingInvoiceForm({
       ? prefillToLineItems(invoicePrefill, employees, services)
       : [newLineItem(employees[0]?.id ?? "")]
   );
+  const [linkedAppointmentId, setLinkedAppointmentId] = useState(
+    invoicePrefill?.appointmentId ?? ""
+  );
   const [products, setProducts] = useState<BillingProduct[]>([]);
 
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
@@ -191,6 +215,19 @@ export function BillingInvoiceForm({
     null
   );
   const autoWhatsAppOpened = useRef(false);
+  const skipCustomerAppointmentPrefill = Boolean(invoicePrefill);
+  const autoPrefillAppointmentId = useRef<string | null>(
+    invoicePrefill?.appointmentId ?? null
+  );
+  const pendingPrefillCustomerId = useRef<string | null>(null);
+  const lineItemsRef = useRef(lineItems);
+  lineItemsRef.current = lineItems;
+  const customerRef = useRef(customer);
+  customerRef.current = customer;
+  const employeesRef = useRef(employees);
+  employeesRef.current = employees;
+  const servicesRef = useRef(services);
+  servicesRef.current = services;
 
   const billingMessageTemplate = whatsappSettings?.billingMessageTemplate;
 
@@ -245,6 +282,120 @@ export function BillingInvoiceForm({
       )
       .catch(() => setProducts([]));
   }, []);
+
+  const resetAutoPrefillLines = useCallback(() => {
+    autoPrefillAppointmentId.current = null;
+    setLinkedAppointmentId("");
+    setEmployeeId("");
+    setLineItems([newLineItem(employeesRef.current[0]?.id ?? "")]);
+  }, []);
+
+  const applyAppointmentPrefill = useCallback((prefill: InvoicePrefill) => {
+    setLineItems(
+      prefillToLineItems(prefill, employeesRef.current, servicesRef.current)
+    );
+    if (prefill.employeeId) setEmployeeId(prefill.employeeId);
+    autoPrefillAppointmentId.current = prefill.appointmentId ?? null;
+    setLinkedAppointmentId(prefill.appointmentId ?? "");
+  }, []);
+
+  const handleCustomerChange = useCallback(
+    async (next: InvoiceCustomer) => {
+      const previous = customerRef.current;
+
+      if (skipCustomerAppointmentPrefill) {
+        customerRef.current = next;
+        setCustomer(next);
+        return;
+      }
+
+      if (!next.id) {
+        const phoneFieldSync =
+          Boolean(previous.id) &&
+          next.name.trim() !== "" &&
+          next.name.trim() === previous.name.trim();
+        if (phoneFieldSync) {
+          const kept = { ...next, id: previous.id };
+          customerRef.current = kept;
+          setCustomer(kept);
+          return;
+        }
+
+        customerRef.current = next;
+        setCustomer(next);
+        pendingPrefillCustomerId.current = null;
+        if (autoPrefillAppointmentId.current) {
+          if (
+            canReplaceInvoiceLines(
+              lineItemsRef.current,
+              autoPrefillAppointmentId.current
+            )
+          ) {
+            resetAutoPrefillLines();
+          } else {
+            autoPrefillAppointmentId.current = null;
+            setLinkedAppointmentId("");
+          }
+        }
+        return;
+      }
+
+      customerRef.current = next;
+      setCustomer(next);
+
+      if (next.id === previous.id) return;
+
+      if (
+        !canReplaceInvoiceLines(
+          lineItemsRef.current,
+          autoPrefillAppointmentId.current
+        )
+      ) {
+        return;
+      }
+
+      const requestedId = next.id;
+      pendingPrefillCustomerId.current = requestedId;
+      const keysAtStart = lineItemsRef.current.map((item) => item.key).join();
+      try {
+        const prefill = await getCustomerOpenAppointmentPrefill(requestedId);
+        if (pendingPrefillCustomerId.current !== requestedId) return;
+
+        const current = customerRef.current;
+        if (current.id && current.id !== requestedId) return;
+        if (!current.id) {
+          const restored = { ...current, id: requestedId };
+          customerRef.current = restored;
+          setCustomer(restored);
+        }
+
+        const keysNow = lineItemsRef.current.map((item) => item.key).join();
+        if (
+          keysNow !== keysAtStart &&
+          !canReplaceInvoiceLines(
+            lineItemsRef.current,
+            autoPrefillAppointmentId.current
+          )
+        ) {
+          return;
+        }
+        if (!prefill?.lineItems?.length) {
+          if (autoPrefillAppointmentId.current) {
+            resetAutoPrefillLines();
+          }
+          return;
+        }
+        applyAppointmentPrefill(prefill);
+      } catch {
+        // Keep the current lines if today's appointment lookup fails.
+      }
+    },
+    [
+      applyAppointmentPrefill,
+      resetAutoPrefillLines,
+      skipCustomerAppointmentPrefill,
+    ]
+  );
 
   const servicesByCategory = useMemo(() => {
     const map = new Map<string, BillingService[]>();
@@ -543,8 +694,10 @@ export function BillingInvoiceForm({
     formData.set("customerName", customer.name.trim());
     formData.set("customerPhone", customer.phone.trim());
     if (customer.id) formData.set("customerId", customer.id);
-    if (invoicePrefill?.appointmentId) {
-      formData.set("appointmentId", invoicePrefill.appointmentId);
+    const appointmentId =
+      invoicePrefill?.appointmentId || linkedAppointmentId;
+    if (appointmentId) {
+      formData.set("appointmentId", appointmentId);
     }
     formData.set("notes", notes.trim());
     formData.set("dueDate", dueDate);
@@ -916,7 +1069,7 @@ export function BillingInvoiceForm({
                 >
                   <CustomerSection
                     customer={customer}
-                    onChange={setCustomer}
+                    onChange={handleCustomerChange}
                     error={fieldErrors.customer}
                     autoFocus
                     dueDate={dueDate}

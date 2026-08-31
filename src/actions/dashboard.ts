@@ -15,6 +15,24 @@ export type RevenueDay = {
   date: string;
   label: string;
   revenue: number;
+  salesCount: number;
+};
+
+export type CustomerDay = {
+  date: string;
+  label: string;
+  newCount: number;
+  total: number;
+};
+
+export type DashboardLowStockItem = {
+  id: string;
+  name: string;
+  sku: string | null;
+  unit: string;
+  quantityOnHand: number;
+  reorderLevel: number | null;
+  status: "low" | "out";
 };
 
 export type DashboardActivity = {

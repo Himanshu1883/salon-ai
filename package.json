@@ -9,7 +9,7 @@
     "build": "prisma generate && npx tsx scripts/migrate-if-postgres.ts && next build",
     "start": "next start",
     "lint": "eslint",
-    "test:scope": "npx tsx --test src/lib/permissions/data-scope.test.ts src/lib/appointments/upcoming-today.test.ts src/lib/appointments/check-in-from-schedule.test.ts src/lib/appointments/check-in-prefill.test.ts src/lib/sales/dates.test.ts",
+    "test:scope": "npx tsx --test src/lib/permissions/data-scope.test.ts src/lib/appointments/upcoming-today.test.ts src/lib/appointments/check-in-from-schedule.test.ts src/lib/appointments/check-in-prefill.test.ts src/lib/billing/customer-appointment-prefill.test.ts src/lib/sales/dates.test.ts",
     "db:migrate": "prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:seed": "npx tsx prisma/seed.ts",

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { addMinutes, isPast, isFuture } from "date-fns";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
+import { groupAppointmentsByVisit } from "@/lib/appointments/service-items";
 import { Calendar } from "lucide-react";
 import { DashboardCard } from "@/components/dashboard/dashboard-card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ type Appointment = {
   id: string;
   scheduledAt: Date;
   status: string;
+  notes?: string | null;
   customer: { name: string };
   service: { name: string; duration: number };
   employee: { name: string } | null;
@@ -21,6 +23,10 @@ type ScheduleWidgetProps = {
   appointments: Appointment[];
   delay?: number;
 };
+
+/** 6 / 8 / 10 rows visible, then scroll. */
+const LIST_VIEWPORT =
+  "h-[17.75rem] overflow-y-auto overscroll-contain pr-1 sm:h-[23.75rem] lg:h-[29.75rem]";
 
 function getAppointmentStatus(
   scheduledAt: Date,
@@ -42,46 +48,56 @@ function getAppointmentStatus(
 }
 
 export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps) {
+  const visits = groupAppointmentsByVisit(appointments);
+  const nextOpenIndex = visits.findIndex(
+    (apt) =>
+      apt.status !== "completed" &&
+      apt.status !== "no_show" &&
+      apt.status !== "cancelled"
+  );
+
   return (
-    <DashboardCard delay={delay} className="h-full">
-      <div className="flex flex-row items-center justify-between p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">
-          Today&apos;s Schedule
-        </h3>
+    <DashboardCard delay={delay} hover={false} className="flex h-full flex-col">
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
+        <div className="min-w-0">
+          <h3 className="text-sm font-semibold text-dashboard-text">
+            Today&apos;s Appointments
+          </h3>
+          <p className="text-[11px] text-dashboard-muted">
+            {visits.length === 1 ? "1 visit today" : `${visits.length} visits today`}
+          </p>
+        </div>
         <Link
           href="/sales/appointments"
-          className="text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-xs font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           View all
         </Link>
       </div>
 
-      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
-        {appointments.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-dashboard-border py-10 text-center">
-            <Calendar className="mb-3 h-8 w-8 text-dashboard-border" />
-            <p className="text-sm font-medium text-dashboard-text">
+      <div className="flex flex-col px-3 pb-3">
+        {visits.length === 0 ? (
+          <div className={`${LIST_VIEWPORT} flex flex-col items-center justify-center rounded-xl border border-dashed border-dashboard-border text-center`}>
+            <Calendar className="mb-1.5 h-6 w-6 text-dashboard-border" />
+            <p className="text-xs font-medium text-dashboard-text">
               No appointments today
-            </p>
-            <p className="mt-1 text-xs text-dashboard-muted">
-              Book your first appointment to fill the schedule
             </p>
             <Button
               asChild
-              className="mt-4 rounded-2xl bg-dashboard-primary hover:bg-dashboard-primary-hover"
+              className="mt-2 h-7 rounded-lg bg-dashboard-primary px-2.5 text-[11px] hover:bg-dashboard-primary-hover"
               size="sm"
             >
               <Link href="/sales/appointments">New Appointment</Link>
             </Button>
           </div>
         ) : (
-          <div className="divide-y divide-dashboard-border/60">
-            {appointments.map((apt, index) => {
+          <div className={`${LIST_VIEWPORT} space-y-1`}>
+            {visits.map((apt, index) => {
               const start = new Date(apt.scheduledAt);
               const end = addMinutes(start, apt.service.duration);
               const time = formatAppointmentDateTime(start, "hh:mm a");
               const timeRange = `${formatAppointmentDateTime(start, "h:mm a")} – ${formatAppointmentDateTime(end, "h:mm a")}`;
-              const isNext = index === 0;
+              const isNext = index === nextOpenIndex;
               const statusInfo = getAppointmentStatus(
                 start,
                 apt.status,
@@ -89,38 +105,40 @@ export function ScheduleWidget({ appointments, delay = 0 }: ScheduleWidgetProps)
               );
 
               return (
-                <div
+                <Link
                   key={apt.id}
-                  className={`flex items-center gap-3 py-3.5 first:pt-0 last:pb-0 xl:gap-4 ${
+                  href="/sales/appointments"
+                  className={`grid min-w-0 shrink-0 grid-cols-[3.25rem_1.5rem_minmax(0,1fr)_auto] items-center gap-1.5 rounded-xl px-1.5 py-2 sm:grid-cols-[4.75rem_1.75rem_minmax(0,1fr)_auto] sm:gap-2 sm:px-2 ${
                     isNext
-                      ? "rounded-2xl bg-violet-50/90 px-3 ring-1 ring-violet-200 first:pt-3.5 last:pb-3.5"
-                      : ""
+                      ? "bg-violet-50/90 ring-1 ring-violet-200"
+                      : "hover:bg-dashboard-bg/60"
                   }`}
                 >
-                  <div className="w-[72px] shrink-0">
-                    <p className="text-xs font-semibold text-dashboard-primary xl:text-sm">
-                      {time}
-                    </p>
-                  </div>
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-sm font-bold text-white">
+                  <p className="whitespace-nowrap text-[10px] font-semibold tabular-nums text-dashboard-primary sm:text-[11px]">
+                    {time}
+                  </p>
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 text-[9px] font-bold text-white sm:h-7 sm:w-7 sm:text-[10px]">
                     {apt.customer.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-dashboard-text">
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-semibold text-dashboard-text">
                       {apt.customer.name}
                       <span className="font-normal text-dashboard-muted">
                         {" "}
                         — {apt.service.name}
                       </span>
                     </p>
-                    <p className="mt-0.5 truncate text-xs text-dashboard-muted">
+                    <p className="truncate text-[11px] text-dashboard-muted">
                       {apt.employee?.name ?? "Unassigned stylist"} · {timeRange}
                     </p>
                   </div>
-                  <Badge variant={statusInfo.variant} className="shrink-0">
+                  <Badge
+                    variant={statusInfo.variant}
+                    className="h-5 shrink-0 justify-self-end px-1.5 text-[10px]"
+                  >
                     {statusInfo.label}
                   </Badge>
-                </div>
+                </Link>
               );
             })}
           </div>
