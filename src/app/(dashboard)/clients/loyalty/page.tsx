@@ -1,4 +1,6 @@
 import { getCustomers } from "@/actions/customers";
+import { PermissionDeniedError } from "@/lib/permissions/require";
+import { PermissionDeniedScreen } from "@/components/permissions/permission-denied-screen";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -9,11 +11,22 @@ import {
 import { Gift, Sparkles } from "lucide-react";
 
 export default async function ClientLoyaltyPage() {
-  const { totalCount, customers } = await getCustomers({
-    page: 1,
-    pageSize: 5,
-    sort: "createdAt_desc",
-  });
+  let totalCount: number;
+  let customers: Awaited<ReturnType<typeof getCustomers>>["customers"];
+  try {
+    const result = await getCustomers({
+      page: 1,
+      pageSize: 5,
+      sort: "createdAt_desc",
+    });
+    totalCount = result.totalCount;
+    customers = result.customers;
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      return <PermissionDeniedScreen featureName="Customers" />;
+    }
+    throw error;
+  }
 
   const withPoints = customers.filter((c) => c.loyaltyPoints > 0);
 

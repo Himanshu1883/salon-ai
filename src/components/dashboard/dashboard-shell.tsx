@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { DashboardSearch } from "@/components/dashboard/dashboard-search";
 import { SalonLogoMark } from "@/components/salon/salon-logo-mark";
 import { DashboardSessionKeepAlive } from "@/components/dashboard/dashboard-session-keepalive";
+import { PermissionAccessRefresh } from "@/components/permissions/permission-access-refresh";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -99,6 +100,12 @@ function DashboardShellInner({
   return (
     <>
       <DashboardSessionKeepAlive />
+      <PermissionAccessRefresh
+        enabled={!isOwner}
+        signature={
+          isOwner ? "owner" : [...permissionKeys].sort().join(",")
+        }
+      />
       {mobileOpen && (
         <button
           type="button"
@@ -189,6 +196,7 @@ function DashboardShellInner({
           showSettings={showSettings}
           alertBadge={headerAlerts}
           accessBlocked={accessBlocked}
+          canViewCustomers={isOwner || permissionKeys.includes("customers.view")}
         />
 
         <main className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-y-contain">

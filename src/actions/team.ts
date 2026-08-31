@@ -11,7 +11,7 @@ import { parseOtherDocuments } from "@/lib/employee";
 import {
   setLinkedLoginActiveState,
 } from "@/lib/employee-login-link";
-import { invalidateResolvedPermissionsCache } from "@/lib/permissions/resolve";
+import { revalidateUserAccessAfterPermissionChange } from "@/lib/permissions/resolve";
 import {
   getDataScopeContext,
   usesOwnDataScope,
@@ -36,7 +36,7 @@ const teamMemberSelect = {
 function revalidateTeamAccess(salonId: string, userIds: string[]) {
   revalidatePath("/team/access");
   for (const userId of userIds) {
-    invalidateResolvedPermissionsCache(salonId, userId);
+    revalidateUserAccessAfterPermissionChange(salonId, userId);
   }
 }
 

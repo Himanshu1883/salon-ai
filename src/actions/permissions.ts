@@ -16,7 +16,7 @@ import {
 } from "@/lib/permissions/defaults";
 import {
   getResolvedPermissions,
-  invalidateResolvedPermissionsCache,
+  revalidateUserAccessAfterPermissionChange,
   type PermissionSource,
 } from "@/lib/permissions/resolve";
 import { requirePermission } from "@/lib/permissions/require";
@@ -275,8 +275,7 @@ export async function updateUserSalonRoleAction(data: unknown) {
       data: { role: legacyRoleFromSystemKey(roleKey) },
     });
 
-    revalidatePath("/team");
-    invalidateResolvedPermissionsCache(salonId, userId);
+    revalidateUserAccessAfterPermissionChange(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
@@ -327,6 +326,7 @@ async function getRolePermissionKeys(
       role: true,
       salonRole: {
         select: {
+          key: true,
           permissions: {
             select: { permission: { select: { key: true } } },
           },
@@ -335,10 +335,11 @@ async function getRolePermissionKeys(
     },
   });
 
-  if (!user?.salonRole) {
+  if (!user?.salonRole || user.salonRole.permissions.length === 0) {
     const { mapLegacyUserRoleToSystemKey, DEFAULT_ROLE_PERMISSIONS } =
       await import("@/lib/permissions/defaults");
-    const key = mapLegacyUserRoleToSystemKey(user?.role ?? "staff");
+    const key = (user?.salonRole?.key as SystemRoleKey | undefined) ??
+      mapLegacyUserRoleToSystemKey(user?.role ?? "staff");
     return new Set(DEFAULT_ROLE_PERMISSIONS[key]);
   }
 
@@ -378,8 +379,7 @@ export async function updateUserPermissionOverridesAction(data: unknown) {
 
     await applyUserPermissionOverrides(userId, salonId, overrides);
 
-    revalidatePath("/team");
-    invalidateResolvedPermissionsCache(salonId, userId);
+    revalidateUserAccessAfterPermissionChange(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
@@ -397,8 +397,7 @@ export async function resetUserPermissionsToRoleDefaultsAction(userId: string) {
   try {
     await assertCanManageTargetUser(session.user.id, salonId, userId);
     await prisma.userPermissionOverride.deleteMany({ where: { userId } });
-    revalidatePath("/team");
-    invalidateResolvedPermissionsCache(salonId, userId);
+    revalidateUserAccessAfterPermissionChange(salonId, userId);
     return { success: true as const };
   } catch (error) {
     return {
@@ -441,15 +440,15 @@ export async function updateStaffLoginPasswordAction(data: unknown) {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    await prisma.$transaction([
-      prisma.user.update({
+    await prisma.$transaction(async (tx) => {
+      await tx.user.update({
         where: { id: userId },
         data: { password: hashed },
-      }),
-      prisma.passwordResetToken.deleteMany({
+      });
+      await tx.passwordResetToken.deleteMany({
         where: { userId, usedAt: null },
-      }),
-    ]);
+      });
+    });
 
     revalidatePath("/team/access");
     revalidatePath("/team/members");
@@ -616,11 +615,8 @@ export async function createSalonLoginUserAction(data: unknown) {
       await applyUserPermissionOverrides(user.id, salonId, overrides);
     }
 
-    revalidatePath("/team");
-    revalidatePath("/team/access");
-    revalidatePath("/team/members");
+    revalidateUserAccessAfterPermissionChange(salonId, user.id);
     revalidatePath(`/team/members/${employee.id}`);
-    invalidateResolvedPermissionsCache(salonId, user.id);
 
     return {
       success: true as const,

@@ -49,6 +49,7 @@ type DashboardHeaderProps = {
   showSettings?: boolean;
   alertBadge?: React.ReactNode;
   accessBlocked?: boolean;
+  canViewCustomers?: boolean;
 };
 
 export function DashboardHeader({
@@ -60,6 +61,7 @@ export function DashboardHeader({
   showSettings = false,
   alertBadge = null,
   accessBlocked = false,
+  canViewCustomers = true,
 }: DashboardHeaderProps) {
   const { isEnterprise } = usePlan();
   const { openRecordSale } = useRecordSale();
@@ -229,9 +231,11 @@ export function DashboardHeader({
                       <Receipt className="h-4 w-4" />
                       Record sale
                     </DropdownMenuItem>
+                    {canViewCustomers ? (
                     <DropdownMenuItem asChild>
                       <Link href="/clients">Add customer</Link>
                     </DropdownMenuItem>
+                    ) : null}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

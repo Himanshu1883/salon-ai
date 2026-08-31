@@ -1,5 +1,8 @@
 import { getEmployeeDashboard } from "@/actions/employee-dashboard";
-import { EmployeeDashboardUi } from "@/components/dashboard/employee-dashboard-ui";
+import {
+  EmployeeDashboardUi,
+  EmployeeDashboardUnlinked,
+} from "@/components/dashboard/employee-dashboard-ui";
 
 export async function EmployeeDashboardSection({
   period,
@@ -11,5 +14,8 @@ export async function EmployeeDashboardSection({
   to?: string;
 }) {
   const data = await getEmployeeDashboard({ period, from, to });
+  if (data.unlinked) {
+    return <EmployeeDashboardUnlinked employeeName={data.employeeName} />;
+  }
   return <EmployeeDashboardUi data={data} />;
 }

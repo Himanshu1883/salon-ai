@@ -24,25 +24,33 @@ const HOUR_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTE_OPTIONS = Array.from({ length: 60 }, (_, i) => i);
 const LIST_MAX_HEIGHT = 208;
 const MENU_CHROME_HEIGHT = 110;
+/** First hour shown in each AM/PM list (9:00, then wrap back to 12:00). */
+const LIST_START_HOUR_12 = 9;
+
+function slotHour(time24: string) {
+  return parseInt(time24.split(":")[0] ?? "0", 10);
+}
+
+function slotMinute(time24: string) {
+  return parseInt(time24.split(":")[1] ?? "0", 10);
+}
+
+function slotSortKey(time24: string) {
+  const hour12 = slotHour(time24) % 12;
+  const hoursFromStart = (hour12 - LIST_START_HOUR_12 + 12) % 12;
+  return hoursFromStart * 60 + slotMinute(time24);
+}
 
 function slotsForPeriod(period: "AM" | "PM", includeValue?: string) {
-  const slots = TIME_SLOTS.filter((slot) => {
-    const hour = parseInt(slot.split(":")[0] ?? "0", 10);
-    return period === "AM" ? hour < 12 : hour >= 12;
-  });
+  const inPeriod = (slot: string) =>
+    period === "AM" ? slotHour(slot) < 12 : slotHour(slot) >= 12;
 
-  if (
-    includeValue &&
-    !slots.includes(includeValue) &&
-    ((period === "AM" &&
-      parseInt(includeValue.split(":")[0] ?? "0", 10) < 12) ||
-      (period === "PM" &&
-        parseInt(includeValue.split(":")[0] ?? "0", 10) >= 12))
-  ) {
-    return [...slots, includeValue].sort();
+  const slots = TIME_SLOTS.filter(inPeriod);
+  if (includeValue && !slots.includes(includeValue) && inPeriod(includeValue)) {
+    slots.push(includeValue);
   }
 
-  return slots;
+  return slots.sort((a, b) => slotSortKey(a) - slotSortKey(b));
 }
 
 function isPresetSlot(time24: string): boolean {

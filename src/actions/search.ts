@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/auth";
 import { getSalonPlan } from "@/lib/plan-access";
 import { canAccessModule, type PlanModule } from "@/lib/plans";
+import { hasPermission } from "@/lib/permissions/require";
 import { formatCurrency } from "@/lib/currency";
 import { getRoleLabel } from "@/lib/team";
 import {
@@ -91,10 +92,13 @@ export async function globalSearch(query: string): Promise<GlobalSearchResponse>
   const plan = await getSalonPlan(salonId);
   const canSearch = (type: GlobalSearchResultType) =>
     canAccessModule(plan, MODULE_BY_TYPE[type]);
+  const canSearchCustomers = canSearch("customer")
+    ? await hasPermission("customers.view")
+    : false;
 
   const searches: Promise<GlobalSearchResult[]>[] = [];
 
-  if (canSearch("customer")) {
+  if (canSearchCustomers) {
     searches.push(
       prisma.customer
         .findMany({

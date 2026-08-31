@@ -1,26 +1,27 @@
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
-import { cachedRead } from "@/lib/memory-cache";
-import { unstable_cache } from "next/cache";
-import { salonCacheTag } from "@/lib/salon-cache";
 import {
-  fetchStaffAnalyticsCharts,
-  fetchStaffAnalyticsOverview,
-} from "@/lib/analytics/staff-analytics";
-import {
-  resolveAnalyticsDateRange,
-  type AnalyticsPeriod,
-} from "@/lib/analytics/date-range";
+  endOfMonth,
+  endOfWeek,
+  format,
+  parseISO,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
 import {
   currentSalonDayBounds,
   DEFAULT_SALON_TIMEZONE,
   formatZonedTime,
   getBusinessDateKey,
+  getZonedMinutes,
   businessDateFromKey,
+  salonDayBounds,
 } from "@/lib/attendance/business-day";
 import { employeeInvoiceFilter } from "@/lib/analytics/staff-analytics-sql";
 import { getDataScopeContext } from "@/lib/permissions/data-scope";
 import { PermissionDeniedError } from "@/lib/permissions/require";
+
+const NEXT_HIDDEN = new Set(["cancelled", "no_show", "completed", "checked_in"]);
 
 function formatMinutesLabel(minutes: number) {
   const safe = Math.max(0, Math.round(minutes));
@@ -28,6 +29,36 @@ function formatMinutesLabel(minutes: number) {
   const mins = safe % 60;
   if (hours <= 0) return `${mins}m`;
   return `${hours}h ${String(mins).padStart(2, "0")}m`;
+}
+
+function salonGreeting(now = new Date()) {
+  const hour = Math.floor(getZonedMinutes(now) / 60);
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
+function salonRangeFromKeys(fromKey: string, toKey: string) {
+  return {
+    start: salonDayBounds(fromKey).start,
+    end: salonDayBounds(toKey).end,
+  };
+}
+
+function currentSalonWeekBounds(now = new Date()) {
+  const noon = parseISO(`${getBusinessDateKey(now)}T12:00:00`);
+  return salonRangeFromKeys(
+    format(startOfWeek(noon, { weekStartsOn: 1 }), "yyyy-MM-dd"),
+    format(endOfWeek(noon, { weekStartsOn: 1 }), "yyyy-MM-dd")
+  );
+}
+
+function currentSalonMonthBounds(now = new Date()) {
+  const noon = parseISO(`${getBusinessDateKey(now)}T12:00:00`);
+  return salonRangeFromKeys(
+    format(startOfMonth(noon), "yyyy-MM-dd"),
+    format(endOfMonth(noon), "yyyy-MM-dd")
+  );
 }
 
 async function attributedRevenue(
@@ -50,226 +81,291 @@ async function attributedRevenue(
   return rows[0]?.revenue ?? 0;
 }
 
-export async function fetchEmployeeDashboardData(params: {
+export type EmployeeDashboardUnlinked = {
+  unlinked: true;
+  employeeName: string;
+};
+
+export type EmployeeDashboardPayload = {
+  unlinked?: false;
+  greeting: string;
+  employeeName: string;
+  timezone: string;
+  rangeLabel: string;
+  today: {
+    earnings: number;
+    appointments: number;
+    completedServices: number;
+    workedMinutes: number;
+    workedLabel: string;
+    checkIn: string | null;
+    checkOut: string | null;
+    status: string;
+    lateMinutes: number;
+    canCheckIn: boolean;
+    canCheckOut: boolean;
+  };
+  secondary: {
+    weekEarnings: number;
+    monthEarnings: number;
+    weekAppointments: number;
+    monthAppointments: number;
+  };
+  appointmentStatus: {
+    completed: number;
+    upcoming: number;
+    inQueue: number;
+    cancelled: number;
+    noShow: number;
+  };
+  topServices: {
+    serviceName: string;
+    appointments: number;
+    estimated: number;
+  }[];
+  queue: {
+    id: string;
+    status: string;
+    service: string;
+    appointmentId: string | null;
+  }[];
+  schedule: {
+    id: string;
+    time: string;
+    at: string;
+    service: string;
+    price: number;
+    status: string;
+    duration: number;
+  }[];
+  nextAppointment: {
+    id: string;
+    time: string;
+    service: string;
+    price: number;
+    status: string;
+    duration: number;
+  } | null;
+};
+
+export type EmployeeDashboardData =
+  | EmployeeDashboardUnlinked
+  | EmployeeDashboardPayload;
+
+export async function fetchEmployeeDashboardData(_params?: {
   period?: string;
   from?: string;
   to?: string;
-}) {
+}): Promise<EmployeeDashboardData> {
   const ctx = await getDataScopeContext();
-  if (ctx.dataScope !== "own" || !ctx.employeeId) {
+  if (ctx.dataScope !== "own") {
     throw new PermissionDeniedError("dashboard.view");
+  }
+  if (!ctx.employeeId) {
+    return {
+      unlinked: true,
+      employeeName: ctx.employeeName ?? "there",
+    };
   }
 
   const employeeId = ctx.employeeId;
   const salonId = ctx.salonId;
-  const period = (params.period as AnalyticsPeriod) || "today";
-  const range = resolveAnalyticsDateRange(period, params.from, params.to);
   const todayBounds = currentSalonDayBounds();
   const todayDate = businessDateFromKey(getBusinessDateKey());
-  const weekRange = resolveAnalyticsDateRange("this_week");
-  const monthRange = resolveAnalyticsDateRange("this_month");
-  const cacheKey = [
-    employeeId,
-    period,
-    params.from ?? "",
-    params.to ?? "",
-  ].join(":");
+  const weekRange = currentSalonWeekBounds();
+  const monthRange = currentSalonMonthBounds();
+  const nowMs = Date.now();
 
-  return cachedRead(
-    `employee-dash:${salonId}:${cacheKey}`,
-    30,
-    () =>
-      unstable_cache(
-        async () => {
-          const [
-            todayAppointments,
-            attendance,
-            todayRevenue,
-            weekRevenue,
-            monthRevenue,
-            weekAppointments,
-            monthAppointments,
-            overview,
-            charts,
-            greetingName,
-          ] = await Promise.all([
-            prisma.appointment.findMany({
-              where: {
-                salonId,
-                employeeId,
-                scheduledAt: { gte: todayBounds.start, lte: todayBounds.end },
-              },
-              select: {
-                id: true,
-                scheduledAt: true,
-                status: true,
-                customer: { select: { name: true } },
-                service: {
-                  select: { name: true, duration: true, price: true },
-                },
-              },
-              orderBy: { scheduledAt: "asc" },
-            }),
-            prisma.attendanceRecord.findUnique({
-              where: {
-                employeeId_date: { employeeId, date: todayDate },
-              },
-              select: {
-                checkInAt: true,
-                checkOutAt: true,
-                totalWorkedMinutes: true,
-                status: true,
-                lateMinutes: true,
-                earlyCheckoutMinutes: true,
-              },
-            }),
-            attributedRevenue(
-              salonId,
-              todayBounds.start,
-              todayBounds.end,
-              employeeId
-            ),
-            attributedRevenue(
-              salonId,
-              weekRange.from,
-              weekRange.to,
-              employeeId
-            ),
-            attributedRevenue(
-              salonId,
-              monthRange.from,
-              monthRange.to,
-              employeeId
-            ),
-            prisma.appointment.count({
-              where: {
-                salonId,
-                employeeId,
-                scheduledAt: { gte: weekRange.from, lte: weekRange.to },
-                status: { not: "cancelled" },
-              },
-            }),
-            prisma.appointment.count({
-              where: {
-                salonId,
-                employeeId,
-                scheduledAt: { gte: monthRange.from, lte: monthRange.to },
-                status: { not: "cancelled" },
-              },
-            }),
-            fetchStaffAnalyticsOverview({
-              salonId,
-              employeeId,
-              range,
-            }),
-            fetchStaffAnalyticsCharts({
-              salonId,
-              employeeId,
-              range,
-            }),
-            prisma.employee.findFirst({
-              where: { id: employeeId, salonId },
-              select: { name: true },
-            }),
-          ]);
-
-          const completedToday = todayAppointments.filter(
-            (row) => row.status === "completed"
-          );
-          const upcomingToday = todayAppointments.filter(
-            (row) =>
-              row.status !== "cancelled" &&
-              row.status !== "no_show" &&
-              row.status !== "completed"
-          );
-          const customersToday = new Set(
-            todayAppointments
-              .filter((row) => row.status !== "cancelled")
-              .map((row) => row.customer.name)
-          ).size;
-          const durationToday = completedToday.reduce(
-            (sum, row) => sum + row.service.duration,
-            0
-          );
-          const workedMinutes =
-            attendance?.totalWorkedMinutes ??
-            (attendance?.checkInAt
-              ? Math.round(
-                  ((attendance.checkOutAt ?? new Date()).getTime() -
-                    attendance.checkInAt.getTime()) /
-                    60000
-                )
-              : 0);
-
-          const nextAppointment = upcomingToday.find(
-            (row) => row.scheduledAt.getTime() >= Date.now()
-          ) ?? upcomingToday[0] ?? null;
-
-          return {
-            employeeName: greetingName?.name ?? ctx.employeeName ?? "there",
-            timezone: DEFAULT_SALON_TIMEZONE,
-            period,
-            rangeLabel: range.label,
-            today: {
-              earnings: todayRevenue,
-              appointments: todayAppointments.filter(
-                (row) => row.status !== "cancelled"
-              ).length,
-              completedServices: completedToday.length,
-              customersServed: customersToday,
-              workedMinutes,
-              workedLabel: formatMinutesLabel(workedMinutes),
-              checkIn: attendance?.checkInAt
-                ? formatZonedTime(attendance.checkInAt)
-                : null,
-              checkOut: attendance?.checkOutAt
-                ? formatZonedTime(attendance.checkOutAt)
-                : null,
-              status: attendance?.status ?? "none",
-              lateMinutes: attendance?.lateMinutes ?? 0,
-            },
-            secondary: {
-              weekEarnings: weekRevenue,
-              monthEarnings: monthRevenue,
-              weekAppointments,
-              monthAppointments,
-            },
-            overview,
-            charts,
-            schedule: todayAppointments.map((row) => ({
-              id: row.id,
-              time: formatZonedTime(row.scheduledAt),
-              at: row.scheduledAt.toISOString(),
-              customer: row.customer.name,
-              service: row.service.name,
-              price: row.service.price,
-              status: row.status,
-              duration: row.service.duration,
-            })),
-            nextAppointment: nextAppointment
-              ? {
-                  time: formatZonedTime(nextAppointment.scheduledAt),
-                  customer: nextAppointment.customer.name,
-                  service: nextAppointment.service.name,
-                  price: nextAppointment.service.price,
-                  status: nextAppointment.status,
-                  duration: nextAppointment.service.duration,
-                }
-              : null,
-            averageDurationMinutes:
-              completedToday.length > 0
-                ? Math.round(durationToday / completedToday.length)
-                : 0,
-          };
+  const [
+    todayAppointments,
+    attendance,
+    todayRevenue,
+    weekRevenue,
+    monthRevenue,
+    weekAppointments,
+    monthAppointments,
+    queueEntries,
+    greetingName,
+  ] = await Promise.all([
+    prisma.appointment.findMany({
+      where: {
+        salonId,
+        employeeId,
+        scheduledAt: { gte: todayBounds.start, lte: todayBounds.end },
+      },
+      select: {
+        id: true,
+        scheduledAt: true,
+        status: true,
+        service: {
+          select: { name: true, duration: true, price: true },
         },
-        ["employee-dashboard", salonId, cacheKey],
-        {
-          revalidate: 30,
-          tags: [
-            salonCacheTag(salonId, "appointments"),
-            salonCacheTag(salonId, "staff-analytics"),
-          ],
-        }
-      )()
+      },
+      orderBy: { scheduledAt: "asc" },
+    }),
+    prisma.attendanceRecord.findUnique({
+      where: {
+        employeeId_date: { employeeId, date: todayDate },
+      },
+      select: {
+        checkInAt: true,
+        checkOutAt: true,
+        totalWorkedMinutes: true,
+        status: true,
+        lateMinutes: true,
+      },
+    }),
+    attributedRevenue(salonId, todayBounds.start, todayBounds.end, employeeId),
+    attributedRevenue(salonId, weekRange.start, weekRange.end, employeeId),
+    attributedRevenue(salonId, monthRange.start, monthRange.end, employeeId),
+    prisma.appointment.count({
+      where: {
+        salonId,
+        employeeId,
+        scheduledAt: { gte: weekRange.start, lte: weekRange.end },
+        status: { not: "cancelled" },
+      },
+    }),
+    prisma.appointment.count({
+      where: {
+        salonId,
+        employeeId,
+        scheduledAt: { gte: monthRange.start, lte: monthRange.end },
+        status: { not: "cancelled" },
+      },
+    }),
+    prisma.queueEntry.findMany({
+      where: {
+        salonId,
+        employeeId,
+        status: { in: ["waiting", "assigned", "in_progress"] },
+      },
+      select: {
+        id: true,
+        status: true,
+        appointmentId: true,
+        services: { select: { service: { select: { name: true } } } },
+      },
+      orderBy: { position: "asc" },
+    }),
+    prisma.employee.findFirst({
+      where: { id: employeeId, salonId },
+      select: { name: true },
+    }),
+  ]);
+
+  const completedToday = todayAppointments.filter(
+    (row) => row.status === "completed"
   );
+  const upcomingForNext = todayAppointments.filter(
+    (row) => !NEXT_HIDDEN.has(row.status)
+  );
+  const nextAppointment =
+    upcomingForNext.find((row) => row.scheduledAt.getTime() >= nowMs) ??
+    upcomingForNext[0] ??
+    null;
+
+  const workedMinutes =
+    attendance?.totalWorkedMinutes ??
+    (attendance?.checkInAt
+      ? Math.round(
+          ((attendance.checkOutAt ?? new Date()).getTime() -
+            attendance.checkInAt.getTime()) /
+            60000
+        )
+      : 0);
+
+  const serviceTotals = new Map<
+    string,
+    { appointments: number; estimated: number }
+  >();
+  for (const row of todayAppointments) {
+    if (row.status === "cancelled" || row.status === "no_show") continue;
+    const current = serviceTotals.get(row.service.name) ?? {
+      appointments: 0,
+      estimated: 0,
+    };
+    current.appointments += 1;
+    current.estimated += row.service.price;
+    serviceTotals.set(row.service.name, current);
+  }
+
+  return {
+    greeting: salonGreeting(),
+    employeeName: greetingName?.name ?? ctx.employeeName ?? "there",
+    timezone: DEFAULT_SALON_TIMEZONE,
+    rangeLabel: format(parseISO(`${getBusinessDateKey()}T12:00:00`), "EEEE, d MMM"),
+    today: {
+      earnings: todayRevenue,
+      appointments: todayAppointments.filter(
+        (row) => row.status !== "cancelled"
+      ).length,
+      completedServices: completedToday.length,
+      workedMinutes,
+      workedLabel: formatMinutesLabel(workedMinutes),
+      checkIn: attendance?.checkInAt
+        ? formatZonedTime(attendance.checkInAt)
+        : null,
+      checkOut: attendance?.checkOutAt
+        ? formatZonedTime(attendance.checkOutAt)
+        : null,
+      status: attendance?.status ?? "none",
+      lateMinutes: attendance?.lateMinutes ?? 0,
+      canCheckIn: !attendance?.checkInAt,
+      canCheckOut: Boolean(attendance?.checkInAt && !attendance.checkOutAt),
+    },
+    secondary: {
+      weekEarnings: weekRevenue,
+      monthEarnings: monthRevenue,
+      weekAppointments,
+      monthAppointments,
+    },
+    appointmentStatus: {
+      completed: completedToday.length,
+      upcoming: todayAppointments.filter((row) => row.status === "scheduled")
+        .length,
+      inQueue: todayAppointments.filter((row) => row.status === "checked_in")
+        .length,
+      cancelled: todayAppointments.filter((row) => row.status === "cancelled")
+        .length,
+      noShow: todayAppointments.filter((row) => row.status === "no_show")
+        .length,
+    },
+    topServices: [...serviceTotals.entries()]
+      .map(([serviceName, value]) => ({ serviceName, ...value }))
+      .sort((a, b) => b.appointments - a.appointments)
+      .slice(0, 6),
+    queue: [...queueEntries]
+      .sort((a, b) => {
+        const rank = (status: string) =>
+          status === "in_progress" ? 0 : status === "assigned" ? 1 : 2;
+        return rank(a.status) - rank(b.status);
+      })
+      .map((entry) => ({
+        id: entry.id,
+        status: entry.status,
+        service:
+          entry.services.map((row) => row.service.name).join(", ") || "Service",
+        appointmentId: entry.appointmentId,
+      })),
+    schedule: todayAppointments.map((row) => ({
+      id: row.id,
+      time: formatZonedTime(row.scheduledAt),
+      at: row.scheduledAt.toISOString(),
+      service: row.service.name,
+      price: row.service.price,
+      status: row.status,
+      duration: row.service.duration,
+    })),
+    nextAppointment: nextAppointment
+      ? {
+          id: nextAppointment.id,
+          time: formatZonedTime(nextAppointment.scheduledAt),
+          service: nextAppointment.service.name,
+          price: nextAppointment.service.price,
+          status: nextAppointment.status,
+          duration: nextAppointment.service.duration,
+        }
+      : null,
+  };
 }

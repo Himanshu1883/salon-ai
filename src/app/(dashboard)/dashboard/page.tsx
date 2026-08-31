@@ -48,6 +48,7 @@ export default async function DashboardPage({
   if (scope.dataScope === "own") {
     return (
       <div className="space-y-4 xl:space-y-6">
+        <DashboardStaleRefresh />
         <Suspense
           fallback={
             <div className="h-96 animate-pulse rounded-[20px] bg-[#E8ECF4]" />

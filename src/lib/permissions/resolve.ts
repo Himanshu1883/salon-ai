@@ -1,6 +1,7 @@
 import { cache } from "react";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { cachedRead, invalidateMemoryCachePrefix } from "@/lib/memory-cache";
+import { invalidateMemoryCachePrefix } from "@/lib/memory-cache";
 import type { PermissionKey } from "@/lib/permissions/catalog";
 import {
   DEFAULT_ROLE_PERMISSIONS,
@@ -24,11 +25,6 @@ export type ResolvedPermissions = {
   permissions: Set<PermissionKey>;
   details: Map<PermissionKey, ResolvedPermissionEntry>;
 };
-
-function legacyPermissionsForRole(role: string): Set<PermissionKey> {
-  const key = mapLegacyUserRoleToSystemKey(role);
-  return new Set(DEFAULT_ROLE_PERMISSIONS[key]);
-}
 
 export function resolveOwnerPermissions(
   userId: string,
@@ -148,8 +144,11 @@ function resolveFromContext(
     : [];
 
   if (rolePermissionKeys.length === 0) {
-    const legacy = legacyPermissionsForRole(user.role);
-    for (const key of legacy) {
+    const fallbackKey =
+      (user.salonRole?.key as SystemRoleKey | null) ??
+      mapLegacyUserRoleToSystemKey(user.role);
+    const fallback = DEFAULT_ROLE_PERMISSIONS[fallbackKey];
+    for (const key of fallback) {
       permissions.add(key);
       details.set(key, { granted: true, source: "legacy" });
     }
@@ -204,21 +203,19 @@ function resolveFromContext(
 
 export const getResolvedPermissions = cache(
   async (userId: string, salonId: string): Promise<ResolvedPermissions> => {
-    return cachedRead(`perms:${salonId}:${userId}`, 300, async () => {
-      const user = await loadUserPermissionContext(userId, salonId);
-      if (!user) {
-        return {
-          userId,
-          salonId,
-          isOwner: false,
-          roleKey: null,
-          hierarchyLevel: 0,
-          permissions: new Set(),
-          details: new Map(),
-        };
-      }
-      return resolveFromContext(user, salonId);
-    });
+    const user = await loadUserPermissionContext(userId, salonId);
+    if (!user) {
+      return {
+        userId,
+        salonId,
+        isOwner: false,
+        roleKey: null,
+        hierarchyLevel: 0,
+        permissions: new Set(),
+        details: new Map(),
+      };
+    }
+    return resolveFromContext(user, salonId);
   }
 );
 
@@ -239,4 +236,20 @@ export function invalidateResolvedPermissionsCache(
     return;
   }
   invalidateMemoryCachePrefix(`perms:${salonId}:`);
+}
+
+/** Clear permission cache and staff layouts so nav updates immediately. */
+export function revalidateUserAccessAfterPermissionChange(
+  salonId: string,
+  userId?: string
+) {
+  invalidateResolvedPermissionsCache(salonId, userId);
+  revalidatePath("/", "layout");
+  revalidatePath("/dashboard", "layout");
+  revalidatePath("/clients", "layout");
+  revalidatePath("/customers", "layout");
+  revalidatePath("/sales/appointments", "layout");
+  revalidatePath("/team", "layout");
+  revalidatePath("/team/access");
+  revalidatePath("/team/members");
 }

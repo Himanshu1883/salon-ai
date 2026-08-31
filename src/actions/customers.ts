@@ -9,6 +9,7 @@ import {
   customerScopeWhere,
   getDataScopeContext,
 } from "@/lib/permissions/data-scope";
+import { requirePermission } from "@/lib/permissions/require";
 
 function invalidateCustomersCache(salonId: string) {
   revalidateSalonCache(
@@ -108,6 +109,7 @@ export async function getCustomers(options?: GetCustomersOptions): Promise<{
   page: number;
   pageSize: number;
 }> {
+  await requirePermission("customers.view");
   const ctx = await getDataScopeContext();
   const salonId = ctx.salonId;
 

@@ -119,6 +119,26 @@ describe("employee nav filter", () => {
     const filtered = filterEmployeeNavModules(items, new Set());
     assert.deepEqual(
       filtered.map((item) => item.label),
+      ["Dashboard"]
+    );
+  });
+
+  it("keeps Customers only when customers.view is granted", () => {
+    const items = [
+      { href: "/dashboard", label: "Dashboard", module: "dashboard" as PlanModule },
+      { href: "/clients", label: "Customers", module: "customers" as PlanModule },
+    ];
+    const without = filterEmployeeNavModules(items, new Set());
+    const withView = filterEmployeeNavModules(
+      items,
+      new Set(["customers.view"])
+    );
+    assert.deepEqual(
+      without.map((item) => item.label),
+      ["Dashboard"]
+    );
+    assert.deepEqual(
+      withView.map((item) => item.label),
       ["Dashboard", "Customers"]
     );
   });

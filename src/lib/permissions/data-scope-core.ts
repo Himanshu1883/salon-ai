@@ -146,6 +146,8 @@ export function filterEmployeeNavModules<
     if (isEmployeeHiddenNavHref(item.href, item.label)) return false;
     if (EMPLOYEE_SALON_WIDE_MODULES.has(item.module)) return false;
     if (item.module === "staff") return permissions.has("team.view");
+    if (item.module === "customers") return permissions.has("customers.view");
+    if (item.module === "billing") return permissions.has("billing.view");
     return true;
   });
 }
