@@ -13,6 +13,7 @@ import type { PermissionKey } from "@/lib/permissions/catalog";
 import type { SystemRoleKey } from "@/lib/permissions/defaults";
 import {
   appointmentScopeWhere,
+  appointmentVisitScopeWhere,
   attendanceScopeWhere,
   customerScopeWhere,
   isAttributedToEmployee,
@@ -41,6 +42,7 @@ export type DataScopeContext = {
 
 export {
   appointmentScopeWhere,
+  appointmentVisitScopeWhere,
   attendanceScopeWhere,
   customerScopeWhere,
   isAttributedToEmployee,

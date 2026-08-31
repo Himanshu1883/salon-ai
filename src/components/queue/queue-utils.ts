@@ -9,22 +9,28 @@ import type {
   QueueTab,
 } from "./types";
 
+export { attachAppointmentStaffToQueueServices } from "@/lib/queue/appointment-staff";
+
 export function queueEntryToInvoicePrefill(entry: QueueInvoiceEntry): InvoicePrefill {
-  const employeeId = entry.employeeId ?? undefined;
+  const fallbackEmployeeId = entry.employeeId ?? undefined;
   return {
     customer: {
       name: entry.customer.name,
       phone: entry.customer.phone ?? "",
     },
-    employeeId,
+    employeeId: fallbackEmployeeId,
     seatId: entry.seatId ?? undefined,
     queueEntryId: entry.id,
+    appointmentId: entry.appointmentId ?? undefined,
     lineItems: entry.services.map((qs) => ({
       serviceId: qs.service.id,
       description: qs.service.name,
       quantity: 1,
       unitPrice: qs.service.price,
-      employeeId,
+      employeeId:
+        qs.employeeId ??
+        (qs.appointmentServiceItemId ? undefined : fallbackEmployeeId),
+      appointmentServiceItemId: qs.appointmentServiceItemId,
     })),
   };
 }

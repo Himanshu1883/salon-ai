@@ -417,6 +417,7 @@ export const invoiceLineItemSchema = z.object({
   stockItemId: z.string().optional(),
   itemType: z.enum(ITEM_TYPES).optional(),
   employeeId: z.string().optional(),
+  appointmentServiceItemId: z.string().optional(),
 });
 
 export const specialSaleSchema = z.object({

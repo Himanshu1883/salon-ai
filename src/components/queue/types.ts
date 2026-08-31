@@ -1,5 +1,7 @@
 export type QueueServiceItem = {
   service: { id: string; name: string; duration: number; price: number };
+  employeeId?: string | null;
+  appointmentServiceItemId?: string;
 };
 
 export type QueueEntry = {
@@ -13,6 +15,7 @@ export type QueueEntry = {
   customer: { name: string; phone: string | null };
   employee: { id: string; name: string } | null;
   seat: { id: string; number: number } | null;
+  appointmentId?: string | null;
   services: QueueServiceItem[];
   waitMinutes?: number;
   serviceNames?: string;
@@ -26,7 +29,12 @@ export type CompletedEntry = {
   customer: { name: string; phone?: string | null };
   employeeId: string | null;
   seatId?: string | null;
-  services: { service: { id: string; name: string; price: number } }[];
+  appointmentId?: string | null;
+  services: {
+    service: { id: string; name: string; price: number };
+    employeeId?: string | null;
+    appointmentServiceItemId?: string;
+  }[];
   invoices: { id: string; status?: string; paymentMethod?: string | null; total?: number }[];
   serviceNames?: string;
   serviceTotal?: number;
@@ -34,7 +42,13 @@ export type CompletedEntry = {
 
 export type QueueInvoiceEntry = Pick<
   CompletedEntry,
-  "id" | "customer" | "employeeId" | "seatId" | "services" | "invoices"
+  | "id"
+  | "customer"
+  | "employeeId"
+  | "seatId"
+  | "appointmentId"
+  | "services"
+  | "invoices"
 >;
 
 export type Employee = { id: string; name: string; role?: string };

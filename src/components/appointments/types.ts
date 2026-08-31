@@ -14,6 +14,27 @@ export type Appointment = {
     category?: { id: string; name: string } | null;
   };
   employee: { id: string; name: string } | null;
+  calendarKey?: string;
+  serviceItems?: Array<{
+    id: string;
+    serviceId: string;
+    employeeId: string | null;
+    price: number;
+    duration: number;
+    status: string;
+    scheduledAt: Date | string;
+    startedAt?: Date | string | null;
+    completedAt?: Date | string | null;
+    sortOrder?: number;
+    service: {
+      id?: string;
+      name: string;
+      duration: number;
+      price?: number;
+      category?: { id: string; name: string } | null;
+    };
+    employee: { id: string; name: string } | null;
+  }>;
 };
 
 export type Service = { id: string; name: string; duration: number };

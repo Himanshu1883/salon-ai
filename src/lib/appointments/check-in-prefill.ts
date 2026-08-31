@@ -1,6 +1,10 @@
 import type { Appointment } from "@/components/appointments/types";
 import type { InvoicePrefill } from "@/components/billing/types";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
+import {
+  getAppointmentServiceItems,
+  serviceItemStaffId,
+} from "@/lib/appointments/service-items";
 
 export function collectVisitGroupAppointments(
   appointment: Appointment,
@@ -66,13 +70,16 @@ export function appointmentsToInvoicePrefill(
   appointment: Appointment,
   allAppointments: Appointment[] = []
 ): InvoicePrefill {
-  const visitAppointments = collectVisitGroupAppointments(
-    appointment,
-    allAppointments.length > 0 ? allAppointments : [appointment]
-  );
-  const assignedEmployee =
-    visitAppointments.find((item) => item.employee?.id)?.employee ??
-    appointment.employee;
+  const source =
+    allAppointments.length > 0 ? allAppointments : [appointment];
+  const items = getAppointmentServiceItems(appointment, source);
+  const assignedEmployeeId =
+    items.map((item) => serviceItemStaffId(item)).find(Boolean) ??
+    appointment.employee?.id;
+
+  const storedItems =
+    (appointment.serviceItems && appointment.serviceItems.length > 0) ||
+    source.some((row) => (row.serviceItems?.length ?? 0) > 0);
 
   return {
     customer: {
@@ -80,14 +87,15 @@ export function appointmentsToInvoicePrefill(
       name: appointment.customer.name,
       phone: appointment.customer.phone ?? "",
     },
-    employeeId: assignedEmployee?.id,
+    employeeId: assignedEmployeeId,
     appointmentId: appointment.id,
-    lineItems: visitAppointments.map((item) => ({
-      serviceId: item.serviceId ?? item.service.id ?? "",
+    lineItems: items.map((item) => ({
+      serviceId: item.serviceId || item.service.id || "",
       description: item.service.name,
       quantity: 1,
-      unitPrice: item.service.price ?? 0,
-      employeeId: item.employee?.id ?? assignedEmployee?.id,
+      unitPrice: item.price || item.service.price || 0,
+      employeeId: serviceItemStaffId(item),
+      ...(storedItems ? { appointmentServiceItemId: item.id } : {}),
     })),
   };
 }

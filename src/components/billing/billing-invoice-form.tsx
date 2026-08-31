@@ -112,7 +112,10 @@ function prefillToLineItems(
         discount: 0,
         discountType: "percent" as const,
         taxRate: 0.18,
-        employeeId: item.employeeId ?? defaultEmployeeId,
+        // Keep this line's assigned staff. Do not copy the visit's first
+        // stylist onto every service.
+        employeeId: item.employeeId ?? "",
+        appointmentServiceItemId: item.appointmentServiceItemId,
       };
     });
   }
@@ -570,6 +573,7 @@ export function BillingInvoiceForm({
           stockItemId: item.stockItemId || undefined,
           itemType: item.itemType,
           employeeId: item.employeeId || undefined,
+          appointmentServiceItemId: item.appointmentServiceItemId || undefined,
         }))
       )
     );
@@ -586,6 +590,8 @@ export function BillingInvoiceForm({
       unitPrice: item.unitPrice,
       taxRate: item.taxRate,
       serviceId: item.serviceId || undefined,
+      employeeId: item.employeeId || undefined,
+      appointmentServiceItemId: item.appointmentServiceItemId || undefined,
     }));
   }
 

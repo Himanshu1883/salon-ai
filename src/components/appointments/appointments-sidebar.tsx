@@ -38,6 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatAppointmentDateTime } from "@/lib/appointments/datetime";
 import { getUpcomingTodayAppointments } from "@/lib/appointments/upcoming-today";
+import { groupAppointmentsByVisit } from "@/lib/appointments/service-items";
 import { usePlan } from "@/components/plans/plan-provider";
 
 type AppointmentsSidebarProps = {
@@ -191,9 +192,9 @@ export function AppointmentsSidebar({
   const analyticsSource = analyticsAppointments ?? todayAppointments;
   const analytics = computeTodayAnalytics(analyticsSource, employees);
   const availableSlots = countAvailableSlotsToday(todayAppointments, new Date());
-  const upcomingSlice = upcomingAppointments.slice(0, 4);
+  const upcomingSlice = groupAppointmentsByVisit(upcomingAppointments).slice(0, 4);
   const { items: todayUpcoming, nextId } = getUpcomingTodayAppointments(
-    todayAppointments
+    groupAppointmentsByVisit(todayAppointments)
   );
 
   return (

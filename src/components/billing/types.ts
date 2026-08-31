@@ -53,6 +53,7 @@ export type InvoicePrefillLineItem = {
   quantity: number;
   unitPrice: number;
   employeeId?: string;
+  appointmentServiceItemId?: string;
 };
 
 export type InvoicePrefill = {

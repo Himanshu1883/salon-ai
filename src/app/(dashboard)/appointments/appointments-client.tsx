@@ -47,6 +47,7 @@ export function AppointmentsClient({
   prefilledCustomer,
   autoOpenCreate = false,
   includeCheckedInOnSchedule = false,
+  canAddService = false,
 }: {
   weekAppointments: Appointment[];
   weekStartIso: string;
@@ -58,6 +59,7 @@ export function AppointmentsClient({
   prefilledCustomer?: PrefilledCustomer;
   autoOpenCreate?: boolean;
   includeCheckedInOnSchedule?: boolean;
+  canAddService?: boolean;
 }) {
   const router = useRouter();
   const weekStart = startOfWeek(new Date(weekStartIso), { weekStartsOn: 1 });
@@ -341,6 +343,7 @@ export function AppointmentsClient({
                   onRefresh={() => router.refresh()}
                   onCheckedIn={removeAppointmentsFromSchedule}
                   onCheckInError={restoreAppointmentsOnSchedule}
+                  onOpen={openAppointmentDetail}
                 />
               </div>
               <div className="rounded-[20px] border border-[#E8ECF4] bg-white p-6 shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
@@ -358,6 +361,7 @@ export function AppointmentsClient({
                   onRefresh={() => router.refresh()}
                   onCheckedIn={removeAppointmentsFromSchedule}
                   onCheckInError={restoreAppointmentsOnSchedule}
+                  onOpen={openAppointmentDetail}
                 />
               </div>
             </motion.div>
@@ -384,6 +388,9 @@ export function AppointmentsClient({
       <AppointmentDetailDialog
         appointment={detailAppointment}
         allAppointments={existingAppointments}
+        services={services}
+        employees={employees}
+        canAddService={canAddService}
         open={detailOpen}
         onOpenChange={setDetailOpen}
         onRefresh={() => router.refresh()}

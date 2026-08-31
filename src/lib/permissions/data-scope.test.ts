@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   appointmentScopeWhere,
+  appointmentVisitScopeWhere,
   customerScopeWhere,
   filterEmployeeNavModules,
   isAttributedToEmployee,
@@ -77,6 +78,17 @@ describe("scope where clauses", () => {
       employeeId: "emp-a",
     });
     assert.deepEqual(appointmentScopeWhere(adminCtx), { salonId: "s1" });
+  });
+
+  it("includes service-item assignments in visit scope", () => {
+    assert.deepEqual(appointmentVisitScopeWhere(ownCtx), {
+      salonId: "s1",
+      OR: [
+        { employeeId: "emp-a" },
+        { serviceItems: { some: { employeeId: "emp-a" } } },
+      ],
+    });
+    assert.deepEqual(appointmentVisitScopeWhere(adminCtx), { salonId: "s1" });
   });
 
   it("does not expose salon-wide customers for employees", () => {

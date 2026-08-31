@@ -1,9 +1,9 @@
 import { after } from "next/server";
 import { PrismaClientKnownRequestError } from "@/generated/prisma/internal/prismaNamespace";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/prisma";
 import { parseVisitGroupId } from "@/lib/appointments/visit-group";
 import {
-  assertEmployeeResourceAccess,
   getDataScopeContextFromAuth,
   type DataScopeContext,
 } from "@/lib/permissions/data-scope";
@@ -84,8 +84,11 @@ async function findVisitGroupAppointments(
   return matched.length > 0 ? matched : [appointment];
 }
 
-async function getNextPosition(salonId: string) {
-  const last = await prisma.queueEntry.findFirst({
+async function getNextPosition(
+  salonId: string,
+  db: Prisma.TransactionClient | typeof prisma = prisma
+) {
+  const last = await db.queueEntry.findFirst({
     where: {
       salonId,
       status: { in: ["waiting", "assigned", "in_progress"] },
@@ -93,6 +96,99 @@ async function getNextPosition(salonId: string) {
     orderBy: { position: "desc" },
   });
   return (last?.position ?? 0) + 1;
+}
+
+/** Put the visit on the Walk-ins In Progress board when a service is started. */
+export async function ensureInProgressQueueEntry(
+  db: Prisma.TransactionClient | typeof prisma,
+  input: {
+    salonId: string;
+    appointmentId: string;
+    customerId: string;
+    employeeId?: string | null;
+    serviceIds: string[];
+    visitAppointmentIds?: string[];
+  }
+) {
+  const serviceIds = [...new Set(input.serviceIds.filter(Boolean))];
+  if (serviceIds.length === 0) return null;
+
+  const visitIds = input.visitAppointmentIds?.length
+    ? input.visitAppointmentIds
+    : [input.appointmentId];
+  const now = new Date();
+
+  const existing = await db.queueEntry.findFirst({
+    where: {
+      salonId: input.salonId,
+      appointmentId: { in: visitIds },
+      status: { in: ["waiting", "assigned", "in_progress"] },
+    },
+    include: { services: { select: { serviceId: true } } },
+  });
+
+  if (existing) {
+    await db.queueEntry.update({
+      where: { id: existing.id },
+      data: {
+        status: "in_progress",
+        startedAt: existing.startedAt ?? now,
+        employeeId: existing.employeeId ?? input.employeeId ?? null,
+      },
+    });
+    const have = new Set(existing.services.map((row) => row.serviceId));
+    const missing = serviceIds.filter((id) => !have.has(id));
+    if (missing.length > 0) {
+      await db.queueService.createMany({
+        data: missing.map((serviceId) => ({
+          queueEntryId: existing.id,
+          serviceId,
+        })),
+        skipDuplicates: true,
+      });
+    }
+    return existing.id;
+  }
+
+  const position = await getNextPosition(input.salonId, db);
+  const created = await db.queueEntry.create({
+    data: {
+      salonId: input.salonId,
+      customerId: input.customerId,
+      appointmentId: input.appointmentId,
+      position,
+      status: "in_progress",
+      employeeId: input.employeeId ?? null,
+      startedAt: now,
+      services: {
+        create: serviceIds.map((serviceId) => ({ serviceId })),
+      },
+    },
+    select: { id: true },
+  });
+  return created.id;
+}
+
+async function startFirstScheduledServiceItem(
+  appointmentId: string,
+  employeeId?: string | null
+) {
+  const item = await prisma.appointmentServiceItem.findFirst({
+    where: {
+      appointmentId,
+      status: { in: ["scheduled"] },
+      ...(employeeId
+        ? { OR: [{ employeeId }, { employeeId: null }] }
+        : {}),
+    },
+    orderBy: [{ sortOrder: "asc" }, { scheduledAt: "asc" }],
+    select: { id: true },
+  });
+  if (!item) return;
+  await prisma.appointmentServiceItem.update({
+    where: { id: item.id },
+    data: { status: "in_progress", startedAt: new Date() },
+  });
 }
 
 export async function performCheckInFromAppointment(options: {
@@ -127,14 +223,28 @@ async function performCheckInFromAppointmentInner(options: {
 
   const appointment = await prisma.appointment.findFirst({
     where: { id: appointmentId, salonId },
+    include: {
+      serviceItems: {
+        select: {
+          id: true,
+          employeeId: true,
+          serviceId: true,
+          status: true,
+          sortOrder: true,
+        },
+      },
+    },
   });
   if (!appointment) return { error: "Appointment not found" };
-  if (appointment.employeeId) {
-    try {
-      assertEmployeeResourceAccess(scope, appointment.employeeId);
-    } catch {
-      return { error: "Appointment not found" };
-    }
+
+  if (scope.dataScope === "own") {
+    const allowed =
+      Boolean(scope.employeeId) &&
+      (appointment.employeeId === scope.employeeId ||
+        appointment.serviceItems.some(
+          (item) => item.employeeId === scope.employeeId
+        ));
+    if (!allowed) return { error: "Appointment not found" };
   }
   if (appointment.status === "cancelled") {
     return { error: "Cannot check in a cancelled appointment" };
@@ -146,8 +256,12 @@ async function performCheckInFromAppointmentInner(options: {
   const visitAppointments = await findVisitGroupAppointments(salonId, appointment);
   const visitIds = visitAppointments.map((item) => item.id);
   const employeeId =
+    appointment.serviceItems.find((item) => item.employeeId)?.employeeId ??
     visitAppointments.find((item) => item.employeeId)?.employeeId ??
     appointment.employeeId;
+  const shouldStartNow =
+    startNow ||
+    appointment.serviceItems.some((item) => item.status === "in_progress");
 
   const existingEntry = await prisma.queueEntry.findFirst({
     where: {
@@ -167,7 +281,7 @@ async function performCheckInFromAppointmentInner(options: {
         },
         data: { status: "checked_in" },
       }),
-      ...(startNow
+      ...(shouldStartNow
         ? [
             prisma.queueEntry.update({
               where: { id: existingEntry.id },
@@ -180,6 +294,9 @@ async function performCheckInFromAppointmentInner(options: {
           ]
         : []),
     ]);
+    if (shouldStartNow) {
+      await startFirstScheduledServiceItem(appointment.id, employeeId);
+    }
     scheduleQueueCacheRefresh(salonId);
     return {
       success: true,
@@ -212,9 +329,10 @@ async function performCheckInFromAppointmentInner(options: {
   const position = await getNextPosition(salonId);
   const requestedServiceIds = [
     ...new Set(
-      visitAppointments
-        .map((item) => item.serviceId)
-        .filter((id): id is string => Boolean(id))
+      [
+        ...appointment.serviceItems.map((item) => item.serviceId),
+        ...visitAppointments.map((item) => item.serviceId),
+      ].filter((id): id is string => Boolean(id))
     ),
   ];
   const [validServices, validEmployee] = await Promise.all([
@@ -237,7 +355,7 @@ async function performCheckInFromAppointmentInner(options: {
     };
   }
   const assignedEmployeeId = validEmployee?.id ?? null;
-  const queueStatus = startNow
+  const queueStatus = shouldStartNow
     ? "in_progress"
     : assignedEmployeeId
       ? "assigned"
@@ -260,13 +378,17 @@ async function performCheckInFromAppointmentInner(options: {
         position,
         status: queueStatus,
         employeeId: assignedEmployeeId,
-        startedAt: startNow ? new Date() : null,
+        startedAt: shouldStartNow ? new Date() : null,
         services: {
           create: serviceIds.map((serviceId) => ({ serviceId })),
         },
       },
     }),
   ]);
+
+  if (shouldStartNow) {
+    await startFirstScheduledServiceItem(appointment.id, assignedEmployeeId);
+  }
 
   scheduleQueueCacheRefresh(salonId);
   return { success: true, position, appointmentIds: visitIds };

@@ -12,6 +12,7 @@ import {
   getBusinessDateKey,
   salonDayBounds,
 } from "@/lib/attendance/business-day";
+import { attachAppointmentStaffToQueueServices } from "@/lib/queue/appointment-staff";
 import type {
   AppointmentSnapshot,
   CompletedEntry,
@@ -48,10 +49,22 @@ export {
 
 const CHART_COLORS = ["#6C3BFF", "#3B82F6", "#10B981", "#EF4444"] as const;
 
+const appointmentServiceStaffSelect = {
+  select: {
+    id: true,
+    serviceItems: {
+      where: { status: { notIn: ["cancelled", "no_show"] } },
+      orderBy: [{ sortOrder: "asc" as const }, { scheduledAt: "asc" as const }],
+      select: { id: true, serviceId: true, employeeId: true },
+    },
+  },
+} as const;
+
 const QUEUE_ENTRY_INCLUDE = {
   customer: { select: { name: true, phone: true } },
   employee: { select: { id: true, name: true } },
   seat: { select: { id: true, number: true } },
+  appointment: appointmentServiceStaffSelect,
   services: {
     select: {
       service: {
@@ -63,6 +76,7 @@ const QUEUE_ENTRY_INCLUDE = {
 
 const COMPLETED_INCLUDE = {
   customer: { select: { name: true, phone: true } },
+  appointment: appointmentServiceStaffSelect,
   services: {
     select: {
       service: {
@@ -140,9 +154,14 @@ function mapQueueEntry(
     startedAt: Date | null;
     completedAt: Date | null;
     customerId: string;
+    appointmentId?: string | null;
     customer: { name: string; phone: string | null };
     employee: { id: string; name: string } | null;
     seat: { id: string; number: number } | null;
+    appointment?: {
+      id: string;
+      serviceItems: { id: string; serviceId: string; employeeId: string | null }[];
+    } | null;
     services: {
       service: { id: string; name: string; duration: number; price: number };
     }[];
@@ -157,17 +176,22 @@ function mapQueueEntry(
     startedAt: e.startedAt,
     completedAt: e.completedAt,
     customerId: e.customerId,
+    appointmentId: e.appointmentId ?? e.appointment?.id ?? null,
     customer: { name: e.customer.name, phone: e.customer.phone },
     employee: e.employee,
     seat: e.seat,
-    services: e.services.map((qs) => ({
-      service: {
-        id: qs.service.id,
-        name: qs.service.name,
-        duration: qs.service.duration,
-        price: qs.service.price,
-      },
-    })),
+    services: attachAppointmentStaffToQueueServices(
+      e.services.map((qs) => ({
+        service: {
+          id: qs.service.id,
+          name: qs.service.name,
+          duration: qs.service.duration,
+          price: qs.service.price,
+        },
+      })),
+      e.appointment?.serviceItems,
+      e.employee?.id ?? null
+    ),
     waitMinutes: waitMinutes(e.checkedInAt, e.startedAt, now),
     serviceNames: serviceNames(e.services),
     serviceDuration: serviceDuration(e.services),
@@ -181,7 +205,12 @@ function mapCompleted(
     completedAt: Date | null;
     employeeId: string | null;
     seatId: string | null;
+    appointmentId?: string | null;
     customer: { name: string; phone: string | null };
+    appointment?: {
+      id: string;
+      serviceItems: { id: string; serviceId: string; employeeId: string | null }[];
+    } | null;
     services: {
       service: { id: string; name: string; duration: number; price: number };
     }[];
@@ -198,14 +227,19 @@ function mapCompleted(
     completedAt: e.completedAt,
     employeeId: e.employeeId,
     seatId: e.seatId,
+    appointmentId: e.appointmentId ?? e.appointment?.id ?? null,
     customer: { name: e.customer.name, phone: e.customer.phone },
-    services: e.services.map((qs) => ({
-      service: {
-        id: qs.service.id,
-        name: qs.service.name,
-        price: qs.service.price,
-      },
-    })),
+    services: attachAppointmentStaffToQueueServices(
+      e.services.map((qs) => ({
+        service: {
+          id: qs.service.id,
+          name: qs.service.name,
+          price: qs.service.price,
+        },
+      })),
+      e.appointment?.serviceItems,
+      e.employeeId
+    ),
     invoices: e.invoices.map((inv) => ({
       id: inv.id,
       status: inv.status,
@@ -544,6 +578,7 @@ async function loadFloorRows(ctx: DataScopeContext) {
         startedAt: true,
         employeeId: true,
         seatId: true,
+        appointmentId: true,
         ...COMPLETED_INCLUDE,
       },
       orderBy: { completedAt: "desc" },
@@ -567,6 +602,7 @@ async function loadFloorRows(ctx: DataScopeContext) {
         completedAt: true,
         employeeId: true,
         seatId: true,
+        appointmentId: true,
         ...COMPLETED_INCLUDE,
       },
       orderBy: { completedAt: "desc" },

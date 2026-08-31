@@ -96,7 +96,7 @@ export async function bookSuggestedSlot(formData: FormData) {
 
   const service = await prisma.service.findFirst({
     where: { id: serviceId, salonId },
-    select: { duration: true },
+    select: { duration: true, price: true },
   });
   if (!service) {
     return { error: "Service not found" };
@@ -123,15 +123,30 @@ export async function bookSuggestedSlot(formData: FormData) {
     data: { salonId, name: customerName, phone: customerPhone },
   });
 
-  const appointment = await prisma.appointment.create({
-    data: {
-      salonId,
-      customerId: customer.id,
-      serviceId,
-      employeeId: employeeId || null,
-      scheduledAt: slotStart,
-      notes: "Booked via AI scheduling",
-    },
+  const appointment = await prisma.$transaction(async (tx) => {
+    const created = await tx.appointment.create({
+      data: {
+        salonId,
+        customerId: customer.id,
+        serviceId,
+        employeeId: employeeId || null,
+        scheduledAt: slotStart,
+        notes: "Booked via AI scheduling",
+      },
+    });
+    await tx.appointmentServiceItem.create({
+      data: {
+        appointmentId: created.id,
+        serviceId,
+        employeeId: employeeId || null,
+        price: service.price,
+        duration: service.duration,
+        status: "scheduled",
+        scheduledAt: slotStart,
+        sortOrder: 0,
+      },
+    });
+    return created;
   });
 
   const salon = await prisma.salon.findUnique({ where: { id: salonId } });

@@ -10,6 +10,7 @@ export type LineItem = {
   discountType: "percent" | "fixed";
   taxRate: number;
   employeeId: string;
+  appointmentServiceItemId?: string;
 };
 
 export function newLineItem(defaultEmployeeId = ""): LineItem {

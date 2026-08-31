@@ -21,7 +21,7 @@ import { employeeInvoiceFilter } from "@/lib/analytics/staff-analytics-sql";
 import { getDataScopeContext } from "@/lib/permissions/data-scope";
 import { PermissionDeniedError } from "@/lib/permissions/require";
 
-const NEXT_HIDDEN = new Set(["cancelled", "no_show", "completed", "checked_in"]);
+const NEXT_HIDDEN = new Set(["cancelled", "no_show", "completed", "in_progress"]);
 
 function formatMinutesLabel(minutes: number) {
   const safe = Math.max(0, Math.round(minutes));
@@ -131,6 +131,7 @@ export type EmployeeDashboardPayload = {
   }[];
   schedule: {
     id: string;
+    appointmentId: string;
     time: string;
     at: string;
     service: string;
@@ -140,6 +141,7 @@ export type EmployeeDashboardPayload = {
   }[];
   nextAppointment: {
     id: string;
+    appointmentId: string;
     time: string;
     service: string;
     price: number;
@@ -177,29 +179,31 @@ export async function fetchEmployeeDashboardData(_params?: {
   const nowMs = Date.now();
 
   const [
-    todayAppointments,
+    todayItems,
     attendance,
     todayRevenue,
     weekRevenue,
     monthRevenue,
-    weekAppointments,
-    monthAppointments,
+    weekAppointmentGroups,
+    monthAppointmentGroups,
     queueEntries,
     greetingName,
   ] = await Promise.all([
-    prisma.appointment.findMany({
+    prisma.appointmentServiceItem.findMany({
       where: {
-        salonId,
         employeeId,
         scheduledAt: { gte: todayBounds.start, lte: todayBounds.end },
+        appointment: { salonId },
       },
       select: {
         id: true,
+        appointmentId: true,
         scheduledAt: true,
         status: true,
-        service: {
-          select: { name: true, duration: true, price: true },
-        },
+        price: true,
+        duration: true,
+        service: { select: { name: true } },
+        appointment: { select: { status: true } },
       },
       orderBy: { scheduledAt: "asc" },
     }),
@@ -218,20 +222,22 @@ export async function fetchEmployeeDashboardData(_params?: {
     attributedRevenue(salonId, todayBounds.start, todayBounds.end, employeeId),
     attributedRevenue(salonId, weekRange.start, weekRange.end, employeeId),
     attributedRevenue(salonId, monthRange.start, monthRange.end, employeeId),
-    prisma.appointment.count({
+    prisma.appointmentServiceItem.groupBy({
+      by: ["appointmentId"],
       where: {
-        salonId,
         employeeId,
         scheduledAt: { gte: weekRange.start, lte: weekRange.end },
         status: { not: "cancelled" },
+        appointment: { salonId },
       },
     }),
-    prisma.appointment.count({
+    prisma.appointmentServiceItem.groupBy({
+      by: ["appointmentId"],
       where: {
-        salonId,
         employeeId,
         scheduledAt: { gte: monthRange.start, lte: monthRange.end },
         status: { not: "cancelled" },
+        appointment: { salonId },
       },
     }),
     prisma.queueEntry.findMany({
@@ -254,13 +260,14 @@ export async function fetchEmployeeDashboardData(_params?: {
     }),
   ]);
 
-  const completedToday = todayAppointments.filter(
-    (row) => row.status === "completed"
-  );
-  const upcomingForNext = todayAppointments.filter(
+  const weekAppointments = weekAppointmentGroups.length;
+  const monthAppointments = monthAppointmentGroups.length;
+
+  const completedToday = todayItems.filter((row) => row.status === "completed");
+  const upcomingForNext = todayItems.filter(
     (row) => !NEXT_HIDDEN.has(row.status)
   );
-  const nextAppointment =
+  const nextItem =
     upcomingForNext.find((row) => row.scheduledAt.getTime() >= nowMs) ??
     upcomingForNext[0] ??
     null;
@@ -279,16 +286,22 @@ export async function fetchEmployeeDashboardData(_params?: {
     string,
     { appointments: number; estimated: number }
   >();
-  for (const row of todayAppointments) {
+  for (const row of todayItems) {
     if (row.status === "cancelled" || row.status === "no_show") continue;
     const current = serviceTotals.get(row.service.name) ?? {
       appointments: 0,
       estimated: 0,
     };
     current.appointments += 1;
-    current.estimated += row.service.price;
+    current.estimated += row.price;
     serviceTotals.set(row.service.name, current);
   }
+
+  const distinctVisitIds = new Set(
+    todayItems
+      .filter((row) => row.status !== "cancelled")
+      .map((row) => row.appointmentId)
+  );
 
   return {
     greeting: salonGreeting(),
@@ -297,9 +310,7 @@ export async function fetchEmployeeDashboardData(_params?: {
     rangeLabel: format(parseISO(`${getBusinessDateKey()}T12:00:00`), "EEEE, d MMM"),
     today: {
       earnings: todayRevenue,
-      appointments: todayAppointments.filter(
-        (row) => row.status !== "cancelled"
-      ).length,
+      appointments: distinctVisitIds.size,
       completedServices: completedToday.length,
       workedMinutes,
       workedLabel: formatMinutesLabel(workedMinutes),
@@ -322,14 +333,14 @@ export async function fetchEmployeeDashboardData(_params?: {
     },
     appointmentStatus: {
       completed: completedToday.length,
-      upcoming: todayAppointments.filter((row) => row.status === "scheduled")
-        .length,
-      inQueue: todayAppointments.filter((row) => row.status === "checked_in")
-        .length,
-      cancelled: todayAppointments.filter((row) => row.status === "cancelled")
-        .length,
-      noShow: todayAppointments.filter((row) => row.status === "no_show")
-        .length,
+      upcoming: todayItems.filter((row) => row.status === "scheduled").length,
+      inQueue: todayItems.filter(
+        (row) =>
+          row.status === "in_progress" ||
+          row.appointment.status === "checked_in"
+      ).length,
+      cancelled: todayItems.filter((row) => row.status === "cancelled").length,
+      noShow: todayItems.filter((row) => row.status === "no_show").length,
     },
     topServices: [...serviceTotals.entries()]
       .map(([serviceName, value]) => ({ serviceName, ...value }))
@@ -348,23 +359,25 @@ export async function fetchEmployeeDashboardData(_params?: {
           entry.services.map((row) => row.service.name).join(", ") || "Service",
         appointmentId: entry.appointmentId,
       })),
-    schedule: todayAppointments.map((row) => ({
+    schedule: todayItems.map((row) => ({
       id: row.id,
+      appointmentId: row.appointmentId,
       time: formatZonedTime(row.scheduledAt),
       at: row.scheduledAt.toISOString(),
       service: row.service.name,
-      price: row.service.price,
-      status: row.status,
-      duration: row.service.duration,
+      price: row.price,
+      status: row.status === "in_progress" ? "in_progress" : row.appointment.status,
+      duration: row.duration,
     })),
-    nextAppointment: nextAppointment
+    nextAppointment: nextItem
       ? {
-          id: nextAppointment.id,
-          time: formatZonedTime(nextAppointment.scheduledAt),
-          service: nextAppointment.service.name,
-          price: nextAppointment.service.price,
-          status: nextAppointment.status,
-          duration: nextAppointment.service.duration,
+          id: nextItem.appointmentId,
+          appointmentId: nextItem.appointmentId,
+          time: formatZonedTime(nextItem.scheduledAt),
+          service: nextItem.service.name,
+          price: nextItem.price,
+          status: nextItem.status,
+          duration: nextItem.duration,
         }
       : null,
   };

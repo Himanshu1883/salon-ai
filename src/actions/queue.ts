@@ -291,9 +291,39 @@ export async function startService(queueEntryId: string) {
   });
   if (!entry) return { error: "Queue entry not found" };
 
-  await prisma.queueEntry.update({
-    where: { id: queueEntryId },
-    data: { status: "in_progress", startedAt: new Date() },
+  const now = new Date();
+  await prisma.$transaction(async (tx) => {
+    await tx.queueEntry.update({
+      where: { id: queueEntryId },
+      data: { status: "in_progress", startedAt: entry.startedAt ?? now },
+    });
+
+    if (!entry.appointmentId) return;
+
+    const item = await tx.appointmentServiceItem.findFirst({
+      where: {
+        appointmentId: entry.appointmentId,
+        status: "scheduled",
+        ...(entry.employeeId
+          ? { OR: [{ employeeId: entry.employeeId }, { employeeId: null }] }
+          : {}),
+      },
+      orderBy: [{ sortOrder: "asc" }, { scheduledAt: "asc" }],
+      select: { id: true },
+    });
+    if (item) {
+      await tx.appointmentServiceItem.update({
+        where: { id: item.id },
+        data: { status: "in_progress", startedAt: now },
+      });
+    }
+    await tx.appointment.updateMany({
+      where: {
+        id: entry.appointmentId,
+        status: { notIn: ["cancelled", "completed"] },
+      },
+      data: { status: "checked_in" },
+    });
   });
 
   invalidateQueueCache(session.user.salonId);
@@ -344,6 +374,13 @@ export async function completeService(queueEntryId: string) {
       await tx.appointment.update({
         where: { id: entry.appointmentId },
         data: { status: "completed" },
+      });
+      await tx.appointmentServiceItem.updateMany({
+        where: {
+          appointmentId: entry.appointmentId,
+          status: { notIn: ["cancelled", "no_show"] },
+        },
+        data: { status: "completed", completedAt },
       });
     }
   });

@@ -57,6 +57,21 @@ export function appointmentScopeWhere(ctx: DataScopeIdentity) {
   return where;
 }
 
+/** Own-scope visits: assigned on the appointment or any service item. */
+export function appointmentVisitScopeWhere(ctx: DataScopeIdentity) {
+  if (ctx.dataScope !== "own") {
+    return { salonId: ctx.salonId };
+  }
+  const employeeId = ctx.employeeId ?? "__unlinked__";
+  return {
+    salonId: ctx.salonId,
+    OR: [
+      { employeeId },
+      { serviceItems: { some: { employeeId } } },
+    ],
+  };
+}
+
 export function attendanceScopeWhere(ctx: DataScopeIdentity) {
   return appointmentScopeWhere(ctx);
 }
@@ -67,6 +82,14 @@ export function customerScopeWhere(ctx: DataScopeIdentity) {
     const employeeId = ctx.employeeId ?? "__unlinked__";
     where.OR = [
       { appointments: { some: { employeeId, salonId: ctx.salonId } } },
+      {
+        appointments: {
+          some: {
+            salonId: ctx.salonId,
+            serviceItems: { some: { employeeId } },
+          },
+        },
+      },
       { invoices: { some: { employeeId, salonId: ctx.salonId } } },
       {
         invoices: {

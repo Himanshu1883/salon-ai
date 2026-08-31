@@ -26,6 +26,7 @@ import {
   appointmentDateKey,
   formatAppointmentDateTime,
 } from "@/lib/appointments/datetime";
+import { groupAppointmentsByVisit } from "@/lib/appointments/service-items";
 import type { Appointment, Employee } from "./types";
 import {
   SLOT_HEIGHT_PX,
@@ -34,6 +35,7 @@ import {
 import {
   formatAppointmentTime,
   getInitials,
+  expandAppointmentsForCalendar,
 } from "./appointments-utils";
 
 const STAFF_PALETTES = [
@@ -559,7 +561,7 @@ function BusyChip({
         <div className="max-h-56 space-y-2 overflow-y-auto p-3">
           {appointments.map((appointment) => (
             <div
-              key={appointment.id}
+              key={appointment.calendarKey ?? appointment.id}
               className="rounded-lg bg-[#FAFAFF] px-2.5 py-2"
             >
               <p className="truncate text-sm font-medium text-[#1C103D]">
@@ -727,7 +729,7 @@ function DayStaffCalendar({
   onNextDay?: () => void;
 }) {
   const dayKey = format(selectedDay, "yyyy-MM-dd");
-  const dayAppointments = appointments.filter(
+  const dayAppointments = expandAppointmentsForCalendar(appointments).filter(
     (apt) =>
       appointmentDateKey(apt.scheduledAt) === dayKey &&
       apt.status !== "cancelled"
@@ -904,7 +906,7 @@ function DayStaffCalendar({
 
                   return (
                     <StaffDayCard
-                      key={appointment.id}
+                      key={appointment.calendarKey ?? appointment.id}
                       appointment={appointment}
                       palette={palette}
                       totalColumns={totalColumns}
@@ -958,7 +960,7 @@ function WeekBusyCalendar({
     for (const day of weekDays) {
       map.set(format(day, "yyyy-MM-dd"), []);
     }
-    for (const apt of appointments) {
+    for (const apt of expandAppointmentsForCalendar(appointments)) {
       const key = appointmentDateKey(apt.scheduledAt);
       if (map.has(key)) map.get(key)!.push(apt);
     }
@@ -1117,12 +1119,12 @@ function MobileAgendaList({
   onAppointmentClick: (appointment: Appointment) => void;
 }) {
   const dayKey = format(selectedDay, "yyyy-MM-dd");
-  const dayAppointments = appointments
-    .filter((apt) => appointmentDateKey(apt.scheduledAt) === dayKey)
-    .sort(
-      (a, b) =>
-        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
-    );
+  const dayAppointments = groupAppointmentsByVisit(
+    appointments.filter((apt) => appointmentDateKey(apt.scheduledAt) === dayKey)
+  ).sort(
+    (a, b) =>
+      new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+  );
 
   if (dayAppointments.length === 0) {
     return (

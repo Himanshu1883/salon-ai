@@ -273,6 +273,7 @@ export function QueueDetailsDrawer({
                         customer: entry.customer,
                         employeeId: entry.employee?.id ?? null,
                         seatId: entry.seat?.id ?? null,
+                        appointmentId: entry.appointmentId,
                         services: entry.services,
                         invoices: [],
                       })

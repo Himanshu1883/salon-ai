@@ -368,8 +368,8 @@ export function EmployeeDashboardUi({
                       <Button
                         size="sm"
                         className="rounded-full bg-[#6C3BFF] hover:bg-[#5B2FE0]"
-                        disabled={pending || busyId === item.id}
-                        onClick={() => runCheckIn(item.id, false)}
+                        disabled={pending || busyId === item.appointmentId}
+                        onClick={() => runCheckIn(item.appointmentId, false)}
                       >
                         Reached
                       </Button>
@@ -377,8 +377,8 @@ export function EmployeeDashboardUi({
                         size="sm"
                         variant="outline"
                         className="rounded-full"
-                        disabled={pending || busyId === item.id}
-                        onClick={() => runCheckIn(item.id, true)}
+                        disabled={pending || busyId === item.appointmentId}
+                        onClick={() => runCheckIn(item.appointmentId, true)}
                       >
                         Start now
                       </Button>

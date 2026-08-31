@@ -35,19 +35,38 @@ import {
 } from "./appointment-service-lines";
 
 function toAppointmentSlots(appointments: Appointment[]): AppointmentSlot[] {
-  return appointments
-    .filter(
-      (apt) =>
-        apt.employee?.id &&
-        BLOCKING_APPOINTMENT_STATUSES.includes(
-          apt.status as (typeof BLOCKING_APPOINTMENT_STATUSES)[number]
-        )
-    )
-    .map((apt) => ({
-      employeeId: apt.employee!.id,
-      scheduledAt: apt.scheduledAt,
-      service: { duration: apt.service.duration },
-    }));
+  const slots: AppointmentSlot[] = [];
+  for (const apt of appointments) {
+    const items = apt.serviceItems ?? [];
+    if (items.length > 0) {
+      for (const item of items) {
+        if (
+          item.employee?.id &&
+          (item.status === "scheduled" || item.status === "in_progress")
+        ) {
+          slots.push({
+            employeeId: item.employee.id,
+            scheduledAt: item.scheduledAt,
+            service: { duration: item.duration },
+          });
+        }
+      }
+      continue;
+    }
+    if (
+      apt.employee?.id &&
+      BLOCKING_APPOINTMENT_STATUSES.includes(
+        apt.status as (typeof BLOCKING_APPOINTMENT_STATUSES)[number]
+      )
+    ) {
+      slots.push({
+        employeeId: apt.employee.id,
+        scheduledAt: apt.scheduledAt,
+        service: { duration: apt.service.duration },
+      });
+    }
+  }
+  return slots;
 }
 
 function FormSection({

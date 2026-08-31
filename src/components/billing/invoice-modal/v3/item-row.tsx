@@ -202,6 +202,7 @@ export function ItemRow({
           <div>
             <span className={v3.label}>Staff</span>
             <StaffSelect
+              key={`${item.key}-staff-mobile`}
               item={item}
               employees={employees}
               onUpdate={onUpdate}
@@ -290,6 +291,7 @@ export function ItemRow({
 
         {showStaffColumn ? (
           <StaffSelect
+            key={`${item.key}-staff-desktop`}
             item={item}
             employees={employees}
             onUpdate={onUpdate}

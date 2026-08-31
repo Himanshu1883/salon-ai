@@ -183,8 +183,6 @@ async function getServicePerformance(
   to: Date,
   employeeId: string | null
 ): Promise<ServiceRow[]> {
-  const employeeFilter = employeeAppointmentFilter(employeeId);
-
   const rows = await prisma.$queryRaw<
     {
       serviceId: string;
@@ -195,13 +193,19 @@ async function getServicePerformance(
   >(Prisma.sql`
     WITH appt_counts AS (
       SELECT s.id AS "serviceId", s.name AS "serviceName", COUNT(*)::bigint AS appointments
-      FROM "Appointment" a
-      INNER JOIN "Service" s ON s.id = a."serviceId"
+      FROM "AppointmentServiceItem" asi
+      INNER JOIN "Appointment" a ON a.id = asi."appointmentId"
+      INNER JOIN "Service" s ON s.id = asi."serviceId"
       WHERE a."salonId" = ${salonId}
-        AND a."scheduledAt" >= ${from}
-        AND a."scheduledAt" <= ${to}
+        AND asi."scheduledAt" >= ${from}
+        AND asi."scheduledAt" <= ${to}
+        AND asi.status NOT IN ('cancelled')
         AND a.status NOT IN ('cancelled')
-        ${employeeFilter}
+        ${
+          employeeId
+            ? Prisma.sql`AND asi."employeeId" = ${employeeId}`
+            : Prisma.sql`AND asi."employeeId" IS NOT NULL`
+        }
       GROUP BY s.id, s.name
     ),
     revenue_totals AS (
@@ -385,17 +389,20 @@ async function getBookedMinutes(
   to: Date,
   employeeId: string | null
 ) {
-  const employeeFilter = employeeAppointmentFilter(employeeId);
-
   const rows = await prisma.$queryRaw<{ bookedMinutes: number }[]>(Prisma.sql`
-    SELECT COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
-    FROM "Appointment" a
-    INNER JOIN "Service" s ON s.id = a."serviceId"
+    SELECT COALESCE(SUM(asi.duration), 0)::float AS "bookedMinutes"
+    FROM "AppointmentServiceItem" asi
+    INNER JOIN "Appointment" a ON a.id = asi."appointmentId"
     WHERE a."salonId" = ${salonId}
-      AND a."scheduledAt" >= ${from}
-      AND a."scheduledAt" <= ${to}
+      AND asi."scheduledAt" >= ${from}
+      AND asi."scheduledAt" <= ${to}
+      AND asi.status IN ('scheduled', 'in_progress', 'completed')
       AND a.status IN ('scheduled', 'checked_in', 'completed')
-      ${employeeFilter}
+      ${
+        employeeId
+          ? Prisma.sql`AND asi."employeeId" = ${employeeId}`
+          : Prisma.sql`AND asi."employeeId" IS NOT NULL`
+      }
   `);
 
   return rows[0]?.bookedMinutes ?? 0;
@@ -645,7 +652,14 @@ async function getUpcomingAppointments(
       salonId,
       scheduledAt: { gte: new Date() },
       status: { in: ["scheduled", "checked_in"] },
-      ...(employeeId ? { employeeId } : {}),
+      ...(employeeId
+        ? {
+            OR: [
+              { employeeId },
+              { serviceItems: { some: { employeeId } } },
+            ],
+          }
+        : {}),
     },
     select: {
       id: true,
@@ -1029,15 +1043,16 @@ async function getBookedMinutesByEmployee(
 ) {
   return prisma.$queryRaw<{ employeeId: string; bookedMinutes: number }[]>(
     Prisma.sql`
-      SELECT a."employeeId", COALESCE(SUM(s.duration), 0)::float AS "bookedMinutes"
-      FROM "Appointment" a
-      INNER JOIN "Service" s ON s.id = a."serviceId"
+      SELECT asi."employeeId", COALESCE(SUM(asi.duration), 0)::float AS "bookedMinutes"
+      FROM "AppointmentServiceItem" asi
+      INNER JOIN "Appointment" a ON a.id = asi."appointmentId"
       WHERE a."salonId" = ${salonId}
-        AND a."scheduledAt" >= ${from}
-        AND a."scheduledAt" <= ${to}
-        AND a."employeeId" IS NOT NULL
+        AND asi."scheduledAt" >= ${from}
+        AND asi."scheduledAt" <= ${to}
+        AND asi."employeeId" IS NOT NULL
+        AND asi.status IN ('scheduled', 'in_progress', 'completed')
         AND a.status IN ('scheduled', 'checked_in', 'completed')
-      GROUP BY a."employeeId"
+      GROUP BY asi."employeeId"
     `
   );
 }

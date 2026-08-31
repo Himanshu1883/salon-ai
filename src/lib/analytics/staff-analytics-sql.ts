@@ -16,9 +16,18 @@ export function employeeAppointmentFilter(
   employeeId: string | null,
   column = Prisma.sql`a."employeeId"`
 ) {
-  return employeeId
-    ? Prisma.sql`AND ${column} = ${employeeId}`
-    : Prisma.sql`AND ${column} IS NOT NULL`;
+  if (employeeId) {
+    return Prisma.sql`AND (
+      ${column} = ${employeeId}
+      OR EXISTS (
+        SELECT 1
+        FROM "AppointmentServiceItem" asi
+        WHERE asi."appointmentId" = a.id
+          AND asi."employeeId" = ${employeeId}
+      )
+    )`;
+  }
+  return Prisma.sql`AND ${column} IS NOT NULL`;
 }
 
 export function employeeInvoiceFilter(employeeId: string | null) {

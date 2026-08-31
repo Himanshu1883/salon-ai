@@ -28,6 +28,7 @@ import { isBasicPlan } from "@/lib/plans";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 import { upsertCustomer } from "@/lib/customers";
 import { getSalonBillingWhatsAppTemplate } from "@/actions/whatsapp";
+import { parseVisitGroupId } from "@/lib/appointments/visit-group";
 import { deductRetailSale } from "@/lib/inventory/ledger";
 import { isInternalServiceDescription, resolveLineItemLabel } from "@/lib/service-display";
 import {
@@ -499,6 +500,43 @@ export async function getInvoice(id: string) {
   return invoice;
 }
 
+async function findExistingAppointmentInvoice(
+  db: Pick<typeof prisma, "invoice" | "appointment">,
+  salonId: string,
+  appointmentId: string
+) {
+  const direct = await db.invoice.findFirst({
+    where: { appointmentId, salonId },
+    select: { id: true },
+  });
+  if (direct) return direct;
+
+  const appointment = await db.appointment.findFirst({
+    where: { id: appointmentId, salonId },
+    select: { notes: true, customerId: true },
+  });
+  const groupId = parseVisitGroupId(appointment?.notes);
+  if (!groupId || !appointment) return null;
+
+  const siblings = await db.appointment.findMany({
+    where: {
+      salonId,
+      customerId: appointment.customerId,
+      notes: { startsWith: `[visit:${groupId}]` },
+    },
+    select: { id: true },
+  });
+  if (siblings.length === 0) return null;
+
+  return db.invoice.findFirst({
+    where: {
+      salonId,
+      appointmentId: { in: siblings.map((item) => item.id) },
+    },
+    select: { id: true },
+  });
+}
+
 export async function createInvoice(formData: FormData) {
   const session = await requireSession();
   const salonId = session.user.salonId!;
@@ -513,6 +551,7 @@ export async function createInvoice(formData: FormData) {
     stockItemId?: string;
     itemType?: string;
     employeeId?: string;
+    appointmentServiceItemId?: string;
   }[];
 
   const raw = {
@@ -653,14 +692,11 @@ export async function createInvoice(formData: FormData) {
     appointmentIdRaw
       ? prisma.appointment.findFirst({
           where: { id: appointmentIdRaw, salonId },
-          select: { id: true },
+          select: { id: true, notes: true, customerId: true },
         })
       : Promise.resolve(null),
     appointmentIdRaw
-      ? prisma.invoice.findFirst({
-          where: { appointmentId: appointmentIdRaw, salonId },
-          select: { id: true },
-        })
+      ? findExistingAppointmentInvoice(prisma, salonId, appointmentIdRaw)
       : Promise.resolve(null),
   ]);
 
@@ -670,11 +706,35 @@ export async function createInvoice(formData: FormData) {
   }
   if (existingAppointmentInvoice) {
     return {
-      error: "Invoice already exists for this appointment",
+      success: true,
       id: existingAppointmentInvoice.id,
+      reused: true,
     };
   }
   const linkedAppointmentId = linkedAppointment?.id ?? null;
+
+  if (linkedAppointmentId) {
+    const linkedItemIds = [
+      ...new Set(
+        parsed.data.lineItems
+          .map((item) => item.appointmentServiceItemId)
+          .filter((id): id is string => Boolean(id))
+      ),
+    ];
+    if (linkedItemIds.length > 0) {
+      const validItems = await prisma.appointmentServiceItem.findMany({
+        where: {
+          id: { in: linkedItemIds },
+          appointmentId: linkedAppointmentId,
+          appointment: { salonId },
+        },
+        select: { id: true },
+      });
+      if (validItems.length !== linkedItemIds.length) {
+        return { error: "Invalid service line on this appointment" };
+      }
+    }
+  }
 
   let totals = calcTotals(parsed.data.lineItems, gstEnabled);
   let invoiceNotes = parsed.data.notes ?? "";
@@ -737,6 +797,17 @@ export async function createInvoice(formData: FormData) {
       });
 
       invoice = await prisma.$transaction(async (tx) => {
+        if (linkedAppointmentId) {
+          const existing = await findExistingAppointmentInvoice(
+            tx,
+            salonId,
+            linkedAppointmentId
+          );
+          if (existing) {
+            return { id: existing.id, reused: true as const };
+          }
+        }
+
         const created = await tx.invoice.create({
           data: {
             salonId,
@@ -766,6 +837,7 @@ export async function createInvoice(formData: FormData) {
                 itemType:
                   item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
                 employeeId: item.employeeId || null,
+                appointmentServiceItemId: item.appointmentServiceItemId || null,
               })),
             },
           },
@@ -786,6 +858,11 @@ export async function createInvoice(formData: FormData) {
         return created;
       });
 
+      if ("reused" in invoice && invoice.reused) {
+        invalidateBillingCache(salonId);
+        return { success: true, id: invoice.id, reused: true };
+      }
+
       invalidateBillingCache(salonId);
       return {
         success: true,
@@ -796,7 +873,19 @@ export async function createInvoice(formData: FormData) {
       };
     }
 
-    invoice = await prisma.invoice.create({
+    invoice = await prisma.$transaction(async (tx) => {
+      if (linkedAppointmentId) {
+        const existing = await findExistingAppointmentInvoice(
+          tx,
+          salonId,
+          linkedAppointmentId
+        );
+        if (existing) {
+          return { id: existing.id, reused: true as const };
+        }
+      }
+
+      return tx.invoice.create({
       data: {
         salonId,
         customerId: customer.id,
@@ -821,10 +910,17 @@ export async function createInvoice(formData: FormData) {
             stockItemId: item.stockItemId || null,
             itemType: item.itemType ?? (item.stockItemId ? "PRODUCT" : "SERVICE"),
             employeeId: item.employeeId || null,
+            appointmentServiceItemId: item.appointmentServiceItemId || null,
           })),
         },
       },
     });
+    });
+
+    if ("reused" in invoice && invoice.reused) {
+      invalidateBillingCache(salonId);
+      return { success: true, id: invoice.id, reused: true };
+    }
   } catch (error) {
     if (
       error instanceof PrismaClientKnownRequestError &&
@@ -834,6 +930,20 @@ export async function createInvoice(formData: FormData) {
         error:
           "Database is updating. Please retry in a moment or contact support.",
       };
+    }
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2002" &&
+      linkedAppointmentId
+    ) {
+      const existing = await findExistingAppointmentInvoice(
+        prisma,
+        salonId,
+        linkedAppointmentId
+      );
+      if (existing) {
+        return { success: true, id: existing.id, reused: true };
+      }
     }
     throw error;
   }
@@ -860,58 +970,113 @@ export async function getMembershipDiscountForCustomer(customerId: string) {
 
 export async function createInvoiceFromAppointment(appointmentId: string) {
   const session = await requireSession();
-  const plan = await getSalonPlan(session.user.salonId);
+  const salonId = session.user.salonId!;
+  const plan = await getSalonPlan(salonId);
   const basicBilling = isBasicPlan(plan);
 
   const appointment = await prisma.appointment.findFirst({
-    where: { id: appointmentId, salonId: session.user.salonId },
-    include: { customer: true, service: true },
-  });
-  if (!appointment) return { error: "Appointment not found" };
-
-  if (!basicBilling && !appointment.employeeId) {
-    return { error: "Assign an employee to this appointment before creating an invoice" };
-  }
-
-  const existing = await prisma.invoice.findFirst({
-    where: { appointmentId, salonId: session.user.salonId },
-  });
-  if (existing) return { error: "Invoice already exists for this appointment", id: existing.id };
-
-  const lineItems = [
-    {
-      description: appointment.service.name,
-      quantity: 1,
-      unitPrice: appointment.service.price,
-      serviceId: appointment.serviceId,
-    },
-  ];
-  const totals = calcTotals(lineItems, await getSalonGstEnabled(session.user.salonId));
-
-  const invoice = await prisma.invoice.create({
-    data: {
-      salonId: session.user.salonId,
-      customerId: appointment.customerId,
-      customerName: appointment.customer.name,
-      customerPhone: appointment.customer.phone,
-      appointmentId,
-      employeeId: appointment.employeeId,
-      status: "sent",
-      subtotal: totals.subtotal,
-      tax: totals.tax,
-      total: totals.total,
-      dueDate: new Date(),
-      lineItems: {
-        create: lineItems.map((item) => ({
-          ...item,
-          total: item.quantity * item.unitPrice,
-        })),
+    where: { id: appointmentId, salonId },
+    include: {
+      customer: true,
+      service: true,
+      serviceItems: {
+        where: { status: { notIn: ["cancelled", "no_show"] } },
+        orderBy: [{ sortOrder: "asc" }, { scheduledAt: "asc" }],
+        include: { service: { select: { name: true } } },
       },
     },
   });
+  if (!appointment) return { error: "Appointment not found" };
 
-  invalidateBillingCache(session.user.salonId);
-  return { success: true, id: invoice.id };
+  const items =
+    appointment.serviceItems.length > 0
+      ? appointment.serviceItems
+      : [
+          {
+            id: null as string | null,
+            serviceId: appointment.serviceId,
+            employeeId: appointment.employeeId,
+            price: appointment.service.price,
+            service: appointment.service,
+          },
+        ];
+
+  if (!basicBilling && items.every((item) => !item.employeeId)) {
+    return {
+      error: "Assign an employee to this appointment before creating an invoice",
+    };
+  }
+
+  const existing = await findExistingAppointmentInvoice(
+    prisma,
+    salonId,
+    appointmentId
+  );
+  if (existing) return { success: true, id: existing.id, reused: true };
+
+  const lineItems = items.map((item) => ({
+    description: item.service.name,
+    quantity: 1,
+    unitPrice: item.price,
+    serviceId: item.serviceId,
+    employeeId: item.employeeId,
+    appointmentServiceItemId: item.id,
+  }));
+  const totals = calcTotals(lineItems, await getSalonGstEnabled(salonId));
+
+  try {
+    const invoice = await prisma.$transaction(async (tx) => {
+      const duplicate = await findExistingAppointmentInvoice(
+        tx,
+        salonId,
+        appointmentId
+      );
+      if (duplicate) return duplicate;
+
+      return tx.invoice.create({
+        data: {
+          salonId,
+          customerId: appointment.customerId,
+          customerName: appointment.customer.name,
+          customerPhone: appointment.customer.phone,
+          appointmentId,
+          employeeId: appointment.employeeId,
+          status: "sent",
+          subtotal: totals.subtotal,
+          tax: totals.tax,
+          total: totals.total,
+          dueDate: new Date(),
+          lineItems: {
+            create: lineItems.map((item) => ({
+              description: item.description,
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              total: item.quantity * item.unitPrice,
+              serviceId: item.serviceId,
+              employeeId: item.employeeId,
+              appointmentServiceItemId: item.appointmentServiceItemId,
+            })),
+          },
+        },
+      });
+    });
+
+    invalidateBillingCache(salonId);
+    return { success: true, id: invoice.id };
+  } catch (error) {
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      const duplicate = await findExistingAppointmentInvoice(
+        prisma,
+        salonId,
+        appointmentId
+      );
+      if (duplicate) return { success: true, id: duplicate.id, reused: true };
+    }
+    throw error;
+  }
 }
 
 export async function createInvoiceFromCheckIn(
@@ -922,6 +1087,8 @@ export async function createInvoiceFromCheckIn(
       quantity: number;
       unitPrice: number;
       serviceId?: string;
+      employeeId?: string;
+      appointmentServiceItemId?: string;
     }[];
     paymentMethod?: string;
   }
@@ -940,6 +1107,16 @@ export async function createInvoiceFromCheckIn(
     include: {
       customer: true,
       services: { include: { service: true } },
+      appointment: {
+        select: {
+          id: true,
+          serviceItems: {
+            where: { status: { notIn: ["cancelled", "no_show"] } },
+            orderBy: [{ sortOrder: "asc" }, { scheduledAt: "asc" }],
+            select: { id: true, serviceId: true, employeeId: true },
+          },
+        },
+      },
     },
   });
   if (!checkIn) return { error: "Completed check-in not found" };
@@ -952,6 +1129,17 @@ export async function createInvoiceFromCheckIn(
     where: { checkInId, salonId: session.user.salonId },
   });
   if (existing) return { error: "Invoice already exists for this check-in", id: existing.id };
+
+  if (checkIn.appointmentId) {
+    const existingAppointmentInvoice = await findExistingAppointmentInvoice(
+      prisma,
+      session.user.salonId,
+      checkIn.appointmentId
+    );
+    if (existingAppointmentInvoice) {
+      return { success: true, id: existingAppointmentInvoice.id, reused: true };
+    }
+  }
 
   const lineItems =
     parsedOptions.data.lineItems ??
@@ -966,11 +1154,32 @@ export async function createInvoiceFromCheckIn(
     return { error: "Add at least one service to the invoice" };
   }
 
+  const remainingItems = [...(checkIn.appointment?.serviceItems ?? [])];
+  const resolvedLineItems = lineItems.map((item) => {
+    const matchIndex = item.serviceId
+      ? remainingItems.findIndex((row) => row.serviceId === item.serviceId)
+      : -1;
+    const match =
+      matchIndex >= 0 ? remainingItems.splice(matchIndex, 1)[0] : undefined;
+    const appointmentStaffId = match?.employeeId || undefined;
+    const employeeId = item.appointmentServiceItemId
+      ? item.employeeId || appointmentStaffId || checkIn.employeeId || undefined
+      : appointmentStaffId || item.employeeId || checkIn.employeeId || undefined;
+    return {
+      ...item,
+      employeeId,
+      appointmentServiceItemId: item.appointmentServiceItemId || match?.id,
+    };
+  });
+
   const totals = calcTotals(
-    lineItems,
+    resolvedLineItems,
     await getSalonGstEnabled(session.user.salonId)
   );
   const isPaid = !!parsedOptions.data.paymentMethod;
+  const invoiceEmployeeId =
+    resolvedLineItems.find((item) => item.employeeId)?.employeeId ??
+    checkIn.employeeId;
 
   const invoice = await prisma.invoice.create({
     data: {
@@ -979,7 +1188,8 @@ export async function createInvoiceFromCheckIn(
       customerName: checkIn.customer.name,
       customerPhone: checkIn.customer.phone,
       checkInId,
-      employeeId: checkIn.employeeId,
+      appointmentId: checkIn.appointmentId,
+      employeeId: invoiceEmployeeId,
       seatId: basicBilling ? null : checkIn.seatId,
       status: isPaid ? "paid" : "sent",
       subtotal: totals.subtotal,
@@ -989,12 +1199,14 @@ export async function createInvoiceFromCheckIn(
       paidAt: isPaid ? new Date() : null,
       paymentMethod: parsedOptions.data.paymentMethod ?? null,
       lineItems: {
-        create: lineItems.map((item) => ({
+        create: resolvedLineItems.map((item) => ({
           description: item.description,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           serviceId: item.serviceId || null,
           total: item.quantity * item.unitPrice,
+          employeeId: item.employeeId || null,
+          appointmentServiceItemId: item.appointmentServiceItemId || null,
         })),
       },
     },
@@ -1004,9 +1216,9 @@ export async function createInvoiceFromCheckIn(
     await deductProductLineItems(
       session.user.salonId,
       invoice.id,
-      lineItems,
+      resolvedLineItems,
       checkIn.customerId,
-      checkIn.employeeId,
+      invoiceEmployeeId,
       session.user.id
     );
   }
