@@ -49,16 +49,18 @@ export {
 
 const CHART_COLORS = ["#6C3BFF", "#3B82F6", "#10B981", "#EF4444"] as const;
 
+const excludedServiceItemStatuses: string[] = ["cancelled", "no_show"];
+
 const appointmentServiceStaffSelect = {
   select: {
     id: true,
     serviceItems: {
-      where: { status: { notIn: ["cancelled", "no_show"] } },
+      where: { status: { notIn: excludedServiceItemStatuses } },
       orderBy: [{ sortOrder: "asc" as const }, { scheduledAt: "asc" as const }],
       select: { id: true, serviceId: true, employeeId: true },
     },
   },
-} as const;
+};
 
 const QUEUE_ENTRY_INCLUDE = {
   customer: { select: { name: true, phone: true } },
@@ -72,7 +74,7 @@ const QUEUE_ENTRY_INCLUDE = {
       },
     },
   },
-} as const;
+};
 
 const COMPLETED_INCLUDE = {
   customer: { select: { name: true, phone: true } },
@@ -87,7 +89,7 @@ const COMPLETED_INCLUDE = {
   invoices: {
     select: { id: true, status: true, paymentMethod: true, total: true },
   },
-} as const;
+};
 
 function initials(name: string): string {
   return name

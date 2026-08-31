@@ -1141,7 +1141,15 @@ export async function createInvoiceFromCheckIn(
     }
   }
 
-  const lineItems =
+  const lineItems: Array<{
+    description: string;
+    quantity: number;
+    unitPrice: number;
+    taxRate?: number;
+    serviceId?: string;
+    employeeId?: string;
+    appointmentServiceItemId?: string;
+  }> =
     parsedOptions.data.lineItems ??
     checkIn.services.map((qs) => ({
       description: qs.service.name,

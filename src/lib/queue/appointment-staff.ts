@@ -15,7 +15,12 @@ export function attachAppointmentStaffToQueueServices<
   services: T[],
   appointmentItems: AppointmentServiceStaffSource[] | undefined,
   fallbackEmployeeId?: string | null
-): T[] {
+): Array<
+  T & {
+    employeeId: string | null;
+    appointmentServiceItemId?: string;
+  }
+> {
   const remaining = [...(appointmentItems ?? [])];
   return services.map((qs) => {
     const matchIndex = remaining.findIndex(
