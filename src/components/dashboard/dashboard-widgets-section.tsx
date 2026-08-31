@@ -104,7 +104,7 @@ export async function DashboardWidgetsSection() {
         delay={0.35}
       />
 
-      <div className="grid min-w-0 items-start gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-4">
         <TopStaffWidget topEarners={widgets.topEarners} delay={0.45} />
         <RecentCustomersWidget
           recentCustomers={widgets.recentCustomers}

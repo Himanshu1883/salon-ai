@@ -25,7 +25,7 @@ export function RecentCustomersWidget({
   const { isEnterprise } = usePlan();
 
   return (
-    <DashboardCard delay={delay}>
+    <DashboardCard delay={delay} className="flex h-full flex-col">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
         <h3 className="min-w-0 truncate text-sm font-semibold text-dashboard-text">Recent Customers</h3>
         <Link
@@ -36,9 +36,9 @@ export function RecentCustomersWidget({
         </Link>
       </div>
 
-      <div className="px-3 pb-3">
+      <div className="h-[15.5rem] overflow-y-auto overscroll-contain px-3 pb-3">
         {recentCustomers.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-dashboard-border py-6 text-center">
+          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-dashboard-border text-center">
             <p className="text-xs font-medium text-dashboard-text">No customers yet</p>
             <Link
               href={isEnterprise ? "/check-in" : "/sales/appointments"}

@@ -10,7 +10,7 @@ type MembershipSalesWidgetProps = {
 
 export function MembershipSalesWidget({ delay = 0 }: MembershipSalesWidgetProps) {
   return (
-    <DashboardCard delay={delay}>
+    <DashboardCard delay={delay} className="flex h-full flex-col">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
         <h3 className="min-w-0 truncate text-sm font-semibold text-dashboard-text">Membership Sales</h3>
         <Link
@@ -20,7 +20,7 @@ export function MembershipSalesWidget({ delay = 0 }: MembershipSalesWidgetProps)
           Manage
         </Link>
       </div>
-      <div className="flex flex-col items-center justify-center px-3 pb-3 pt-1 text-center">
+      <div className="flex h-[15.5rem] flex-col items-center justify-center px-3 pb-3 text-center">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-sm">
           <Crown className="h-4 w-4" />
         </div>
@@ -44,7 +44,7 @@ type BirthdaysWidgetProps = {
 
 export function BirthdaysWidget({ delay = 0 }: BirthdaysWidgetProps) {
   return (
-    <DashboardCard delay={delay}>
+    <DashboardCard delay={delay} className="flex h-full flex-col">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
         <h3 className="min-w-0 truncate text-sm font-semibold text-dashboard-text">Birthdays</h3>
         <Link
@@ -54,7 +54,7 @@ export function BirthdaysWidget({ delay = 0 }: BirthdaysWidgetProps) {
           Segments
         </Link>
       </div>
-      <div className="flex flex-col items-center justify-center px-3 pb-3 pt-1 text-center">
+      <div className="flex h-[15.5rem] flex-col items-center justify-center px-3 pb-3 text-center">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-pink-400 to-rose-500 text-white shadow-sm">
           <Cake className="h-4 w-4" />
         </div>

@@ -19,7 +19,7 @@ type TopStaffWidgetProps = {
 
 export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
   return (
-    <DashboardCard delay={delay}>
+    <DashboardCard delay={delay} className="flex h-full flex-col">
       <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
         <h3 className="min-w-0 truncate text-sm font-semibold text-dashboard-text">Top Staff</h3>
         <Link
@@ -30,9 +30,9 @@ export function TopStaffWidget({ topEarners, delay = 0 }: TopStaffWidgetProps) {
         </Link>
       </div>
 
-      <div className="px-3 pb-3">
+      <div className="h-[15.5rem] overflow-y-auto overscroll-contain px-3 pb-3">
         {topEarners.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-dashboard-border py-6 text-center">
+          <div className="flex h-full flex-col items-center justify-center rounded-xl border border-dashed border-dashboard-border text-center">
             <p className="text-xs font-medium text-dashboard-text">No earnings data yet</p>
             <p className="mt-1 text-[11px] text-dashboard-muted">
               Record sales to see top performers
