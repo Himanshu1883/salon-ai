@@ -28,7 +28,7 @@ function CompactKpiCardContent({
       className={cn(
         "flex items-center",
         isLg
-          ? "gap-2 px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5 xl:px-5 xl:py-4"
+          ? "gap-2.5 px-3 py-3.5 sm:gap-3 sm:px-4 sm:py-4 xl:px-5 xl:py-[1.125rem]"
           : "items-start gap-2.5 px-3 py-2.5 xl:gap-3 xl:px-3.5 xl:py-3"
       )}
     >
@@ -47,7 +47,7 @@ function CompactKpiCardContent({
         <p
           className={cn(
             isLg
-              ? "text-[11px] font-semibold leading-tight text-dashboard-text sm:text-sm"
+              ? "text-[11px] font-medium leading-tight text-dashboard-muted sm:text-xs"
               : "text-[11px] font-medium leading-snug text-dashboard-muted sm:text-xs"
           )}
         >
@@ -57,7 +57,7 @@ function CompactKpiCardContent({
           className={cn(
             "truncate leading-tight tracking-tight",
             isLg
-              ? "mt-0.5 truncate text-xs font-bold text-dashboard-text"
+              ? "mt-1 truncate text-lg font-bold tabular-nums tracking-tight text-dashboard-text sm:text-xl"
               : "mt-0.5 truncate text-sm font-bold text-dashboard-text sm:text-base"
           )}
         >

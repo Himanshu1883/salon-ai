@@ -17,7 +17,7 @@ function KpiSkeleton() {
       </div>
       <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 @min-[68rem]:grid-cols-5">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={`kpi-${i}`} className="h-[68px] rounded-2xl bg-white shadow-sm xl:h-[76px]" />
+          <div key={`kpi-${i}`} className="h-[75px] rounded-2xl bg-white shadow-sm xl:h-[84px]" />
         ))}
       </div>
     </div>
@@ -37,11 +37,11 @@ function WidgetsSkeleton() {
         <div className="h-[22rem] rounded-[20px] border border-[#E8ECF4] bg-white animate-pulse sm:h-[28rem] lg:h-[34rem]" />
         <div className="h-[22rem] rounded-[20px] border border-[#E8ECF4] bg-white animate-pulse sm:h-[28rem] lg:h-[34rem]" />
       </div>
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid min-w-0 items-start gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="h-64 rounded-[20px] border border-[#E8ECF4] bg-white animate-pulse"
+            className="h-40 rounded-[20px] border border-[#E8ECF4] bg-white animate-pulse"
           />
         ))}
       </div>

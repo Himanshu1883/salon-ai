@@ -30,24 +30,22 @@ export function AiInsightsWidget({
   }
 
   return (
-    <DashboardCard delay={delay} className="h-full">
+    <DashboardCard delay={delay}>
       <Link
         href="/schedule/ai"
-        className="flex h-full flex-col justify-between p-4 transition-colors hover:bg-violet-50/30 xl:p-6"
+        className="flex min-w-0 items-center gap-3 px-3 py-2.5 transition-colors hover:bg-violet-50/30"
       >
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-md shadow-violet-200/60 xl:h-11 xl:w-11 xl:rounded-2xl">
-            <Sparkles className="h-4 w-4 xl:h-5 xl:w-5" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">AI Insights</h3>
-            <p className="mt-1.5 text-sm leading-relaxed text-dashboard-muted xl:mt-2">{insight}</p>
-          </div>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-sm shadow-violet-200/60">
+          <Sparkles className="h-4 w-4" />
         </div>
-        <div className="mt-4 flex items-center gap-2 text-sm font-medium text-dashboard-primary">
+        <div className="min-w-0 flex-1">
+          <h3 className="text-sm font-semibold text-dashboard-text">AI Insights</h3>
+          <p className="mt-0.5 text-xs leading-snug text-dashboard-muted">{insight}</p>
+        </div>
+        <span className="hidden shrink-0 items-center gap-1 text-xs font-medium text-dashboard-primary sm:inline-flex">
           Open AI scheduler
-          <ArrowRight className="h-4 w-4" />
-        </div>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </span>
       </Link>
     </DashboardCard>
   );

@@ -109,30 +109,30 @@ export function AlertsWidget({
   }
 
   return (
-    <DashboardCard delay={delay} className="h-full">
-      <div className="p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="text-base font-semibold text-dashboard-text xl:text-lg">Alerts</h3>
+    <DashboardCard delay={delay} className="flex h-full flex-col">
+      <div className="px-3 pt-3 pb-1.5">
+        <h3 className="text-sm font-semibold text-dashboard-text">Alerts</h3>
       </div>
 
-      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
+      <div className="h-[15.5rem] overflow-y-auto overscroll-contain px-3 pb-3">
         {alerts.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-2xl bg-emerald-50 px-4 py-3">
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <div className="flex h-full items-center gap-2 rounded-xl bg-emerald-50 px-2.5 py-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-xs text-emerald-600">
               ✓
             </div>
             <div>
-              <p className="text-sm font-medium text-emerald-900">All clear</p>
-              <p className="text-xs text-emerald-700">No urgent items right now</p>
+              <p className="text-xs font-semibold text-emerald-900">All clear</p>
+              <p className="text-[11px] text-emerald-700">No urgent items right now</p>
             </div>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {alerts.map((alert) => (
               <Link
                 key={alert.id}
                 href={alert.href}
                 className={cn(
-                  "flex items-start gap-3 rounded-2xl border p-3 transition-colors hover:bg-dashboard-bg/60",
+                  "flex items-start gap-2 rounded-xl border p-2 transition-colors hover:bg-dashboard-bg/60",
                   alert.severity === "critical"
                     ? "border-red-200 bg-red-50/50"
                     : alert.severity === "warning"
@@ -142,7 +142,7 @@ export function AlertsWidget({
               >
                 <div
                   className={cn(
-                    "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+                    "mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
                     alert.severity === "critical"
                       ? "bg-red-100 text-red-600"
                       : alert.severity === "warning"
@@ -153,9 +153,9 @@ export function AlertsWidget({
                   {alert.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-dashboard-text">{alert.title}</p>
-                  <p className="mt-0.5 text-xs text-dashboard-muted">{alert.description}</p>
-                  <span className="mt-2 inline-block text-xs font-medium text-dashboard-primary">
+                  <p className="text-xs font-semibold text-dashboard-text">{alert.title}</p>
+                  <p className="mt-0.5 text-[11px] text-dashboard-muted">{alert.description}</p>
+                  <span className="mt-1 inline-block text-[11px] font-medium text-dashboard-primary">
                     {alert.action} →
                   </span>
                 </div>

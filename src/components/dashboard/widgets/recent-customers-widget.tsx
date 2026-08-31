@@ -25,24 +25,24 @@ export function RecentCustomersWidget({
   const { isEnterprise } = usePlan();
 
   return (
-    <DashboardCard delay={delay} className="h-full">
-      <div className="flex min-w-0 flex-row items-center justify-between gap-2 p-4 pb-3 xl:p-6 xl:pb-4">
-        <h3 className="min-w-0 truncate text-base font-semibold text-dashboard-text xl:text-lg">Recent Customers</h3>
+    <DashboardCard delay={delay}>
+      <div className="flex min-w-0 flex-row items-center justify-between gap-2 px-3 pt-3 pb-1.5">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-dashboard-text">Recent Customers</h3>
         <Link
           href="/clients"
-          className="shrink-0 text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+          className="shrink-0 text-xs font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
         >
           View all
         </Link>
       </div>
 
-      <div className="px-4 pb-4 xl:px-6 xl:pb-6">
+      <div className="px-3 pb-3">
         {recentCustomers.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-dashboard-border py-8 text-center">
-            <p className="text-sm font-medium text-dashboard-text">No customers yet</p>
+          <div className="rounded-xl border border-dashed border-dashboard-border py-6 text-center">
+            <p className="text-xs font-medium text-dashboard-text">No customers yet</p>
             <Link
               href={isEnterprise ? "/check-in" : "/sales/appointments"}
-              className="mt-2 inline-block text-sm font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
+              className="mt-1.5 inline-block text-xs font-medium text-dashboard-primary hover:text-dashboard-primary-hover"
             >
               {isEnterprise ? "Check in first client →" : "Book first appointment →"}
             </Link>
@@ -53,20 +53,20 @@ export function RecentCustomersWidget({
               <Link
                 key={customer.id}
                 href={`/clients/${customer.id}`}
-                className="-mx-2 flex min-w-0 items-center justify-between gap-2 rounded-2xl px-2 py-3 transition-colors hover:bg-dashboard-bg/80"
+                className="-mx-1 flex min-w-0 items-center justify-between gap-2 rounded-xl px-1 py-1.5 transition-colors hover:bg-dashboard-bg/80"
               >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-sm font-semibold text-white">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-[11px] font-semibold text-white">
                     {customer.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-dashboard-text">{customer.name}</p>
-                    <p className="truncate text-xs text-dashboard-muted">
+                    <p className="truncate text-xs font-semibold text-dashboard-text">{customer.name}</p>
+                    <p className="truncate text-[11px] text-dashboard-muted">
                       {customer.phone || customer.email || "New client"}
                     </p>
                   </div>
                 </div>
-                <span className="shrink-0 text-xs text-dashboard-muted">
+                <span className="shrink-0 text-[11px] text-dashboard-muted">
                   {format(new Date(customer.createdAt), "MMM d")}
                 </span>
               </Link>

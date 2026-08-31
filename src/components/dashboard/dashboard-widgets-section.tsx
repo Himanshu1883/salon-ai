@@ -83,7 +83,7 @@ export async function DashboardWidgetsSection() {
         />
       </div>
 
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-3 xl:gap-6">
+      <div className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-3">
         <ActivityWidget recentActivity={widgets.recentActivity} delay={0.2} />
         <TeamStatusWidget team={widgets.teamOnShift} delay={0.25} />
         <AlertsWidget
@@ -104,7 +104,7 @@ export async function DashboardWidgetsSection() {
         delay={0.35}
       />
 
-      <div className="grid min-w-0 gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-4 xl:gap-6">
+      <div className="grid min-w-0 items-start gap-3 sm:grid-cols-2 @min-[56rem]:grid-cols-4">
         <TopStaffWidget topEarners={widgets.topEarners} delay={0.45} />
         <RecentCustomersWidget
           recentCustomers={widgets.recentCustomers}
