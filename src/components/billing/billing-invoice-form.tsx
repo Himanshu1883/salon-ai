@@ -54,6 +54,7 @@ import {
   type WhatsAppInvoiceContext,
 } from "./whatsapp-communication";
 import { buildBillingWhatsAppMessage, openWhatsApp } from "@/lib/whatsapp";
+import { getPublicInvoiceUrl } from "@/lib/salon-paths";
 
 const NOTES_MAX = 300;
 const PAYMENT_NOTES_MAX = 200;
@@ -531,7 +532,10 @@ export function BillingInvoiceForm({
     }
 
     autoWhatsAppOpened.current = true;
-    const invoiceUrl = `${window.location.origin}/billing/${successContext.invoiceId}`;
+    const invoiceUrl = getPublicInvoiceUrl(
+      successContext.invoiceId,
+      window.location.origin
+    );
     const message = buildBillingWhatsAppMessage(
       billingMessageTemplate,
       successContext,

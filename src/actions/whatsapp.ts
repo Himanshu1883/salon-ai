@@ -11,7 +11,7 @@ import {
   buildTemplateVariables,
 } from "@/lib/whatsapp";
 import type { WhatsAppInvoiceContext } from "@/lib/whatsapp";
-import { getAppOrigin } from "@/lib/salon-paths";
+import { getPublicInvoiceUrl } from "@/lib/salon-paths";
 import { cachedBySalon } from "@/lib/salon-cache";
 
 async function getOrCreateWhatsAppSettings(salonId: string) {
@@ -109,7 +109,7 @@ export async function getBillingWhatsAppPreview(
     services: sampleContext?.services ?? "Hair Spa, Blow Dry",
   };
 
-  const invoiceUrl = `${getAppOrigin()}/billing/sample-id`;
+  const invoiceUrl = getPublicInvoiceUrl("sample-id");
   return buildBillingWhatsAppMessage(template, ctx, invoiceUrl);
 }
 

@@ -17,7 +17,7 @@ import {
   buildBillingWhatsAppMessage,
 } from "@/lib/whatsapp";
 import { MessageCircle, RotateCcw, Save } from "lucide-react";
-import { getAppOrigin } from "@/lib/salon-paths";
+import { getPublicInvoiceUrl } from "@/lib/salon-paths";
 
 type Settings = {
   billingMessageTemplate: string;
@@ -53,7 +53,7 @@ export function WhatsAppSettingsClient({
     return buildBillingWhatsAppMessage(
       template,
       SAMPLE_CONTEXT,
-      `${getAppOrigin()}/billing/preview`
+      `${getPublicInvoiceUrl("preview")}`
     );
   }, [template]);
 

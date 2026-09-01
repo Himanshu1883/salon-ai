@@ -29,6 +29,7 @@ import {
   WHATSAPP_TEMPLATES,
 } from "./templates";
 import { openWhatsApp } from "@/lib/whatsapp";
+import { getPublicInvoiceUrl } from "@/lib/salon-paths";
 import type {
   AttachmentKey,
   SendMode,
@@ -119,8 +120,8 @@ export function WhatsAppCommunicationDrawer({
 
   const invoiceUrl =
     typeof window !== "undefined"
-      ? `${window.location.origin}/billing/${context.invoiceId}`
-      : `/billing/${context.invoiceId}`;
+      ? getPublicInvoiceUrl(context.invoiceId, window.location.origin)
+      : getPublicInvoiceUrl(context.invoiceId);
 
   const messagePreview = useMemo(
     () =>

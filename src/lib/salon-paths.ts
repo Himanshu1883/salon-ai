@@ -32,6 +32,7 @@ export const RESERVED_SALON_SLUGS = new Set([
   "download",
   "integrations",
   "gotix",
+  "invoice",
 ]);
 
 const SALON_ROUTE_MATCHERS = [
@@ -169,4 +170,14 @@ export function getSalonPublicUrl(
 ) {
   const base = origin ? stripTrailingSlash(origin) : getAppOrigin();
   return `${base}${salonPath(slug, path)}`;
+}
+
+export function getPublicInvoicePath(invoiceId: string) {
+  return `/invoice/${invoiceId}`;
+}
+
+/** Customer-facing invoice URL used in WhatsApp. Does not require login. */
+export function getPublicInvoiceUrl(invoiceId: string, origin?: string) {
+  const base = origin ? stripTrailingSlash(origin) : getAppOrigin();
+  return `${base}${getPublicInvoicePath(invoiceId)}`;
 }
