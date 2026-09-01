@@ -57,10 +57,10 @@ const DURATION_FILTERS = new Set<CheckInServiceDurationFilter>([
   "long",
 ]);
 
-export const CHECK_IN_CATALOG_WHERE = {
+export const CHECK_IN_CATALOG_WHERE: Prisma.ServiceWhereInput = {
   status: { not: "ARCHIVED" },
   catalogType: { in: ["SERVICE", "PACKAGE"] },
-} as const;
+};
 
 export function parseCheckInServicesQuery(
   searchParams: URLSearchParams
