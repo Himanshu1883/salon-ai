@@ -115,7 +115,7 @@ export function BillingMarkPaidDialog({
               : "Mark paid"}
         </Button>
       </DialogTrigger>
-      <DialogContent className="rounded-2xl sm:max-w-md">
+      <DialogContent className="max-h-[90vh] w-[calc(100%-1.5rem)] overflow-y-auto rounded-2xl sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[#1C103D]">
             {isPartialInvoice ? "Collect remaining payment" : "Record payment"}

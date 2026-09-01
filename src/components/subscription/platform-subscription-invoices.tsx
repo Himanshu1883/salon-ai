@@ -100,11 +100,11 @@ export function PlatformSubscriptionInvoices({
   return (
     <>
       {!compact && (
-        <div className="border-b border-[#ECECEC] px-5 py-4">
-          <h2 className="text-lg font-semibold text-[#1C103D]">
+        <div className="border-b border-[#ECECEC] px-3 py-2.5 sm:px-5 sm:py-4">
+          <h2 className="text-sm font-semibold text-[#1C103D] sm:text-lg">
             Go Tix Subscription Invoices
           </h2>
-          <p className="mt-1 text-sm text-[#6B7280]">
+          <p className="mt-0.5 text-[11px] leading-snug text-[#6B7280] sm:mt-1 sm:text-sm">
             Platform invoices from {PLATFORM_BILLING_ENTITY.legalName} for your Go Tix ERP
             subscription — not invoices you create for salon customers.
           </p>
@@ -116,20 +116,20 @@ export function PlatformSubscriptionInvoices({
           cards={
             <div className="divide-y divide-[#ECECEC]">
               {sortedInvoices.map((invoice) => (
-                <div key={invoice.id} className="space-y-2.5 p-4">
+                <div key={invoice.id} className="space-y-1.5 p-2.5 sm:space-y-2.5 sm:p-4">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="font-semibold text-[#1C103D]">{invoice.invoiceNumber}</p>
+                    <p className="truncate text-sm font-semibold text-[#1C103D]">{invoice.invoiceNumber}</p>
                     <PlatformInvoiceStatusBadge status={invoice.status} />
                   </div>
-                  <p className="text-sm text-[#6B7280]">
+                  <p className="text-xs text-[#6B7280] sm:text-sm">
                     {format(new Date(invoice.dueDate), "MMM d, yyyy")}
                   </p>
-                  <p className="text-sm text-[#6B7280]">
+                  <p className="text-xs text-[#6B7280] sm:text-sm">
                     {getPlanLabel(invoice.amount, planName)}
                   </p>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
+                  <div className="grid grid-cols-3 gap-2 text-xs sm:text-sm">
                     <div>
-                      <p className="text-xs text-[#9CA3AF]">Base</p>
+                      <p className="text-[10px] text-[#9CA3AF] sm:text-xs">Base</p>
                       <p className="font-medium tabular-nums">{formatCurrency(invoice.amount)}</p>
                     </div>
                     <div>
@@ -145,7 +145,7 @@ export function PlatformSubscriptionInvoices({
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-11 min-h-[48px] flex-1 text-[#6C3CF0] hover:text-[#5B2FE0]"
+                      className="h-8 flex-1 text-xs text-[#6C3CF0] hover:text-[#5B2FE0] sm:h-9"
                       onClick={() => openInvoiceDialog(invoice)}
                     >
                       View

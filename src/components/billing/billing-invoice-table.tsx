@@ -179,16 +179,16 @@ function BillingInvoiceMobileCards({
           .join(", ");
 
         return (
-          <article key={inv.id} className="px-3 py-2.5 sm:px-4 sm:py-3">
-            <div className="flex gap-2.5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EDE9FE] text-xs font-semibold text-[#6C3CF0]">
+          <article key={inv.id} className="px-2 py-1.5 sm:px-4 sm:py-3">
+            <div className="flex gap-2">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#EDE9FE] text-[9px] font-semibold text-[#6C3CF0] sm:h-7 sm:w-7 sm:text-[10px]">
                 {getInitials(inv.customerName)}
               </div>
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold leading-tight text-[#1C103D]">
+                    <p className="truncate text-[13px] font-semibold leading-tight text-[#1C103D] sm:text-sm">
                       {inv.customerName}
                     </p>
                     <p className="mt-0.5 text-[11px] leading-tight text-[#9CA3AF]">
@@ -212,7 +212,7 @@ function BillingInvoiceMobileCards({
                   </p>
                 )}
 
-                <div className="mt-1.5 flex items-center justify-between gap-2">
+                <div className="mt-1 flex items-center justify-between gap-2">
                   <div className="flex min-w-0 flex-wrap gap-1">
                     <span
                       className={cn(

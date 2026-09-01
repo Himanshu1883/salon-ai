@@ -72,14 +72,14 @@ export function BillingInvoiceListClient({
 
   if (invoices.length === 0) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <BillingEmptyState onNewInvoice={openNewInvoice} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 p-1 pb-5">
+    <div className="space-y-3 p-1 pb-4 sm:space-y-4 sm:pb-5">
       <BillingInvoiceTable
         invoices={invoices}
         loading={loading || isPending}

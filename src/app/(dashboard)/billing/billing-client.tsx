@@ -196,42 +196,42 @@ export function BillingClient({
 
   return (
     <BillingStatsProvider openNewInvoice={() => setOpen(true)}>
-      <div className="space-y-6">
+      <div className="min-w-0 max-w-full space-y-3 overflow-x-hidden sm:space-y-6">
         <BillingHeader
           onNewInvoice={() => setOpen(true)}
           showNewInvoice={activeTab === "customers"}
         />
 
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="h-auto w-full justify-start gap-1 rounded-xl border border-[#ECECEC] bg-white p-1 shadow-sm sm:w-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="min-w-0 space-y-3 sm:space-y-6">
+          <TabsList className="h-auto w-full min-w-0 justify-start gap-1 overflow-x-auto rounded-xl border border-[#ECECEC] bg-white p-0.5 shadow-sm sm:w-auto sm:p-1">
             <TabsTrigger
               value="customers"
-              className="rounded-lg px-4 py-2 data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white"
+              className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white sm:px-4 sm:py-2 sm:text-sm"
             >
               Customer Invoices
             </TabsTrigger>
             <TabsTrigger
               value="subscription"
-              className="rounded-lg px-4 py-2 data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white"
+              className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs data-[state=active]:bg-[#6C3CF0] data-[state=active]:text-white sm:px-4 sm:py-2 sm:text-sm"
             >
               Go Tix Subscription
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="customers" className="mt-0 space-y-6">
+          <TabsContent value="customers" className="mt-0 min-w-0 space-y-3 sm:space-y-6">
             <BillingKpiCards
               stats={overview.stats}
               activeStatusFilter={status}
               onUnpaidClick={handleUnpaidCardClick}
             />
 
-            <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
-              <div className="flex flex-col gap-3 border-b border-[#ECECEC] px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
-                <div>
-                  <h2 className="text-base font-semibold text-[#1C103D] sm:text-lg">
+            <div className="min-w-0 overflow-hidden rounded-xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)] sm:rounded-2xl">
+              <div className="flex min-w-0 flex-col gap-2 border-b border-[#ECECEC] px-2.5 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5 sm:py-4">
+                <div className="min-w-0">
+                  <h2 className="text-sm font-semibold text-[#1C103D] sm:text-lg">
                     Customer Invoices
                   </h2>
-                  <p className="text-xs text-[#9CA3AF] sm:text-sm">
+                  <p className="hidden text-[11px] text-[#9CA3AF] sm:block sm:text-sm">
                     Bills you create for salon customers
                   </p>
                 </div>
@@ -266,7 +266,7 @@ export function BillingClient({
           </TabsContent>
 
           <TabsContent value="subscription" className="mt-0">
-            <div className="overflow-hidden rounded-2xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)]">
+            <div className="min-w-0 overflow-hidden rounded-xl border border-[#ECECEC] bg-white shadow-[0_4px_24px_rgba(28,16,61,0.05)] sm:rounded-2xl">
               {subscriptionLoading ? (
                 <div className="flex min-h-[240px] items-center justify-center p-8 text-sm text-[#9CA3AF]">
                   Loading subscription invoices…
