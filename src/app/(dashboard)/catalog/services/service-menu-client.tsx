@@ -404,6 +404,169 @@ function ServiceActionsMenu({
   );
 }
 
+function ServiceMobileCard({
+  service,
+  bulkMode,
+  selected,
+  onToggleSelect,
+  onEdit,
+  onDelete,
+  onDuplicate,
+}: {
+  service: CatalogServiceItem;
+  bulkMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onDuplicate: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-dashboard-border/80 bg-white p-3 shadow-sm",
+        bulkMode && selected && "border-violet-200 bg-violet-50/50"
+      )}
+    >
+      <div className="flex items-start gap-2.5">
+        {bulkMode && (
+          <Checkbox
+            checked={selected ?? false}
+            onChange={() => onToggleSelect?.()}
+            aria-label={`Select ${service.name}`}
+            className="mt-0.5 shrink-0"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold leading-snug text-dashboard-text">
+                {service.name}
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-1">
+                <Badge
+                  variant="secondary"
+                  className="rounded-md bg-violet-50 px-1.5 py-0 text-[10px] text-violet-700"
+                >
+                  {CATALOG_TYPE_LABELS[service.catalogType as keyof typeof CATALOG_TYPE_LABELS] ??
+                    service.catalogType}
+                </Badge>
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "rounded-md px-1.5 py-0 text-[10px]",
+                    service.status === "ACTIVE" && "bg-emerald-50 text-emerald-700",
+                    service.status === "INACTIVE" && "bg-amber-50 text-amber-700",
+                    service.status === "ARCHIVED" && "bg-stone-100 text-stone-600"
+                  )}
+                >
+                  {STATUS_LABELS[service.status as keyof typeof STATUS_LABELS] ??
+                    service.status}
+                </Badge>
+              </div>
+            </div>
+            <p className="shrink-0 text-sm font-bold tabular-nums text-dashboard-text">
+              {service.isStartingPrice ? (
+                <>
+                  <span className="mr-0.5 text-[10px] font-medium text-dashboard-muted">
+                    from
+                  </span>
+                  {formatCurrency(service.price)}
+                </>
+              ) : (
+                formatCurrency(service.price)
+              )}
+            </p>
+          </div>
+          <div className="mt-2 flex items-center justify-between gap-2 text-[11px] text-dashboard-muted">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3 text-dashboard-primary" />
+              {formatDuration(service.duration)}
+            </span>
+            <span className="truncate">
+              {service.categoryName ?? "Uncategorized"}
+            </span>
+          </div>
+        </div>
+        {!bulkMode && (
+          <ServiceActionsMenu
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onDuplicate={onDuplicate}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ServicesList({
+  services,
+  onEdit,
+  onDelete,
+  onDuplicate,
+  bulkMode = false,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
+}: {
+  services: CatalogServiceItem[];
+  onEdit: (service: CatalogServiceItem) => void;
+  onDelete: (id: string) => void;
+  onDuplicate: (id: string) => void;
+  bulkMode?: boolean;
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: (ids: string[], select: boolean) => void;
+}) {
+  const serviceIds = services.map((s) => s.id);
+  const allSelected =
+    bulkMode &&
+    serviceIds.length > 0 &&
+    serviceIds.every((id) => selectedIds?.has(id));
+
+  return (
+    <>
+      {bulkMode && services.length > 0 && (
+        <div className="mb-2 flex items-center gap-2 md:hidden">
+          <Checkbox
+            checked={allSelected}
+            onChange={() => onToggleSelectAll?.(serviceIds, !allSelected)}
+            aria-label="Select all services in category"
+          />
+          <span className="text-xs text-dashboard-muted">Select all in category</span>
+        </div>
+      )}
+      <div className="space-y-2 md:hidden">
+        {services.map((service) => (
+          <ServiceMobileCard
+            key={service.id}
+            service={service}
+            bulkMode={bulkMode}
+            selected={selectedIds?.has(service.id)}
+            onToggleSelect={() => onToggleSelect?.(service.id)}
+            onEdit={() => onEdit(service)}
+            onDelete={() => onDelete(service.id)}
+            onDuplicate={() => onDuplicate(service.id)}
+          />
+        ))}
+      </div>
+      <div className="hidden md:block">
+        <ServicesTable
+          services={services}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          bulkMode={bulkMode}
+          selectedIds={selectedIds}
+          onToggleSelect={onToggleSelect}
+          onToggleSelectAll={onToggleSelectAll}
+        />
+      </div>
+    </>
+  );
+}
+
 function ServicesTable({
   services,
   onEdit,
@@ -432,8 +595,8 @@ function ServicesTable({
     bulkMode && serviceIds.some((id) => selectedIds?.has(id));
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-dashboard-border">
-      <Table>
+    <div className="overflow-x-auto rounded-2xl border border-dashboard-border">
+      <Table className="min-w-[720px]">
         <TableHeader>
           <TableRow className="border-dashboard-border bg-dashboard-bg/60 hover:bg-dashboard-bg/60">
             {bulkMode && (
@@ -636,12 +799,12 @@ function StatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
       whileHover={{ y: -2, transition: { duration: 0.2 } }}
-      className="rounded-[20px] border border-dashboard-border bg-dashboard-card p-5 shadow-dashboard-card"
+      className="rounded-2xl border border-dashboard-border bg-dashboard-card p-3 shadow-dashboard-card sm:rounded-[20px] sm:p-5"
     >
-      <div className="flex items-start gap-4">
+      <div className="flex items-center gap-3 sm:items-start sm:gap-4">
         <div
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl",
+            "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg sm:h-11 sm:w-11 sm:rounded-xl",
             iconBg,
             accent
           )}
@@ -649,8 +812,10 @@ function StatCard({
           {icon}
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-dashboard-muted">{label}</p>
-          <p className="mt-1 text-2xl font-bold tracking-tight text-dashboard-text">
+          <p className="truncate text-xs font-medium text-dashboard-muted sm:text-sm">
+            {label}
+          </p>
+          <p className="mt-0.5 text-lg font-bold tracking-tight text-dashboard-text sm:mt-1 sm:text-2xl">
             {value}
           </p>
         </div>
@@ -1136,28 +1301,28 @@ export function ServiceMenuClient({
   }
 
   return (
-    <div className="space-y-6 pb-8 font-[family-name:var(--font-inter)]">
+    <div className="space-y-4 pb-6 font-[family-name:var(--font-inter)] sm:space-y-6 sm:pb-8">
       {/* Page header */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="overflow-hidden rounded-[20px] border border-dashboard-border bg-dashboard-card shadow-dashboard-card"
+        className="overflow-hidden rounded-2xl border border-dashboard-border bg-dashboard-card shadow-dashboard-card sm:rounded-[20px]"
       >
-        <div className="bg-gradient-to-br from-violet-600/5 via-dashboard-card to-dashboard-card px-6 py-6 sm:px-8 sm:py-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-dashboard-primary to-violet-500 text-white shadow-lg shadow-violet-500/25 sm:h-20 sm:w-20">
-                <Scissors className="h-8 w-8 sm:h-9 sm:w-9" />
+        <div className="bg-gradient-to-br from-violet-600/5 via-dashboard-card to-dashboard-card px-4 py-4 sm:px-8 sm:py-8">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between lg:gap-6">
+            <div className="flex items-start gap-3 sm:gap-5">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-dashboard-primary to-violet-500 text-white shadow-lg shadow-violet-500/25 sm:h-16 sm:w-16 sm:rounded-2xl lg:h-20 lg:w-20">
+                <Scissors className="h-6 w-6 sm:h-8 sm:w-8 lg:h-9 lg:w-9" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl font-bold tracking-tight text-dashboard-text sm:text-3xl">
+                <h1 className="text-xl font-bold tracking-tight text-dashboard-text sm:text-2xl lg:text-3xl">
                   Service menu
                 </h1>
-                <p className="mt-1 text-sm text-dashboard-muted">
+                <p className="mt-0.5 text-xs text-dashboard-muted sm:mt-1 sm:text-sm">
                   View and manage the services offered by your business.
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-3 flex flex-wrap gap-1.5 sm:mt-4 sm:gap-2">
                   <Badge className="rounded-lg border-0 bg-violet-100 px-2.5 py-0.5 text-violet-700 hover:bg-violet-100">
                     <Layers className="mr-1 h-3 w-3" />
                     {localCategories.length} categories
@@ -1178,15 +1343,15 @@ export function ServiceMenuClient({
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 lg:justify-end">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap lg:justify-end">
               <Button
                 variant="outline"
                 size="sm"
-                className="rounded-xl border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50"
+                className="col-span-2 rounded-xl border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50 sm:col-span-1"
                 onClick={() => setImportOpen(true)}
               >
-                <Upload className="h-4 w-4" />
-                Import CSV / Excel / PDF
+                <Upload className="h-4 w-4 shrink-0" />
+                <span className="truncate">Import</span>
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -1231,8 +1396,8 @@ export function ServiceMenuClient({
               <Dialog open={addPackageOpen} onOpenChange={setAddPackageOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" onClick={() => setEditItem(null)} className="rounded-xl border-dashboard-border">
-                    <Package className="h-4 w-4" />
-                    Add package
+                    <Package className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Package</span>
                   </Button>
                 </DialogTrigger>
                 <CatalogDialogContent
@@ -1256,8 +1421,8 @@ export function ServiceMenuClient({
               <Dialog open={addAddOnOpen} onOpenChange={setAddAddOnOpen}>
                 <DialogTrigger asChild>
                   <Button size="sm" variant="outline" onClick={() => setEditItem(null)} className="rounded-xl border-dashboard-border">
-                    <Sparkles className="h-4 w-4" />
-                    Add add-on
+                    <Sparkles className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Add-on</span>
                   </Button>
                 </DialogTrigger>
                 <CatalogDialogContent
@@ -1282,10 +1447,10 @@ export function ServiceMenuClient({
                   <Button
                     size="sm"
                     onClick={() => setEditItem(null)}
-                    className="rounded-xl bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20 hover:opacity-90"
+                    className="col-span-2 rounded-xl bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20 hover:opacity-90 sm:col-span-1"
                   >
-                    <Plus className="h-4 w-4" />
-                    Add service
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Add service</span>
                   </Button>
                 </DialogTrigger>
                 <CatalogDialogContent
@@ -1321,7 +1486,7 @@ export function ServiceMenuClient({
       </motion.div>
 
       {/* Stats row */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
         <StatCard
           label="Total catalog items"
           value={String(allCatalogItems.length)}
@@ -1349,7 +1514,7 @@ export function ServiceMenuClient({
       </div>
 
       {/* Catalog type tabs */}
-      <div className="flex flex-wrap gap-2 rounded-[20px] border border-dashboard-border bg-dashboard-card p-2 shadow-dashboard-card">
+      <div className="flex gap-1.5 overflow-x-auto rounded-2xl border border-dashboard-border bg-dashboard-card p-1.5 shadow-dashboard-card sm:flex-wrap sm:gap-2 sm:rounded-[20px] sm:p-2">
         {CATALOG_TABS.map((tab) => (
           <Button
             key={tab.id}
@@ -1357,7 +1522,7 @@ export function ServiceMenuClient({
             variant={catalogTab === tab.id ? "default" : "ghost"}
             onClick={() => setCatalogTab(tab.id)}
             className={cn(
-              "rounded-xl",
+              "shrink-0 rounded-lg px-2.5 text-xs sm:rounded-xl sm:px-3 sm:text-sm",
               catalogTab === tab.id
                 ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
                 : "text-dashboard-muted hover:bg-violet-50 hover:text-dashboard-primary"
@@ -1369,39 +1534,40 @@ export function ServiceMenuClient({
       </div>
 
       {/* Search & filters toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative min-w-[220px] flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted" />
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
+        <div className="relative w-full sm:min-w-[200px] sm:max-w-md sm:flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-dashboard-muted sm:left-4" />
           <Input
-            placeholder="Search name, category, audience..."
+            placeholder="Search services..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className={cn(invoiceModalStyles.input, "h-11 pl-11")}
+            className={cn(invoiceModalStyles.input, "h-10 pl-9 sm:h-11 sm:pl-11")}
           />
         </div>
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
         <Button
           variant="outline"
           onClick={() => setShowFilters((v) => !v)}
           className={cn(
-            "h-11 rounded-2xl border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50",
+            "h-10 rounded-xl border-dashboard-border bg-white text-xs shadow-sm hover:border-violet-200 hover:bg-violet-50 sm:h-11 sm:text-sm",
             showFilters && "border-violet-300 bg-violet-50 text-violet-700"
           )}
         >
-          <SlidersHorizontal className="h-4 w-4" />
+          <SlidersHorizontal className="h-4 w-4 shrink-0" />
           Filters
         </Button>
         <Button
           variant={bulkMode ? "default" : "outline"}
           onClick={toggleBulkMode}
           className={cn(
-            "h-11 rounded-2xl",
+            "h-10 rounded-xl text-xs sm:h-11 sm:text-sm",
             bulkMode
               ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
               : "border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50"
           )}
         >
-          <CheckSquare className="h-4 w-4" />
-          {bulkMode ? "Done selecting" : "Bulk actions"}
+          <CheckSquare className="h-4 w-4 shrink-0" />
+          {bulkMode ? "Done" : "Bulk"}
         </Button>
         <Button
           variant={manageOrder ? "default" : "outline"}
@@ -1412,15 +1578,16 @@ export function ServiceMenuClient({
             });
           }}
           className={cn(
-            "h-11 rounded-2xl",
+            "h-10 rounded-xl text-xs sm:h-11 sm:text-sm",
             manageOrder
               ? "bg-gradient-to-r from-dashboard-primary to-dashboard-secondary shadow-md shadow-violet-500/20"
               : "border-dashboard-border bg-white shadow-sm hover:border-violet-200 hover:bg-violet-50"
           )}
         >
-          <ArrowUpDown className="h-4 w-4" />
-          {manageOrder ? "Done reordering" : "Manage order"}
+          <ArrowUpDown className="h-4 w-4 shrink-0" />
+          {manageOrder ? "Done" : "Order"}
         </Button>
+        </div>
       </div>
 
       {bulkMode && (
@@ -1513,14 +1680,55 @@ export function ServiceMenuClient({
         </motion.div>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[280px_1fr] lg:items-start">
-        {/* Category sidebar */}
+      <div className="lg:hidden">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-dashboard-muted">
+          Categories
+        </p>
+        <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryId(null)}
+            className={cn(
+              "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+              selectedCategoryId === null
+                ? "bg-violet-600 text-white"
+                : "bg-white text-dashboard-muted shadow-sm ring-1 ring-dashboard-border/80"
+            )}
+          >
+            All ({allCatalogItems.filter((s) => matchesCatalogFilters(s, filterOpts)).length})
+          </button>
+          {localCategories
+            .filter(
+              (cat) =>
+                (categoryCounts.get(cat.id) ?? 0) > 0 ||
+                !catalogFiltersAreActive(filterOpts)
+            )
+            .map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategoryId(cat.id)}
+                className={cn(
+                  "shrink-0 rounded-full px-3 py-1.5 text-xs font-medium transition-colors",
+                  selectedCategoryId === cat.id
+                    ? "bg-violet-600 text-white"
+                    : "bg-white text-dashboard-muted shadow-sm ring-1 ring-dashboard-border/80"
+                )}
+              >
+                {cat.name} ({categoryCounts.get(cat.id) ?? 0})
+              </button>
+            ))}
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[260px_1fr] lg:items-start lg:gap-6">
+        {/* Category sidebar — desktop only */}
         <motion.div
           ref={categorySidebarRef}
           initial={{ opacity: 0, x: -8 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="flex h-fit flex-col rounded-[20px] border border-dashboard-border bg-dashboard-card p-5 pb-6 shadow-dashboard-card lg:sticky lg:top-4 lg:z-10 lg:max-h-[calc(100dvh-10rem)] lg:overflow-hidden"
+          className="hidden h-fit flex-col rounded-[20px] border border-dashboard-border bg-dashboard-card p-5 pb-6 shadow-dashboard-card lg:sticky lg:top-4 lg:z-10 lg:flex lg:max-h-[calc(100dvh-10rem)] lg:overflow-hidden"
         >
           <h2 className="mb-4 shrink-0 text-sm font-semibold text-dashboard-text">
             Categories
@@ -1623,7 +1831,7 @@ export function ServiceMenuClient({
         </motion.div>
 
         {/* Services content */}
-        <div className="space-y-8">
+        <div className="min-w-0 space-y-6 sm:space-y-8">
           {filteredGroups.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-[20px] border border-dashed border-dashboard-border bg-dashboard-bg/50 px-6 py-16 text-center">
               <Scissors className="mb-3 h-10 w-10 text-dashboard-muted/50" />
@@ -1656,16 +1864,16 @@ export function ServiceMenuClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: groupIndex * 0.05 }}
               >
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-50 text-dashboard-primary">
+                <div className="mb-3 flex items-center justify-between gap-2 sm:mb-4 sm:gap-3">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-dashboard-primary sm:h-9 sm:w-9 sm:rounded-xl">
                       <FolderOpen className="h-4 w-4" />
                     </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-dashboard-text">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-base font-semibold text-dashboard-text sm:text-lg">
                         {group.name}
                       </h2>
-                      <p className="text-xs text-dashboard-muted">
+                      <p className="text-[11px] text-dashboard-muted sm:text-xs">
                         {totalItems}{" "}
                         {totalItems === 1 ? "item" : "items"}
                         {totalItems !== group.services.length
@@ -1731,7 +1939,7 @@ export function ServiceMenuClient({
                     ))}
                   </div>
                 ) : (
-                  <ServicesTable
+                  <ServicesList
                     services={group.services}
                     onEdit={openEditItem}
                     onDelete={handleDeleteService}
