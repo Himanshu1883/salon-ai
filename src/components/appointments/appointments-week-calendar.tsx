@@ -771,14 +771,14 @@ function DayStaffCalendar({
 
   return (
     <div className="overflow-hidden rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_8px_40px_rgba(28,16,61,0.06)]">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#EEF1F6] px-4 py-3 sm:px-5">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#EEF1F6] px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="text-sm font-semibold text-[#1C103D]">Day view</span>
-          <span className="rounded-full bg-[#EDE9FE] px-2.5 py-0.5 text-[10px] font-semibold text-[#6C3BFF]">
+          <span className="hidden rounded-full bg-[#EDE9FE] px-2.5 py-0.5 text-[10px] font-semibold text-[#6C3BFF] sm:inline">
             staff columns — recommended
           </span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           {onPrevDay && (
             <button
               type="button"
@@ -788,8 +788,11 @@ function DayStaffCalendar({
               <ChevronLeft className="h-4 w-4" />
             </button>
           )}
-          <span className="min-w-[180px] text-center text-sm font-semibold text-[#1C103D]">
-            {format(selectedDay, "EEEE, d MMMM yyyy")}
+          <span className="min-w-0 text-center text-xs font-semibold text-[#1C103D] sm:min-w-[180px] sm:text-sm">
+            <span className="sm:hidden">{format(selectedDay, "EEE, d MMM")}</span>
+            <span className="hidden sm:inline">
+              {format(selectedDay, "EEEE, d MMMM yyyy")}
+            </span>
           </span>
           {onNextDay && (
             <button
@@ -803,9 +806,9 @@ function DayStaffCalendar({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="max-h-[min(62vh,560px)] overflow-auto overscroll-x-contain md:max-h-none md:overflow-x-auto">
         <div
-          className="min-w-[720px]"
+          className="min-w-[520px] md:min-w-[720px]"
           style={{
             display: "grid",
             gridTemplateColumns: `72px repeat(${colCount}, minmax(160px, 1fr))`,
@@ -815,23 +818,23 @@ function DayStaffCalendar({
           {columns.map(({ employee, palette }) => (
             <div
               key={employee.id}
-              className="border-b border-[#EEF1F6] bg-[#FAFBFD] px-3 py-3 text-center"
+              className="border-b border-[#EEF1F6] bg-[#FAFBFD] px-2 py-2 text-center sm:px-3 sm:py-3"
             >
               <div
                 className={cn(
-                  "mx-auto flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold",
+                  "mx-auto flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold sm:h-10 sm:w-10 sm:text-sm",
                   palette.avatar
                 )}
               >
                 {getInitials(employee.name)}
               </div>
-              <p className="mt-2 truncate text-sm font-semibold text-[#1C103D]">
+              <p className="mt-1 truncate text-xs font-semibold text-[#1C103D] sm:mt-2 sm:text-sm">
                 {employee.name.split(" ")[0]}
               </p>
-              <p className="truncate text-[11px] text-[#6B7280]">
+              <p className="hidden truncate text-[11px] text-[#6B7280] sm:block">
                 {getStaffRoleLabel(employee)}
               </p>
-              <div className={cn("mx-auto mt-2 h-1 w-10 rounded-full", palette.bar)} />
+              <div className={cn("mx-auto mt-1.5 h-1 w-8 rounded-full sm:mt-2 sm:w-10", palette.bar)} />
             </div>
           ))}
 
@@ -969,16 +972,16 @@ function WeekBusyCalendar({
 
   return (
     <div className="overflow-hidden rounded-[20px] border border-[#E8ECF4] bg-white shadow-[0_8px_40px_rgba(28,16,61,0.06)]">
-      <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF1F6] px-4 py-3 sm:px-5">
+      <div className="flex flex-wrap items-center gap-2 border-b border-[#EEF1F6] px-3 py-2.5 sm:px-5 sm:py-3">
         <span className="text-sm font-semibold text-[#1C103D]">Week view</span>
-        <span className="rounded-full bg-[#FEF3C7] px-2.5 py-0.5 text-[10px] font-semibold text-[#B45309]">
+        <span className="hidden rounded-full bg-[#FEF3C7] px-2.5 py-0.5 text-[10px] font-semibold text-[#B45309] sm:inline">
           busy chip — hover to expand
         </span>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="max-h-[min(62vh,560px)] overflow-auto overscroll-x-contain md:max-h-none md:overflow-x-auto">
         <div
-          className="min-w-[720px]"
+          className="min-w-[560px] md:min-w-[720px]"
           style={{
             display: "grid",
             gridTemplateColumns: `72px repeat(7, minmax(100px, 1fr))`,
@@ -991,7 +994,7 @@ function WeekBusyCalendar({
               type="button"
               onClick={() => onSelectDay(day)}
               className={cn(
-                "border-b border-[#EEF1F6] px-2 py-4 text-center transition-colors hover:bg-[#FAFAFF]",
+                "border-b border-[#EEF1F6] px-1 py-2.5 text-center transition-colors hover:bg-[#FAFAFF] sm:px-2 sm:py-4",
                 isSameDay(day, selectedDay) && "bg-[#FAFAFF]"
               )}
             >
@@ -1128,14 +1131,14 @@ function MobileAgendaList({
 
   if (dayAppointments.length === 0) {
     return (
-      <p className="rounded-xl border border-dashed border-[#E8ECF4] py-8 text-center text-sm text-[#9CA3AF]">
+      <p className="rounded-xl border border-dashed border-[#E8ECF4] py-6 text-center text-sm text-[#9CA3AF] sm:py-8">
         No appointments for {format(selectedDay, "EEEE, MMM d")}
       </p>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5 sm:space-y-2">
       {dayAppointments.map((appointment) => {
         const staffIndex = appointment.employee
           ? employees.findIndex((e) => e.id === appointment.employee!.id)
@@ -1147,7 +1150,7 @@ function MobileAgendaList({
             type="button"
             onClick={() => onAppointmentClick(appointment)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left shadow-sm",
+              "flex w-full items-center gap-3 rounded-2xl border p-2.5 text-left shadow-sm sm:p-3.5",
               palette.card,
               palette.text
             )}
@@ -1204,43 +1207,51 @@ export function AppointmentsWeekCalendar({
     return buildCalendarGrid(bounds.startHour, bounds.endHour);
   }, [openingHours]);
 
+  const selectedDayKey = format(selectedDay, "yyyy-MM-dd");
+  const selectedDayHasAppointments = appointments.some(
+    (apt) => appointmentDateKey(apt.scheduledAt) === selectedDayKey
+  );
+
   return (
-    <div className="space-y-4">
-      <div className="md:hidden">
-        <MobileAgendaList
+    <div className="space-y-3 sm:space-y-4">
+      {viewMode === "day" ? (
+        <DayStaffCalendar
+          selectedDay={selectedDay}
+          appointments={appointments}
+          employees={employees}
+          openingHours={openingHours}
+          calendar={calendar}
+          onSlotClick={onSlotClick}
+          onAppointmentClick={onAppointmentClick}
+          onPrevDay={() => onSelectDay(addDays(selectedDay, -1))}
+          onNextDay={() => onSelectDay(addDays(selectedDay, 1))}
+        />
+      ) : (
+        <WeekBusyCalendar
+          weekStart={weekStart}
           appointments={appointments}
           employees={employees}
           selectedDay={selectedDay}
-          onAppointmentClick={onAppointmentClick}
+          openingHours={openingHours}
+          calendar={calendar}
+          onSelectDay={onSelectDay}
+          onSlotClick={onSlotClick}
         />
-      </div>
+      )}
 
-      <div className="hidden md:block">
-        {viewMode === "day" ? (
-          <DayStaffCalendar
-            selectedDay={selectedDay}
+      {selectedDayHasAppointments ? (
+        <div className="md:hidden">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#9CA3AF]">
+            {format(selectedDay, "EEE, MMM d")} bookings
+          </p>
+          <MobileAgendaList
             appointments={appointments}
             employees={employees}
-            openingHours={openingHours}
-            calendar={calendar}
-            onSlotClick={onSlotClick}
+            selectedDay={selectedDay}
             onAppointmentClick={onAppointmentClick}
-            onPrevDay={() => onSelectDay(addDays(selectedDay, -1))}
-            onNextDay={() => onSelectDay(addDays(selectedDay, 1))}
           />
-        ) : (
-          <WeekBusyCalendar
-            weekStart={weekStart}
-            appointments={appointments}
-            employees={employees}
-            selectedDay={selectedDay}
-            openingHours={openingHours}
-            calendar={calendar}
-            onSelectDay={onSelectDay}
-            onSlotClick={onSlotClick}
-          />
-        )}
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

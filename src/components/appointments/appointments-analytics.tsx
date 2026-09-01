@@ -143,12 +143,12 @@ export function AppointmentsAnalytics({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: index * 0.04 }}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className="rounded-[20px] border border-[#E8ECF4] bg-white p-4 shadow-[0_4px_24px_rgba(28,16,61,0.05)]"
+            className="rounded-[16px] border border-[#E8ECF4] bg-white p-3 shadow-[0_4px_24px_rgba(28,16,61,0.05)] sm:rounded-[20px] sm:p-4"
           >
             <div className="flex items-start justify-between gap-2">
               <div
                 className={cn(
-                  "flex h-10 w-10 items-center justify-center rounded-xl",
+                  "flex h-8 w-8 items-center justify-center rounded-xl sm:h-10 sm:w-10",
                   card.iconBg,
                   card.accent
                 )}
@@ -156,7 +156,7 @@ export function AppointmentsAnalytics({
                 {card.icon}
               </div>
             </div>
-            <p className="mt-3 text-2xl font-bold tracking-tight text-[#1C103D]">
+            <p className="mt-2 text-xl font-bold tracking-tight text-[#1C103D] sm:mt-3 sm:text-2xl">
               {card.value}
             </p>
             <p className="mt-0.5 text-xs font-medium text-[#6B7280]">

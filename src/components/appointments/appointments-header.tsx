@@ -46,31 +46,32 @@ export function AppointmentsHeader({
   }
 
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-[#1C103D] sm:text-4xl">
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-bold tracking-tight text-[#1C103D] sm:text-3xl lg:text-4xl">
           Appointments
         </h1>
-        <p className="mt-1.5 max-w-xl text-sm text-[#6B7280] sm:text-base">
+        <p className="mt-0.5 hidden max-w-xl text-sm text-[#6B7280] sm:mt-1.5 sm:block sm:text-base">
           Manage bookings, walk-ins, staff schedules and appointments.
         </p>
       </div>
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
         <Button
           variant="outline"
           asChild
-          className="h-11 rounded-2xl border-[#E5E7EB] bg-white px-4 shadow-sm hover:border-[#6C3BFF]/30 hover:bg-[#F7F8FC]"
+          className="h-9 rounded-2xl border-[#E5E7EB] bg-white px-2.5 shadow-sm hover:border-[#6C3BFF]/30 hover:bg-[#F7F8FC] sm:h-11 sm:px-4"
         >
-          <Link href="/schedule/ai">
+          <Link href="/schedule/ai" aria-label="AI Suggest">
             <Sparkles className="h-4 w-4 text-[#6C3BFF]" />
-            AI Suggest
+            <span className="hidden sm:inline">AI Suggest</span>
           </Link>
         </Button>
         <Dialog open={open} onOpenChange={handleOpenChange}>
           <DialogTrigger asChild>
-            <Button className="h-11 rounded-2xl border-0 bg-gradient-to-r from-[#FF2D6F] to-[#FF5A8F] px-5 text-white shadow-lg shadow-[#FF2D6F]/25 hover:from-[#E82663] hover:to-[#FF2D6F]">
+            <Button className="h-9 rounded-2xl border-0 bg-gradient-to-r from-[#FF2D6F] to-[#FF5A8F] px-3 text-white shadow-lg shadow-[#FF2D6F]/25 hover:from-[#E82663] hover:to-[#FF2D6F] sm:h-11 sm:px-5">
               <Plus className="h-4 w-4" />
-              New Appointment
+              <span className="sm:hidden">New</span>
+              <span className="hidden sm:inline">New Appointment</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="!flex max-h-[min(92vh,820px)] w-[calc(100%-2rem)] max-w-lg flex-col gap-0 overflow-hidden rounded-[24px] border-0 p-0 shadow-2xl shadow-violet-500/10">
