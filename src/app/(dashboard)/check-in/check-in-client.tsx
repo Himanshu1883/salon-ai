@@ -19,7 +19,7 @@ import { EstimatedBillCard } from "@/components/check-in/estimated-bill-card";
 import { QueueDashboard } from "@/components/check-in/queue-dashboard";
 import { CheckInActionBar } from "@/components/check-in/check-in-action-bar";
 import { DRAFT_STORAGE_KEY } from "@/components/check-in/utils";
-import type { CheckInPrefill, RecentCustomerItem } from "@/components/check-in/types";
+import type { CheckInPrefill, CheckInService, RecentCustomerItem } from "@/components/check-in/types";
 import type { CheckInOverview } from "@/lib/queue/overview-types";
 import { Button } from "@/components/ui/button";
 
@@ -34,15 +34,15 @@ export function CheckInClient({
   const startNowRef = useRef(false);
   const router = useRouter();
   const [overview, setOverview] = useState(initialOverview);
-  const services = overview?.services ?? [];
+  const [serviceCatalog, setServiceCatalog] = useState<CheckInService[]>(
+    initialOverview.services ?? []
+  );
+  const services = serviceCatalog;
   const employees = overview?.employees ?? [];
   const recentCustomers = overview?.recentCustomers ?? [];
   const validPrefillServiceIds = useMemo(
-    () =>
-      (prefilledCustomer?.serviceIds ?? []).filter((id) =>
-        services.some((service) => service.id === id)
-      ),
-    [prefilledCustomer?.serviceIds, services]
+    () => prefilledCustomer?.serviceIds ?? [],
+    [prefilledCustomer?.serviceIds]
   );
   const prefillEmployeeId =
     prefilledCustomer?.employeeId &&
@@ -69,6 +69,14 @@ export function CheckInClient({
     setSelectedServices((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
+  }
+
+  function mergeServiceCatalog(items: CheckInService[]) {
+    setServiceCatalog((prev) => {
+      const map = new Map(prev.map((service) => [service.id, service]));
+      for (const item of items) map.set(item.id, item);
+      return [...map.values()];
+    });
   }
 
   const handleSubmit = useCallback(
@@ -296,9 +304,9 @@ export function CheckInClient({
           />
 
           <ServiceSelection
-            services={services}
             selectedIds={selectedServices}
             onToggle={toggleService}
+            onCatalogUpdate={mergeServiceCatalog}
           />
 
           <StylistSelection

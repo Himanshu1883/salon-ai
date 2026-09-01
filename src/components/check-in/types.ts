@@ -73,12 +73,14 @@ export type BillingStatsSnapshot = {
 };
 
 export const SERVICE_CATEGORIES = [
-  "Popular",
+  "All",
   "Hair",
+  "Styling",
   "Color",
-  "Spa",
   "Facial",
   "Nails",
+  "Spa",
+  "Packages",
 ] as const;
 
 export type ServiceCategoryFilter = (typeof SERVICE_CATEGORIES)[number];

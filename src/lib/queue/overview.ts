@@ -542,7 +542,11 @@ function buildSidebar(
   };
 }
 
-async function loadFloorRows(ctx: DataScopeContext) {
+async function loadFloorRows(
+  ctx: DataScopeContext,
+  options: { includeCatalogServices?: boolean } = {}
+) {
+  const includeCatalogServices = options.includeCatalogServices !== false;
   const now = new Date();
   const today = currentSalonDayBounds(now);
   const yesterday = salonDayBounds(
@@ -640,21 +644,23 @@ async function loadFloorRows(ctx: DataScopeContext) {
       select: { id: true, number: true },
       orderBy: { number: "asc" },
     }),
-    prisma.service.findMany({
-      where: {
-        salonId: ctx.salonId,
-        status: { not: "ARCHIVED" },
-        catalogType: { in: ["SERVICE", "PACKAGE"] },
-      },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        duration: true,
-        category: { select: { name: true } },
-      },
-      orderBy: { name: "asc" },
-    }),
+    includeCatalogServices
+      ? prisma.service.findMany({
+          where: {
+            salonId: ctx.salonId,
+            status: { not: "ARCHIVED" },
+            catalogType: { in: ["SERVICE", "PACKAGE"] },
+          },
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            duration: true,
+            category: { select: { name: true } },
+          },
+          orderBy: { name: "asc" },
+        })
+      : Promise.resolve([]),
     prisma.invoice.aggregate({
       where: {
         ...invoiceWhere,
@@ -869,7 +875,7 @@ export async function fetchCheckInOverview(
   ctx: DataScopeContext
 ): Promise<CheckInOverview> {
   const [data, recentCustomers] = await Promise.all([
-    loadFloorRows(ctx),
+    loadFloorRows(ctx, { includeCatalogServices: false }),
     prisma.customer.findMany({
       where: { salonId: ctx.salonId },
       orderBy: { createdAt: "desc" },

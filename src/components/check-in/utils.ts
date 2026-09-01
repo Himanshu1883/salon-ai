@@ -55,15 +55,13 @@ export function filterServices(
     );
   }
 
-  if (category === "Popular") {
-    const sorted = [...services].sort((a, b) => b.price - a.price);
-    const popularIds = new Set(sorted.slice(0, Math.min(6, sorted.length)).map((s) => s.id));
-    filtered = filtered.filter((s) => popularIds.has(s.id));
-  } else {
-    filtered = filtered.filter((s) =>
-      s.category.toLowerCase().includes(category.toLowerCase())
-    );
+  if (category === "All") {
+    return filtered;
   }
+
+  filtered = filtered.filter((s) =>
+    s.category.toLowerCase().includes(category.toLowerCase())
+  );
 
   return filtered;
 }
