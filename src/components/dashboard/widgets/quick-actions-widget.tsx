@@ -110,7 +110,7 @@ function ActionCardContent({ action }: { action: ActionStyle }) {
       >
         <action.icon className="h-5 w-5" />
       </div>
-      <div className="min-w-0 text-left">
+      <div className="hidden min-w-0 text-left sm:block">
         <p className="text-[11px] font-semibold leading-tight sm:text-sm">{action.label}</p>
         <p className={cn("truncate text-[10px] sm:text-xs", action.descriptionClassName)}>
           {action.description}
@@ -136,11 +136,11 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay, ease: "easeOut" }}
-      className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 @min-[68rem]:grid-cols-5"
+      className="flex gap-2 sm:grid sm:grid-cols-2 sm:gap-3 lg:grid-cols-3 @min-[68rem]:grid-cols-5"
     >
       {visibleActions.map((action) => {
         const cardClassName = cn(
-          "flex w-full min-w-0 items-center gap-2 rounded-2xl border-0 px-3 py-3 transition-all hover:scale-[1.01] hover:shadow-md sm:gap-3 sm:px-4 sm:py-3.5 xl:px-5 xl:py-4",
+          "flex aspect-square min-w-0 flex-1 items-center justify-center rounded-2xl border-0 p-2 transition-all hover:scale-[1.01] hover:shadow-md sm:aspect-auto sm:w-full sm:flex-none sm:justify-start sm:gap-3 sm:px-4 sm:py-3.5 xl:px-5 xl:py-4",
           action.className
         );
 
@@ -149,6 +149,8 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
             <button
               key={action.id}
               type="button"
+              aria-label={action.label}
+              title={action.label}
               onClick={() => openRecordSale()}
               className={cardClassName}
             >
@@ -158,7 +160,13 @@ export function QuickActionsWidget({ delay = 0 }: QuickActionsWidgetProps) {
         }
 
         return (
-          <Link key={action.href} href={action.href} className={cardClassName}>
+          <Link
+            key={action.href}
+            href={action.href}
+            aria-label={action.label}
+            title={action.label}
+            className={cardClassName}
+          >
             <ActionCardContent action={action} />
           </Link>
         );

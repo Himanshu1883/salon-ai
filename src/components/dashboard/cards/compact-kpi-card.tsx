@@ -12,6 +12,7 @@ type CompactKpiCardProps = {
   iconGradient: string;
   delay?: number;
   size?: "compact" | "lg";
+  className?: string;
 };
 
 function CompactKpiCardContent({
@@ -20,7 +21,7 @@ function CompactKpiCardContent({
   icon,
   iconGradient,
   size = "compact",
-}: Omit<CompactKpiCardProps, "href" | "delay">) {
+}: Omit<CompactKpiCardProps, "href" | "delay" | "className">) {
   const isLg = size === "lg";
 
   return (
@@ -76,6 +77,7 @@ export function CompactKpiCard({
   iconGradient,
   delay = 0,
   size = "compact",
+  className,
 }: CompactKpiCardProps) {
   const card = (
     <DashboardCard
@@ -95,11 +97,11 @@ export function CompactKpiCard({
 
   if (href) {
     return (
-      <Link href={href} className="block h-full  min-w-0">
+      <Link href={href} className={cn("block h-full min-w-0", className)}>
         {card}
       </Link>
     );
   }
 
-  return card;
+  return className ? <div className={className}>{card}</div> : card;
 }

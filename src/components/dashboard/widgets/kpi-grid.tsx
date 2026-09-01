@@ -68,8 +68,13 @@ export function KpiGrid({
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 @min-[68rem]:grid-cols-5">
-      {cards.map((card) => (
-        <CompactKpiCard key={card.label} size="lg" {...card} />
+      {cards.map((card, index) => (
+        <CompactKpiCard
+          key={card.label}
+          size="lg"
+          {...card}
+          className={index === 0 ? "max-sm:col-span-2" : undefined}
+        />
       ))}
     </div>
   );
