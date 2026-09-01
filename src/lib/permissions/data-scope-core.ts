@@ -156,7 +156,11 @@ const EMPLOYEE_SALON_WIDE_MODULES = new Set<PlanModule>([
 
 export function isEmployeeHiddenNavHref(href: string, label: string) {
   if (label === "Calendar" || label === "My Time") return true;
-  if (href === "/settings/billing" || href === "/settings/subscription") {
+  if (
+    href === "/settings/billing" ||
+    href === "/settings/subscription" ||
+    href === "/settings/salon"
+  ) {
     return true;
   }
   return false;

@@ -143,7 +143,7 @@ export const ALL_NAV_ITEMS: NavItem[] = [
   { href: "/reports", label: "Reports", icon: BarChart3, module: "reports" },
   { href: "/reports/dashboards", label: "Analytics", icon: LineChart, module: "analytics" },
   { href: "/hair-consultation", label: "AI Hair", icon: Sparkles, module: "consultation" },
-  { href: "/settings/billing", label: "Settings", icon: Settings, module: "settings" },
+  { href: "/settings/salon", label: "Settings", icon: Settings, module: "settings" },
 ];
 
 /** Extra nav entries prepended for staff/employee accounts. */

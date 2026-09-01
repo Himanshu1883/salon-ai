@@ -104,10 +104,17 @@ export function RecordSaleProvider({
     [formData, loadFormData]
   );
 
-  function handleSuccess(invoice: BillingInvoice) {
+  function handleSuccess(
+    invoice: BillingInvoice,
+    options?: { close?: boolean }
+  ) {
     markDashboardStale();
     successCallbackRef.current?.(invoice);
     successCallbackRef.current = null;
+    // Payment success keeps the dialog open so the invoice can be sent on WhatsApp.
+    if (options?.close === false) {
+      return;
+    }
     setInvoicePrefill(null);
     setOpen(false);
   }

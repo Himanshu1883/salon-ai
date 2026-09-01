@@ -157,8 +157,11 @@ function isActive(pathname: string, href: string, label: string) {
   if (label === "Analytics") {
     return pathname.startsWith("/reports/dashboards");
   }
-  if (href === "/settings/billing" && label === "Settings") {
-    return pathname.startsWith("/settings");
+  if (label === "Settings" && href.startsWith("/settings")) {
+    return (
+      pathname.startsWith("/settings") &&
+      !pathname.startsWith("/settings/notifications")
+    );
   }
   if (href === "/sales/appointments") {
     return (

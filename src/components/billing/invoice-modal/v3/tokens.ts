@@ -16,9 +16,9 @@ export const v3 = {
     "fixed inset-0 z-50 flex h-[100dvh] max-h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-none",
     "border-0 p-0",
     // Tablet+: centered dialog — single flex column, no outer scroll
-    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[88dvh] sm:max-h-[88dvh] sm:w-[min(95vw,100%)] sm:max-w-none sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
-    // Laptop / desktop width caps
-    "lg:max-w-[1200px] xl:max-w-[1400px] 2xl:max-w-[1700px]",
+    "sm:inset-auto sm:left-[50%] sm:top-[50%] sm:h-[88dvh] sm:max-h-[88dvh] sm:w-[min(92vw,100%)] sm:max-w-[874px] sm:translate-x-[-50%] sm:translate-y-[-50%] sm:rounded-[18px] sm:border sm:border-[#ECECF5]",
+    // Desktop: ~15% wider than the previous compact cap
+    "lg:max-w-[1172px] xl:max-w-[1242px]",
     "bg-white",
     "shadow-[0_20px_60px_-12px_rgba(124,58,237,0.16),0_6px_24px_rgba(17,24,39,0.06)]"
   ),

@@ -50,10 +50,16 @@ export function PaymentSuccessScreen({
           transition={{ delay: 0.15 }}
           className="mt-6 text-2xl font-bold text-[#111827]"
         >
-          {context.isPartial
-            ? "Partial Payment Recorded"
-            : "Payment Received Successfully"}
+          {context.isPartial ? "Partial Payment Recorded" : "Payment Recorded"}
         </motion.h2>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          className="mt-2 max-w-md text-center text-sm text-[#6B7280]"
+        >
+          Send the invoice to the customer on WhatsApp.
+        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 12 }}
@@ -112,7 +118,7 @@ export function PaymentSuccessScreen({
             className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#25D366] text-base font-semibold text-white shadow-[0_8px_24px_rgba(37,211,102,0.35)] transition-all hover:bg-[#1EBE5A] hover:shadow-[0_12px_28px_rgba(37,211,102,0.4)] active:scale-[0.98]"
           >
             <MessageCircle className="h-5 w-5" />
-            Send on WhatsApp
+            Send Invoice on WhatsApp
           </button>
 
           <div className="grid grid-cols-2 gap-3">
