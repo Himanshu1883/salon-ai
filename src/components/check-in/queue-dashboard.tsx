@@ -209,7 +209,7 @@ export function QueueDashboard({ dashboard }: QueueDashboardProps) {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.04 }}
                   onClick={() => router.push("/queue")}
-                  className="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-white/70 p-2.5 text-left transition-all hover:border-violet-200/60 hover:bg-violet-50/50 hover:shadow-sm"
+                  className="group flex w-full min-w-0 items-center gap-2 rounded-xl border border-transparent bg-white/70 p-2.5 text-left transition-all hover:border-violet-200/60 hover:bg-violet-50/50 hover:shadow-sm sm:gap-3"
                 >
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-violet-100 text-xs font-bold text-violet-700 transition-colors group-hover:bg-violet-200">
                     {entry.position}
@@ -231,7 +231,7 @@ export function QueueDashboard({ dashboard }: QueueDashboardProps) {
                   >
                     {entry.status.replace("_", " ")}
                   </span>
-                  <ArrowRight className="h-3.5 w-3.5 shrink-0 text-dashboard-muted/50 transition-transform group-hover:translate-x-0.5 group-hover:text-dashboard-primary" />
+                  <ArrowRight className="hidden h-3.5 w-3.5 shrink-0 text-dashboard-muted/50 transition-transform group-hover:translate-x-0.5 group-hover:text-dashboard-primary sm:block" />
                 </motion.button>
               ))}
             </div>

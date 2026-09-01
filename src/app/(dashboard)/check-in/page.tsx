@@ -1,5 +1,6 @@
 import { requireSession } from "@/lib/auth";
 import { getCheckInOverview } from "@/actions/queue-overview";
+import { parseStaffQuery } from "@/lib/queue/check-in-staff";
 import { CheckInClient } from "./check-in-client";
 
 export default async function CheckInPage({
@@ -11,6 +12,7 @@ export default async function CheckInPage({
     phone?: string;
     serviceIds?: string;
     employeeId?: string;
+    staff?: string;
     fromAppointment?: string;
   }>;
 }) {
@@ -31,6 +33,7 @@ export default async function CheckInPage({
         phone: params.phone ?? "",
         serviceIds,
         employeeId: params.employeeId ?? "",
+        staffByService: parseStaffQuery(params.staff),
         fromAppointmentId: params.fromAppointment ?? "",
       }}
     />

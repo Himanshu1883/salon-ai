@@ -62,7 +62,9 @@ export function EstimatedBillCard({
                   key={service.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span className="text-dashboard-text/80">{service.name}</span>
+                  <span className="min-w-0 truncate text-dashboard-text/80 pr-2">
+                    {service.name}
+                  </span>
                   <span className="font-medium tabular-nums text-dashboard-text">
                     {formatCurrency(service.price)}
                   </span>

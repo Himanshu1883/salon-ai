@@ -42,11 +42,13 @@ export function buildCheckInHref(
     params.set("phone", primary.customer.phone);
   }
 
+  const items = getAppointmentServiceItems(appointment, allAppointments);
   const serviceIds = [
     ...new Set(
-      visitAppointments
-        .map((item) => item.serviceId)
-        .filter((id): id is string => Boolean(id))
+      [
+        ...items.map((item) => item.serviceId),
+        ...visitAppointments.map((item) => item.serviceId),
+      ].filter((id): id is string => Boolean(id))
     ),
   ];
   if (serviceIds.length > 0) {
@@ -54,10 +56,21 @@ export function buildCheckInHref(
   }
 
   const assignedEmployee =
+    items.map((item) => item.employee).find((employee) => employee?.id) ??
     visitAppointments.find((item) => item.employee?.id)?.employee ??
     appointment.employee;
   if (assignedEmployee?.id) {
     params.set("employeeId", assignedEmployee.id);
+  }
+
+  const staffPairs = items
+    .map((item) => {
+      const staffId = serviceItemStaffId(item);
+      return item.serviceId && staffId ? `${item.serviceId}:${staffId}` : null;
+    })
+    .filter((pair): pair is string => Boolean(pair));
+  if (staffPairs.length > 0) {
+    params.set("staff", staffPairs.join(","));
   }
 
   params.set("fromAppointment", appointment.id);

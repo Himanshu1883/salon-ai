@@ -281,7 +281,7 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
   }
 
   return (
-    <div className="space-y-5 pb-6">
+    <div className="min-w-0 max-w-full space-y-3 overflow-x-hidden sm:space-y-5">
       <QueueHeader
         activeCount={overview.stats.activeTotal}
         estimatedWait={overview.stats.estimatedWait}
@@ -298,12 +298,12 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
         onChange={setFilters}
       />
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
-        <div className="space-y-5">
+      <div className="grid min-w-0 gap-3 xl:grid-cols-[1fr_320px] xl:gap-5">
+        <div className="min-w-0 space-y-3 sm:space-y-5">
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            className="overflow-hidden rounded-2xl border border-[#E8ECF4] bg-white shadow-[0_2px_12px_rgba(28,16,61,0.04)]"
+            className="min-w-0 overflow-hidden rounded-2xl border border-[#E8ECF4] bg-white shadow-[0_2px_12px_rgba(28,16,61,0.04)]"
           >
             <QueueTabs
               activeTab={activeTab}
@@ -354,7 +354,7 @@ export function QueueClient({ overview: overviewProp }: QueueClientProps) {
         </div>
       </div>
 
-      <div className="xl:hidden">
+      <div className="xl:hidden min-w-0">
         <QueueSidebar sidebar={overview.sidebar} />
       </div>
 

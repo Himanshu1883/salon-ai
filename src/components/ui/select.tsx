@@ -13,6 +13,7 @@ const SelectTrigger = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
+    type="button"
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-rose-400 disabled:cursor-not-allowed disabled:opacity-50",
       className
@@ -45,9 +46,9 @@ const SelectContent = React.forwardRef<
     >
       <SelectPrimitive.Viewport
         className={cn(
-          "p-1",
+          "max-h-72 overflow-y-auto p-1",
           position === "popper" &&
-            "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]"
+            "w-full min-w-[var(--radix-select-trigger-width)]"
         )}
       >
         {children}

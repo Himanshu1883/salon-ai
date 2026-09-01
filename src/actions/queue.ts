@@ -16,6 +16,18 @@ import {
 } from "@/lib/permissions/data-scope";
 import { performCheckInFromAppointment } from "@/lib/queue/check-in-from-appointment";
 import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
+import {
+  parseCheckInStaffAssignments,
+  primaryCheckInEmployeeId,
+  queueServiceCreates,
+} from "@/lib/queue/check-in-staff";
+import { isMissingDbColumn } from "@/lib/db-errors";
+
+function serviceCreatesWithoutLineStaff(
+  rows: { serviceId: string; employeeId?: string }[]
+) {
+  return rows.map(({ serviceId }) => ({ serviceId }));
+}
 
 async function fetchQueueEntries(salonId: string) {
   return prisma.queueEntry.findMany({
@@ -138,6 +150,39 @@ export async function checkInCustomer(formData: FormData) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const staffAssignments = parseCheckInStaffAssignments(
+    formData,
+    parsed.data.serviceIds,
+    employeeId
+  );
+  const requestedStaffIds = [
+    ...new Set(Object.values(staffAssignments).filter(Boolean)),
+  ];
+  const allowedStaff = requestedStaffIds.length
+    ? await prisma.employee.findMany({
+        where: {
+          salonId: session.user.salonId,
+          id: { in: requestedStaffIds },
+          status: "active",
+        },
+        select: { id: true },
+      })
+    : [];
+  const allowedStaffIds = new Set(allowedStaff.map((row) => row.id));
+  const serviceCreates = queueServiceCreates(
+    parsed.data.serviceIds,
+    staffAssignments,
+    allowedStaffIds
+  );
+  const primaryStaffId = primaryCheckInEmployeeId(
+    Object.fromEntries(
+      serviceCreates
+        .filter((row) => row.employeeId)
+        .map((row) => [row.serviceId, row.employeeId as string])
+    ),
+    employeeId && allowedStaffIds.has(employeeId) ? employeeId : undefined
+  );
+
   const customer = await upsertCustomer(session.user.salonId, {
     customerId: parsed.data.customerId,
     name: parsed.data.customerName,
@@ -158,11 +203,14 @@ export async function checkInCustomer(formData: FormData) {
         },
       });
       const assignedEmployeeId =
-        employeeId || appointment.employeeId || existingEntry?.employeeId || null;
+        primaryStaffId ||
+        appointment.employeeId ||
+        existingEntry?.employeeId ||
+        null;
 
       if (existingEntry) {
-        await prisma.$transaction([
-          prisma.queueEntry.update({
+        await prisma.$transaction(async (tx) => {
+          await tx.queueEntry.update({
             where: { id: existingEntry.id },
             data: {
               status: startNow
@@ -173,12 +221,38 @@ export async function checkInCustomer(formData: FormData) {
               employeeId: assignedEmployeeId,
               startedAt: startNow ? new Date() : existingEntry.startedAt,
             },
-          }),
-          prisma.appointment.update({
+          });
+          await tx.appointment.update({
             where: { id: appointmentId },
             data: { status: "checked_in" },
-          }),
-        ]);
+          });
+          const existingServices = await tx.queueService.findMany({
+            where: { queueEntryId: existingEntry.id },
+            select: { serviceId: true },
+          });
+          const have = new Set(existingServices.map((row) => row.serviceId));
+          for (const row of serviceCreates) {
+            if (have.has(row.serviceId)) {
+              await tx.queueService.update({
+                where: {
+                  queueEntryId_serviceId: {
+                    queueEntryId: existingEntry.id,
+                    serviceId: row.serviceId,
+                  },
+                },
+                data: { employeeId: row.employeeId ?? null },
+              });
+            } else {
+              await tx.queueService.create({
+                data: {
+                  queueEntryId: existingEntry.id,
+                  serviceId: row.serviceId,
+                  employeeId: row.employeeId ?? null,
+                },
+              });
+            }
+          }
+        });
         invalidateQueueCache(session.user.salonId);
         return {
           success: true,
@@ -189,54 +263,83 @@ export async function checkInCustomer(formData: FormData) {
       }
 
       const position = await getNextPosition(session.user.salonId);
-      await prisma.$transaction([
-        prisma.appointment.update({
-          where: { id: appointmentId },
-          data: { status: "checked_in" },
-        }),
-        prisma.queueEntry.create({
-          data: {
-            salonId: session.user.salonId,
-            customerId: customer.id,
-            appointmentId,
-            position,
-            status: startNow
-              ? "in_progress"
-              : assignedEmployeeId
-                ? "assigned"
-                : "waiting",
-            employeeId: assignedEmployeeId,
-            startedAt: startNow ? new Date() : null,
-            services: {
-              create: parsed.data.serviceIds.map((serviceId) => ({ serviceId })),
+      const appointmentQueueData = {
+        salonId: session.user.salonId,
+        customerId: customer.id,
+        appointmentId,
+        position,
+        status: startNow
+          ? "in_progress"
+          : assignedEmployeeId
+            ? "assigned"
+            : "waiting",
+        employeeId: assignedEmployeeId,
+        startedAt: startNow ? new Date() : null,
+        services: {
+          create: serviceCreates,
+        },
+      };
+      try {
+        await prisma.$transaction([
+          prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { status: "checked_in" },
+          }),
+          prisma.queueEntry.create({ data: appointmentQueueData }),
+        ]);
+      } catch (error) {
+        if (!isMissingDbColumn(error, "QueueService", "employeeId")) {
+          throw error;
+        }
+        await prisma.$transaction([
+          prisma.appointment.update({
+            where: { id: appointmentId },
+            data: { status: "checked_in" },
+          }),
+          prisma.queueEntry.create({
+            data: {
+              ...appointmentQueueData,
+              services: {
+                create: serviceCreatesWithoutLineStaff(serviceCreates),
+              },
             },
-          },
-        }),
-      ]);
+          }),
+        ]);
+      }
       invalidateQueueCache(session.user.salonId);
       return { success: true, position, started: startNow };
     }
   }
 
   const position = await getNextPosition(session.user.salonId);
-
-  await prisma.queueEntry.create({
-    data: {
-      salonId: session.user.salonId,
-      customerId: customer.id,
-      position,
-      status: startNow
-        ? "in_progress"
-        : employeeId
-          ? "assigned"
-          : "waiting",
-      employeeId: employeeId ?? null,
-      startedAt: startNow ? new Date() : null,
-      services: {
-        create: parsed.data.serviceIds.map((serviceId) => ({ serviceId })),
-      },
+  const walkInData = {
+    salonId: session.user.salonId,
+    customerId: customer.id,
+    position,
+    status: startNow
+      ? "in_progress"
+      : primaryStaffId
+        ? "assigned"
+        : "waiting",
+    employeeId: primaryStaffId ?? null,
+    startedAt: startNow ? new Date() : null,
+    services: {
+      create: serviceCreates,
     },
-  });
+  };
+  try {
+    await prisma.queueEntry.create({ data: walkInData });
+  } catch (error) {
+    if (!isMissingDbColumn(error, "QueueService", "employeeId")) {
+      throw error;
+    }
+    await prisma.queueEntry.create({
+      data: {
+        ...walkInData,
+        services: { create: serviceCreatesWithoutLineStaff(serviceCreates) },
+      },
+    });
+  }
 
   invalidateQueueCache(session.user.salonId);
   return { success: true, position, started: startNow };

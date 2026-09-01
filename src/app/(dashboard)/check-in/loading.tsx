@@ -2,7 +2,7 @@ import { CustomerInfoCardSkeleton } from "@/components/check-in/customer-info-ca
 
 export default function CheckInLoading() {
   return (
-    <div className="space-y-5 pb-24 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="animate-pulse overflow-hidden rounded-[20px] border border-dashboard-border bg-dashboard-card shadow-dashboard-card">
         <div className="px-6 py-6">
           <div className="flex items-start gap-4">

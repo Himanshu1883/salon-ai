@@ -41,31 +41,33 @@ export function CheckInCardHeader({
   return (
     <div
       className={cn(
-        "flex items-start justify-between gap-4 border-b border-dashboard-border/50 px-6 py-5",
+        "flex min-w-0 flex-col gap-3 border-b border-dashboard-border/50 px-4 py-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4 sm:px-6 sm:py-5",
         className
       )}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex min-w-0 items-start gap-3">
         {Icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-dashboard-primary">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-100 text-dashboard-primary sm:h-10 sm:w-10">
             <Icon className="h-5 w-5" />
           </div>
         )}
         {step !== undefined && !Icon && (
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-dashboard-primary to-violet-500 text-sm font-bold text-white shadow-md shadow-violet-500/25">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-dashboard-primary to-violet-500 text-sm font-bold text-white shadow-md shadow-violet-500/25 sm:h-10 sm:w-10">
             {step}
           </div>
         )}
-        <div>
+        <div className="min-w-0">
           <h2 className="text-base font-semibold text-dashboard-text sm:text-lg">
             {title}
           </h2>
           {description && (
-            <p className="mt-0.5 text-sm text-dashboard-muted">{description}</p>
+            <p className="mt-0.5 text-xs text-dashboard-muted sm:text-sm">
+              {description}
+            </p>
           )}
         </div>
       </div>
-      {action}
+      {action ? <div className="min-w-0 w-full sm:w-auto">{action}</div> : null}
     </div>
   );
 }
@@ -77,5 +79,5 @@ export function CheckInCardContent({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <div className={cn("px-6 py-5", className)}>{children}</div>;
+  return <div className={cn("px-4 py-4 sm:px-6 sm:py-5", className)}>{children}</div>;
 }

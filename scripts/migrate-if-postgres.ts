@@ -79,6 +79,22 @@ if (url.startsWith("postgres://") || url.startsWith("postgresql://")) {
   }
 
   try {
+    execSync("npx tsx scripts/ensure-queue-service-employee.ts", {
+      stdio: "inherit",
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (isVercel) {
+      console.error(
+        "CRITICAL: queue service employee column ensure failed on Vercel build.",
+        message
+      );
+    } else {
+      console.warn("Queue service employee column ensure failed:", message);
+    }
+  }
+
+  try {
     execSync("npm run db:seed", { stdio: "inherit" });
     execSync("npm run db:backfill-slugs", { stdio: "inherit" });
   } catch (error) {

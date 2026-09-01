@@ -29,3 +29,36 @@ export function isRetryableDbError(error: unknown): boolean {
 
   return false;
 }
+
+export function isMissingDbColumn(
+  error: unknown,
+  model: string,
+  column: string
+): boolean {
+  if (!error || typeof error !== "object") return false;
+  const e = error as {
+    code?: string;
+    message?: string;
+    meta?: { column?: string; modelName?: string; table?: string };
+    cause?: unknown;
+  };
+  const message = e.message ?? (error instanceof Error ? error.message : "");
+  const columnName = e.meta?.column ?? "";
+  const columnOk =
+    !columnName ||
+    columnName === column ||
+    columnName.endsWith(`.${column}`) ||
+    columnName.includes(column);
+  const modelName = e.meta?.modelName ?? e.meta?.table ?? "";
+  const modelOk = !modelName || modelName === model;
+  const mentionsColumn =
+    message.includes(column) && /does not exist|P2022/i.test(message);
+  const codeMatch = e.code === "P2022";
+  if (codeMatch && columnOk && modelOk) return true;
+  if (mentionsColumn) return true;
+  if (e.cause && e.cause !== error) {
+    return isMissingDbColumn(e.cause, model, column);
+  }
+  return false;
+}
+

@@ -31,7 +31,7 @@ export function QueueRowActions({
 }: QueueRowActionsProps) {
   return (
     <div
-      className="flex items-center justify-end gap-1.5"
+      className="flex flex-wrap items-center justify-start gap-1.5 sm:justify-end"
       onClick={(e) => e.stopPropagation()}
     >
       {entry.status === "waiting" && (

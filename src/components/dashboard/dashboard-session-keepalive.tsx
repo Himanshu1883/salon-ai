@@ -22,7 +22,6 @@ async function pingSession() {
 /** Keeps the auth cookie and database pool alive while the dashboard is open. */
 export function DashboardSessionKeepAlive() {
   useEffect(() => {
-    sessionStorage.removeItem(DASHBOARD_ERROR_RETRY_KEY);
     void pingSession();
 
     const intervalId = window.setInterval(() => {

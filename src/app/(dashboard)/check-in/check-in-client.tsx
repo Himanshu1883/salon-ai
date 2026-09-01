@@ -23,6 +23,24 @@ import type { CheckInPrefill, CheckInService, RecentCustomerItem } from "@/compo
 import type { CheckInOverview } from "@/lib/queue/overview-types";
 import { Button } from "@/components/ui/button";
 
+const EMPTY_EMPLOYEES: CheckInOverview["employees"] = [];
+
+function seedStaffByService(
+  serviceIds: string[],
+  staffByService: Record<string, string> | undefined,
+  fallbackEmployeeId: string,
+  allowedEmployeeIds: Set<string>
+): Record<string, string> {
+  const fromQuery = Object.fromEntries(
+    Object.entries(staffByService ?? {}).filter(([, id]) =>
+      allowedEmployeeIds.has(id)
+    )
+  );
+  if (Object.keys(fromQuery).length > 0) return fromQuery;
+  if (!fallbackEmployeeId) return {};
+  return Object.fromEntries(serviceIds.map((id) => [id, fallbackEmployeeId]));
+}
+
 export function CheckInClient({
   overview: initialOverview,
   prefilledCustomer,
@@ -38,7 +56,11 @@ export function CheckInClient({
     initialOverview.services ?? []
   );
   const services = serviceCatalog;
-  const employees = overview?.employees ?? [];
+  const employees = overview?.employees ?? EMPTY_EMPLOYEES;
+  const allowedEmployeeIds = useMemo(
+    () => new Set(employees.map((employee) => employee.id)),
+    [employees]
+  );
   const recentCustomers = overview?.recentCustomers ?? [];
   const validPrefillServiceIds = useMemo(
     () => prefilledCustomer?.serviceIds ?? [],
@@ -58,7 +80,15 @@ export function CheckInClient({
     validPrefillServiceIds
   );
   const [preferredStylist, setPreferredStylist] = useState(prefillEmployeeId);
-  const [selectedStylist, setSelectedStylist] = useState(prefillEmployeeId);
+  const [staffByService, setStaffByService] = useState<Record<string, string>>(
+    () =>
+      seedStaffByService(
+        validPrefillServiceIds,
+        prefilledCustomer?.staffByService,
+        prefillEmployeeId,
+        new Set(employees.map((employee) => employee.id))
+      )
+  );
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<{ position: number } | null>(null);
@@ -66,9 +96,37 @@ export function CheckInClient({
   const [prefill, setPrefill] = useState(prefilledCustomer);
 
   function toggleService(id: string) {
-    setSelectedServices((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+    setSelectedServices((prev) => {
+      const removing = prev.includes(id);
+      if (removing) {
+        setStaffByService((staff) => {
+          const next = { ...staff };
+          delete next[id];
+          return next;
+        });
+        return prev.filter((s) => s !== id);
+      }
+      setStaffByService((staff) => {
+        if (staff[id]) return staff;
+        const fallback =
+          preferredStylist ||
+          Object.values(staff).find(Boolean) ||
+          "";
+        return fallback ? { ...staff, [id]: fallback } : staff;
+      });
+      return [...prev, id];
+    });
+  }
+
+  function assignStaff(serviceId: string, employeeId: string) {
+    setStaffByService((prev) => {
+      if (!employeeId) {
+        const next = { ...prev };
+        delete next[serviceId];
+        return next;
+      }
+      return { ...prev, [serviceId]: employeeId };
+    });
   }
 
   function mergeServiceCatalog(items: CheckInService[]) {
@@ -94,7 +152,13 @@ export function CheckInClient({
       if (prefill?.fromAppointmentId) {
         formData.set("appointmentId", prefill.fromAppointmentId);
       }
-      const stylistId = selectedStylist || preferredStylist;
+      for (const serviceId of selectedServices) {
+        const staffId = staffByService[serviceId];
+        if (staffId) formData.set(`staff_${serviceId}`, staffId);
+      }
+      const stylistId =
+        selectedServices.map((id) => staffByService[id]).find(Boolean) ||
+        preferredStylist;
       if (stylistId) formData.set("employeeId", stylistId);
 
       const result = await checkInCustomer(formData);
@@ -113,7 +177,7 @@ export function CheckInClient({
       setShowUndo(true);
       setSelectedServices([]);
       setPreferredStylist("");
-      setSelectedStylist("");
+      setStaffByService({});
       setPrefill({ customerId: "", name: "", phone: "" });
       formRef.current?.reset();
       localStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -138,7 +202,7 @@ export function CheckInClient({
       services,
       overview.dashboard?.activeCount,
       prefill?.fromAppointmentId,
-      selectedStylist,
+      staffByService,
       preferredStylist,
       employees,
       router,
@@ -161,7 +225,14 @@ export function CheckInClient({
   useEffect(() => {
     setSelectedServices(validPrefillServiceIds);
     setPreferredStylist(prefillEmployeeId);
-    setSelectedStylist(prefillEmployeeId);
+    setStaffByService(
+      seedStaffByService(
+        validPrefillServiceIds,
+        prefilledCustomer?.staffByService,
+        prefillEmployeeId,
+        allowedEmployeeIds
+      )
+    );
     setPrefill(prefilledCustomer);
   }, [
     prefilledCustomer?.customerId,
@@ -170,6 +241,7 @@ export function CheckInClient({
     prefilledCustomer?.fromAppointmentId,
     validPrefillServiceIds.join(","),
     prefillEmployeeId,
+    allowedEmployeeIds,
     prefilledCustomer,
   ]);
 
@@ -183,12 +255,16 @@ export function CheckInClient({
         const parsed = JSON.parse(draft) as {
           selectedServices?: string[];
           preferredStylist?: string;
+          staffByService?: Record<string, string>;
         };
         if (parsed.selectedServices?.length) {
           setSelectedServices(parsed.selectedServices);
         }
         if (parsed.preferredStylist) {
           setPreferredStylist(parsed.preferredStylist);
+        }
+        if (parsed.staffByService) {
+          setStaffByService(parsed.staffByService);
         }
       }
     } catch {
@@ -199,14 +275,14 @@ export function CheckInClient({
   function handleSaveDraft() {
     localStorage.setItem(
       DRAFT_STORAGE_KEY,
-      JSON.stringify({ selectedServices, preferredStylist })
+      JSON.stringify({ selectedServices, preferredStylist, staffByService })
     );
   }
 
   function handleCancel() {
     setSelectedServices([]);
     setPreferredStylist("");
-    setSelectedStylist("");
+    setStaffByService({});
     setError("");
     setPrefill({ customerId: "", name: "", phone: "" });
     formRef.current?.reset();
@@ -245,7 +321,7 @@ export function CheckInClient({
   ];
 
   return (
-    <div className="space-y-5 pb-24 sm:space-y-6">
+    <div className="space-y-4 pb-[7.5rem] sm:space-y-6 lg:pb-0">
       <CheckInHeader
         recentCustomers={recentCustomers}
         onSelectRecent={handleSelectRecent}
@@ -259,12 +335,12 @@ export function CheckInClient({
             initial={{ opacity: 0, y: -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8 }}
-            className="flex items-center gap-3 rounded-[20px] border border-emerald-200/60 bg-emerald-50/90 p-4 shadow-sm backdrop-blur-sm"
+            className="flex flex-col gap-3 rounded-[20px] border border-emerald-200/60 bg-emerald-50/90 p-4 shadow-sm backdrop-blur-sm sm:flex-row sm:items-center"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 ring-2 ring-emerald-200/60">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="font-semibold text-emerald-800">
                 Customer checked in successfully!
               </p>
@@ -277,7 +353,7 @@ export function CheckInClient({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="rounded-xl text-emerald-700 hover:bg-emerald-100/80"
+                className="self-start rounded-xl text-emerald-700 hover:bg-emerald-100/80 sm:self-auto"
                 onClick={() => {
                   setSuccess(null);
                   setShowUndo(false);
@@ -291,15 +367,30 @@ export function CheckInClient({
         )}
       </AnimatePresence>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_340px] xl:grid-cols-[1fr_380px] xl:gap-6">
-        <form ref={formRef} onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_380px] xl:gap-6">
+        <form
+          id="check-in-form"
+          ref={formRef}
+          onSubmit={handleSubmit}
+          className="min-w-0 space-y-4 sm:space-y-6"
+        >
           <CustomerInfoCard
             key={`${prefill?.customerId}-${prefill?.name}`}
             defaultCustomerId={prefill?.customerId}
             defaultName={prefill?.name}
             defaultPhone={prefill?.phone}
             preferredStylist={preferredStylist}
-            onPreferredStylistChange={setPreferredStylist}
+            onPreferredStylistChange={(id) => {
+              setPreferredStylist(id);
+              if (!id) return;
+              setStaffByService((prev) => {
+                const next = { ...prev };
+                for (const serviceId of selectedServices) {
+                  if (!next[serviceId]) next[serviceId] = id;
+                }
+                return next;
+              });
+            }}
             stylists={employees}
           />
 
@@ -313,8 +404,8 @@ export function CheckInClient({
             employees={employees}
             services={services}
             selectedServiceIds={selectedServices}
-            selectedStylistId={selectedStylist}
-            onSelect={setSelectedStylist}
+            staffByService={staffByService}
+            onAssign={assignStaff}
           />
 
           {selectedServices.length > 0 && (
@@ -335,17 +426,9 @@ export function CheckInClient({
               {error}
             </motion.p>
           )}
-
-          <CheckInActionBar
-            loading={loading}
-            canSubmit={selectedServices.length > 0}
-            onCancel={handleCancel}
-            onSaveDraft={handleSaveDraft}
-            onCheckInAndStart={handleCheckInAndStart}
-          />
         </form>
 
-        <aside className="space-y-4">
+        <aside className="min-w-0 space-y-4">
           {selectedServices.length > 0 && (
             <div className="hidden lg:block">
               <EstimatedBillCard
@@ -358,7 +441,7 @@ export function CheckInClient({
         </aside>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="hidden gap-3 sm:grid sm:grid-cols-3">
         {trustItems.map((item, index) => (
           <motion.div
             key={item.title}
@@ -379,6 +462,15 @@ export function CheckInClient({
           </motion.div>
         ))}
       </div>
+
+      <CheckInActionBar
+        formId="check-in-form"
+        loading={loading}
+        canSubmit={selectedServices.length > 0}
+        onCancel={handleCancel}
+        onSaveDraft={handleSaveDraft}
+        onCheckInAndStart={handleCheckInAndStart}
+      />
     </div>
   );
 }

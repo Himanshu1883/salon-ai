@@ -13,7 +13,7 @@ export function QueueStatusBadge({ status }: { status: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold capitalize ring-1 ring-inset",
+        "inline-flex shrink-0 items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold capitalize ring-1 ring-inset sm:gap-1.5 sm:px-2.5 sm:py-1 sm:text-xs",
         style.badge
       )}
     >

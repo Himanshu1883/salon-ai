@@ -172,7 +172,7 @@ export function ServiceSelection({
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
               aria-label="Duration"
-              className="h-9 rounded-xl border border-dashboard-border bg-white/80 px-3 text-sm text-dashboard-text shadow-none"
+              className="h-9 w-full rounded-xl border border-dashboard-border bg-white/80 px-3 text-sm text-dashboard-text shadow-none sm:w-auto"
             >
               <option value="any">Any duration</option>
               <option value="quick">Quick · 30 min or less</option>
@@ -254,7 +254,7 @@ export function ServiceSelection({
           <>
             <div
               ref={listRef}
-              className="max-h-[min(28rem,55vh)] overflow-y-auto overscroll-contain pr-1"
+              className="max-h-[min(16rem,38vh)] overflow-y-auto overscroll-contain pr-1 sm:max-h-[min(28rem,55vh)]"
             >
               <div className="grid gap-3 sm:grid-cols-2">
                 {filtered.map((service, index) => {
@@ -273,7 +273,7 @@ export function ServiceSelection({
                       whileHover={{ y: -2, scale: 1.01 }}
                       whileTap={{ scale: 0.99 }}
                       className={cn(
-                        "relative flex items-start gap-3 rounded-xl border-2 p-4 text-left transition-all duration-200",
+                        "relative flex items-start gap-3 rounded-xl border-2 p-3 text-left transition-all duration-200 sm:p-4",
                         selected
                           ? "border-violet-400/60 bg-violet-50/60 shadow-lg shadow-violet-500/10 ring-1 ring-violet-200/50"
                           : "border-transparent bg-white/70 shadow-sm hover:border-violet-200/60 hover:bg-white hover:shadow-md"
@@ -290,7 +290,7 @@ export function ServiceSelection({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-start justify-between gap-2">
-                          <p className="font-medium text-dashboard-text">
+                          <p className="min-w-0 break-words font-medium text-dashboard-text">
                             {service.name}
                           </p>
                           <div

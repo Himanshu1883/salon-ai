@@ -26,10 +26,10 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
   } = sidebar ?? EMPTY_QUEUE_OVERVIEW.sidebar;
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
+    <div className="min-w-0 space-y-3 sm:space-y-4">
+      <div className="overflow-hidden rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-5">
         <h3 className="text-sm font-semibold text-[#1C103D]">Queue Overview</h3>
-        <div className="relative mx-auto mt-2 h-44 w-full">
+        <div className="relative mx-auto mt-2 h-32 w-full max-w-[220px] sm:h-44 sm:max-w-none">
           {chartData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height="100%">
@@ -38,8 +38,8 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={52}
-                    outerRadius={72}
+                    innerRadius="58%"
+                    outerRadius="82%"
                     paddingAngle={3}
                     dataKey="value"
                     strokeWidth={0}
@@ -76,7 +76,7 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
+      <div className="rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-5">
         <h3 className="text-sm font-semibold text-[#1C103D]">Upcoming in queue</h3>
         {upcomingWaiting.length === 0 ? (
           <p className="mt-3 text-sm text-[#9CA3AF]">No one waiting</p>
@@ -107,7 +107,7 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
+      <div className="rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-5">
         <h3 className="text-sm font-semibold text-[#1C103D]">Recently completed</h3>
         {recentDone.length === 0 ? (
           <p className="mt-3 text-sm text-[#9CA3AF]">No completions yet</p>
@@ -142,7 +142,7 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
         )}
       </div>
 
-      <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
+      <div className="rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-5">
         <h3 className="text-sm font-semibold text-[#1C103D]">Staff availability</h3>
         <div className="mt-3 space-y-2">
           {staff.map((emp) => (
@@ -154,7 +154,7 @@ export function QueueSidebar({ sidebar }: QueueSidebarProps) {
                 <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-[10px] font-bold text-[#6C3BFF] shadow-sm">
                   {emp.initials}
                 </div>
-                <span className="text-sm text-[#1C103D]">{emp.name}</span>
+                <span className="max-w-[60%] truncate text-sm text-[#1C103D]">{emp.name}</span>
               </div>
               <span
                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${

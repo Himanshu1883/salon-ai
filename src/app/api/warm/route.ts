@@ -1,6 +1,6 @@
-import { prisma } from "@/lib/prisma";
+import { warmDatabasePool } from "@/lib/warm-database-pool";
 
 export async function GET() {
-  await prisma.$queryRaw`SELECT 1`;
+  await warmDatabasePool();
   return Response.json({ ok: true });
 }

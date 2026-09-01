@@ -53,31 +53,32 @@ export function CheckInHeader({
       transition={{ duration: 0.35 }}
       className="overflow-hidden rounded-[20px] border border-dashboard-border bg-dashboard-card/95 shadow-dashboard-card backdrop-blur-sm"
     >
-      <div className="bg-gradient-to-br from-violet-600/8 via-dashboard-card to-dashboard-card px-5 py-5 sm:px-6 sm:py-6">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-dashboard-primary to-violet-500 shadow-lg shadow-violet-500/30">
-              <UserRound className="h-6 w-6 text-white" />
+      <div className="bg-gradient-to-br from-violet-600/8 via-dashboard-card to-dashboard-card px-4 py-4 sm:px-6 sm:py-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-dashboard-primary to-violet-500 shadow-lg shadow-violet-500/30 sm:h-12 sm:w-12">
+              <UserRound className="h-5 w-5 text-white sm:h-6 sm:w-6" />
             </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-dashboard-text sm:text-3xl">
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-dashboard-text sm:text-3xl">
                 Customer Check-in
               </h1>
-              <p className="mt-1 max-w-xl text-sm text-dashboard-muted sm:text-base">
+              <p className="mt-1 max-w-xl text-xs text-dashboard-muted sm:text-base">
                 Register walk-ins and add them to today&apos;s queue in seconds.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
             <Button
               asChild
               variant="outline"
-              className="h-10 rounded-xl border-dashboard-border bg-white/80 px-3.5 shadow-sm backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/80"
+              className="h-10 min-w-0 flex-1 rounded-xl border-dashboard-border bg-white/80 px-3 shadow-sm backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/80 sm:flex-none sm:px-3.5"
             >
               <Link href="/queue">
                 <ListOrdered className="h-4 w-4 text-dashboard-primary" />
-                Live Queue
+                <span className="sm:hidden">Queue</span>
+                <span className="hidden sm:inline">Live Queue</span>
                 {queueCount > 0 && (
                   <Badge className="ml-1.5 border-0 bg-dashboard-primary px-2 py-0 text-[10px] text-white">
                     {queueCount}
@@ -101,13 +102,13 @@ export function CheckInHeader({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-10 rounded-xl border-dashboard-border bg-white/80 px-3.5 shadow-sm backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/80"
+                  className="h-10 min-w-0 flex-1 rounded-xl border-dashboard-border bg-white/80 px-3 shadow-sm backdrop-blur-sm hover:border-violet-300 hover:bg-violet-50/80 sm:flex-none sm:px-3.5"
                 >
                   <Clock className="h-4 w-4 text-dashboard-muted" />
                   Recent
                 </Button>
               </DialogTrigger>
-              <DialogContent className="rounded-[20px] border-dashboard-border bg-dashboard-card/98 shadow-2xl backdrop-blur-md">
+              <DialogContent className="max-h-[85dvh] w-[calc(100vw-1.5rem)] max-w-lg overflow-y-auto rounded-[20px] border-dashboard-border bg-dashboard-card/98 shadow-2xl backdrop-blur-md">
                 <DialogHeader>
                   <DialogTitle className="text-dashboard-text">
                     Recent walk-ins
@@ -166,7 +167,7 @@ export function CheckInHeader({
 
         {/* Step progress */}
         <div
-          className="mt-5 hidden items-center sm:flex"
+          className="mt-4 flex items-center overflow-x-auto pb-0.5 sm:mt-5"
           aria-label="Check-in progress"
         >
           {STEPS.map((step, i) => {
@@ -188,7 +189,7 @@ export function CheckInHeader({
                   </div>
                   <span
                     className={cn(
-                      "text-xs font-medium transition-colors",
+                      "text-[11px] font-medium transition-colors sm:text-xs",
                       isCurrent
                         ? "text-dashboard-primary"
                         : isActive
@@ -202,7 +203,7 @@ export function CheckInHeader({
                 {i < STEPS.length - 1 && (
                   <div
                     className={cn(
-                      "mx-3 h-0.5 w-8 rounded-full transition-colors duration-300 lg:w-12",
+                      "mx-2 h-0.5 w-4 shrink-0 rounded-full transition-colors duration-300 sm:mx-3 sm:w-8 lg:w-12",
                       stepNum < activeStep ? "bg-violet-400" : "bg-violet-100"
                     )}
                     aria-hidden

@@ -50,6 +50,23 @@ describe("attachAppointmentStaffToQueueServices", () => {
     assert.equal(stamped[0]?.employeeId, "emp-suresh");
     assert.equal(stamped[1]?.employeeId, null);
   });
+
+  it("keeps staff already stored on the queue line", () => {
+    const stamped = attachAppointmentStaffToQueueServices(
+      [
+        { service: { id: "svc-spa" }, employeeId: "emp-walkin" },
+        { service: { id: "svc-style" }, employeeId: "emp-color" },
+      ],
+      [
+        { id: "i1", serviceId: "svc-spa", employeeId: "emp-suresh" },
+        { id: "i2", serviceId: "svc-style", employeeId: "emp-new" },
+      ],
+      "emp-suresh"
+    );
+
+    assert.equal(stamped[0]?.employeeId, "emp-walkin");
+    assert.equal(stamped[1]?.employeeId, "emp-color");
+  });
 });
 
 describe("queueEntryToInvoicePrefill", () => {

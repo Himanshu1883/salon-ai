@@ -14,8 +14,8 @@ export function QueueAiInsights({ insights }: QueueAiInsightsProps) {
       ? insights
       : ["Queue operations look healthy. Monitor wait times during the next rush."];
   return (
-    <div className="rounded-2xl border border-[#E8ECF4] bg-white p-5 shadow-[0_2px_12px_rgba(28,16,61,0.04)]">
-      <div className="mb-4 flex items-center gap-2">
+    <div className="rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-5">
+      <div className="mb-3 flex flex-wrap items-center gap-2 sm:mb-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EDE9FE]">
           <Lightbulb className="h-4 w-4 text-[#6C3BFF]" />
         </div>
@@ -31,7 +31,7 @@ export function QueueAiInsights({ insights }: QueueAiInsightsProps) {
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.05 }}
-            className="flex gap-2 rounded-xl bg-[#F7F8FC] p-3 text-sm text-[#6B7280]"
+            className="flex gap-2 rounded-xl bg-[#F7F8FC] p-2.5 text-xs text-[#6B7280] sm:p-3 sm:text-sm"
           >
             <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-[#6C3BFF]" />
             {text}
@@ -50,9 +50,9 @@ export function QueueTipBanner() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between gap-3 rounded-2xl bg-gradient-to-r from-[#EDE9FE] to-[#F7F8FC] px-4 py-3"
+      className="flex items-start justify-between gap-2 rounded-xl bg-gradient-to-r from-[#EDE9FE] to-[#F7F8FC] px-3 py-2.5 sm:items-center sm:rounded-2xl sm:px-4 sm:py-3"
     >
-      <p className="text-sm text-[#6B7280]">
+      <p className="text-xs leading-snug text-[#6B7280] sm:text-sm">
         <strong className="text-[#6C3BFF]">Tip:</strong> Not seeing a walk-in
         here? Make sure they are added via Check-in.
       </p>

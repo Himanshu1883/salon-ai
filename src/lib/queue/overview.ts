@@ -13,6 +13,7 @@ import {
   salonDayBounds,
 } from "@/lib/attendance/business-day";
 import { attachAppointmentStaffToQueueServices } from "@/lib/queue/appointment-staff";
+import { isMissingDbColumn } from "@/lib/db-errors";
 import type {
   AppointmentSnapshot,
   CompletedEntry,
@@ -62,34 +63,37 @@ const appointmentServiceStaffSelect = {
   },
 };
 
-const QUEUE_ENTRY_INCLUDE = {
-  customer: { select: { name: true, phone: true } },
-  employee: { select: { id: true, name: true } },
-  seat: { select: { id: true, number: true } },
-  appointment: appointmentServiceStaffSelect,
-  services: {
+function queueServicesSelect(includeLineStaff: boolean) {
+  return {
     select: {
+      ...(includeLineStaff ? { employeeId: true as const } : {}),
       service: {
         select: { id: true, name: true, duration: true, price: true },
       },
     },
-  },
-};
+  };
+}
 
-const COMPLETED_INCLUDE = {
-  customer: { select: { name: true, phone: true } },
-  appointment: appointmentServiceStaffSelect,
-  services: {
-    select: {
-      service: {
-        select: { id: true, name: true, duration: true, price: true },
-      },
+function queueEntryInclude(includeLineStaff: boolean) {
+  return {
+    customer: { select: { name: true, phone: true } },
+    employee: { select: { id: true, name: true } },
+    seat: { select: { id: true, number: true } },
+    appointment: appointmentServiceStaffSelect,
+    services: queueServicesSelect(includeLineStaff),
+  };
+}
+
+function completedInclude(includeLineStaff: boolean) {
+  return {
+    customer: { select: { name: true, phone: true } },
+    appointment: appointmentServiceStaffSelect,
+    services: queueServicesSelect(includeLineStaff),
+    invoices: {
+      select: { id: true, status: true, paymentMethod: true, total: true },
     },
-  },
-  invoices: {
-    select: { id: true, status: true, paymentMethod: true, total: true },
-  },
-};
+  };
+}
 
 function initials(name: string): string {
   return name
@@ -165,6 +169,7 @@ function mapQueueEntry(
       serviceItems: { id: string; serviceId: string; employeeId: string | null }[];
     } | null;
     services: {
+      employeeId?: string | null;
       service: { id: string; name: string; duration: number; price: number };
     }[];
   },
@@ -184,6 +189,7 @@ function mapQueueEntry(
     seat: e.seat,
     services: attachAppointmentStaffToQueueServices(
       e.services.map((qs) => ({
+        employeeId: qs.employeeId ?? null,
         service: {
           id: qs.service.id,
           name: qs.service.name,
@@ -214,6 +220,7 @@ function mapCompleted(
       serviceItems: { id: string; serviceId: string; employeeId: string | null }[];
     } | null;
     services: {
+      employeeId?: string | null;
       service: { id: string; name: string; duration: number; price: number };
     }[];
     invoices: {
@@ -233,6 +240,7 @@ function mapCompleted(
     customer: { name: e.customer.name, phone: e.customer.phone },
     services: attachAppointmentStaffToQueueServices(
       e.services.map((qs) => ({
+        employeeId: qs.employeeId ?? null,
         service: {
           id: qs.service.id,
           name: qs.service.name,
@@ -546,6 +554,21 @@ async function loadFloorRows(
   ctx: DataScopeContext,
   options: { includeCatalogServices?: boolean } = {}
 ) {
+  try {
+    return await loadFloorRowsInner(ctx, options, true);
+  } catch (error) {
+    if (!isMissingDbColumn(error, "QueueService", "employeeId")) {
+      throw error;
+    }
+    return loadFloorRowsInner(ctx, options, false);
+  }
+}
+
+async function loadFloorRowsInner(
+  ctx: DataScopeContext,
+  options: { includeCatalogServices?: boolean },
+  includeLineStaff: boolean
+) {
   const includeCatalogServices = options.includeCatalogServices !== false;
   const now = new Date();
   const today = currentSalonDayBounds(now);
@@ -572,7 +595,7 @@ async function loadFloorRows(
   ] = await Promise.all([
     prisma.queueEntry.findMany({
       where: activeQueueWhere(ctx),
-      include: QUEUE_ENTRY_INCLUDE,
+      include: queueEntryInclude(includeLineStaff),
       orderBy: { position: "asc" },
     }),
     prisma.queueEntry.findMany({
@@ -585,7 +608,7 @@ async function loadFloorRows(
         employeeId: true,
         seatId: true,
         appointmentId: true,
-        ...COMPLETED_INCLUDE,
+        ...completedInclude(includeLineStaff),
       },
       orderBy: { completedAt: "desc" },
     }),
@@ -609,7 +632,7 @@ async function loadFloorRows(
         employeeId: true,
         seatId: true,
         appointmentId: true,
-        ...COMPLETED_INCLUDE,
+        ...completedInclude(includeLineStaff),
       },
       orderBy: { completedAt: "desc" },
       take: 10,

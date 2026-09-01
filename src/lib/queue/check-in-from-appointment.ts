@@ -8,6 +8,7 @@ import {
   type DataScopeContext,
 } from "@/lib/permissions/data-scope";
 import { invalidateQueueCache } from "@/lib/queue/invalidate-cache";
+import { queueServiceCreatesFromAppointmentLines } from "@/lib/queue/check-in-staff";
 
 function scheduleQueueCacheRefresh(
   salonId: string,
@@ -143,6 +144,7 @@ export async function ensureInProgressQueueEntry(
         data: missing.map((serviceId) => ({
           queueEntryId: existing.id,
           serviceId,
+          employeeId: input.employeeId ?? null,
         })),
         skipDuplicates: true,
       });
@@ -161,7 +163,10 @@ export async function ensureInProgressQueueEntry(
       employeeId: input.employeeId ?? null,
       startedAt: now,
       services: {
-        create: serviceIds.map((serviceId) => ({ serviceId })),
+        create: serviceIds.map((serviceId) => ({
+          serviceId,
+          employeeId: input.employeeId ?? null,
+        })),
       },
     },
     select: { id: true },
@@ -380,7 +385,13 @@ async function performCheckInFromAppointmentInner(options: {
         employeeId: assignedEmployeeId,
         startedAt: shouldStartNow ? new Date() : null,
         services: {
-          create: serviceIds.map((serviceId) => ({ serviceId })),
+          create: queueServiceCreatesFromAppointmentLines(serviceIds, [
+            ...appointment.serviceItems,
+            ...visitAppointments.map((item) => ({
+              serviceId: item.serviceId,
+              employeeId: item.employeeId,
+            })),
+          ]),
         },
       },
     }),

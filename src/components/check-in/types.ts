@@ -47,6 +47,7 @@ export type PrefilledCustomer = {
 export type CheckInPrefill = PrefilledCustomer & {
   serviceIds?: string[];
   employeeId?: string;
+  staffByService?: Record<string, string>;
   fromAppointmentId?: string;
 };
 

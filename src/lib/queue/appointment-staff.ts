@@ -30,9 +30,11 @@ export function attachAppointmentStaffToQueueServices<
       matchIndex >= 0 ? remaining.splice(matchIndex, 1)[0] : undefined;
     return {
       ...qs,
-      employeeId: match
-        ? match.employeeId
-        : (fallbackEmployeeId ?? qs.employeeId ?? null),
+      employeeId: qs.employeeId
+        ? qs.employeeId
+        : match
+          ? match.employeeId
+          : (fallbackEmployeeId ?? null),
       appointmentServiceItemId: match?.id ?? qs.appointmentServiceItemId,
     };
   });

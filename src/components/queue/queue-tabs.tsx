@@ -28,7 +28,8 @@ export function QueueTabs({
   appointmentsToday,
 }: QueueTabsProps) {
   return (
-    <div className="flex gap-1 overflow-x-auto border-b border-[#E8ECF4] pb-px">
+    <div className="min-w-0 overflow-x-auto overscroll-x-contain border-b border-[#E8ECF4] pb-px">
+      <div className="flex w-max min-w-full gap-0.5 px-1">
       {QUEUE_TABS.map((tab) => {
         const count =
           tabCounts?.[tab.id] ??
@@ -45,7 +46,7 @@ export function QueueTabs({
             type="button"
             onClick={() => onTabChange(tab.id)}
             className={cn(
-              "relative shrink-0 px-4 py-3 text-sm font-medium transition-colors",
+              "relative shrink-0 px-2.5 py-2 text-xs font-medium transition-colors sm:px-4 sm:py-3 sm:text-sm",
               active
                 ? "text-[#6C3BFF]"
                 : "text-[#6B7280] hover:text-[#1C103D]"
@@ -64,8 +65,9 @@ export function QueueTabs({
               <span className="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-[#6C3BFF]" />
             )}
           </button>
-        );
+          );
       })}
+      </div>
     </div>
   );
 }

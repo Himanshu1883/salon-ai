@@ -32,7 +32,7 @@ function StubSelect({ label }: { label: string }) {
     <Select disabled>
       <SelectTrigger
         title="Coming soon"
-        className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs text-[#9CA3AF] sm:w-[130px]"
+        className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs text-[#9CA3AF] sm:w-[130px] sm:shrink-0"
       >
         <SelectValue placeholder={label} />
       </SelectTrigger>
@@ -50,24 +50,24 @@ export function QueueFilterBar({
     onChange({ ...filters, ...patch });
 
   return (
-    <div className="rounded-2xl border border-[#E8ECF4] bg-white p-3 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:p-4">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-        <div className="relative min-w-[200px] flex-1">
+    <div className="min-w-0 rounded-xl border border-[#E8ECF4] bg-white p-2.5 shadow-[0_2px_12px_rgba(28,16,61,0.04)] sm:rounded-2xl sm:p-4">
+      <div className="flex min-w-0 flex-col gap-2.5 xl:flex-row xl:items-center">
+        <div className="relative min-w-0 flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9CA3AF]" />
           <Input
             value={filters.search}
             onChange={(e) => set({ search: e.target.value })}
-            placeholder="Search customers, services, stylists..."
-            className="h-10 rounded-xl border-[#E8ECF4] bg-[#F7F8FC] pl-9 text-sm"
+            placeholder="Search customers, services..."
+            className="h-9 min-w-0 rounded-xl border-[#E8ECF4] bg-[#F7F8FC] pl-9 text-sm sm:h-10"
           />
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid min-w-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Select
             value={filters.status}
             onValueChange={(v) => set({ status: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -82,8 +82,8 @@ export function QueueFilterBar({
             value={filters.stylist}
             onValueChange={(v) => set({ stylist: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
-              <User className="mr-1 h-3.5 w-3.5 text-[#9CA3AF]" />
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
+              <User className="mr-1 hidden h-3.5 w-3.5 shrink-0 text-[#9CA3AF] sm:block" />
               <SelectValue placeholder="Stylist" />
             </SelectTrigger>
             <SelectContent>
@@ -101,7 +101,7 @@ export function QueueFilterBar({
             value={filters.service}
             onValueChange={(v) => set({ service: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
               <SelectValue placeholder="Service" />
             </SelectTrigger>
             <SelectContent>
@@ -120,8 +120,8 @@ export function QueueFilterBar({
             value={filters.priority}
             onValueChange={(v) => set({ priority: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
-              <Star className="mr-1 h-3.5 w-3.5 text-[#9CA3AF]" />
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
+              <Star className="mr-1 hidden h-3.5 w-3.5 shrink-0 text-[#9CA3AF] sm:block" />
               <SelectValue placeholder="Priority" />
             </SelectTrigger>
             <SelectContent>
@@ -135,8 +135,8 @@ export function QueueFilterBar({
             value={filters.arrivalTime}
             onValueChange={(v) => set({ arrivalTime: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
-              <Clock className="mr-1 h-3.5 w-3.5 text-[#9CA3AF]" />
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
+              <Clock className="mr-1 hidden h-3.5 w-3.5 shrink-0 text-[#9CA3AF] sm:block" />
               <SelectValue placeholder="Arrival" />
             </SelectTrigger>
             <SelectContent>
@@ -151,7 +151,7 @@ export function QueueFilterBar({
             value={filters.waitingTime}
             onValueChange={(v) => set({ waitingTime: v })}
           >
-            <SelectTrigger className="h-9 w-[120px] rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px]">
+            <SelectTrigger className="h-9 w-full min-w-0 overflow-hidden rounded-xl border-[#E8ECF4] bg-[#F7F8FC] text-xs sm:w-[130px] sm:shrink-0">
               <SelectValue placeholder="Wait time" />
             </SelectTrigger>
             <SelectContent>
@@ -166,7 +166,7 @@ export function QueueFilterBar({
             variant="outline"
             size="sm"
             onClick={() => onChange(DEFAULT_FILTERS)}
-            className="h-9 rounded-xl border-[#E8ECF4] bg-white text-xs text-[#6B7280]"
+            className="h-9 w-full min-w-0 rounded-xl border-[#E8ECF4] bg-white text-xs text-[#6B7280] sm:w-auto sm:shrink-0"
           >
             <RotateCcw className="mr-1 h-3.5 w-3.5" />
             Reset

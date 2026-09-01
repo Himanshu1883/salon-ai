@@ -12,6 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { DASHBOARD_ERROR_RETRY_KEY } from "@/components/dashboard/dashboard-session-keepalive";
+import { isRetryableDbError } from "@/lib/db-errors";
+
+const AUTO_RETRY_COOLDOWN_MS = 12_000;
 
 function salonLoginHref(pathname: string | null) {
   const slug = pathname?.split("/").filter(Boolean)[0];
@@ -30,7 +33,9 @@ export default function DashboardError({
 }) {
   const pathname = usePathname();
   const loginHref = useMemo(() => salonLoginHref(pathname), [pathname]);
-  const [reconnecting, setReconnecting] = useState(true);
+  const [reconnecting, setReconnecting] = useState(() =>
+    isRetryableDbError(error)
+  );
 
   useEffect(() => {
     console.error("Dashboard error:", error);
@@ -38,10 +43,17 @@ export default function DashboardError({
 
   useEffect(() => {
     let cancelled = false;
-    const alreadyRetried =
-      sessionStorage.getItem(DASHBOARD_ERROR_RETRY_KEY) === "1";
+    const lastRetryAt = Number(
+      sessionStorage.getItem(DASHBOARD_ERROR_RETRY_KEY) || "0"
+    );
+    const recentlyRetried = Date.now() - lastRetryAt < AUTO_RETRY_COOLDOWN_MS;
+    const shouldAutoRetry = isRetryableDbError(error) && !recentlyRetried;
 
     async function reconnect() {
+      if (!shouldAutoRetry) {
+        setReconnecting(false);
+        return;
+      }
       try {
         await fetch("/api/warm", {
           cache: "no-store",
@@ -51,12 +63,8 @@ export default function DashboardError({
         // Reset still attempts a fresh render.
       }
       if (cancelled) return;
-      if (!alreadyRetried) {
-        sessionStorage.setItem(DASHBOARD_ERROR_RETRY_KEY, "1");
-        reset();
-        return;
-      }
-      setReconnecting(false);
+      sessionStorage.setItem(DASHBOARD_ERROR_RETRY_KEY, String(Date.now()));
+      reset();
     }
 
     void reconnect();
@@ -90,7 +98,14 @@ export default function DashboardError({
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          <Button onClick={() => reset()}>Refresh dashboard</Button>
+          <Button
+            onClick={() => {
+              sessionStorage.removeItem(DASHBOARD_ERROR_RETRY_KEY);
+              reset();
+            }}
+          >
+            Refresh dashboard
+          </Button>
           <Button variant="outline" asChild>
             <Link href={loginHref}>Go to sign in</Link>
           </Button>

@@ -115,7 +115,7 @@ export function QueueDetailsDrawer({
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className="fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-2xl"
           >
-            <div className="flex items-center justify-between border-b border-[#E8ECF4] px-5 py-4">
+            <div className="flex items-center justify-between border-b border-[#E8ECF4] px-4 py-3 sm:px-5 sm:py-4">
               <div>
                 <p className="text-xs font-medium text-[#6C3BFF]">
                   Queue #{entry.position}
@@ -134,7 +134,7 @@ export function QueueDetailsDrawer({
               </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4">
+            <div className="flex-1 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#6C3BFF] to-[#FF2D6F] text-lg font-bold text-white">
                   {getInitials(entry.customer.name)}
@@ -225,7 +225,7 @@ export function QueueDetailsDrawer({
               </div>
             </div>
 
-            <div className="border-t border-[#E8ECF4] p-4">
+            <div className="border-t border-[#E8ECF4] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-4">
               <div className="flex flex-wrap gap-2">
                 {entry.status === "waiting" && (
                   <Button
