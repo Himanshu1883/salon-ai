@@ -7,6 +7,7 @@ export {
   renderWhatsAppTemplate,
 } from "./templates";
 export { buildWhatsAppUrl, normalizeWhatsAppPhone, openWhatsApp } from "./phone";
+export { prepareWhatsAppMessage } from "./sanitize-message";
 export type {
   WhatsAppInvoiceContext,
   WhatsAppTemplateId,

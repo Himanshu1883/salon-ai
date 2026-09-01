@@ -154,7 +154,7 @@ export function WhatsAppCommunicationDrawer({
     await new Promise((r) => setTimeout(r, 400));
     openWhatsApp(phone, messagePreview);
     setSending(false);
-    setToast("Opening WhatsApp…");
+    setToast("Opening WhatsApp… If the review link is cut, press Ctrl+V to paste the full message.");
     onSent?.();
   }
 

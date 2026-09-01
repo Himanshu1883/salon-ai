@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { formatCurrency } from "@/lib/utils";
 import { PAYMENT_LABELS } from "@/components/billing/types";
+import { prepareWhatsAppMessage } from "./sanitize-message";
 import type {
   WhatsAppInvoiceContext,
   WhatsAppTemplateId,
@@ -88,7 +89,7 @@ export function buildBillingWhatsAppMessage(
   invoiceUrl: string
 ): string {
   const variables = buildTemplateVariables(ctx, invoiceUrl);
-  return renderWhatsAppTemplate(template, variables);
+  return prepareWhatsAppMessage(renderWhatsAppTemplate(template, variables));
 }
 
 export function buildPresetWhatsAppMessage(

@@ -108,7 +108,7 @@ export function WhatsAppSettingsClient({
             <CardTitle>Message template</CardTitle>
             <CardDescription>
               Edit the thank-you message sent after invoice creation or payment. Click a variable
-              to insert it.
+              to insert it. Paste your full Google review or Maps link — it is sent as written.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -148,6 +148,10 @@ export function WhatsAppSettingsClient({
                 className="font-mono text-sm leading-relaxed"
                 required
               />
+              <p className="text-xs text-stone-500">
+                Use {"{salonName}"} for the salon name. Your review link is sent in full, exactly
+                as you pasted it.
+              </p>
             </div>
 
             <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-stone-200 p-4">
