@@ -112,31 +112,31 @@ export function InvoicePrintView({
       </div>
 
       <div className="mx-auto max-w-[800px] bg-white px-6 py-8 shadow-[0_12px_40px_rgba(17,24,39,0.08)] sm:px-10 sm:py-10 print:max-w-none print:px-0 print:py-0 print:shadow-none">
-        <div className="flex items-start justify-between gap-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <SalonLogoMark
-              logoUrl={invoice.salon.logoUrl}
-              fallbackInitial={invoice.salon.name}
-              size="lg"
-              shape="rounded"
-              variant="dark"
-              alt={`${invoice.salon.name} logo`}
-            />
-            <div className="min-w-0">
-              <h1 className="truncate text-xl font-extrabold tracking-tight text-[#1F2937]">
-                {invoice.salon.name}
-              </h1>
-              <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7C3AED]">
-                Salon invoice
-              </p>
-            </div>
-          </div>
-          <div className="relative -mr-6 shrink-0 pt-1 text-right sm:-mr-10">
-            <p className="relative z-[1] text-[34px] font-black leading-none tracking-tight text-[#1F2937] sm:text-[42px]">
-              INVOICE
+        <div className="flex min-w-0 items-center gap-3">
+          <SalonLogoMark
+            logoUrl={invoice.salon.logoUrl}
+            fallbackInitial={invoice.salon.name}
+            size="lg"
+            shape="rounded"
+            variant="dark"
+            alt={`${invoice.salon.name} logo`}
+          />
+          <div className="min-w-0">
+            <h1 className="truncate text-xl font-extrabold tracking-tight text-[#1F2937]">
+              {invoice.salon.name}
+            </h1>
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7C3AED]">
+              Salon invoice
             </p>
-            <div className="absolute bottom-[5px] left-4 right-0 z-0 h-3 bg-[#7C3AED] sm:bottom-[6px] sm:h-3.5" />
           </div>
+        </div>
+
+        <div className="-mx-6 mt-8 flex items-center gap-3 sm:-mx-10 sm:gap-4">
+          <div className="h-8 min-w-0 flex-1 bg-[#7C3AED] sm:h-10" />
+          <p className="shrink-0 text-[28px] font-black leading-none tracking-tight text-[#1F2937] sm:text-[36px]">
+            INVOICE
+          </p>
+          <div className="h-8 w-8 shrink-0 bg-[#7C3AED] sm:h-10 sm:w-10" />
         </div>
 
         <div className="mt-10 grid gap-8 sm:grid-cols-2">
@@ -272,13 +272,6 @@ export function InvoicePrintView({
               <span className="text-lg font-extrabold text-white">
                 {formatCurrency(invoice.total)}
               </span>
-            </div>
-            <div className="ml-auto mt-10 w-full max-w-xs text-center">
-              <div className="mx-auto w-40 border-t border-[#9CA3AF]" />
-              <p className="mt-1 text-xs font-semibold text-[#1F2937]">
-                Authorised Sign
-              </p>
-              <p className="text-[11px] text-[#6B7280]">{invoice.salon.name}</p>
             </div>
           </div>
         </div>
