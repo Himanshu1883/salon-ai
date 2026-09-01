@@ -117,7 +117,7 @@ export function ClientsListClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 max-w-full space-y-3 overflow-x-hidden sm:space-y-6">
       <ClientsHeader
         totalCount={totalCount}
         onImport={() => setImportOpen(true)}
@@ -128,11 +128,11 @@ export function ClientsListClient({
 
       <ClientsImportBanner onStartImport={() => setImportOpen(true)} />
 
-      <div className="flex flex-col gap-6 xl:flex-row xl:items-start">
+      <div className="flex min-w-0 flex-col gap-3 xl:flex-row xl:items-start xl:gap-6">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="min-w-0 flex-1 space-y-4"
+          className="min-w-0 flex-1 space-y-3 sm:space-y-4"
         >
           <ClientsFilterToolbar
             search={search}

@@ -16,57 +16,58 @@ export function ClientsHeader({
   onAdd,
 }: ClientsHeaderProps) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight text-[#1C103D] sm:text-3xl">
+    <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+          <h1 className="text-lg font-bold tracking-tight text-[#1C103D] sm:text-3xl">
             Clients
           </h1>
-          <Badge className="border-[#EDE9FE] bg-[#EDE9FE] text-[#6C3BFF]">
+          <Badge className="h-5 border-[#EDE9FE] bg-[#EDE9FE] px-1.5 text-[10px] text-[#6C3BFF] sm:h-auto sm:px-2.5 sm:text-xs">
             {totalCount}
           </Badge>
         </div>
-        <p className="mt-1 max-w-2xl text-sm text-[#6B7280] sm:text-base">
-          Manage customer profiles, appointments, memberships and lifetime
-          value.
+        <p className="mt-0.5 text-[11px] leading-snug text-[#6B7280] sm:mt-1 sm:max-w-2xl sm:text-base">
+          Profiles, visits, memberships, and lifetime value
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
         <Button
           variant="outline"
           size="sm"
-          className="rounded-xl border-[#E8ECF4]"
+          className="h-8 rounded-xl border-[#E8ECF4] px-2.5 text-xs sm:h-9 sm:px-3 sm:text-sm"
           onClick={onImport}
         >
-          <Upload className="h-4 w-4" />
-          Import Clients
+          <Upload className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <span className="sm:inline">Import</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           disabled
-          className="rounded-xl border-[#E8ECF4]"
+          title="Export"
+          className="h-8 w-8 rounded-xl border-[#E8ECF4] p-0 sm:h-9 sm:w-auto sm:px-3"
         >
-          <Download className="h-4 w-4" />
-          Export
+          <Download className="h-3.5 w-3.5 sm:mr-1.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Export</span>
         </Button>
         <Button
           variant="outline"
           size="sm"
           disabled
-          className="rounded-xl border-[#E8ECF4]"
+          title="AI Insights"
+          className="h-8 w-8 rounded-xl border-[#E8ECF4] p-0 sm:h-9 sm:w-auto sm:px-3"
         >
-          <Sparkles className="h-4 w-4" />
-          AI Insights
+          <Sparkles className="h-3.5 w-3.5 sm:mr-1.5 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">AI Insights</span>
         </Button>
         <Button
           size="sm"
-          className="rounded-xl bg-gradient-to-r from-[#6C3BFF] to-[#8B5CF6] text-white shadow-[0_4px_16px_rgba(108,59,255,0.35)] hover:opacity-90"
+          className="h-8 rounded-xl bg-gradient-to-r from-[#6C3BFF] to-[#8B5CF6] px-2.5 text-xs text-white shadow-[0_4px_16px_rgba(108,59,255,0.35)] hover:opacity-90 sm:h-9 sm:px-3 sm:text-sm"
           onClick={onAdd}
         >
-          <Plus className="h-4 w-4" />
-          Add Client
+          <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          Add
         </Button>
       </div>
     </div>

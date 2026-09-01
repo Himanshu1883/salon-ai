@@ -43,7 +43,7 @@ function SidebarSection({
       initial={{ opacity: 0, x: 12 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ duration: 0.35 }}
-      className="rounded-[20px] border border-[#E8ECF4] bg-white p-4 shadow-[0_4px_24px_rgba(28,16,61,0.05)]"
+      className="rounded-xl border border-[#E8ECF4] bg-white p-3 shadow-[0_4px_24px_rgba(28,16,61,0.05)] sm:rounded-[20px] sm:p-4"
     >
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-[#1C103D]">{title}</h3>
@@ -118,15 +118,15 @@ export function ClientsInsightsPanel({
   }));
 
   return (
-    <aside className="w-full space-y-4 xl:w-[320px] xl:shrink-0">
+    <aside className="min-w-0 w-full space-y-3 xl:w-[320px] xl:shrink-0 xl:space-y-4">
       <SidebarSection title="Clients Overview">
         <div className="grid grid-cols-2 gap-2">
           {overviewCards.map((card) => (
             <div
               key={card.label}
-              className="rounded-xl bg-[#F7F8FC] p-3 transition-all hover:bg-white hover:shadow-sm"
+              className="rounded-xl bg-[#F7F8FC] p-2 transition-all hover:bg-white hover:shadow-sm sm:p-3"
             >
-              <p className="text-xl font-bold text-[#1C103D]">{card.value}</p>
+              <p className="text-base font-bold text-[#1C103D] sm:text-xl">{card.value}</p>
               <p className="text-[10px] font-medium text-[#6B7280]">
                 {card.label}
               </p>
@@ -235,7 +235,7 @@ export function ClientsInsightsPanel({
         {membershipData.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No data</p>
         ) : (
-          <div className="h-[160px]">
+          <div className="h-[120px] sm:h-[160px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -266,7 +266,7 @@ export function ClientsInsightsPanel({
         {revenueByClient.length === 0 ? (
           <p className="text-sm text-[#6B7280]">No revenue data</p>
         ) : (
-          <div className="h-[160px]">
+          <div className="h-[120px] sm:h-[160px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueByClient} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#E8ECF4" vertical={false} />
@@ -281,7 +281,7 @@ export function ClientsInsightsPanel({
       </SidebarSection>
 
       <SidebarSection title="Customer Growth">
-        <div className="h-[140px]">
+        <div className="h-[110px] sm:h-[140px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={stats.growthData} margin={{ top: 4, right: 4, left: 0, bottom: 0 }}>
               <defs>

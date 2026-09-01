@@ -26,24 +26,23 @@ export function ClientsImportBanner({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="overflow-hidden rounded-[20px] bg-gradient-to-r from-[#6C3BFF] via-[#8B5CF6] to-[#6C3BFF] p-5 text-white shadow-[0_8px_32px_rgba(108,59,255,0.25)]"
+      className="overflow-hidden rounded-xl bg-gradient-to-r from-[#6C3BFF] via-[#8B5CF6] to-[#6C3BFF] p-3 text-white shadow-[0_8px_32px_rgba(108,59,255,0.25)] sm:rounded-[20px] sm:p-5"
     >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
-            <Upload className="h-6 w-6" />
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3 sm:gap-4">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm sm:h-12 sm:w-12 sm:rounded-2xl">
+            <Upload className="h-4 w-4 sm:h-6 sm:w-6" />
           </div>
-          <div>
-            <p className="text-lg font-semibold">Import your client list</p>
-            <p className="mt-0.5 text-sm text-white/80">
-              Upload CSV, Excel, Google Contacts, or sync from phone. AI
-              duplicate detection keeps your database clean.
+          <div className="min-w-0">
+            <p className="text-sm font-semibold sm:text-lg">Import your client list</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-white/80 sm:text-sm">
+              Upload CSV to add clients. Duplicate detection keeps the list clean.
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <div className="mt-2 hidden flex-wrap gap-1.5 sm:mt-3 sm:flex sm:gap-2">
               {IMPORT_SOURCES.map((source) => (
                 <span
                   key={source.label}
-                  className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-medium sm:px-3 sm:py-1 sm:text-xs ${
                     source.enabled
                       ? "bg-white/20 text-white"
                       : "bg-white/10 text-white/60"
@@ -57,7 +56,7 @@ export function ClientsImportBanner({
           </div>
         </div>
 
-        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+        <div className="flex shrink-0 flex-row flex-wrap items-center gap-2">
           {importProgress != null && importProgress > 0 && (
             <div className="min-w-[140px] rounded-xl bg-white/15 px-3 py-2">
               <div className="mb-1 flex items-center justify-between text-xs">
@@ -74,7 +73,7 @@ export function ClientsImportBanner({
           )}
           <Button
             size="sm"
-            className="rounded-xl bg-white text-[#6C3BFF] hover:bg-white/90"
+            className="h-8 rounded-xl bg-white px-2.5 text-xs text-[#6C3BFF] hover:bg-white/90 sm:h-9 sm:text-sm"
             onClick={onStartImport}
           >
             <Upload className="h-4 w-4" />
@@ -83,7 +82,7 @@ export function ClientsImportBanner({
           <Button
             variant="outline"
             size="sm"
-            className="rounded-xl border-white/40 bg-transparent text-white hover:bg-white/10"
+            className="h-8 rounded-xl border-white/40 bg-transparent px-2.5 text-xs text-white hover:bg-white/10 sm:h-9 sm:text-sm"
             onClick={onStartImport}
           >
             <Sparkles className="h-4 w-4" />
