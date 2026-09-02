@@ -38,43 +38,67 @@ function KpiCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay }}
-      whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className="rounded-2xl border border-[#ECECEC] bg-white p-5 shadow-[0_4px_24px_rgba(28,16,61,0.05)] transition-shadow duration-150 hover:shadow-[0_8px_32px_rgba(28,16,61,0.08)]"
+      whileHover={{ 
+        y: -3, 
+        scale: 1.02,
+        transition: { duration: 0.2 } 
+      }}
+      className="group relative overflow-hidden rounded-2xl border border-[#F0F0F0] bg-white p-4 shadow-[0_2px_16px_rgba(28,16,61,0.06)] transition-all duration-300 hover:shadow-[0_12px_48px_rgba(28,16,61,0.12)]"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div
-          className={cn(
-            "flex h-11 w-11 items-center justify-center rounded-xl",
-            iconBg,
-            iconColor
-          )}
-        >
-          {icon}
+      {/* Premium gradient accent bar */}
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-[#6366F1] to-[#8B5CF6] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      
+      {/* Subtle background glow */}
+      <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-gradient-to-br from-[#6366F1]/5 to-[#8B5CF6]/5 blur-2xl transition-opacity duration-300 group-hover:opacity-100 opacity-0" />
+
+      <div className="relative flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg",
+              iconBg,
+              iconColor
+            )}
+          >
+            {icon}
+          </div>
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wider text-[#9CA3AF]">
+              {label}
+            </p>
+            <p className="text-lg font-bold tracking-tight text-[#1C103D] transition-colors duration-300 group-hover:text-[#6366F1]">
+              {value}
+            </p>
+          </div>
         </div>
+        
         {trend !== undefined && trend !== 0 && (
           <span
             className={cn(
-              "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-semibold",
+              "inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[11px] font-semibold transition-all duration-300",
               trend >= 0
-                ? "bg-emerald-50 text-emerald-600"
-                : "bg-red-50 text-red-500"
+                ? "bg-emerald-50/80 text-emerald-600 group-hover:bg-emerald-100"
+                : "bg-red-50/80 text-red-500 group-hover:bg-red-100"
             )}
           >
             <TrendingUp
-              className={cn("h-3 w-3", trend < 0 && "rotate-180")}
+              className={cn(
+                "h-3 w-3 transition-transform duration-300", 
+                trend < 0 && "rotate-180",
+                trend >= 0 && "group-hover:translate-y-[-1px]"
+              )}
             />
             {trend >= 0 ? "+" : ""}
             {trend}%
           </span>
         )}
       </div>
-      <p className="mt-4 text-2xl font-bold tracking-tight text-[#1C103D]">
-        {value}
-      </p>
-      <p className="mt-0.5 text-xs font-medium uppercase tracking-wide text-[#9CA3AF]">
-        {label}
-      </p>
-      <p className="mt-1 text-sm text-[#6B7280]">{sublabel}</p>
+
+      {sublabel && (
+        <p className="relative mt-1.5 text-xs text-[#6B7280] opacity-80 transition-opacity duration-300 group-hover:opacity-100">
+          {sublabel}
+        </p>
+      )}
     </motion.div>
   );
 }
